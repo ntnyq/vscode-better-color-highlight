@@ -1,0 +1,25 @@
+.foo {
+  color: red;
+  background-color: #00ff00;
+  border: 1px solid rgb(0, 0, 255);
+}
+
+.bar {
+  color: #f00a;
+  background: hsl(210, 50%, 50%);
+  outline: 2px solid hwb(30, 0%, 20%);
+}
+
+.baz {
+  --primary: #ff0000;
+  --secondary: rgb(0, 128, 255);
+  color: var(--primary);
+  background: var(--secondary);
+}
+
+.modern {
+  color: lch(50 30 120);
+  background: oklch(0.7 0.15 200);
+  border-color: lab(50 20 -30);
+  outline-color: oklab(0.6 0.1 -0.05);
+}

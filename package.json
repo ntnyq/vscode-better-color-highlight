@@ -1,0 +1,189 @@
+{
+  "name": "vscode-better-color-highlight",
+  "displayName": "Better Color Highlight",
+  "version": "0.0.0",
+  "description": "Highlight and preview colors in multiple formats across code, comments, and strings.",
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "color",
+    "color highlight",
+    "color picker",
+    "color preview",
+    "colour",
+    "css",
+    "design tokens",
+    "hex",
+    "highlight",
+    "hsl",
+    "hsla",
+    "hwb",
+    "lab",
+    "lch",
+    "oklab",
+    "oklch",
+    "preview",
+    "rgb",
+    "rgba",
+    "tailwind"
+  ],
+  "homepage": "https://github.com/ntnyq/vscode-better-color-highlight",
+  "bugs": {
+    "url": "https://github.com/ntnyq/vscode-better-color-highlight/issues/new"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "ntnyq",
+    "email": "ntnyq13@gmail.com"
+  },
+  "repository": "ntnyq/vscode-better-color-highlight",
+  "publisher": "ntnyq",
+  "files": [
+    "LICENSE",
+    "dist/*",
+    "res/*"
+  ],
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "generate:meta": "vscode-ext-gen --output src/meta.ts",
+    "lint": "oxlint",
+    "pack": "vsce package --no-dependencies",
+    "prepare": "husky",
+    "release": "run-s release:check release:version release:publish",
+    "release:build": "run-s generate:meta build",
+    "release:check": "run-s format:check lint typecheck test",
+    "release:publish": "vsce publish --no-dependencies",
+    "release:version": "bumpp --all --execute='pnpm release:build'",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsgo --noEmit",
+    "vscode:prepublish": "pnpm run build"
+  },
+  "dependencies": {
+    "reactive-vscode": "^1.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/vscode": "^1.116.0",
+    "@typescript/native-preview": "^7.0.0-dev.20260417.1",
+    "@vscode/vsce": "^3.9.1",
+    "bumpp": "^11.0.1",
+    "husky": "^9.1.7",
+    "nano-staged": "^1.0.2",
+    "oxfmt": "^0.45.0",
+    "oxlint": "^1.60.0",
+    "tsdown": "^0.21.9",
+    "vitest": "^4.1.4",
+    "vscode-ext-gen": "^1.6.0"
+  },
+  "nano-staged": {
+    "*.{js,ts,mjs,tsx}": "oxlint --fix",
+    "*": "oxfmt --no-error-on-unmatched-pattern"
+  },
+  "contributes": {
+    "configuration": {
+      "title": "Better Color Highlight",
+      "properties": {
+        "color-highlight.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable or disable color highlighting."
+        },
+        "color-highlight.languages": {
+          "type": "array",
+          "default": [
+            "*"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Language IDs where colors are highlighted. Use '*' for all languages, prefix with '!' to exclude."
+        },
+        "color-highlight.matchWords": {
+          "type": "boolean",
+          "default": false,
+          "description": "Highlight named CSS colors (e.g., 'red', 'blue') in all file types."
+        },
+        "color-highlight.useARGB": {
+          "type": "boolean",
+          "default": false,
+          "description": "Interpret 8-digit hex colors as ARGB instead of RGBA."
+        },
+        "color-highlight.matchRgbWithNoFunction": {
+          "type": "boolean",
+          "default": false,
+          "description": "Highlight RGB values not wrapped in rgb() function."
+        },
+        "color-highlight.rgbWithNoFunctionLanguages": {
+          "type": "array",
+          "default": [
+            "*"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Language IDs for rgb-without-function matching. Use '*' / '!' syntax."
+        },
+        "color-highlight.matchHslWithNoFunction": {
+          "type": "boolean",
+          "default": false,
+          "description": "Highlight HSL values not wrapped in hsl() function."
+        },
+        "color-highlight.hslWithNoFunctionLanguages": {
+          "type": "array",
+          "default": [
+            "*"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Language IDs for hsl-without-function matching. Use '*' / '!' syntax."
+        },
+        "color-highlight.markerType": {
+          "type": "string",
+          "default": "background",
+          "enum": [
+            "background",
+            "outline",
+            "foreground",
+            "underline",
+            "dot-before",
+            "dot-after"
+          ],
+          "description": "Style of the color highlight marker."
+        },
+        "color-highlight.markRuler": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show color indicators on the scrollbar ruler."
+        }
+      }
+    },
+    "commands": [
+      {
+        "category": "Color Highlight",
+        "command": "color-highlight.enable",
+        "title": "Enable Better Color Highlight"
+      },
+      {
+        "category": "Color Highlight",
+        "command": "color-highlight.disable",
+        "title": "Disable Better Color Highlight"
+      }
+    ]
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "icon": "https://ntnyq.com/static/icons/icon-192x192.png",
+  "engines": {
+    "vscode": "^1.116.0"
+  },
+  "packageManager": "pnpm@10.33.0"
+}

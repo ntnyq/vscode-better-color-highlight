@@ -1,0 +1,14 @@
+import { defineExtension } from 'reactive-vscode'
+import { version } from '../package.json'
+import { useCommands } from './commands'
+import { useColorHighlight } from './composables/use-color-highlight'
+import { logger } from './utils/logger'
+
+const { activate, deactivate } = defineExtension(() => {
+  logger.info(`✅ Activated, version: ${version} `)
+
+  useCommands()
+  useColorHighlight()
+})
+
+export { activate, deactivate }

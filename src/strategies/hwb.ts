@@ -1,0 +1,73 @@
+import { hwbToRgb, rgbString } from '../color/convert'
+import type { ColorMatch } from '../core/types'
+
+/**
+ * Regex for hwb() color function.
+ * hwb(hue, whiteness%, blackness%[, alpha])
+ */
+const HWB_REGEX =
+  /(hwb\(\s*\d+(?:deg|grad|rad|turn)?\s*,\s*(?:100|0*\d{1,2})%\s*,\s*(?:100|0*\d{1,2})%(?:\s*,\s*0?\.?\d+%?)?\s*\))/gi
+
+/**
+ * Also match space-delimited hwb() syntax:
+ * hwb(hue whiteness% blackness%[/ alpha])
+ */
+const HWB_SPACE_REGEX =
+  /(hwb\(\s*\d+(?:deg|grad|rad|turn)?\s+(?:100|0*\d{1,2})%\s+(?:100|0*\d{1,2})%(?:\s*\/\s*[\d.]+%?)?\s*\))/gi
+
+/**
+ * Detect hwb() color functions.
+ */
+export function findHwb(text: string): ColorMatch[] {
+  const matches: ColorMatch[] = []
+
+  for (const m of text.matchAll(HWB_REGEX)) {
+    const fullMatch = m[1]
+    const start = m.index ?? 0
+    const end = start + fullMatch.length
+    const color = parseHwb(fullMatch)
+    if (color) matches.push({ start, end, color })
+  }
+
+  for (const m of text.matchAll(HWB_SPACE_REGEX)) {
+    const fullMatch = m[1]
+    const start = m.index ?? 0
+    const end = start + fullMatch.length
+    const color = parseHwb(fullMatch)
+    if (color) matches.push({ start, end, color })
+  }
+
+  return matches
+}
+
+function parseAngle(value: string): number {
+  const num = Number.parseFloat(value)
+  if (value.endsWith('grad')) return (num * 360) / 400
+  if (value.endsWith('rad')) return (num * 180) / Math.PI
+  if (value.endsWith('turn')) return num * 360
+  return num
+}
+
+function parseHwb(func: string): string | null {
+  const innerMatch = func.match(
+    /^hwb\(\s*(\d+(?:deg|grad|rad|turn)?)\s*[, ]\s*(\d{1,3})%\s*[, ]\s*(\d{1,3})%(?:\s*[,/]\s*([\d.]+%?))?\s*\)$/i,
+  )
+  if (!innerMatch) return null
+
+  const h = parseAngle(innerMatch[1])
+  const w = Number.parseInt(innerMatch[2]) / 100
+  const b = Number.parseInt(innerMatch[3]) / 100
+
+  if (w < 0 || w > 1 || b < 0 || b > 1) return null
+
+  let alpha: number | undefined
+  if (innerMatch[4]) {
+    const aStr = innerMatch[4]
+    alpha = aStr.endsWith('%')
+      ? Number.parseFloat(aStr) / 100
+      : Number.parseFloat(aStr)
+  }
+
+  const [r, g, bl] = hwbToRgb(h, w, b)
+  return rgbString(r, g, bl, alpha)
+}

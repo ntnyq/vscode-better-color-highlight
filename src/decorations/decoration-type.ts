@@ -1,0 +1,48 @@
+import { window, type TextEditorDecorationType } from 'vscode'
+import type { MarkerType } from '../core/types'
+import { buildDecorationOptions } from './marker-types'
+
+/**
+ * Manages a cache of TextEditorDecorationType instances keyed by color + marker type.
+ * Each unique (color, markerType, markRuler) triple gets its own decoration type.
+ *
+ * The cache is lazily populated and must be disposed when no longer needed.
+ */
+export class DecorationTypeCache {
+  private cache = new Map<string, TextEditorDecorationType>()
+
+  /**
+   * Get or create a decoration type for the given color and marker configuration.
+   */
+  getOrCreate(
+    color: string,
+    markerType: MarkerType,
+    markRuler: boolean,
+  ): TextEditorDecorationType {
+    const key = `${markerType}:${color}:${markRuler}`
+    let type = this.cache.get(key)
+    if (!type) {
+      const options = buildDecorationOptions(markerType, color, markRuler)
+      type = window.createTextEditorDecorationType(options)
+      this.cache.set(key, type)
+    }
+    return type
+  }
+
+  /**
+   * Dispose all cached decoration types and clear the cache.
+   */
+  clear(): void {
+    for (const type of this.cache.values()) {
+      type.dispose()
+    }
+    this.cache.clear()
+  }
+
+  /**
+   * Dispose the cache. Alias for clear().
+   */
+  dispose(): void {
+    this.clear()
+  }
+}
