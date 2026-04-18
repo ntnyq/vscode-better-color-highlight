@@ -1,0 +1,101 @@
+// =============================================
+// Hex Colors
+// =============================================
+
+// #RGB — 3-digit hex
+$hex-3: #f00
+$hex-3b: #0f0
+$hex-3c: #00f
+
+// #RRGGBB — 6-digit hex
+$hex-6: #ff0000
+$hex-6b: #00ff00
+$hex-6c: #0000ff
+
+// #RGBA — 4-digit hex (RGBA mode)
+$hex-4: #f00f
+$hex-4b: #0f0c
+$hex-4c: #00f8
+
+// #RRGGBBAA — 8-digit hex (RGBA mode)
+$hex-8: #ff000080
+$hex-8b: #00ff00cc
+$hex-8c: #0000ffff
+
+// =============================================
+// RGB / RGBA Functions
+// =============================================
+
+// rgb() comma syntax
+$rgb-comma: rgb(255, 0, 0)
+$rgb-comma-b: rgb(0, 128, 255)
+
+// rgba() comma syntax
+$rgba-comma: rgba(255, 0, 0, 1)
+$rgba-comma-b: rgba(0, 128, 255, 0.5)
+
+// rgb() space syntax
+$rgb-space: rgb(255 0 0)
+$rgb-space-b: rgb(0 128 255)
+
+// rgba() space + slash alpha
+$rgba-space: rgb(255 0 0 / 1)
+$rgba-space-b: rgb(0 128 255 / 0.5)
+
+// =============================================
+// HSL / HSLA Functions
+// =============================================
+
+// hsl() comma syntax
+$hsl-comma: hsl(0, 100%, 50%)
+$hsl-comma-b: hsl(210, 50%, 50%)
+
+// hsla() comma syntax
+$hsla-comma: hsla(0, 100%, 50%, 1)
+$hsla-comma-b: hsla(210, 50%, 50%, 0.5)
+
+// hsl() space syntax
+$hsl-space: hsl(0 100% 50%)
+
+// =============================================
+// HWB Function
+// =============================================
+
+// hwb()
+$hwb: hwb(0, 0%, 0%)
+$hwb-b: hwb(210, 20%, 30%)
+
+// hwb() with alpha
+$hwb-alpha: hwb(0, 0%, 0%, 0.5)
+
+// =============================================
+// LCH / OKLCH / LAB / OKLab Functions
+// =============================================
+
+$lch: lch(50, 30, 0)
+$oklch: oklch(0.5, 0.15, 0)
+$lab: lab(50, 0, 0)
+$oklab: oklab(0.5, 0, 0)
+
+// =============================================
+// Named Colors
+// =============================================
+
+$named-red: red
+$named-blue: blue
+$named-rebeccapurple: rebeccapurple
+$named-coral: coral
+
+// =============================================
+// SCSS Variable Usage
+// =============================================
+
+.foo
+  color: $hex-6
+  background: $rgb-comma
+  border-color: $hsl-comma
+
+.bar
+  color: $named-red
+  background: $hex-8
+  outline-color: $hwb

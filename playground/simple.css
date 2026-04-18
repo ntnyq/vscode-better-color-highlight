@@ -1,0 +1,127 @@
+/* =============================================
+ * Hex Colors
+ * ============================================= */
+
+/* #RGB — 3-digit hex */
+.hex-3 {
+  color: #f00;
+}
+
+/* #RRGGBB — 6-digit hex */
+.hex-6 {
+  color: #ff0000;
+}
+
+/* #RGBA — 4-digit hex (RGBA mode) */
+.hex-4 {
+  color: #f00f;
+}
+
+/* #RRGGBBAA — 8-digit hex (RGBA mode) */
+.hex-8 {
+  color: #ff000080;
+}
+
+/* =============================================
+ * RGB / RGBA Functions
+ * ============================================= */
+
+/* rgb() comma syntax */
+.rgb-comma {
+  color: rgb(255, 0, 0);
+}
+
+/* rgba() comma syntax */
+.rgba-comma {
+  color: rgba(255, 0, 0, 0.5);
+}
+
+/* rgb() space syntax */
+.rgb-space {
+  color: rgb(255 0 0);
+}
+
+/* rgba() space + slash alpha */
+.rgba-space {
+  color: rgb(255 0 0 / 0.5);
+}
+
+/* =============================================
+ * HSL / HSLA Functions
+ * ============================================= */
+
+/* hsl() comma syntax */
+.hsl-comma {
+  color: hsl(0, 100%, 50%);
+}
+
+/* hsla() comma syntax */
+.hsla-comma {
+  color: hsla(0, 100%, 50%, 0.5);
+}
+
+/* hsl() space syntax */
+.hsl-space {
+  color: hsl(0 100% 50%);
+}
+
+/* =============================================
+ * HWB Function
+ * ============================================= */
+
+/* hwb() comma syntax */
+.hwb-comma {
+  color: hwb(0, 0%, 0%);
+}
+
+/* hwb() space syntax with alpha */
+.hwb-space {
+  color: hwb(0 0% 0% / 0.5);
+}
+
+/* =============================================
+ * LCH / OKLCH / LAB / OKLab Functions
+ * ============================================= */
+
+.lch {
+  color: lch(50, 30, 0);
+}
+.oklch {
+  color: oklch(0.5, 0.15, 0);
+}
+.lab {
+  color: lab(50, 0, 0);
+}
+.oklab {
+  color: oklab(0.5, 0, 0);
+}
+
+/* =============================================
+ * Named Colors
+ * ============================================= */
+
+.named-red {
+  color: red;
+}
+.named-blue {
+  color: blue;
+}
+.named-rebeccapurple {
+  color: rebeccapurple;
+}
+.named-coral {
+  color: coral;
+}
+.named-teal {
+  color: teal;
+}
+
+/* =============================================
+ * Mixed — Multiple colors in one rule
+ * ============================================= */
+
+.mixed {
+  background: linear-gradient(rgb(255, 0, 0), hsl(210, 50%, 50%), #00ff00);
+  border: 2px solid rgba(0, 0, 255, 0.5);
+  box-shadow: 0 0 5px hwb(0, 0%, 0%);
+}

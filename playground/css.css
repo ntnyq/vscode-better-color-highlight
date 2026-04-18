@@ -1,25 +1,289 @@
-.foo {
-  color: red;
-  background-color: #00ff00;
-  border: 1px solid rgb(0, 0, 255);
+/* =============================================
+ * Hex Colors
+ * ============================================= */
+
+/* #RGB — 3-digit hex */
+.hex-3 {
+  color: #f00;
+  background: #0f0;
+  border-color: #00f;
 }
 
-.bar {
-  color: #f00a;
+/* #RRGGBB — 6-digit hex */
+.hex-6 {
+  color: #ff0000;
+  background: #00ff00;
+  border-color: #0000ff;
+}
+
+/* #RGBA — 4-digit hex (RGBA mode) */
+.hex-4-rgba {
+  color: #f00f;
+  background: #0f0c;
+  border-color: #00f8;
+}
+
+/* #RRGGBBAA — 8-digit hex (RGBA mode) */
+.hex-8-rgba {
+  color: #ff000080;
+  background: #00ff00cc;
+  border-color: #0000ffff;
+}
+
+/* 0x prefix hex */
+.hex-0x {
+  color: 0xff0000;
+  background: 0x00ff00;
+}
+
+/* =============================================
+ * RGB / RGBA Functions
+ * ============================================= */
+
+/* rgb() comma syntax */
+.rgb-comma {
+  color: rgb(255, 0, 0);
+  background: rgb(0, 128, 255);
+}
+
+/* rgba() comma syntax */
+.rgba-comma {
+  color: rgba(255, 0, 0, 1);
+  background: rgba(0, 128, 255, 0.5);
+}
+
+/* rgb() space syntax */
+.rgb-space {
+  color: rgb(255 0 0);
+  background: rgb(0 128 255);
+}
+
+/* rgba() space + slash alpha syntax */
+.rgba-space {
+  color: rgb(255 0 0 / 1);
+  background: rgb(0 128 255 / 0.5);
+}
+
+/* rgb() with percentages */
+.rgb-percent {
+  color: rgb(100%, 0%, 0%);
+  background: rgb(0%, 50%, 100%);
+}
+
+/* =============================================
+ * HSL / HSLA Functions
+ * ============================================= */
+
+/* hsl() comma syntax */
+.hsl-comma {
+  color: hsl(0, 100%, 50%);
   background: hsl(210, 50%, 50%);
-  outline: 2px solid hwb(30, 0%, 20%);
 }
 
-.baz {
-  --primary: #ff0000;
-  --secondary: rgb(0, 128, 255);
-  color: var(--primary);
-  background: var(--secondary);
+/* hsla() comma syntax */
+.hsla-comma {
+  color: hsla(0, 100%, 50%, 1);
+  background: hsla(210, 50%, 50%, 0.5);
 }
 
-.modern {
-  color: lch(50 30 120);
-  background: oklch(0.7 0.15 200);
-  border-color: lab(50 20 -30);
-  outline-color: oklab(0.6 0.1 -0.05);
+/* hsl() space syntax */
+.hsl-space {
+  color: hsl(0 100% 50%);
+  background: hsl(210 50% 50%);
+}
+
+/* hsla() space + slash alpha syntax */
+.hsla-space {
+  color: hsl(0 100% 50% / 1);
+  background: hsl(210 50% 50% / 0.5);
+}
+
+/* hsl() with degree units */
+.hsl-units {
+  color: hsl(0deg, 100%, 50%);
+  background: hsl(120deg 100% 50%);
+}
+
+/* =============================================
+ * HWB Function
+ * ============================================= */
+
+/* hwb() comma syntax */
+.hwb-comma {
+  color: hwb(0, 0%, 0%);
+  background: hwb(210, 20%, 30%);
+}
+
+/* hwb() space syntax */
+.hwb-space {
+  color: hwb(0 0% 0%);
+  background: hwb(210 20% 30%);
+}
+
+/* hwb() with alpha */
+.hwb-alpha {
+  color: hwb(0, 0%, 0%, 0.5);
+  background: hwb(210 20% 30% / 0.8);
+}
+
+/* hwb() with degree units */
+.hwb-units {
+  color: hwb(0deg, 0%, 0%);
+  background: hwb(120deg 20% 30%);
+}
+
+/* =============================================
+ * LCH Function
+ * ============================================= */
+
+/* lch() comma syntax */
+.lch-comma {
+  color: lch(50, 30, 0);
+  background: lch(70, 40, 120);
+}
+
+/* lcha() with alpha */
+.lcha {
+  color: lcha(50, 30, 0, 0.5);
+  background: lch(70 40 120 / 0.8);
+}
+
+/* lch() with degree units */
+.lch-units {
+  color: lch(50 30 0deg);
+  background: lch(70 40 120deg);
+}
+
+/* =============================================
+ * OKLCH Function
+ * ============================================= */
+
+/* oklch() */
+.oklch {
+  color: oklch(0.5, 0.15, 0);
+  background: oklch(0.7, 0.2, 200);
+}
+
+/* oklcha() with alpha */
+.oklcha {
+  color: oklcha(0.5, 0.15, 0, 0.5);
+  background: oklch(0.7 0.2 200 / 0.8);
+}
+
+/* oklch() with degree units */
+.oklch-units {
+  color: oklch(0.5 0.15 0deg);
+  background: oklch(0.7 0.2 200deg);
+}
+
+/* =============================================
+ * LAB Function
+ * ============================================= */
+
+/* lab() */
+.lab {
+  color: lab(50, 0, 0);
+  background: lab(70, 20, -30);
+}
+
+/* laba() with alpha */
+.laba {
+  color: laba(50, 0, 0, 0.5);
+  background: lab(70 20 -30 / 0.8);
+}
+
+/* =============================================
+ * OKLab Function
+ * ============================================= */
+
+/* oklab() */
+.oklab {
+  color: oklab(0.5, 0, 0);
+  background: oklab(0.7, 0.1, -0.05);
+}
+
+/* oklaba() with alpha */
+.oklaba {
+  color: oklaba(0.5, 0, 0, 0.5);
+  background: oklab(0.7 0.1 -0.05 / 0.8);
+}
+
+/* =============================================
+ * Named Colors
+ * ============================================= */
+
+/* Basic named colors */
+.named-basic {
+  color: red;
+  background: blue;
+  border-color: green;
+}
+
+/* Extended named colors */
+.named-extended {
+  color: rebeccapurple;
+  background: cornflowerblue;
+  border-color: darkorange;
+}
+
+/* More named colors */
+.named-more {
+  color: coral;
+  background: teal;
+  border-color: crimson;
+}
+
+/* Gray variants */
+.named-gray {
+  color: gray;
+  background: grey;
+  border-color: darkgray;
+}
+
+/* =============================================
+ * CSS Custom Properties (Variables)
+ * ============================================= */
+
+/* Define CSS variables with color values */
+:root {
+  --color-primary: #ff0000;
+  --color-secondary: rgb(0, 128, 255);
+  --color-accent: hsl(120, 100%, 50%);
+  --color-muted: #80808080;
+  --color-warning: orange;
+}
+
+/* Use CSS variables */
+.css-vars {
+  color: var(--color-primary);
+  background: var(--color-secondary);
+  border-color: var(--color-accent);
+  outline-color: var(--color-muted);
+}
+
+/* CSS variable shorthand: --color-rgb */
+.css-var-shorthand {
+  --brand-rgb: 255 0 0;
+  --brand-hsl: 0 100% 50%;
+  color: var(--brand-rgb);
+}
+
+/* =============================================
+ * Mixed / Edge Cases
+ * ============================================= */
+
+/* Multiple colors in one declaration */
+.mixed {
+  background: linear-gradient(rgb(255, 0, 0), hsl(210, 50%, 50%), #00ff00);
+  border: 2px solid rgba(0, 0, 255, 0.5);
+  box-shadow: 0 0 5px hwb(0, 0%, 0%);
+}
+
+/* Colors in comments should also be highlighted */
+/* TODO: fix the #ff0000 border */
+/* NOTE: use rgb(128, 0, 128) for the accent */
+
+/* Colors in strings */
+.content::after {
+  content: "color: #ff0000";
 }

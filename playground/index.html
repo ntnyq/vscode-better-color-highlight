@@ -1,0 +1,112 @@
+<!--
+=============================================
+     HTML — All supported color formats
+=============================================
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Color Highlight Playground</title>
+    <style>
+      /* #RGB — 3-digit hex */
+      .hex-3 {
+        color: #f00;
+        background: #0f0;
+      }
+
+      /* #RRGGBB — 6-digit hex */
+      .hex-6 {
+        color: #ff0000;
+        background: #00ff00;
+      }
+
+      /* #RGBA — 4-digit hex */
+      .hex-4 {
+        color: #f00f;
+        background: #0f0c;
+      }
+
+      /* #RRGGBBAA — 8-digit hex */
+      .hex-8 {
+        color: #ff000080;
+        background: #00ff00cc;
+      }
+
+      /* rgb() / rgba() functions */
+      .rgb-func {
+        color: rgb(255, 0, 0);
+        background: rgba(0, 128, 255, 0.5);
+      }
+      .rgb-space {
+        color: rgb(255 0 0);
+        background: rgb(0 128 255 / 0.5);
+      }
+
+      /* hsl() / hsla() functions */
+      .hsl-func {
+        color: hsl(0, 100%, 50%);
+        background: hsla(210, 50%, 50%, 0.5);
+      }
+      .hsl-space {
+        color: hsl(0 100% 50%);
+        background: hsl(210 50% 50% / 0.5);
+      }
+
+      /* hwb() function */
+      .hwb {
+        color: hwb(0, 0%, 0%);
+        background: hwb(210 20% 30% / 0.8);
+      }
+
+      /* lch() / oklch() functions */
+      .lch {
+        color: lch(50, 30, 0);
+        background: lch(70, 40, 120);
+      }
+      .oklch {
+        color: oklch(0.5, 0.15, 0);
+        background: oklch(0.7, 0.2, 200);
+      }
+
+      /* lab() / oklab() functions */
+      .lab {
+        color: lab(50, 0, 0);
+        background: lab(70, 20, -30);
+      }
+      .oklab {
+        color: oklab(0.5, 0, 0);
+        background: oklab(0.7, 0.1, -0.05);
+      }
+
+      /* Named colors */
+      .named {
+        color: red;
+        background: blue;
+        border-color: rebeccapurple;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Inline styles with hex colors -->
+    <div style="color: #ff0000">#RRGGBB inline</div>
+    <div style="background: #f00">#RGB inline</div>
+    <div style="color: #ff000080">#RRGGBBAA inline</div>
+
+    <!-- Inline styles with rgb/rgba -->
+    <div style="color: rgb(255, 0, 0)">rgb() inline</div>
+    <div style="background: rgba(0, 128, 255, 0.5)">rgba() inline</div>
+
+    <!-- Inline styles with hsl/hsla -->
+    <div style="color: hsl(0, 100%, 50%)">hsl() inline</div>
+    <div style="background: hsla(210, 50%, 50%, 0.5)">hsla() inline</div>
+
+    <!-- Inline styles with named colors -->
+    <div style="color: red">named inline</div>
+    <div style="background: cornflowerblue">named extended inline</div>
+
+    <!-- Colors in attributes -->
+    <font color="#ff0000">font color hex</font>
+    <font color="blue">font color named</font>
+  </body>
+</html>
