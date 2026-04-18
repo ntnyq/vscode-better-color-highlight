@@ -7,6 +7,7 @@ export const config = defineConfig<NestedConfigs>('color-highlight')
  * Get the color-highlight namespace from config.
  * The defineConfig<NestedConfigs> creates a nested structure
  * where color-highlight properties are under the 'color-highlight' key.
+ * @returns The nested color-highlight config object
  */
 function getNs() {
   return config['color-highlight']
@@ -15,6 +16,7 @@ function getNs() {
 /**
  * Get the current highlight config as a typed object.
  * Reads from reactive config values.
+ * @returns The full highlight configuration
  */
 export function getHighlightConfig() {
   const ns = getNs()

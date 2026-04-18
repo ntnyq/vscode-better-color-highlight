@@ -13,6 +13,9 @@ const STYLUS_VAR_DEF_REGEX = /^\s*\$?([-\w]+)\s*=\s*(.*)$/gm
 
 /**
  * Resolve variable values to colors using all base strategies.
+ *
+ * @param value - The raw variable value string to resolve
+ * @returns The resolved rgb() color string, or null if no color found
  */
 async function resolveVarValue(value: string): Promise<string | null> {
   const strategies: ColorDetector[] = [
@@ -34,6 +37,9 @@ async function resolveVarValue(value: string): Promise<string | null> {
  *
  * Phase 1: Find all var = value definitions and resolve their values.
  * Phase 2: Find all var usages and map them to resolved colors.
+ *
+ * @param text - The document text to scan for Stylus variable colors
+ * @returns Array of color matches found in the text
  */
 export async function findStylusVars(text: string): Promise<ColorMatch[]> {
   // Phase 1: Find variable definitions
@@ -79,6 +85,13 @@ export async function findStylusVars(text: string): Promise<ColorMatch[]> {
   return matches
 }
 
+/**
+ * Build a regex that matches Stylus variable usages for the given names.
+ * Skips definitions (varName =) and hyphenated names (varName-xxx).
+ *
+ * @param varNames - Array of Stylus variable names
+ * @returns A RegExp matching var name usages, or null if no names provided
+ */
 function buildStylusVarUsageRegex(varNames: string[]): RegExp | null {
   if (varNames.length === 0) return null
   const names = varNames

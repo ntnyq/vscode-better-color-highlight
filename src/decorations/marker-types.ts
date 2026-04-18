@@ -4,8 +4,9 @@ import type { MarkerType } from '../core/types'
 
 /**
  * Parse a CSS rgb() string to numeric RGB values.
- * e.g. "rgb(255, 0, 0)" -> [255, 0, 0]
- * e.g. "rgba(255, 0, 0, 0.5)" -> [255, 0, 0]
+ *
+ * @param color - The CSS rgb() color string (e.g. "rgb(255, 0, 0)" or "rgba(255, 0, 0, 0.5)")
+ * @returns A tuple of [r, g, b] numeric values, defaults to [0, 0, 0] if parsing fails
  */
 function parseRgbString(color: string): [number, number, number] {
   const match = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/)
@@ -19,6 +20,11 @@ function parseRgbString(color: string): [number, number, number] {
 
 /**
  * Build VS Code decoration render options for a given marker type and color.
+ *
+ * @param markerType - The decoration style: 'background', 'outline', 'foreground', 'underline', 'dot-before', or 'dot-after'
+ * @param color - The CSS rgb() color string for the decoration
+ * @param markRuler - Whether to show the color in the overview ruler
+ * @returns The decoration render options object
  */
 export function buildDecorationOptions(
   markerType: MarkerType,

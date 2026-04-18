@@ -14,6 +14,13 @@ const CSS_VAR_DEF_REGEX = /^\s*(--[-\w]+)\s*:\s*(.*)$/gm
  * Regex for CSS custom property usages:
  *   var(--my-color)
  */
+/**
+ * Build a regex that matches var() usages for the given variable names.
+ * Names are sorted by length descending to avoid partial matches.
+ *
+ * @param varNames - Array of CSS custom property names (e.g. ["--my-color"])
+ * @returns A RegExp matching var(--name) usages, or null if no names provided
+ */
 function buildVarUsageRegex(varNames: string[]): RegExp | null {
   if (varNames.length === 0) return null
   const names = varNames
@@ -26,6 +33,9 @@ function buildVarUsageRegex(varNames: string[]): RegExp | null {
 /**
  * Resolve variable values to colors using all base strategies.
  * Uses Promise.all instead of Promise.race (fixes reference repo bug).
+ *
+ * @param value - The raw variable value string to resolve
+ * @returns The resolved rgb() color string, or null if no color found
  */
 async function resolveVarValue(value: string): Promise<string | null> {
   const strategies: ColorDetector[] = [
@@ -45,6 +55,9 @@ async function resolveVarValue(value: string): Promise<string | null> {
  * Detect CSS custom property colors.
  * Phase 1: Find all variable definitions and resolve their values.
  * Phase 2: Find all var() usages and map them to resolved colors.
+ *
+ * @param text - The document text to scan for CSS variable colors
+ * @returns Array of color matches found in the text
  */
 export async function findCssVars(text: string): Promise<ColorMatch[]> {
   // Phase 1: Find variable definitions

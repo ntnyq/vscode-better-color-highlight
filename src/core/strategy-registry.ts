@@ -17,6 +17,9 @@ import { STYLE_LANGUAGES } from './types'
 /**
  * Check if a language ID matches a pattern list.
  * Supports '*' (match all) and '!' prefix (exclude).
+ * @param languageId - The document's language ID to check
+ * @param patterns - Array of language patterns (e.g. ["*", "!css"])
+ * @returns Whether the language matches the pattern list
  */
 function isLanguageMatch(
   languageId: string,
@@ -57,6 +60,10 @@ function isLanguageMatch(
  * - less-vars: only for less
  * - scss-vars: only for scss
  * - stylus-vars: only for stylus/styl
+ *
+ * @param languageId - The document's language ID
+ * @param config - The current highlight configuration
+ * @returns Array of color detection strategies to apply
  */
 export function getStrategies(
   languageId: string,
@@ -113,6 +120,9 @@ export function getStrategies(
 
 /**
  * Check if a language should be processed based on the languages config.
+ * @param languageId - The document's language ID
+ * @param languages - Array of language patterns from configuration
+ * @returns Whether the language should be processed
  */
 export function shouldProcessLanguage(
   languageId: string,

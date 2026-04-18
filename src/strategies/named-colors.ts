@@ -11,6 +11,12 @@ import type { ColorMatch } from '../core/types'
  */
 const NAMED_COLOR_REGEX = buildNamedColorRegex()
 
+/**
+ * Build a regex that matches any CSS named color keyword.
+ * Names are sorted by length descending to avoid partial matches.
+ *
+ * @returns A RegExp that captures named color keywords
+ */
 function buildNamedColorRegex(): RegExp {
   const names = [...NAMED_COLORS.keys()]
     .sort((a, b) => b.length - a.length)
@@ -22,6 +28,9 @@ function buildNamedColorRegex(): RegExp {
 /**
  * Detect CSS named color keywords (e.g. "red", "blue", "rebeccapurple").
  * Skips matches preceded by variable prefixes (-, $, @, #).
+ *
+ * @param text - The document text to scan for named colors
+ * @returns Array of color matches found in the text
  */
 export function findNamedColors(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []

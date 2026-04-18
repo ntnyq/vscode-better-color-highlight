@@ -3,26 +3,42 @@
  * No external dependencies. All functions clamp values to valid ranges.
  */
 
-/** Clamp a value between min and max */
+/**
+ * Clamp a value between min and max.
+ * @param value - The value to clamp
+ * @param min - The minimum allowed value
+ * @param max - The maximum allowed value
+ * @returns The clamped value
+ */
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }
 
-/** Parse a percentage value string (e.g. "50%") to a number */
+/**
+ * Parse a percentage value string (e.g. "50%") to a number.
+ * @param value - The string to parse
+ * @returns The parsed number (50% -> 0.5)
+ */
 function parsePercent(value: string): number {
   return value.endsWith('%')
     ? Number.parseFloat(value) / 100
     : Number.parseFloat(value)
 }
 
-/** Convert degrees to radians */
+/**
+ * Convert degrees to radians.
+ * @param deg - Angle in degrees
+ * @returns Angle in radians
+ */
 function degToRad(deg: number): number {
   return (deg * Math.PI) / 180
 }
 
 /**
  * Parse a hex color string to RGB values.
- * Supports #RGB, #RRGGBB, #RRGGBBAA (RGBA mode).
+ * Supports #RGB, #RRGGBB, #RRGGBBAA (RGBA mode), and 0x prefix.
+ * @param hex - The hex color string to parse
+ * @returns An object with r, g, b (and optional a) values, or null if invalid
  */
 export function hexToRgb(
   hex: string,
@@ -78,6 +94,9 @@ export function hexToRgb(
  * Parse a hex color string in ARGB mode.
  * For 8-digit hex: first 2 digits = alpha, last 6 = RGB.
  * For 4-digit hex: first digit = alpha, last 3 = RGB.
+ * Falls back to hexToRgb for non-alpha hex strings.
+ * @param hex - The hex color string to parse
+ * @returns An object with r, g, b (and optional a) values, or null if invalid
  */
 export function hexARGBToRgb(
   hex: string,
@@ -115,9 +134,9 @@ export function hexARGBToRgb(
 
 /**
  * Helper function for HSL to RGB conversion.
- * @param p - temporary value based on lightness and saturation
- * @param q - temporary value based on lightness and saturation
- * @param t - temporary hue value (hue / 360 + offset)
+ * @param p - Temporary value based on lightness and saturation
+ * @param q - Temporary value based on lightness and saturation
+ * @param t - Temporary hue value (hue / 360 + offset)
  * @returns RGB component value in [0, 1]
  */
 function hue2rgb(p: number, q: number, t: number): number {
@@ -142,9 +161,10 @@ function hue2rgb(p: number, q: number, t: number): number {
 
 /**
  * Convert HSL to RGB.
- * @param h Hue in degrees [0, 360]
- * @param s Saturation [0, 1] or percentage string
- * @param l Lightness [0, 1] or percentage string
+ * @param h - Hue in degrees [0, 360]
+ * @param s - Saturation [0, 1]
+ * @param l - Lightness [0, 1]
+ * @returns Tuple of [r, g, b] in [0, 255]
  */
 export function hslToRgb(
   h: number,
@@ -172,9 +192,10 @@ export function hslToRgb(
 
 /**
  * Convert HWB to RGB.
- * @param h Hue in degrees [0, 360]
- * @param w Whiteness [0, 1]
- * @param b Blackness [0, 1]
+ * @param h - Hue in degrees [0, 360]
+ * @param w - Whiteness [0, 1]
+ * @param b - Blackness [0, 1]
+ * @returns Tuple of [r, g, b] in [0, 255]
  */
 export function hwbToRgb(
   h: number,
@@ -193,31 +214,44 @@ export function hwbToRgb(
 
   const [r, g, bl] = hslToRgb(h, 1, 0.5)
 
-  const scale = (x: number): number =>
-    Math.round((x / 255) * (1 - w - b) * 255 + w * 255)
+  function scale(x: number): number {
+    return Math.round((x / 255) * (1 - w - b) * 255 + w * 255)
+  }
 
   return [scale(r), scale(g), scale(bl)]
 }
 
 // --- CIE Lab / OKLab conversions ---
 
-/** SRGB delinearization */
+/**
+ * Convert a linear sRGB value to gamma-corrected sRGB (delinearization).
+ * @param c - Linear sRGB value
+ * @returns Gamma-corrected sRGB value
+ */
 function linearToSrgb(c: number): number {
   return c <= 0.003_130_8 ? c * 12.92 : 1.055 * c ** (1 / 2.4) - 0.055
 }
 
-/** D65 white point */
+/** D65 white point constants */
 const D65_XN = 0.950_489
 const D65_YN = 1
 const D65_ZN = 1.088_84
 
-/** Lab f function */
+/**
+ * Lab forward transform function.
+ * @param t - Input value
+ * @returns Transformed value
+ */
 function labF(t: number): number {
   const delta = 6 / 29
   return t > delta ** 3 ? t ** (1 / 3) : t / (3 * delta * delta) + 4 / 29
 }
 
-/** Lab f inverse */
+/**
+ * Lab inverse transform function.
+ * @param t - Input value
+ * @returns Inverse-transformed value
+ */
 function labFInv(t: number): number {
   const delta = 6 / 29
   return t > delta ? t ** 3 : 3 * delta * delta * (t - 4 / 29)
@@ -225,9 +259,10 @@ function labFInv(t: number): number {
 
 /**
  * Convert CIE Lab to RGB.
- * @param L Lightness [0, 100]
- * @param a Green-red axis
- * @param b Blue-yellow axis
+ * @param L - Lightness [0, 100]
+ * @param a - Green-red axis
+ * @param b - Blue-yellow axis
+ * @returns Tuple of [r, g, b] in [0, 255]
  */
 export function labToRgb(
   L: number,
@@ -258,9 +293,10 @@ export function labToRgb(
 
 /**
  * Convert LCH to RGB (CIE LCH, cylindrical form of Lab).
- * @param L Lightness [0, 100]
- * @param C Chroma
- * @param H Hue in degrees [0, 360]
+ * @param L - Lightness [0, 100]
+ * @param C - Chroma
+ * @param H - Hue in degrees [0, 360]
+ * @returns Tuple of [r, g, b] in [0, 255]
  */
 export function lchToRgb(
   L: number,
@@ -274,9 +310,10 @@ export function lchToRgb(
 
 /**
  * Convert OKLab to RGB.
- * @param L Lightness [0, 1]
- * @param a Green-red axis
- * @param b Blue-yellow axis
+ * @param L - Lightness [0, 1]
+ * @param a - Green-red axis
+ * @param b - Blue-yellow axis
+ * @returns Tuple of [r, g, b] in [0, 255]
  */
 export function oklabToRgb(
   L: number,
@@ -307,9 +344,10 @@ export function oklabToRgb(
 
 /**
  * Convert OKLCH to RGB (cylindrical form of OKLab).
- * @param L Lightness [0, 1]
- * @param C Chroma
- * @param H Hue in degrees [0, 360]
+ * @param L - Lightness [0, 1]
+ * @param C - Chroma
+ * @param H - Hue in degrees [0, 360]
+ * @returns Tuple of [r, g, b] in [0, 255]
  */
 export function oklchToRgb(
   L: number,
@@ -324,6 +362,11 @@ export function oklchToRgb(
 /**
  * Format RGB values as a CSS color string.
  * Uses rgba() if alpha is provided and < 1, otherwise rgb().
+ * @param r - Red value [0, 255]
+ * @param g - Green value [0, 255]
+ * @param b - Blue value [0, 255]
+ * @param a - Optional alpha value [0, 1]
+ * @returns A CSS rgb() or rgba() string
  */
 export function rgbString(r: number, g: number, b: number, a?: number): string {
   r = clamp(Math.round(r), 0, 255)
@@ -339,6 +382,7 @@ export function rgbString(r: number, g: number, b: number, a?: number): string {
 
 /**
  * Parse a color function value that may be a percentage or number.
- * Returns the raw number value.
+ * @param value - The string to parse
+ * @returns The raw number value
  */
 export { parsePercent }

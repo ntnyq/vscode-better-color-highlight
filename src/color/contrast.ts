@@ -12,9 +12,10 @@ for (let i = 0; i < 256; i++) {
 
 /**
  * Calculate the relative luminance of an sRGB color per WCAG 2.0.
- * @param r Red [0, 255]
- * @param g Green [0, 255]
- * @param b Blue [0, 255]
+ * @param r - Red channel [0, 255]
+ * @param g - Green channel [0, 255]
+ * @param b - Blue channel [0, 255]
+ * @returns The relative luminance value in [0, 1]
  */
 export function relativeLuminance(r: number, g: number, b: number): number {
   return (
@@ -26,6 +27,9 @@ export function relativeLuminance(r: number, g: number, b: number): number {
 
 /**
  * Calculate the contrast ratio between two relative luminance values.
+ * @param l1 - First luminance value
+ * @param l2 - Second luminance value
+ * @returns The contrast ratio (1 = no contrast, 21 = maximum contrast)
  */
 export function contrastRatio(l1: number, l2: number): number {
   const lighter = Math.max(l1, l2)
@@ -39,10 +43,9 @@ const BLACK_LUMINANCE = relativeLuminance(0, 0, 0) // ~0.0
 /**
  * Get the best contrast text color (white or black) for a given background color.
  * Uses WCAG 2.0 relative luminance and contrast ratio calculations.
- *
- * @param r Red [0, 255]
- * @param g Green [0, 255]
- * @param b Blue [0, 255]
+ * @param r - Red channel [0, 255]
+ * @param g - Green channel [0, 255]
+ * @param b - Blue channel [0, 255]
  * @returns '#FFFFFF' or '#000000'
  */
 export function getContrastColor(

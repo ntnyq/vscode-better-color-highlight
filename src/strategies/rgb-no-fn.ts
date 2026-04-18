@@ -15,6 +15,9 @@ const RGB_NO_FN_REGEX =
 /**
  * Detect bare RGB triplets not wrapped in rgb() function.
  * e.g. "255, 0, 128" or "255 0 128"
+ *
+ * @param text - The document text to scan for bare RGB triplets
+ * @returns Array of color matches found in the text
  */
 export function findRgbNoFunction(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []

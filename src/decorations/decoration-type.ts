@@ -13,6 +13,11 @@ export class DecorationTypeCache {
 
   /**
    * Get or create a decoration type for the given color and marker configuration.
+   *
+   * @param color - The CSS rgb() color string
+   * @param markerType - The decoration style
+   * @param markRuler - Whether to show the color in the overview ruler
+   * @returns The cached or newly created TextEditorDecorationType
    */
   getOrCreate(
     color: string,

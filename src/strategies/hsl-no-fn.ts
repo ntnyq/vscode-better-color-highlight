@@ -17,6 +17,9 @@ const HSL_NO_FN_REGEX =
 /**
  * Detect bare HSL triplets not wrapped in hsl() function.
  * e.g. "210, 50%, 50%" or "210 50% 50%"
+ *
+ * @param text - The document text to scan for bare HSL triplets
+ * @returns Array of color matches found in the text
  */
 export function findHslNoFunction(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
@@ -50,6 +53,12 @@ export function findHslNoFunction(text: string): ColorMatch[] {
   return matches
 }
 
+/**
+ * Parse angle value in degrees from various CSS angle units.
+ *
+ * @param value - The angle string (e.g. "90deg", "100grad", "1.57rad", "0.25turn")
+ * @returns The angle in degrees
+ */
 function parseAngle(value: string): number {
   const num = Number.parseFloat(value)
   if (value.endsWith('grad')) return (num * 360) / 400

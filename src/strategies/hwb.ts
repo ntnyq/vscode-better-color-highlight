@@ -17,6 +17,9 @@ const HWB_SPACE_REGEX =
 
 /**
  * Detect hwb() color functions.
+ *
+ * @param text - The document text to scan for hwb() colors
+ * @returns Array of color matches found in the text
  */
 export function findHwb(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
@@ -40,6 +43,12 @@ export function findHwb(text: string): ColorMatch[] {
   return matches
 }
 
+/**
+ * Parse angle value in degrees from various CSS angle units.
+ *
+ * @param value - The angle string (e.g. "90deg", "100grad", "1.57rad", "0.25turn")
+ * @returns The angle in degrees
+ */
 function parseAngle(value: string): number {
   const num = Number.parseFloat(value)
   if (value.endsWith('grad')) return (num * 360) / 400
@@ -48,6 +57,12 @@ function parseAngle(value: string): number {
   return num
 }
 
+/**
+ * Parse an hwb() function string and convert to RGB.
+ *
+ * @param func - The full hwb() function string
+ * @returns The resolved rgb() color string, or null if parsing fails
+ */
 function parseHwb(func: string): string | null {
   const innerMatch = func.match(
     /^hwb\(\s*(\d+(?:deg|grad|rad|turn)?)\s*[, ]\s*(\d{1,3})%\s*[, ]\s*(\d{1,3})%(?:\s*[,/]\s*([\d.]+%?))?\s*\)$/i,

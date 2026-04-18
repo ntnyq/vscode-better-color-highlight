@@ -3,6 +3,8 @@ import type { ColorMatch, ColorMatchGroup } from './types'
 /**
  * Group color matches by their resolved color string.
  * Each unique color gets its own array of matches.
+ * @param matches - Array of color matches to group
+ * @returns An object mapping each resolved color string to its matches
  */
 export function groupByColor(matches: readonly ColorMatch[]): ColorMatchGroup {
   const groups: ColorMatchGroup = {}
@@ -21,6 +23,8 @@ export function groupByColor(matches: readonly ColorMatch[]): ColorMatchGroup {
 /**
  * Merge multiple arrays of color matches, removing duplicates by offset.
  * Earlier arrays take priority over later ones (first match wins).
+ * @param matchArrays - Multiple arrays of color matches to merge
+ * @returns A deduplicated array of color matches
  */
 export function mergeMatches(
   ...matchArrays: readonly (readonly ColorMatch[])[]

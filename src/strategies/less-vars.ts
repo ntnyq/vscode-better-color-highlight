@@ -11,6 +11,9 @@ const LESS_VAR_DEF_REGEX = /^\s*@([-\w]+)\s*:\s*(.*)$/gm
 
 /**
  * Resolve variable values to colors using all base strategies.
+ *
+ * @param value - The raw variable value string to resolve
+ * @returns The resolved rgb() color string, or null if no color found
  */
 async function resolveVarValue(value: string): Promise<string | null> {
   const strategies: ColorDetector[] = [
@@ -30,6 +33,9 @@ async function resolveVarValue(value: string): Promise<string | null> {
  * Detect Less variable colors.
  * Phase 1: Find all @var definitions and resolve their values.
  * Phase 2: Find all @var usages and map them to resolved colors.
+ *
+ * @param text - The document text to scan for Less variable colors
+ * @returns Array of color matches found in the text
  */
 export async function findLessVars(text: string): Promise<ColorMatch[]> {
   // Phase 1: Find variable definitions
@@ -75,6 +81,13 @@ export async function findLessVars(text: string): Promise<ColorMatch[]> {
   return matches
 }
 
+/**
+ * Build a regex that matches Less @var usages for the given variable names.
+ * Skips definitions (@varName:) and hyphenated names (@varName-xxx).
+ *
+ * @param varNames - Array of Less variable names without the @ prefix
+ * @returns A RegExp matching @name usages, or null if no names provided
+ */
 function buildLessVarUsageRegex(varNames: string[]): RegExp | null {
   if (varNames.length === 0) return null
   const names = varNames

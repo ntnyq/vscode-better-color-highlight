@@ -18,6 +18,10 @@ import { logger } from '../utils/logger'
 /**
  * Debounce helper: delays updating a ref until after `ms` milliseconds
  * of silence following the last invocation.
+ *
+ * @param source - The reactive ref to debounce
+ * @param ms - The debounce delay in milliseconds
+ * @returns A debounced ref that updates after the specified delay
  */
 function useDebouncedRef<T>(source: Ref<T>, ms: number): Ref<T> {
   const debounced = ref(source.value) as Ref<T>
@@ -48,6 +52,11 @@ function useDebouncedRef<T>(source: Ref<T>, ms: number): Ref<T> {
 /**
  * Run all applicable strategies on the given text.
  * Uses Promise.all for async strategies (fixes reference repo Promise.race bug).
+ *
+ * @param text - The document text to analyze
+ * @param languageId - The language identifier for strategy selection
+ * @param debug - Whether to emit debug log messages
+ * @returns Flat array of all color matches from all strategies
  */
 async function runStrategies(
   text: string,
@@ -157,6 +166,10 @@ export function useColorHighlight(): void {
 
 /**
  * Set up reactive tracking for a single text editor.
+ *
+ * @param editor - The VS Code text editor to track
+ * @param cache - The decoration type cache for this editor
+ * @param disposables - Array to push cleanup functions into
  */
 function setupEditorTracking(
   editor: TextEditor,
@@ -263,6 +276,13 @@ function setupEditorTracking(
 /**
  * Apply color match groups as decorations to the editor.
  * Each unique color gets its own TextEditorDecorationType.
+ *
+ * @param editor - The VS Code text editor to decorate
+ * @param cache - The decoration type cache
+ * @param groups - Color matches grouped by color string
+ * @param markerType - The decoration style to use
+ * @param markRuler - Whether to show markers in the overview ruler
+ * @param debug - Whether to emit debug log messages
  */
 function applyDecorations(
   editor: TextEditor,
@@ -290,7 +310,10 @@ function applyDecorations(
 }
 
 /**
- * Clear all decorations from an editor.
+ * Clear all decorations from an editor by disposing the decoration cache.
+ *
+ * @param _editor - The VS Code text editor (unused, kept for API consistency)
+ * @param cache - The decoration type cache to clear
  */
 function clearDecorations(
   editor: TextEditor,
@@ -300,7 +323,10 @@ function clearDecorations(
 }
 
 /**
- * Get a unique key for a text editor.
+ * Get a unique key for a text editor based on its document URI and view column.
+ *
+ * @param editor - The VS Code text editor
+ * @returns A unique string key for the editor
  */
 function getEditorKey(editor: TextEditor): string {
   return `${editor.document.uri.toString()}:${editor.viewColumn ?? 0}`

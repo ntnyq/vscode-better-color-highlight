@@ -33,6 +33,10 @@ const CSS_VAR_SHORTHAND_REGEX =
 /**
  * Parse a single numeric value from a color function argument.
  * Handles percentages, degrees, and plain numbers.
+ *
+ * @param value - The raw string value from the color function argument
+ * @param type - The expected value type: 'rgb', 'angle', 'percent', or 'number'
+ * @returns The parsed numeric value
  */
 function parseChannelValue(
   value: string,
@@ -53,6 +57,9 @@ function parseChannelValue(
 
 /**
  * Parse angle value in degrees from various CSS angle units.
+ *
+ * @param value - The angle string (e.g. "90deg", "100grad", "1.57rad", "0.25turn")
+ * @returns The angle in degrees
  */
 function parseAngle(value: string): number {
   const num = Number.parseFloat(value)
@@ -65,6 +72,9 @@ function parseAngle(value: string): number {
 /**
  * Detect CSS color functions: rgb(), rgba(), hsl(), hsla(), lch(), lcha(),
  * oklch(), oklcha(), lab(), laba(), oklab(), oklaba().
+ *
+ * @param text - The document text to scan for color functions
+ * @returns Array of color matches found in the text
  */
 export function findColorFunctions(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
@@ -109,6 +119,9 @@ export function findColorFunctions(text: string): ColorMatch[] {
 
 /**
  * Parse a CSS color function string like "rgb(255, 0, 0)" or "hsl(210, 50%, 50%)".
+ *
+ * @param func - The full color function string including name and arguments
+ * @returns The resolved rgb() color string, or null if parsing fails
  */
 function parseColorFunction(func: string): string | null {
   const fnMatch = func.match(
@@ -147,6 +160,10 @@ function parseColorFunction(func: string): string | null {
 
 /**
  * Convert parsed function arguments to RGB based on the color space.
+ *
+ * @param fn - The color function name (e.g. 'rgb', 'hsl', 'lch')
+ * @param parts - Array of raw string arguments from the color function
+ * @returns RGB tuple [r, g, b] or [null, null, null] if conversion fails
  */
 function convertColorFunction(
   fn: string,
@@ -202,6 +219,10 @@ function convertColorFunction(
 
 /**
  * Parse a CSS variable shorthand value like "255 0 0" or "0 100% 50%".
+ *
+ * @param value - The shorthand value string
+ * @param space - The color space identifier
+ * @returns The resolved rgb() color string, or null if parsing fails
  */
 function parseShorthandValue(
   value: string,

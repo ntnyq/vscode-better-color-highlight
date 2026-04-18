@@ -11,7 +11,10 @@ const HEX_REGEX =
 
 /**
  * Detect hex colors in RGBA mode (default).
- * #RGB, #RRGGBB, #RGBA, #RRGGBBAA
+ * Matches #RGB, #RRGGBB, #RGBA, #RRGGBBAA and 0x prefix variants.
+ *
+ * @param text - The document text to scan for hex colors
+ * @returns Array of color matches found in the text
  */
 export function findHexRGBA(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
@@ -39,6 +42,9 @@ export function findHexRGBA(text: string): ColorMatch[] {
 /**
  * Detect hex colors in ARGB mode.
  * For 8-digit and 4-digit hex: first digits are alpha.
+ *
+ * @param text - The document text to scan for hex colors
+ * @returns Array of color matches found in the text
  */
 export function findHexARGB(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
