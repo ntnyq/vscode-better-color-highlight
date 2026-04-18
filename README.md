@@ -34,6 +34,7 @@ Highlight and preview colors in multiple formats across code, comments, and stri
 | `color-highlight.hslWithNoFunctionLanguages` | Language IDs for hsl-without-function matching. Use '\*' / '!' syntax.                             | `array`   | `["*"]`        |
 | `color-highlight.markerType`                 | Style of the color highlight marker.                                                               | `string`  | `"background"` |
 | `color-highlight.markRuler`                  | Show color indicators on the scrollbar ruler.                                                      | `boolean` | `true`         |
+| `color-highlight.debug`                      | Enable debug logging for color detection and decoration.                                           | `boolean` | `false`        |
 
 <!-- configs -->
 

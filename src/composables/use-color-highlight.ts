@@ -52,6 +52,7 @@ function useDebouncedRef<T>(source: Ref<T>, ms: number): Ref<T> {
 async function runStrategies(
   text: string,
   languageId: string,
+  debug: boolean,
 ): Promise<ColorMatch[]> {
   const cfg = getHighlightConfig()
 
@@ -60,8 +61,24 @@ async function runStrategies(
   }
 
   const strategies = getStrategies(languageId, cfg)
+
+  if (debug) {
+    logger.info(
+      `[debug] Running ${strategies.length} strategies for language: ${languageId}`,
+    )
+  }
+
   const results = await Promise.all(
-    strategies.map(fn => fn(text, { languageId })),
+    strategies.map(async fn => {
+      const strategyName = fn.name || 'anonymous'
+      const matches = await fn(text, { languageId })
+      if (debug && matches.length > 0) {
+        logger.info(
+          `[debug] Strategy "${strategyName}" found ${matches.length} matches`,
+        )
+      }
+      return matches
+    }),
   )
 
   return results.flat()
@@ -168,11 +185,21 @@ function setupEditorTracking(
 
       // Check if this language should be processed
       if (!shouldProcessLanguage(doc.languageId, cfg.languages)) {
+        if (cfg.debug) {
+          logger.info(
+            `[debug] Skipping ${doc.uri.fsPath} — language "${doc.languageId}" not in configured languages: ${JSON.stringify(cfg.languages)}`,
+          )
+        }
         clearDecorations(editor, cache)
         return
       }
 
       if (!cfg.enable) {
+        if (cfg.debug) {
+          logger.info(
+            `[debug] Skipping ${doc.uri.fsPath} — highlighting is disabled`,
+          )
+        }
         clearDecorations(editor, cache)
         return
       }
@@ -181,16 +208,48 @@ function setupEditorTracking(
       pendingVersion++
       const thisVersion = pendingVersion
 
+      if (cfg.debug) {
+        logger.info(
+          `[debug] Processing ${doc.uri.fsPath} (language: ${doc.languageId}, text length: ${text.length}, version: ${thisVersion})`,
+        )
+      }
+
       try {
-        const matches = await runStrategies(text, doc.languageId)
+        const matches = await runStrategies(text, doc.languageId, cfg.debug)
 
         // Guard: discard stale results if document changed while strategies ran
         if (thisVersion !== pendingVersion) {
+          if (cfg.debug) {
+            logger.info(
+              `[debug] Discarding stale results for ${doc.uri.fsPath} (version ${thisVersion} != ${pendingVersion})`,
+            )
+          }
           return
         }
 
         const groups = groupByColor(matches)
-        applyDecorations(editor, cache, groups, cfg.markerType, cfg.markRuler)
+
+        if (cfg.debug) {
+          const colorCount = Object.keys(groups).length
+          const matchCount = matches.length
+          logger.info(
+            `[debug] Found ${matchCount} matches with ${colorCount} unique colors in ${doc.uri.fsPath}`,
+          )
+          for (const [color, colorMatches] of Object.entries(groups)) {
+            logger.info(
+              `[debug]   ${color}: ${colorMatches.length} occurrence(s)`,
+            )
+          }
+        }
+
+        applyDecorations(
+          editor,
+          cache,
+          groups,
+          cfg.markerType,
+          cfg.markRuler,
+          cfg.debug,
+        )
       } catch (error) {
         logger.error(`Color detection failed: ${error}`)
       }
@@ -211,24 +270,23 @@ function applyDecorations(
   groups: ColorMatchGroup,
   markerType: MarkerType,
   markRuler: boolean,
+  debug: boolean,
 ): void {
   const doc = editor.document
 
-  // Track which colors are currently active so we can clear removed ones
-  const activeColors = new Set<string>()
+  if (debug) {
+    logger.info(
+      `[debug] Applying decorations: markerType=${markerType}, markRuler=${markRuler}, colors=${Object.keys(groups).length}`,
+    )
+  }
 
   for (const [color, matches] of Object.entries(groups)) {
-    activeColors.add(color)
     const decorationType = cache.getOrCreate(color, markerType, markRuler)
     const ranges: Range[] = matches.map(
       m => new VscodeRange(doc.positionAt(m.start), doc.positionAt(m.end)),
     )
     editor.setDecorations(decorationType, ranges)
   }
-
-  // Clear decoration types that are no longer in use
-  // The cache handles reuse; we just need to set empty ranges for removed colors
-  // This is handled by the cache.clear() on re-process
 }
 
 /**

@@ -20,6 +20,7 @@ const defaultConfig: HighlightConfig = {
   hslWithNoFunctionLanguages: ['*'],
   markerType: 'background',
   markRuler: true,
+  debug: false,
 }
 
 describe(getStrategies, () => {

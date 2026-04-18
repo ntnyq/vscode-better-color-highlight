@@ -29,5 +29,6 @@ export function getHighlightConfig() {
     hslWithNoFunctionLanguages: ns.hslWithNoFunctionLanguages,
     markerType: ns.markerType,
     markRuler: ns.markRuler,
+    debug: ns.debug,
   }
 }

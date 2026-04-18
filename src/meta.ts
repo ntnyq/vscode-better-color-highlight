@@ -46,6 +46,7 @@ export type ConfigKey =
   | "color-highlight.hslWithNoFunctionLanguages"
   | "color-highlight.markerType"
   | "color-highlight.markRuler"
+  | "color-highlight.debug"
 
 export interface ConfigKeyTypeMap {
   "color-highlight.enable": boolean,
@@ -58,6 +59,7 @@ export interface ConfigKeyTypeMap {
   "color-highlight.hslWithNoFunctionLanguages": string[],
   "color-highlight.markerType": ("background" | "outline" | "foreground" | "underline" | "dot-before" | "dot-after"),
   "color-highlight.markRuler": boolean,
+  "color-highlight.debug": boolean,
 }
 
 export interface ConfigShorthandMap {
@@ -71,6 +73,7 @@ export interface ConfigShorthandMap {
   colorHighlightHslWithNoFunctionLanguages: "color-highlight.hslWithNoFunctionLanguages",
   colorHighlightMarkerType: "color-highlight.markerType",
   colorHighlightMarkRuler: "color-highlight.markRuler",
+  colorHighlightDebug: "color-highlight.debug",
 }
 
 export interface ConfigShorthandTypeMap {
@@ -84,6 +87,7 @@ export interface ConfigShorthandTypeMap {
   colorHighlightHslWithNoFunctionLanguages: string[],
   colorHighlightMarkerType: ("background" | "outline" | "foreground" | "underline" | "dot-before" | "dot-after"),
   colorHighlightMarkRuler: boolean,
+  colorHighlightDebug: boolean,
 }
 
 export interface ConfigItem<T extends keyof ConfigKeyTypeMap> {
@@ -196,6 +200,16 @@ export const configs = {
     key: "color-highlight.markRuler",
     default: true,
   } as ConfigItem<"color-highlight.markRuler">,
+  /**
+   * Enable debug logging for color detection and decoration.
+   * @key `color-highlight.debug`
+   * @default `false`
+   * @type `boolean`
+   */
+  colorHighlightDebug: {
+    key: "color-highlight.debug",
+    default: false,
+  } as ConfigItem<"color-highlight.debug">,
 }
 
 export interface ScopedConfigKeyTypeMap {
@@ -219,6 +233,7 @@ export interface NestedConfigs {
     "hslWithNoFunctionLanguages": string[],
     "markerType": ("background" | "outline" | "foreground" | "underline" | "dot-before" | "dot-after"),
     "markRuler": boolean,
+    "debug": boolean,
   },
 }
 

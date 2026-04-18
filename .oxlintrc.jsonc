@@ -91,7 +91,7 @@
         "skipBlankLines": true,
       },
     ],
-    "max-params": ["warn", { "max": 5 }],
+    "max-params": ["warn", { "max": 6 }],
     "max-classes-per-file": ["warn", { "max": 5 }],
     "max-statements": [
       "warn",

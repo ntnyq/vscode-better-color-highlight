@@ -162,6 +162,11 @@
           "type": "boolean",
           "default": true,
           "description": "Show color indicators on the scrollbar ruler."
+        },
+        "color-highlight.debug": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable debug logging for color detection and decoration."
         }
       }
     },

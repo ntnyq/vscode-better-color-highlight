@@ -66,6 +66,7 @@ export interface HighlightConfig {
   hslWithNoFunctionLanguages: string[]
   markerType: MarkerType
   markRuler: boolean
+  debug: boolean
 }
 
 /**

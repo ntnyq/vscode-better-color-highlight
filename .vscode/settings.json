@@ -37,7 +37,8 @@
     "styl",
     "tsdown",
     "tsgo",
-    "unrs"
+    "unrs",
+    "WCAG"
   ],
   "emeraldwalk.runonsave": {
     "commands": [
