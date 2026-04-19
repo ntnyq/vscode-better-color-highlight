@@ -36,6 +36,8 @@ const COLOR_SPACE_FUNC_REGEX =
 const CSS_VAR_SHORTHAND_REGEX =
   /(--[\w-]+-(?:rgb|hsl|lch|oklch|lab|oklab))\s*:\s*([\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*\/\s*[\d.*]*\.?[\d]+%?)?)\s*;/gi
 
+type ShorthandSpace = 'rgb' | 'hsl' | 'lch' | 'oklch' | 'lab' | 'oklab'
+
 /**
  * Parse a single numeric value from a color function argument.
  * Handles percentages, degrees, and plain numbers.
@@ -214,6 +216,45 @@ function parseColorSpaceFunction(func: string): string | null {
   return rgbString(r, g, b, alpha)
 }
 
+function inferShorthandSpace(name?: string): ShorthandSpace | null {
+  if (!name) return null
+
+  const lower = name.toLowerCase()
+  const match = lower.match(/(?:^|[-_])(oklch|oklab|rgb|hsl|lch|lab)$/)
+  return (match?.[1] as ShorthandSpace | undefined) ?? null
+}
+
+/**
+ * Resolve raw shorthand values such as "255 0 0" or "0 100% 50%".
+ * Uses an explicit variable-name hint when available, with safe heuristics as fallback.
+ */
+export function resolveShorthandColor(
+  value: string,
+  hint?: string,
+): string | null {
+  const normalized = value.replaceAll(/!important\b/g, '').trim()
+  const parts = normalized.split(/\s+/).filter(Boolean)
+
+  if (parts.length < 3) {
+    return null
+  }
+
+  let space = inferShorthandSpace(hint)
+
+  if (!space) {
+    const looksLikeHsl = parts[1]?.endsWith('%') && parts[2]?.endsWith('%')
+    const looksLikeRgb = parts.slice(0, 3).every(part => !part.endsWith('%'))
+
+    if (looksLikeHsl) {
+      space = 'hsl'
+    } else if (looksLikeRgb) {
+      space = 'rgb'
+    }
+  }
+
+  return space ? parseShorthandValue(normalized, space) : null
+}
+
 function convertColorFunction(
   fn: string,
   parts: string[],
@@ -273,9 +314,9 @@ function convertColorFunction(
  * @param space - The color space identifier
  * @returns The resolved rgb() color string, or null if parsing fails
  */
-function parseShorthandValue(
+export function parseShorthandValue(
   value: string,
-  space: 'rgb' | 'hsl' | 'lch' | 'oklch' | 'lab' | 'oklab',
+  space: ShorthandSpace,
 ): string | null {
   const parts = value.trim().split(/\s+/)
 

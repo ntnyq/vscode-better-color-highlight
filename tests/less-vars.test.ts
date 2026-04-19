@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { findLessVars } from '../src/strategies/less-vars'
+import { FIXTURE_LESS } from './fixtures'
 
 describe(findLessVars, () => {
   it('finds Less variable usages with named-color values', async () => {
@@ -46,5 +47,56 @@ describe(findLessVars, () => {
     expect(
       result.some(match => match.start === text.lastIndexOf('@red2')),
     ).toBe(true)
+  })
+
+  it('matches the expected playground Less variable usages without false property hits', async () => {
+    const result = await findLessVars(FIXTURE_LESS)
+    const usages = result.map(match =>
+      FIXTURE_LESS.slice(match.start, match.end),
+    )
+
+    const expectedUsages = [
+      '@hex-6',
+      '@rgb-comma',
+      '@hsl-comma',
+      '@named-red',
+      '@hex-8',
+      '@hwb',
+      '@oklch',
+      '@hex-4',
+      '@root-red',
+      '@root-red-2',
+      '@root-panel',
+      '@local-border',
+      '@local-fill',
+      '@red2',
+      '@red-long',
+      '@red',
+      '@named-brand',
+      '@display-p3-accent',
+      '@rec2020-accent',
+      '@prophoto-accent',
+    ]
+
+    const actualUniqueUsages = [
+      ...new Set(usages.filter(usageText => usageText.startsWith('@'))),
+    ]
+    const missingUsages = expectedUsages.filter(
+      usage => !actualUniqueUsages.includes(usage),
+    )
+    const falsePropertyHits = usages.filter(usage =>
+      [
+        'color',
+        'background',
+        'border-color',
+        'outline-color',
+        'border-bottom',
+      ].includes(usage),
+    )
+
+    expect(expectedUsages).toHaveLength(20)
+    expect(actualUniqueUsages).toEqual(expect.arrayContaining(expectedUsages))
+    expect(missingUsages).toEqual([])
+    expect(falsePropertyHits).toEqual([])
   })
 })

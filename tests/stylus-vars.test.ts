@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { findStylusVars } from '../src/strategies/stylus-vars'
+import { FIXTURE_STYLUS } from './fixtures'
 
 describe(findStylusVars, () => {
   it('finds Stylus variable usages in property values', async () => {
@@ -70,5 +71,133 @@ describe(findStylusVars, () => {
     expect(result.some(match => match.start === text.lastIndexOf('red2'))).toBe(
       true,
     )
+  })
+
+  it('resolves complex stylus variable usages across scopes and nested references', async () => {
+    const text = `
+      $root-red = #ff0000
+      $root-red-2 = $root-red
+      $root-panel = rgb(30, 64, 175)
+
+      .root-scope-usage
+        color $root-red
+        background $root-red-2
+        border-color $root-panel
+
+      .local-scope
+        $local-accent = #7c3aed
+        $local-fill: hsl(160, 70%, 45%)
+        color $local-accent
+        background $local-fill
+
+      $base-brand = #0ea5e9
+      $brand-strong = $base-brand
+      $brand-ring: $brand-strong
+      $token-rgb = 255 0 0
+      $token-hsl: 0 100% 50%
+
+      .nested-usage
+        color $brand-strong
+        outline-color: $brand-ring
+        background $token-rgb
+        box-shadow 0 0 0 2px $token-hsl
+
+      $red = #ff0000
+      $red2 = $red
+      $red-long: $red2
+
+      .partial-name-safe
+        color $red2
+        border-color $red-long
+        box-shadow 0 0 0 2px $red
+    `
+    const result = await findStylusVars(text)
+    const usages = result.map(match => text.slice(match.start, match.end))
+
+    expect(usages).toEqual(
+      expect.arrayContaining([
+        '$root-red',
+        '$root-red-2',
+        '$root-panel',
+        '$local-accent',
+        '$local-fill',
+        '$brand-strong',
+        '$brand-ring',
+        '$token-rgb',
+        '$token-hsl',
+        '$red2',
+        '$red-long',
+        '$red',
+      ]),
+    )
+
+    expect(result.some(match => match.color === 'rgb(255, 0, 0)')).toBe(true)
+    expect(result.some(match => match.color === 'rgb(30, 64, 175)')).toBe(true)
+    expect(result.some(match => match.color === 'rgb(124, 58, 237)')).toBe(true)
+    expect(
+      result.some(
+        match =>
+          text.slice(match.start, match.end) === '$token-rgb' &&
+          match.color === 'rgb(255, 0, 0)',
+      ),
+    ).toBe(true)
+    expect(
+      result.some(
+        match =>
+          text.slice(match.start, match.end) === '$token-hsl' &&
+          match.color === 'rgb(255, 0, 0)',
+      ),
+    ).toBe(true)
+    expect(usages).not.toEqual(
+      expect.arrayContaining(['color', 'background', 'border-color']),
+    )
+  })
+
+  it('matches the expected class usages in playground stylus without false property hits', async () => {
+    const result = await findStylusVars(FIXTURE_STYLUS)
+    const usages = result.map(match =>
+      FIXTURE_STYLUS.slice(match.start, match.end),
+    )
+
+    const expectedClassUsages = [
+      '$hex-6',
+      '$rgb-comma',
+      '$hsl-comma',
+      '$named-red',
+      '$hex-8',
+      '$hwb',
+      '$root-red',
+      '$root-red-2',
+      '$root-panel',
+      '$colon-red',
+      '$colon-red-2',
+      '$local-accent',
+      '$local-fill',
+      '$brand-strong',
+      '$brand-ring',
+      '$red2',
+      '$red-long',
+      '$red',
+      '$display-p3-accent',
+      '$rec2020-accent',
+      '$prophoto-accent',
+    ]
+
+    const actualUniqueUsages = [
+      ...new Set(usages.filter(usageText => usageText.startsWith('$'))),
+    ]
+    const missingUsages = expectedClassUsages.filter(
+      usage => !actualUniqueUsages.includes(usage),
+    )
+    const falsePropertyHits = usages.filter(usage =>
+      ['color', 'background', 'border-color', 'outline-color'].includes(usage),
+    )
+
+    expect(expectedClassUsages).toHaveLength(21)
+    expect(actualUniqueUsages).toEqual(
+      expect.arrayContaining(expectedClassUsages),
+    )
+    expect(missingUsages).toEqual([])
+    expect(falsePropertyHits).toEqual([])
   })
 })

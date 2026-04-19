@@ -1,5 +1,5 @@
 import type { ColorMatch, ColorDetector } from '../core/types'
-import { findColorFunctions } from './color-functions'
+import { findColorFunctions, resolveShorthandColor } from './color-functions'
 import { findHexRGBA } from './hex'
 import { findHwb } from './hwb'
 import { findNamedColors } from './named-colors'
@@ -61,6 +61,7 @@ async function resolveDirectColor(value: string): Promise<string | null> {
 async function resolveVarValue(
   value: string,
   varDefs: Map<string, string>,
+  currentName?: string,
   seen = new Set<string>(),
 ): Promise<string | null> {
   const normalized = value.replaceAll(/!important\b/g, '').trim()
@@ -68,6 +69,11 @@ async function resolveVarValue(
   const directColor = await resolveDirectColor(normalized)
   if (directColor) {
     return directColor
+  }
+
+  const shorthandColor = resolveShorthandColor(normalized, currentName)
+  if (shorthandColor) {
+    return shorthandColor
   }
 
   for (const m of normalized.matchAll(CSS_VAR_REF_REGEX)) {
@@ -80,6 +86,7 @@ async function resolveVarValue(
         const resolved = await resolveVarValue(
           refValue,
           varDefs,
+          refName,
           new Set([...seen, refName]),
         )
         if (resolved) {
@@ -89,7 +96,12 @@ async function resolveVarValue(
     }
 
     if (fallback) {
-      const resolvedFallback = await resolveVarValue(fallback, varDefs, seen)
+      const resolvedFallback = await resolveVarValue(
+        fallback,
+        varDefs,
+        currentName,
+        seen,
+      )
       if (resolvedFallback) {
         return resolvedFallback
       }
@@ -121,7 +133,7 @@ export async function findCssVars(text: string): Promise<ColorMatch[]> {
   // Resolve variable values to colors
   await Promise.all(
     [...varDefs.entries()].map(async ([name, value]) => {
-      const color = await resolveVarValue(value, varDefs)
+      const color = await resolveVarValue(value, varDefs, name)
       if (color) {
         varColors.set(name, color)
       }

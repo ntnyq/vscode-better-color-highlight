@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { findCssVars } from '../src/strategies/css-vars'
+import { FIXTURE_VARS_CSS } from './fixtures'
 
 describe(findCssVars, () => {
   it('finds CSS variable usages with hex values', async () => {
@@ -59,8 +60,64 @@ describe(findCssVars, () => {
     expect(result.some(match => match.color === 'rgb(255, 0, 0)')).toBe(true)
   })
 
+  it('resolves CSS shorthand triplet custom properties inside rule blocks', async () => {
+    const text = `
+      .css-var-shorthand {
+        --brand-rgb: 255 0 0;
+        --brand-hsl: 0 100% 50%;
+        color: var(--brand-rgb);
+        background: var(--brand-hsl);
+      }
+    `
+    const result = await findCssVars(text)
+
+    expect(
+      result.some(
+        match => text.slice(match.start, match.end) === 'var(--brand-rgb)',
+      ),
+    ).toBe(true)
+    expect(
+      result.some(
+        match => text.slice(match.start, match.end) === 'var(--brand-hsl)',
+      ),
+    ).toBe(true)
+    expect(result.some(match => match.color === 'rgb(255, 0, 0)')).toBe(true)
+  })
+
   it('returns empty when no variables are defined', async () => {
     const result = await findCssVars('color: #ff0000;')
     expect(result).toEqual([])
+  })
+
+  it('matches the expected playground CSS variable usages without false definition hits', async () => {
+    const result = await findCssVars(FIXTURE_VARS_CSS)
+    const usages = result.map(match =>
+      FIXTURE_VARS_CSS.slice(match.start, match.end),
+    )
+
+    const expectedUsages = [
+      'var(--hex-6)',
+      'var(--rgb-comma)',
+      'var(--hsl-comma)',
+      'var(--named-red)',
+      'var(--hex-8)',
+      'var(--hwb)',
+      'var(--oklch)',
+      'var(--hex-4)',
+      'var(--display-p3-accent)',
+      'var(--rec2020-accent)',
+      'var(--wide-gamut-outline)',
+    ]
+
+    const actualUniqueUsages = [...new Set(usages)]
+    const missingUsages = expectedUsages.filter(
+      usage => !actualUniqueUsages.includes(usage),
+    )
+    const falseDefinitionHits = usages.filter(usage => usage.startsWith('--'))
+
+    expect(expectedUsages).toHaveLength(11)
+    expect(actualUniqueUsages).toEqual(expect.arrayContaining(expectedUsages))
+    expect(missingUsages).toEqual([])
+    expect(falseDefinitionHits).toEqual([])
   })
 })

@@ -1,16 +1,24 @@
 import type { ColorMatch, ColorDetector } from '../core/types'
-import { findColorFunctions } from './color-functions'
+import { findColorFunctions, resolveShorthandColor } from './color-functions'
 import { findHexRGBA } from './hex'
 import { findHwb } from './hwb'
 import { findNamedColors } from './named-colors'
 
 /**
- * Regex for Stylus variable definitions:
+ * Regex for Stylus variable definitions.
+ *
+ * Notes:
+ * - `=` assignments may be bare or `$`-prefixed
+ * - `:` assignments must be `$`-prefixed to avoid confusing property
+ *   declarations like `color: red` with variable definitions
+ *
+ * Examples:
  *   my-color = #ff0000
  *   $my-color = #ff0000
  *   $my-color: #ff0000
  */
-const STYLUS_VAR_DEF_REGEX = /(?:^|[;\n]\s*)\$?([-\w]+)\s*[:=]\s*([^\n;]+)/gm
+const STYLUS_VAR_DEF_REGEX =
+  /(?:^|[;\n]\s*)(?:\$([-\w]+)\s*:\s*([^\n;]+)|\$?([-\w]+)\s*=\s*([^\n;]+))/gm
 
 /**
  * Regex for Stylus variable references:
@@ -41,6 +49,7 @@ async function resolveDirectColor(value: string): Promise<string | null> {
 async function resolveVarValue(
   value: string,
   varDefs: Map<string, string>,
+  currentName?: string,
   seen = new Set<string>(),
 ): Promise<string | null> {
   const normalized = value.replaceAll(/!important\b/g, '').trim()
@@ -48,6 +57,11 @@ async function resolveVarValue(
   const directColor = await resolveDirectColor(normalized)
   if (directColor) {
     return directColor
+  }
+
+  const shorthandColor = resolveShorthandColor(normalized, currentName)
+  if (shorthandColor) {
+    return shorthandColor
   }
 
   for (const m of normalized.matchAll(STYLUS_VAR_REF_REGEX)) {
@@ -64,6 +78,7 @@ async function resolveVarValue(
     const resolved = await resolveVarValue(
       refValue,
       varDefs,
+      refName,
       new Set([...seen, refName]),
     )
     if (resolved) {
@@ -90,15 +105,21 @@ export async function findStylusVars(text: string): Promise<ColorMatch[]> {
   const varColors = new Map<string, string>() // name -> resolved color
 
   for (const m of text.matchAll(STYLUS_VAR_DEF_REGEX)) {
-    const name = m[1]
-    const value = m[2].trim()
+    const name = m[1] ?? m[3]
+    const rawValue = m[2] ?? m[4]
+    const value = rawValue?.trim()
+
+    if (!name || !value) {
+      continue
+    }
+
     varDefs.set(name, value)
   }
 
   // Resolve variable values to colors
   await Promise.all(
     [...varDefs.entries()].map(async ([name, value]) => {
-      const color = await resolveVarValue(value, varDefs)
+      const color = await resolveVarValue(value, varDefs, name)
       if (color) {
         varColors.set(name, color)
       }
