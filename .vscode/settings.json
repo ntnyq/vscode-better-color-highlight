@@ -39,6 +39,7 @@
     "tsdown",
     "tsgo",
     "unrs",
+    "Vitest",
     "WCAG"
   ],
   "emeraldwalk.runonsave": {
