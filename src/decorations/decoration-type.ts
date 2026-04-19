@@ -50,4 +50,12 @@ export class DecorationTypeCache {
   dispose(): void {
     this.clear()
   }
+
+  /**
+   * Get all cached decoration types.
+   * @returns Array of TextEditorDecorationType instances
+   */
+  getAll(): TextEditorDecorationType[] {
+    return [...this.cache.values()]
+  }
 }

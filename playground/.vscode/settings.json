@@ -1,4 +1,5 @@
 {
   "color-highlight.enable": true,
-  "color-highlight.debug": true
+  "color-highlight.debug": true,
+  "color-highlight.matchWords": true
 }

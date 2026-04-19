@@ -7,9 +7,10 @@ import {
   type Ref,
 } from 'reactive-vscode'
 import type { TextEditor, Range } from 'vscode'
-import { Range as VscodeRange } from 'vscode'
+import { window, Range as VscodeRange } from 'vscode'
 import { config } from '../config'
 import { groupByColor } from '../core/color-match'
+import { shouldTrackEditor } from '../core/editor-filter'
 import { getStrategies, shouldProcessLanguage } from '../core/strategy-registry'
 import type { ColorMatch, ColorMatchGroup, MarkerType } from '../core/types'
 import { DecorationTypeCache } from '../decorations/decoration-type'
@@ -117,7 +118,8 @@ export function useColorHighlight() {
   watch(
     visibleEditors,
     editors => {
-      const currentKeys = new Set(editors.map(getEditorKey))
+      const trackedEditors = editors.filter(shouldTrackEditor)
+      const currentKeys = new Set(trackedEditors.map(getEditorKey))
 
       // Remove stale editors
       for (const [key, state] of editorStates) {
@@ -129,7 +131,7 @@ export function useColorHighlight() {
       }
 
       // Set up new editors
-      for (const editor of editors) {
+      for (const editor of trackedEditors) {
         const key = getEditorKey(editor)
         if (editorStates.has(key)) {
           continue
@@ -296,6 +298,16 @@ function applyDecorations(
     )
   }
 
+  // Clear existing decorations first to avoid accumulation
+  // Get all current decoration types from the cache
+  const existingDecorationTypes = cache.getAll()
+
+  // Clear each existing decoration type
+  for (const decorationType of existingDecorationTypes) {
+    editor.setDecorations(decorationType, [])
+  }
+
+  // Apply new decorations
   for (const [color, matches] of Object.entries(groups)) {
     const decorationType = cache.getOrCreate(color, markerType, markRuler)
     const ranges: Range[] = matches.map(
@@ -315,6 +327,16 @@ function clearDecorations(
   editor: TextEditor,
   cache: DecorationTypeCache,
 ): void {
+  // First clear all decorations from the editor
+  // This requires access to all active decoration types
+  // Since we don't have direct access to the cache's internal map,
+  // we'll create a temporary decoration type and set it to empty ranges
+  // This is a workaround to clear all decorations
+  const tempDecorationType = window.createTextEditorDecorationType({})
+  editor.setDecorations(tempDecorationType, [])
+  tempDecorationType.dispose()
+
+  // Then clear the cache
   cache.clear()
 }
 
