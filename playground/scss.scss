@@ -104,3 +104,44 @@ $named-coral: coral;
     border: 1px solid $hex-4;
   }
 }
+
+// =============================================
+// SCSS Variable Resolution Coverage
+// =============================================
+
+// Root/global scope variables used later in declarations should be highlighted.
+$root-red: red;
+$root-red-2: $root-red;
+$root-panel: rgb(30, 64, 175);
+
+.root-scope-usage {
+  color: $root-red;
+  background: $root-red-2;
+  border-color: $root-panel;
+}
+
+// Variables can also be introduced inside a selector scope.
+.scope-local {
+  $local-border: #7c3aed;
+  $local-bg: hsl(160, 70%, 45%);
+
+  border-color: $local-border;
+  background: $local-bg;
+}
+
+// Only value usages should highlight. The new definition name itself should not.
+$red: #ff0000;
+$red2: $red;
+$red-long: $red2;
+
+.partial-name-safe {
+  color: $red2;
+  outline-color: $red-long;
+  box-shadow: 0 0 0 2px $red;
+}
+
+// Interpolation and nested values provide extra visual coverage for manual checking.
+.interpolated-usage {
+  border: 1px solid #{$red};
+  box-shadow: 0 0 0 3px $red2;
+}

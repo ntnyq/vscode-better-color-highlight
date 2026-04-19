@@ -99,3 +99,51 @@ $named-coral: coral
   color: $named-red
   background: $hex-8
   outline-color: $hwb
+
+// =============================================
+// Stylus Variable Resolution Coverage
+// =============================================
+
+// '=' syntax with $var-name references should highlight at usage sites.
+$root-red = #ff0000
+$root-red-2 = $root-red
+$root-panel = rgb(30, 64, 175)
+
+.root-scope-usage
+  color $root-red
+  background $root-red-2
+  border-color $root-panel
+
+// ':' syntax is also common in Stylus and should behave the same way.
+$colon-red: red
+$colon-red-2: $colon-red
+
+.colon-scope-usage
+  color: $colon-red
+  border-color: $colon-red-2
+
+// Local selector scope variables: definitions live near the consuming declarations.
+.local-scope
+  $local-accent = #7c3aed
+  $local-fill: hsl(160, 70%, 45%)
+  color $local-accent
+  background $local-fill
+
+// Nested references should resolve to the final color.
+$base-brand = #0ea5e9
+$brand-strong = $base-brand
+$brand-ring: $brand-strong
+
+.nested-usage
+  color $brand-strong
+  outline-color: $brand-ring
+
+// Similar variable names should only highlight where the value is actually used.
+$red = #ff0000
+$red2 = $red
+$red-long: $red2
+
+.partial-name-safe
+  color $red2
+  border-color $red-long
+  box-shadow 0 0 0 2px $red

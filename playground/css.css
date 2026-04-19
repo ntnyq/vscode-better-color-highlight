@@ -287,3 +287,51 @@
 .content::after {
   content: "color: #ff0000";
 }
+
+/* =============================================
+ * CSS Variable Resolution Coverage
+ * ============================================= */
+
+/* Root-scoped custom properties: the var() usage should be highlighted */
+:root {
+  --named-red: red;
+  --root-brand: var(--named-red);
+  --root-accent: rgb(12, 120, 220);
+}
+
+.root-scope-usage {
+  color: var(--named-red);
+  background: var(--root-brand);
+  border-color: var(--root-accent);
+}
+
+/* Class-scoped custom properties: values are defined locally on the selector */
+.card-scope {
+  --card-border: #7c3aed;
+  --card-bg: hsl(160, 70%, 45%);
+  border-color: var(--card-border);
+  background: var(--card-bg);
+}
+
+/* Inline definitions inside a rule block should still resolve */
+.inline-var-scope {
+  --inline-red: #ff0000;
+  --inline-red-2: var(--inline-red);
+  color: var(--inline-red);
+  outline-color: var(--inline-red-2);
+}
+
+/* Fallbacks inside var() should be readable and the var() usage should highlight */
+.fallback-var-usage {
+  color: var(--missing-brand, #1d4ed8);
+  background: var(--missing-named, red);
+}
+
+/* Definition names that contain other variable names should not highlight partially */
+.partial-name-safe {
+  --red: #ff0000;
+  --red2: var(--red);
+  --red-long: var(--red2);
+  color: var(--red2);
+  border-color: var(--red-long);
+}

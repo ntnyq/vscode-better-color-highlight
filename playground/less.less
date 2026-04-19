@@ -102,3 +102,44 @@
   color: @oklch;
   border-bottom: 2px solid @hex-4;
 }
+
+// =============================================
+// Less Variable Resolution Coverage
+// =============================================
+
+// Top-level Less variables with direct and nested references.
+@root-red: red;
+@root-red-2: @root-red;
+@root-panel: rgb(30, 64, 175);
+
+.root-scope-usage {
+  color: @root-red;
+  background: @root-red-2;
+  border-color: @root-panel;
+}
+
+// Variables defined inside a selector should still resolve for local value usages.
+.component-scope {
+  @local-border: #7c3aed;
+  @local-fill: hsl(160, 70%, 45%);
+
+  border-color: @local-border;
+  background: @local-fill;
+}
+
+// Longer variable names should not accidentally highlight the shorter name in the definition.
+@red: #ff0000;
+@red2: @red;
+@red-long: @red2;
+
+.partial-name-safe {
+  color: @red2;
+  outline-color: @red-long;
+  box-shadow: 0 0 0 2px @red;
+}
+
+// Named-color variables should resolve exactly like hex/function-based variables.
+@named-brand: rebeccapurple;
+.named-usage {
+  color: @named-brand;
+}
