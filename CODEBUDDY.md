@@ -30,14 +30,14 @@ pnpm release:check # Pre-release checks (format:check + lint + typecheck)
 
 ### Key source directories
 
-- **`src/core/types.ts`** — `ColorMatch`, `ColorDetector`, `StrategyContext`, `MarkerType`, `HighlightConfig`
+- **`src/core/types.ts`** — `ColorMatch`, `ColorDetector`, `StrategyContext`, `MarkerType`
 - **`src/core/strategy-registry.ts`** — `getStrategies(languageId, config)` selects applicable strategies based on language and config
 - **`src/core/color-match.ts`** — `groupByColor()`, `mergeMatches()` utilities
 - **`src/strategies/`** — Each file is a `ColorDetector` function: `hex`, `color-functions`, `hwb`, `named-colors`, `rgb-no-fn`, `hsl-no-fn`, `css-vars`, `less-vars`, `scss-vars`, `stylus-vars`
 - **`src/color/`** — `named-color-map.ts` (148 CSS colors), `convert.ts` (hexToRgb, hslToRgb, hwbToRgb, lchToRgb, oklchToRgb, labToRgb, oklabToRgb), `contrast.ts` (WCAG 2.0)
 - **`src/decorations/`** — `marker-types.ts` (6 decoration styles), `decoration-type.ts` (cache of TextEditorDecorationType)
 - **`src/composables/use-color-highlight.ts`** — Main composable: reactive pipeline from document change to decoration
-- **`src/config.ts`** — `defineConfig()` + `getHighlightConfig()` helper
+- **`src/config.ts`** — `defineConfig()` helper
 - **`src/meta.ts`** — **Auto-generated** by `vscode-ext-gen`. Do not edit manually.
 
 ### Data flow

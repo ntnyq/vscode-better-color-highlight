@@ -8,7 +8,7 @@ import {
 } from 'reactive-vscode'
 import type { TextEditor, Range } from 'vscode'
 import { Range as VscodeRange } from 'vscode'
-import { getHighlightConfig } from '../config'
+import { config } from '../config'
 import { groupByColor } from '../core/color-match'
 import { getStrategies, shouldProcessLanguage } from '../core/strategy-registry'
 import type { ColorMatch, ColorMatchGroup, MarkerType } from '../core/types'
@@ -63,13 +63,11 @@ async function runStrategies(
   languageId: string,
   debug: boolean,
 ): Promise<ColorMatch[]> {
-  const cfg = getHighlightConfig()
-
-  if (!cfg.enable) {
+  if (!config.enable) {
     return []
   }
 
-  const strategies = getStrategies(languageId, cfg)
+  const strategies = getStrategies(languageId, config)
 
   if (debug) {
     logger.info(
@@ -103,7 +101,7 @@ async function runStrategies(
  * 4. Strategies are run on the debounced text
  * 5. Results are grouped by color and applied as decorations
  */
-export function useColorHighlight(): void {
+export function useColorHighlight() {
   const visibleEditors = useVisibleTextEditors()
 
   // Track per-editor state
@@ -194,21 +192,19 @@ function setupEditorTracking(
         return
       }
 
-      const cfg = getHighlightConfig()
-
       // Check if this language should be processed
-      if (!shouldProcessLanguage(doc.languageId, cfg.languages)) {
-        if (cfg.debug) {
+      if (!shouldProcessLanguage(doc.languageId, config.languages)) {
+        if (config.debug) {
           logger.info(
-            `[debug] Skipping ${doc.uri.fsPath} — language "${doc.languageId}" not in configured languages: ${JSON.stringify(cfg.languages)}`,
+            `[debug] Skipping ${doc.uri.fsPath} — language "${doc.languageId}" not in configured languages: ${JSON.stringify(config.languages)}`,
           )
         }
         clearDecorations(editor, cache)
         return
       }
 
-      if (!cfg.enable) {
-        if (cfg.debug) {
+      if (!config.enable) {
+        if (config.debug) {
           logger.info(
             `[debug] Skipping ${doc.uri.fsPath} — highlighting is disabled`,
           )
@@ -221,18 +217,18 @@ function setupEditorTracking(
       pendingVersion++
       const thisVersion = pendingVersion
 
-      if (cfg.debug) {
+      if (config.debug) {
         logger.info(
           `[debug] Processing ${doc.uri.fsPath} (language: ${doc.languageId}, text length: ${text.length}, version: ${thisVersion})`,
         )
       }
 
       try {
-        const matches = await runStrategies(text, doc.languageId, cfg.debug)
+        const matches = await runStrategies(text, doc.languageId, config.debug)
 
         // Guard: discard stale results if document changed while strategies ran
         if (thisVersion !== pendingVersion) {
-          if (cfg.debug) {
+          if (config.debug) {
             logger.info(
               `[debug] Discarding stale results for ${doc.uri.fsPath} (version ${thisVersion} != ${pendingVersion})`,
             )
@@ -242,7 +238,7 @@ function setupEditorTracking(
 
         const groups = groupByColor(matches)
 
-        if (cfg.debug) {
+        if (config.debug) {
           const colorCount = Object.keys(groups).length
           const matchCount = matches.length
           logger.info(
@@ -259,9 +255,9 @@ function setupEditorTracking(
           editor,
           cache,
           groups,
-          cfg.markerType,
-          cfg.markRuler,
-          cfg.debug,
+          config.markerType,
+          config.markRuler,
+          config.debug,
         )
       } catch (error) {
         logger.error(`Color detection failed: ${error}`)

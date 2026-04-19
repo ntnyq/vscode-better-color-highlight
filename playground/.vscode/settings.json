@@ -1,3 +1,4 @@
 {
-  "color-highlight.enable": true
+  "color-highlight.enable": true,
+  "color-highlight.debug": true
 }

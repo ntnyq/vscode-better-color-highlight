@@ -53,23 +53,6 @@ export type MarkerType =
 export type ColorMatchGroup = Record<string, ColorMatch[]>
 
 /**
- * Configuration shape for strategy selection.
- */
-export interface HighlightConfig {
-  enable: boolean
-  languages: string[]
-  matchWords: boolean
-  useARGB: boolean
-  matchRgbWithNoFunction: boolean
-  rgbWithNoFunctionLanguages: string[]
-  matchHslWithNoFunction: boolean
-  hslWithNoFunctionLanguages: string[]
-  markerType: MarkerType
-  markRuler: boolean
-  debug: boolean
-}
-
-/**
  * CSS/Sass language IDs that are treated as style languages.
  */
 export const STYLE_LANGUAGES = new Set([

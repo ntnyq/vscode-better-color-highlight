@@ -24,12 +24,12 @@ export const commands = {
    * Enable Better Color Highlight
    * @value `color-highlight.enable`
    */
-  colorHighlightEnable: "color-highlight.enable",
+  enable: "color-highlight.enable",
   /**
    * Disable Better Color Highlight
    * @value `color-highlight.disable`
    */
-  colorHighlightDisable: "color-highlight.disable",
+  disable: "color-highlight.disable",
 } satisfies Record<string, CommandKey>
 
 /**
@@ -63,31 +63,31 @@ export interface ConfigKeyTypeMap {
 }
 
 export interface ConfigShorthandMap {
-  colorHighlightEnable: "color-highlight.enable",
-  colorHighlightLanguages: "color-highlight.languages",
-  colorHighlightMatchWords: "color-highlight.matchWords",
-  colorHighlightUseARGB: "color-highlight.useARGB",
-  colorHighlightMatchRgbWithNoFunction: "color-highlight.matchRgbWithNoFunction",
-  colorHighlightRgbWithNoFunctionLanguages: "color-highlight.rgbWithNoFunctionLanguages",
-  colorHighlightMatchHslWithNoFunction: "color-highlight.matchHslWithNoFunction",
-  colorHighlightHslWithNoFunctionLanguages: "color-highlight.hslWithNoFunctionLanguages",
-  colorHighlightMarkerType: "color-highlight.markerType",
-  colorHighlightMarkRuler: "color-highlight.markRuler",
-  colorHighlightDebug: "color-highlight.debug",
+  enable: "color-highlight.enable",
+  languages: "color-highlight.languages",
+  matchWords: "color-highlight.matchWords",
+  useARGB: "color-highlight.useARGB",
+  matchRgbWithNoFunction: "color-highlight.matchRgbWithNoFunction",
+  rgbWithNoFunctionLanguages: "color-highlight.rgbWithNoFunctionLanguages",
+  matchHslWithNoFunction: "color-highlight.matchHslWithNoFunction",
+  hslWithNoFunctionLanguages: "color-highlight.hslWithNoFunctionLanguages",
+  markerType: "color-highlight.markerType",
+  markRuler: "color-highlight.markRuler",
+  debug: "color-highlight.debug",
 }
 
 export interface ConfigShorthandTypeMap {
-  colorHighlightEnable: boolean,
-  colorHighlightLanguages: string[],
-  colorHighlightMatchWords: boolean,
-  colorHighlightUseARGB: boolean,
-  colorHighlightMatchRgbWithNoFunction: boolean,
-  colorHighlightRgbWithNoFunctionLanguages: string[],
-  colorHighlightMatchHslWithNoFunction: boolean,
-  colorHighlightHslWithNoFunctionLanguages: string[],
-  colorHighlightMarkerType: ("background" | "outline" | "foreground" | "underline" | "dot-before" | "dot-after"),
-  colorHighlightMarkRuler: boolean,
-  colorHighlightDebug: boolean,
+  enable: boolean,
+  languages: string[],
+  matchWords: boolean,
+  useARGB: boolean,
+  matchRgbWithNoFunction: boolean,
+  rgbWithNoFunctionLanguages: string[],
+  matchHslWithNoFunction: boolean,
+  hslWithNoFunctionLanguages: string[],
+  markerType: ("background" | "outline" | "foreground" | "underline" | "dot-before" | "dot-after"),
+  markRuler: boolean,
+  debug: boolean,
 }
 
 export interface ConfigItem<T extends keyof ConfigKeyTypeMap> {
@@ -106,7 +106,7 @@ export const configs = {
    * @default `true`
    * @type `boolean`
    */
-  colorHighlightEnable: {
+  enable: {
     key: "color-highlight.enable",
     default: true,
   } as ConfigItem<"color-highlight.enable">,
@@ -116,7 +116,7 @@ export const configs = {
    * @default `["*"]`
    * @type `array`
    */
-  colorHighlightLanguages: {
+  languages: {
     key: "color-highlight.languages",
     default: ["*"],
   } as ConfigItem<"color-highlight.languages">,
@@ -126,7 +126,7 @@ export const configs = {
    * @default `false`
    * @type `boolean`
    */
-  colorHighlightMatchWords: {
+  matchWords: {
     key: "color-highlight.matchWords",
     default: false,
   } as ConfigItem<"color-highlight.matchWords">,
@@ -136,7 +136,7 @@ export const configs = {
    * @default `false`
    * @type `boolean`
    */
-  colorHighlightUseARGB: {
+  useARGB: {
     key: "color-highlight.useARGB",
     default: false,
   } as ConfigItem<"color-highlight.useARGB">,
@@ -146,7 +146,7 @@ export const configs = {
    * @default `false`
    * @type `boolean`
    */
-  colorHighlightMatchRgbWithNoFunction: {
+  matchRgbWithNoFunction: {
     key: "color-highlight.matchRgbWithNoFunction",
     default: false,
   } as ConfigItem<"color-highlight.matchRgbWithNoFunction">,
@@ -156,7 +156,7 @@ export const configs = {
    * @default `["*"]`
    * @type `array`
    */
-  colorHighlightRgbWithNoFunctionLanguages: {
+  rgbWithNoFunctionLanguages: {
     key: "color-highlight.rgbWithNoFunctionLanguages",
     default: ["*"],
   } as ConfigItem<"color-highlight.rgbWithNoFunctionLanguages">,
@@ -166,7 +166,7 @@ export const configs = {
    * @default `false`
    * @type `boolean`
    */
-  colorHighlightMatchHslWithNoFunction: {
+  matchHslWithNoFunction: {
     key: "color-highlight.matchHslWithNoFunction",
     default: false,
   } as ConfigItem<"color-highlight.matchHslWithNoFunction">,
@@ -176,7 +176,7 @@ export const configs = {
    * @default `["*"]`
    * @type `array`
    */
-  colorHighlightHslWithNoFunctionLanguages: {
+  hslWithNoFunctionLanguages: {
     key: "color-highlight.hslWithNoFunctionLanguages",
     default: ["*"],
   } as ConfigItem<"color-highlight.hslWithNoFunctionLanguages">,
@@ -186,7 +186,7 @@ export const configs = {
    * @default `"background"`
    * @type `string`
    */
-  colorHighlightMarkerType: {
+  markerType: {
     key: "color-highlight.markerType",
     default: "background",
   } as ConfigItem<"color-highlight.markerType">,
@@ -196,7 +196,7 @@ export const configs = {
    * @default `true`
    * @type `boolean`
    */
-  colorHighlightMarkRuler: {
+  markRuler: {
     key: "color-highlight.markRuler",
     default: true,
   } as ConfigItem<"color-highlight.markRuler">,
@@ -206,18 +206,40 @@ export const configs = {
    * @default `false`
    * @type `boolean`
    */
-  colorHighlightDebug: {
+  debug: {
     key: "color-highlight.debug",
     default: false,
   } as ConfigItem<"color-highlight.debug">,
 }
 
 export interface ScopedConfigKeyTypeMap {
+  "enable": boolean,
+  "languages": string[],
+  "matchWords": boolean,
+  "useARGB": boolean,
+  "matchRgbWithNoFunction": boolean,
+  "rgbWithNoFunctionLanguages": string[],
+  "matchHslWithNoFunction": boolean,
+  "hslWithNoFunctionLanguages": string[],
+  "markerType": ("background" | "outline" | "foreground" | "underline" | "dot-before" | "dot-after"),
+  "markRuler": boolean,
+  "debug": boolean,
 }
 
 export const scopedConfigs = {
-  scope: "vscode-better-color-highlight",
+  scope: "color-highlight",
   defaults: {
+    "enable": true,
+    "languages": ["*"],
+    "matchWords": false,
+    "useARGB": false,
+    "matchRgbWithNoFunction": false,
+    "rgbWithNoFunctionLanguages": ["*"],
+    "matchHslWithNoFunction": false,
+    "hslWithNoFunctionLanguages": ["*"],
+    "markerType": "background",
+    "markRuler": true,
+    "debug": false,
   } satisfies ScopedConfigKeyTypeMap,
 }
 
@@ -238,5 +260,16 @@ export interface NestedConfigs {
 }
 
 export interface NestedScopedConfigs {
+  "enable": boolean,
+  "languages": string[],
+  "matchWords": boolean,
+  "useARGB": boolean,
+  "matchRgbWithNoFunction": boolean,
+  "rgbWithNoFunctionLanguages": string[],
+  "matchHslWithNoFunction": boolean,
+  "hslWithNoFunctionLanguages": string[],
+  "markerType": ("background" | "outline" | "foreground" | "underline" | "dot-before" | "dot-after"),
+  "markRuler": boolean,
+  "debug": boolean,
 }
 

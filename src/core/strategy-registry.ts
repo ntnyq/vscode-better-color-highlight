@@ -1,3 +1,4 @@
+import type { NestedScopedConfigs } from '../meta'
 import {
   findHexRGBA,
   findHexARGB,
@@ -11,7 +12,7 @@ import {
   findScssVars,
   findStylusVars,
 } from '../strategies'
-import type { ColorDetector, HighlightConfig } from './types'
+import type { ColorDetector } from './types'
 import { STYLE_LANGUAGES } from './types'
 
 /**
@@ -67,7 +68,7 @@ function isLanguageMatch(
  */
 export function getStrategies(
   languageId: string,
-  config: HighlightConfig,
+  config: NestedScopedConfigs,
 ): ColorDetector[] {
   const strategies: ColorDetector[] = []
 

@@ -3,13 +3,13 @@ import {
   getStrategies,
   shouldProcessLanguage,
 } from '../src/core/strategy-registry'
-import type { HighlightConfig } from '../src/core/types'
+import type { NestedScopedConfigs } from '../src/meta'
 import { findColorFunctions } from '../src/strategies/color-functions'
 import { findHexRGBA, findHexARGB } from '../src/strategies/hex'
 import { findHwb } from '../src/strategies/hwb'
 import { findNamedColors } from '../src/strategies/named-colors'
 
-const defaultConfig: HighlightConfig = {
+const defaultConfig: NestedScopedConfigs = {
   enable: true,
   languages: ['*'],
   matchWords: false,

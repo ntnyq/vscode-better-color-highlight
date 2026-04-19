@@ -6,11 +6,11 @@ import { commands } from '../meta'
  * Register the enable and disable commands for color highlighting.
  */
 export function useCommands(): void {
-  useCommand(commands.colorHighlightEnable, () => {
-    config.update('color-highlight.enable', true)
+  useCommand(commands.enable, () => {
+    config.update('enable', true)
   })
 
-  useCommand(commands.colorHighlightDisable, () => {
-    config.update('color-highlight.enable', false)
+  useCommand(commands.disable, () => {
+    config.update('enable', false)
   })
 }
