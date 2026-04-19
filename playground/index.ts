@@ -148,3 +148,18 @@ const namedTeal = 'teal'
 // TODO: use #ff0000 for the primary
 // NOTE: the accent is rgb(128, 0, 128)
 // FIXME: hsl(210, 50%, 50%) should be the background
+
+// =============================================
+// Newly Supported CSS Color 4 Spaces
+// =============================================
+
+// These strings are handy when manually checking the new parser support.
+const colorDisplayP3 = 'color(display-p3 1 0.2 0.1)'
+const colorRec2020 = 'color(rec2020 0.8 0.2 0.1 / 0.75)'
+const colorProphoto = 'color(prophoto-rgb 0.7 0.3 0.2)'
+const colorXyz = 'color(xyz 0.4 0.3 0.2)'
+
+// Optional extra expressions that may also be highlighted depending on config.
+const bareRgbTriplet = '255 0 0'
+const bareHslTriplet = '210 60% 50%'
+const hexWith0xPrefix = '0xff6600'

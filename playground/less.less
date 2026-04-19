@@ -143,3 +143,23 @@
 .named-usage {
   color: @named-brand;
 }
+
+// =============================================
+// Newly Supported CSS Color 4 Spaces
+// =============================================
+
+// These samples help verify the new color() strategy in Less files.
+@display-p3-accent: color(display-p3 1 0.2 0.1);
+@rec2020-accent: color(rec2020 0.8 0.2 0.1 / 0.75);
+@prophoto-accent: color(prophoto-rgb 0.7 0.3 0.2);
+
+.color-space-demo {
+  color: @display-p3-accent;
+  background: @rec2020-accent;
+  border-color: @prophoto-accent;
+}
+
+// Optional plain-text samples for extra manual checking:
+// 0xff6600
+// 255 0 0
+// 210 60% 50%

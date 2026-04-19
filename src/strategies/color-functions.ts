@@ -1,9 +1,11 @@
 import {
+  colorSpaceToRgb,
   hslToRgb,
   lchToRgb,
   oklchToRgb,
   labToRgb,
   oklabToRgb,
+  parsePercent,
   rgbString,
 } from '../color/convert'
 import type { ColorMatch } from '../core/types'
@@ -14,13 +16,17 @@ import type { ColorMatch } from '../core/types'
  *
  * Uses named backreference `sep` to enforce consistent separator style
  * (comma-delimited OR space-delimited, not mixed).
- *
- * Also matches CSS variable shorthand form:
- *   --color-rgb: 255 0 0;
- *   --color-hsl: 210 50% 50%;
  */
 const COLOR_FUNC_REGEX =
-  /((?:rgba?|hsla?|lcha?|oklcha?|laba?|oklaba?)\(\s*[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s*(?<sep>[\s,])\s*[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s*\k<sep>\s*[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*(?:\k<sep>|\/)\s*[\d.*]*\.?[\d]+%?)?\s*\))/gi
+  /((?:rgba?|hsla?|lcha?|oklcha?|laba?|oklaba?)\(\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s*(?<sep>[\s,])\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s*\k<sep>\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*(?:\k<sep>|\/)\s*[-+]?[\d.*]*\.?[\d]+%?)?\s*\))/gi
+
+/**
+ * Regex for CSS Color 4 color() syntax:
+ *   color(display-p3 1 0 0)
+ *   color(srgb 1 0 0 / 0.5)
+ */
+const COLOR_SPACE_FUNC_REGEX =
+  /(color\(\s*(?:srgb|srgb-linear|display-p3|a98-rgb|prophoto-rgb|rec2020|xyz(?:-d50|-d65)?)\s+[-+]?[\d.*]*\.?[\d]+%?\s+[-+]?[\d.*]*\.?[\d]+%?\s+[-+]?[\d.*]*\.?[\d]+%?(?:\s*\/\s*[-+]?[\d.*]*\.?[\d]+%?)?\s*\))/gi
 
 /**
  * Regex for CSS custom property color shorthands:
@@ -90,6 +96,18 @@ export function findColorFunctions(text: string): ColorMatch[] {
     matches.push({ start, end, color })
   }
 
+  // CSS Color 4 color() function syntax
+  for (const m of text.matchAll(COLOR_SPACE_FUNC_REGEX)) {
+    const fullMatch = m[1]
+    const start = m.index ?? 0
+    const end = start + fullMatch.length
+
+    const color = parseColorFunction(fullMatch)
+    if (!color) continue
+
+    matches.push({ start, end, color })
+  }
+
   // CSS variable shorthand: --color-rgb: 255 0 0;
   for (const m of text.matchAll(CSS_VAR_SHORTHAND_REGEX)) {
     const propName = m[1]
@@ -124,6 +142,10 @@ export function findColorFunctions(text: string): ColorMatch[] {
  * @returns The resolved rgb() color string, or null if parsing fails
  */
 function parseColorFunction(func: string): string | null {
+  if (func.toLowerCase().startsWith('color(')) {
+    return parseColorSpaceFunction(func)
+  }
+
   const fnMatch = func.match(
     /^(rgba?|hsla?|lcha?|oklcha?|laba?|oklaba?)\((.*)\)$/i,
   )
@@ -165,6 +187,33 @@ function parseColorFunction(func: string): string | null {
  * @param parts - Array of raw string arguments from the color function
  * @returns RGB tuple [r, g, b] or [null, null, null] if conversion fails
  */
+function parseColorSpaceFunction(func: string): string | null {
+  const fnMatch = func.match(/^color\(\s*([\w-]+)\s+(.+)\)$/i)
+  if (!fnMatch) return null
+
+  const space = fnMatch[1].toLowerCase()
+  let args = fnMatch[2].trim()
+
+  let alpha: number | undefined
+  if (args.includes('/')) {
+    const [channels, a] = args.split('/')
+    args = channels.trim()
+    alpha = parseChannelValue(a.trim(), 'percent')
+  }
+
+  const parts = args.split(/\s+/).filter(Boolean)
+  if (parts.length < 3) return null
+
+  const c1 = parsePercent(parts[0])
+  const c2 = parsePercent(parts[1])
+  const c3 = parsePercent(parts[2])
+
+  const [r, g, b] = colorSpaceToRgb(space, c1, c2, c3)
+  if (r === null) return null
+
+  return rgbString(r, g, b, alpha)
+}
+
 function convertColorFunction(
   fn: string,
   parts: string[],

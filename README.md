@@ -38,19 +38,20 @@ Highlight and preview colors in multiple formats across code, comments, and stri
 
 <!-- configs -->
 
-## Supported color format
+## Supported color formats
 
 <!-- cSpell: disable-next-line -->
 
-- [ ] Hex：`#RGB` `#RRGGBB` `#RGBA` `#RRGGBBAA`
+- [ ] Hex：`#RGB` `#RRGGBB` `#RGBA` `#RRGGBBAA` `0xRRGGBB`
 - [ ] `rgb()` / `rgba()`（whitespace, comma and backslash）
 - [ ] `hsl()` / `hsla()`（percentage and angle）
 - [ ] `hwb()`
 - [ ] `lab()` / `lch()`
 - [ ] `oklab()` / `oklch()`
-- [ ] `color()`：`display-p3` `rec2020`
+- [ ] `color()`：`srgb` `srgb-linear` `display-p3` `a98-rgb` `prophoto-rgb` `rec2020` `xyz`
 - [ ] Named color（`red` `rebeccapurple`）
 - [ ] CSS variables：`var(--color)`
+- [ ] Extra expressions：bare RGB / HSL triplets、`--color-rgb: 255 0 0` shorthands
 - [ ] Design tokens：Tailwind、tokens（JSON/YAML）
 
 ## License

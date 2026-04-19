@@ -232,6 +232,107 @@ function linearToSrgb(c: number): number {
   return c <= 0.003_130_8 ? c * 12.92 : 1.055 * c ** (1 / 2.4) - 0.055
 }
 
+/**
+ * Convert gamma-corrected sRGB to linear sRGB.
+ * @param c - Gamma-corrected sRGB value
+ * @returns Linear sRGB value
+ */
+function srgbToLinear(c: number): number {
+  return c <= 0.040_45 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+}
+
+/**
+ * Convert gamma-corrected Rec.2020 value to linear light.
+ * @param c - Gamma-corrected Rec.2020 channel
+ * @returns Linear Rec.2020 channel
+ */
+function rec2020ToLinear(c: number): number {
+  const alpha = 1.099_296_826_809_44
+  const beta = 0.018_053_968_510_807
+  return c < beta * 4.5 ? c / 4.5 : ((c + alpha - 1) / alpha) ** (1 / 0.45)
+}
+
+/**
+ * Convert Adobe RGB (1998) channel to linear light.
+ * @param c - Gamma-corrected Adobe RGB channel
+ * @returns Linear Adobe RGB channel
+ */
+function a98RgbToLinear(c: number): number {
+  return Math.sign(c) * Math.abs(c) ** 2.199_218_75
+}
+
+/**
+ * Convert ProPhoto RGB channel to linear light.
+ * @param c - Gamma-corrected ProPhoto RGB channel
+ * @returns Linear ProPhoto RGB channel
+ */
+function prophotoToLinear(c: number): number {
+  return c <= 16 / 512 ? c / 16 : Math.sign(c) * Math.abs(c) ** 1.8
+}
+
+type Matrix3x3 = [
+  [number, number, number],
+  [number, number, number],
+  [number, number, number],
+]
+
+/**
+ * Multiply a 3×3 matrix by a 3×1 vector.
+ */
+function multiplyMatrixAndVector(
+  matrix: Matrix3x3,
+  vector: [number, number, number],
+): [number, number, number] {
+  return [
+    matrix[0][0] * vector[0] +
+      matrix[0][1] * vector[1] +
+      matrix[0][2] * vector[2],
+    matrix[1][0] * vector[0] +
+      matrix[1][1] * vector[1] +
+      matrix[1][2] * vector[2],
+    matrix[2][0] * vector[0] +
+      matrix[2][1] * vector[1] +
+      matrix[2][2] * vector[2],
+  ]
+}
+
+/**
+ * Adapt XYZ values from D50 to D65 white point.
+ */
+function adaptD50ToD65(
+  x: number,
+  y: number,
+  z: number,
+): [number, number, number] {
+  return multiplyMatrixAndVector(
+    [
+      [0.955_576_6, -0.023_039_3, 0.063_163_6],
+      [-0.028_289_5, 1.009_941_6, 0.021_007_7],
+      [0.012_298_2, -0.020_483, 1.329_909_8],
+    ],
+    [x, y, z],
+  )
+}
+
+/**
+ * Convert D65 XYZ to gamma-corrected sRGB.
+ */
+function xyzD65ToRgb(
+  x: number,
+  y: number,
+  z: number,
+): [number, number, number] {
+  const rl = x * 3.240_454_2 + y * -1.537_138_5 + z * -0.498_531_4
+  const gl = x * -0.969_266 + y * 1.876_010_8 + z * 0.041_556
+  const bl = x * 0.055_643_4 + y * -0.204_025_9 + z * 1.057_225_2
+
+  return [
+    clamp(Math.round(linearToSrgb(rl) * 255), 0, 255),
+    clamp(Math.round(linearToSrgb(gl) * 255), 0, 255),
+    clamp(Math.round(linearToSrgb(bl) * 255), 0, 255),
+  ]
+}
+
 /** D65 white point constants */
 const D65_XN = 0.950_489
 const D65_YN = 1
@@ -279,16 +380,7 @@ export function labToRgb(
   const y = D65_YN * labFInv(fy)
   const z = D65_ZN * labFInv(fz)
 
-  // XYZ to linear sRGB
-  const rl = x * 3.240_454_2 + y * -1.537_138_5 + z * -0.498_531_4
-  const gl = x * -0.969_266 + y * 1.876_010_8 + z * 0.041_556
-  const bl = x * 0.055_643_4 + y * -0.204_025_9 + z * 1.057_225_2
-
-  return [
-    clamp(Math.round(linearToSrgb(rl) * 255), 0, 255),
-    clamp(Math.round(linearToSrgb(gl) * 255), 0, 255),
-    clamp(Math.round(linearToSrgb(bl) * 255), 0, 255),
-  ]
+  return xyzD65ToRgb(x, y, z)
 }
 
 /**
@@ -357,6 +449,107 @@ export function oklchToRgb(
   const a = C * Math.cos(degToRad(H))
   const b = C * Math.sin(degToRad(H))
   return oklabToRgb(L, a, b)
+}
+
+/**
+ * Convert CSS color() space values to sRGB.
+ * Supports the common CSS Color 4 spaces that can be normalized reliably.
+ *
+ * @param space - The CSS color space name
+ * @param c1 - First channel
+ * @param c2 - Second channel
+ * @param c3 - Third channel
+ * @returns Tuple of [r, g, b] in [0, 255]
+ */
+export function colorSpaceToRgb(
+  space: string,
+  c1: number,
+  c2: number,
+  c3: number,
+): [number, number, number] | [null, null, null] {
+  switch (space.toLowerCase()) {
+    case 'srgb': {
+      return xyzD65ToRgb(
+        ...multiplyMatrixAndVector(
+          [
+            [0.412_390_8, 0.357_584_34, 0.180_480_79],
+            [0.212_639, 0.715_168_68, 0.072_192_32],
+            [0.019_330_82, 0.119_194_78, 0.950_532_15],
+          ],
+          [srgbToLinear(c1), srgbToLinear(c2), srgbToLinear(c3)],
+        ),
+      )
+    }
+    case 'srgb-linear': {
+      return xyzD65ToRgb(
+        ...multiplyMatrixAndVector(
+          [
+            [0.412_390_8, 0.357_584_34, 0.180_480_79],
+            [0.212_639, 0.715_168_68, 0.072_192_32],
+            [0.019_330_82, 0.119_194_78, 0.950_532_15],
+          ],
+          [c1, c2, c3],
+        ),
+      )
+    }
+    case 'display-p3': {
+      return xyzD65ToRgb(
+        ...multiplyMatrixAndVector(
+          [
+            [0.486_570_95, 0.265_667_69, 0.198_217_29],
+            [0.228_974_56, 0.691_738_52, 0.079_286_91],
+            [0, 0.045_113_38, 1.043_944_37],
+          ],
+          [srgbToLinear(c1), srgbToLinear(c2), srgbToLinear(c3)],
+        ),
+      )
+    }
+    case 'a98-rgb': {
+      return xyzD65ToRgb(
+        ...multiplyMatrixAndVector(
+          [
+            [0.576_730_9, 0.185_554, 0.188_185_2],
+            [0.297_376_9, 0.627_349_1, 0.075_274_1],
+            [0.027_034_3, 0.070_687_2, 0.991_108_5],
+          ],
+          [a98RgbToLinear(c1), a98RgbToLinear(c2), a98RgbToLinear(c3)],
+        ),
+      )
+    }
+    case 'prophoto-rgb': {
+      const [x, y, z] = multiplyMatrixAndVector(
+        [
+          [0.797_674_9, 0.135_191_7, 0.031_353_4],
+          [0.288_040_2, 0.711_874_1, 0.000_085_7],
+          [0, 0, 0.825_21],
+        ],
+        [prophotoToLinear(c1), prophotoToLinear(c2), prophotoToLinear(c3)],
+      )
+      return xyzD65ToRgb(...adaptD50ToD65(x, y, z))
+    }
+    case 'rec2020': {
+      return xyzD65ToRgb(
+        ...multiplyMatrixAndVector(
+          [
+            [0.636_958_05, 0.144_616_9, 0.168_880_98],
+            [0.262_700_21, 0.677_998_07, 0.059_301_72],
+            [0, 0.028_072_69, 1.060_985_06],
+          ],
+          [rec2020ToLinear(c1), rec2020ToLinear(c2), rec2020ToLinear(c3)],
+        ),
+      )
+    }
+    case 'xyz':
+    case 'xyz-d65': {
+      return xyzD65ToRgb(c1, c2, c3)
+    }
+    case 'xyz-d50': {
+      return xyzD65ToRgb(...adaptD50ToD65(c1, c2, c3))
+    }
+    default: {
+      return [null, null, null]
+    }
+  }
 }
 
 /**

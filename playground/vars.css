@@ -129,3 +129,24 @@
   color: var(--oklch);
   border: 1px solid var(--hex-4);
 }
+
+/* =============================================
+ * Newly Supported CSS Color 4 Spaces
+ * ============================================= */
+
+/* These custom properties exercise both color() parsing and shorthand token values */
+:root {
+  --display-p3-accent: color(display-p3 1 0.2 0.1);
+  --rec2020-accent: color(rec2020 0.8 0.2 0.1 / 0.75);
+  --wide-gamut-outline: color(a98-rgb 0.6 0.2 0.9);
+
+  /* Bare triplet shorthands are also useful for manual checks */
+  --token-rgb: 255 0 0;
+  --token-hsl: 210 60% 50%;
+}
+
+.color-space-vars {
+  color: var(--display-p3-accent);
+  background: var(--rec2020-accent);
+  border-color: var(--wide-gamut-outline);
+}

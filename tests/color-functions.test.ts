@@ -55,4 +55,16 @@ describe(findColorFunctions, () => {
     const result = findColorFunctions('--color-rgb: 255 0 0;')
     expect(result).toHaveLength(1)
   })
+
+  it('finds color() in display-p3 space', () => {
+    const result = findColorFunctions('color: color(display-p3 1 0 0);')
+    expect(result).toHaveLength(1)
+    expect(result[0].color).toBe('rgb(255, 0, 0)')
+  })
+
+  it('finds color() with alpha channel', () => {
+    const result = findColorFunctions('color: color(srgb 1 0 0 / 0.5);')
+    expect(result).toHaveLength(1)
+    expect(result[0].color).toBe('rgba(255, 0, 0, 0.5)')
+  })
 })

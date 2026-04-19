@@ -105,6 +105,20 @@
     <div style="color: red">named inline</div>
     <div style="background: cornflowerblue">named extended inline</div>
 
+    <!-- Newly supported CSS Color 4 syntax -->
+    <div style="color: color(display-p3 1 0.2 0.1)">display-p3 inline</div>
+    <div style="background: color(rec2020 0.8 0.2 0.1 / 0.75)">
+      rec2020 inline
+    </div>
+    <div style="border-color: color(prophoto-rgb 0.7 0.3 0.2)">
+      prophoto-rgb inline
+    </div>
+
+    <!-- Extra plain-text samples for manual checking -->
+    <!-- 0xff6600 -->
+    <!-- 255 0 0 -->
+    <!-- 210 60% 50% -->
+
     <!-- Colors in attributes -->
     <font color="#ff0000">font color hex</font>
     <font color="blue">font color named</font>

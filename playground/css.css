@@ -219,6 +219,24 @@
   border-color: green;
 }
 
+/* =============================================
+ * Newly Supported CSS Color 4 Spaces
+ * ============================================= */
+
+/* Wide-gamut color() syntax now supported */
+.color-space-demo {
+  color: color(display-p3 1 0.2 0.1);
+  background: color(rec2020 0.8 0.2 0.1 / 0.75);
+  border-color: color(prophoto-rgb 0.7 0.3 0.2);
+  outline-color: color(xyz 0.4 0.3 0.2);
+}
+
+/* Extra expression samples for manual checking:
+ * 0xff6600
+ * 255 0 0
+ * 210 60% 50%
+ */
+
 /* Extended named colors */
 .named-extended {
   color: rebeccapurple;

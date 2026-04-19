@@ -35,6 +35,7 @@
     "rgba",
     "RRGGBB",
     "RRGGBBAA",
+    "srgb",
     "styl",
     "tsdown",
     "tsgo",

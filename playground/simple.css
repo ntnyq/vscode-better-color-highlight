@@ -125,3 +125,22 @@
   border: 2px solid rgba(0, 0, 255, 0.5);
   box-shadow: 0 0 5px hwb(0, 0%, 0%);
 }
+
+/* =============================================
+ * Newly Supported CSS Color 4 Spaces
+ * ============================================= */
+
+/* These are good quick checks for the new color() strategy */
+.color-space-display-p3 {
+  color: color(display-p3 1 0.15 0.05);
+}
+
+.color-space-rec2020 {
+  color: color(rec2020 0.8 0.25 0.1 / 0.7);
+}
+
+/* Optional extra expressions that can be matched in comments:
+ * 0xff6600
+ * 255 0 0
+ * 210 60% 50%
+ */
