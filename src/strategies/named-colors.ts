@@ -21,8 +21,7 @@ function buildNamedColorRegex(): RegExp {
   const names = [...NAMED_COLORS.keys()]
     .sort((a, b) => b.length - a.length)
     .join('|')
-  // .? captures one preceding char for filtering
-  return new RegExp(`.?(\\b(?:${names})\\b)(?!-)`, 'gi')
+  return new RegExp(`(^|[^-\\w$@#])(\\b(?:${names})\\b)(?!-)`, 'gi')
 }
 
 /**
@@ -36,17 +35,13 @@ export function findNamedColors(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
 
   for (const m of text.matchAll(NAMED_COLOR_REGEX)) {
-    const name = m[1]
-    const preceding = m[0][0]
-
-    // Skip if preceded by variable prefix characters
-    if ('-$@#'.includes(preceding)) continue
-    if (/\w/.test(preceding)) continue
+    const prefix = m[1] ?? ''
+    const name = m[2]
 
     const rgb = NAMED_COLORS.get(name.toLowerCase())
     if (!rgb) continue
 
-    const start = (m.index ?? 0) + 1 // +1 for the captured preceding char
+    const start = (m.index ?? 0) + prefix.length
     const end = start + name.length
     const color = rgbString(rgb[0], rgb[1], rgb[2])
 

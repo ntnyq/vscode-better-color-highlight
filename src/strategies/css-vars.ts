@@ -5,15 +5,19 @@ import { findHwb } from './hwb'
 import { findNamedColors } from './named-colors'
 
 /**
- * Regex for CSS custom property definitions:
+ * Regex for CSS custom property definitions anywhere in a stylesheet:
  *   --my-color: #ff0000;
+ *   :root { --my-color: #ff0000; }
  */
-const CSS_VAR_DEF_REGEX = /^\s*(--[-\w]+)\s*:\s*(.*)$/gm
+const CSS_VAR_DEF_REGEX = /(--[-\w]+)\s*:\s*([^;]+?)\s*;/g
 
 /**
- * Regex for CSS custom property usages:
+ * Regex for CSS custom property references:
  *   var(--my-color)
+ *   var(--my-color, #ff0000)
  */
+const CSS_VAR_REF_REGEX = /var\(\s*(--[-\w]+)\s*(?:,\s*([^)]*?))?\s*\)/g
+
 /**
  * Build a regex that matches var() usages for the given variable names.
  * Names are sorted by length descending to avoid partial matches.
@@ -27,17 +31,13 @@ function buildVarUsageRegex(varNames: string[]): RegExp | null {
     .sort((a, b) => b.length - a.length)
     .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`))
     .join('|')
-  return new RegExp(`(var\\(\\s*(?:${names})\\s*\\))`, 'g')
+  return new RegExp(`(var\\(\\s*(${names})(?:\\s*,\\s*[^)]*?)?\\s*\\))`, 'g')
 }
 
 /**
- * Resolve variable values to colors using all base strategies.
- * Uses Promise.all instead of Promise.race (fixes reference repo bug).
- *
- * @param value - The raw variable value string to resolve
- * @returns The resolved rgb() color string, or null if no color found
+ * Resolve a raw CSS value to a color using the base color strategies.
  */
-async function resolveVarValue(value: string): Promise<string | null> {
+async function resolveDirectColor(value: string): Promise<string | null> {
   const strategies: ColorDetector[] = [
     findHexRGBA,
     findColorFunctions,
@@ -46,9 +46,57 @@ async function resolveVarValue(value: string): Promise<string | null> {
   ]
 
   const results = await Promise.all(strategies.map(fn => fn(value)))
-
   const allMatches = results.flat()
   return allMatches.length > 0 ? allMatches[0].color : null
+}
+
+/**
+ * Resolve variable values to colors, following nested var() references.
+ *
+ * @param value - The raw variable value string to resolve
+ * @param varDefs - All CSS variable definitions in the document
+ * @param seen - Variables already visited to avoid cycles
+ * @returns The resolved rgb() color string, or null if no color found
+ */
+async function resolveVarValue(
+  value: string,
+  varDefs: Map<string, string>,
+  seen = new Set<string>(),
+): Promise<string | null> {
+  const normalized = value.replaceAll(/!important\b/g, '').trim()
+
+  const directColor = await resolveDirectColor(normalized)
+  if (directColor) {
+    return directColor
+  }
+
+  for (const m of normalized.matchAll(CSS_VAR_REF_REGEX)) {
+    const refName = m[1]
+    const fallback = m[2]?.trim()
+
+    if (!seen.has(refName)) {
+      const refValue = varDefs.get(refName)
+      if (refValue) {
+        const resolved = await resolveVarValue(
+          refValue,
+          varDefs,
+          new Set([...seen, refName]),
+        )
+        if (resolved) {
+          return resolved
+        }
+      }
+    }
+
+    if (fallback) {
+      const resolvedFallback = await resolveVarValue(fallback, varDefs, seen)
+      if (resolvedFallback) {
+        return resolvedFallback
+      }
+    }
+  }
+
+  return null
 }
 
 /**
@@ -73,7 +121,7 @@ export async function findCssVars(text: string): Promise<ColorMatch[]> {
   // Resolve variable values to colors
   await Promise.all(
     [...varDefs.entries()].map(async ([name, value]) => {
-      const color = await resolveVarValue(value)
+      const color = await resolveVarValue(value, varDefs)
       if (color) {
         varColors.set(name, color)
       }
@@ -91,14 +139,11 @@ export async function findCssVars(text: string): Promise<ColorMatch[]> {
 
   for (const m of text.matchAll(usageRegex)) {
     const fullMatch = m[1]
+    const varName = m[2]
     const start = m.index ?? 0
     const end = start + fullMatch.length
 
-    // Extract the variable name from var(--name)
-    const nameMatch = fullMatch.match(/var\(\s*(--[-\w]+)\s*\)/)
-    if (!nameMatch) continue
-
-    const color = varColors.get(nameMatch[1])
+    const color = varColors.get(varName)
     if (!color) continue
 
     matches.push({ start, end, color })

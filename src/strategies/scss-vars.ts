@@ -5,18 +5,21 @@ import { findHwb } from './hwb'
 import { findNamedColors } from './named-colors'
 
 /**
- * Regex for SCSS variable definitions:
+ * Regex for SCSS variable definitions anywhere in a stylesheet:
  *   $my-color: #ff0000;
  */
-const SCSS_VAR_DEF_REGEX = /^\s*\$([-\w]+)\s*:\s*(.*)$/gm
+const SCSS_VAR_DEF_REGEX = /\$([-\w]+)\s*:\s*([^;]+?)\s*;/g
 
 /**
- * Resolve variable values to colors using all base strategies.
- *
- * @param value - The raw variable value string to resolve
- * @returns The resolved rgb() color string, or null if no color found
+ * Regex for SCSS variable references:
+ *   $my-color
  */
-async function resolveVarValue(value: string): Promise<string | null> {
+const SCSS_VAR_REF_REGEX = /\$([-\w]+)/g
+
+/**
+ * Resolve a raw SCSS value to a color using the base color strategies.
+ */
+async function resolveDirectColor(value: string): Promise<string | null> {
   const strategies: ColorDetector[] = [
     findHexRGBA,
     findColorFunctions,
@@ -25,9 +28,47 @@ async function resolveVarValue(value: string): Promise<string | null> {
   ]
 
   const results = await Promise.all(strategies.map(fn => fn(value)))
-
   const allMatches = results.flat()
   return allMatches.length > 0 ? allMatches[0].color : null
+}
+
+/**
+ * Resolve SCSS variable values to colors, following nested variable references.
+ */
+async function resolveVarValue(
+  value: string,
+  varDefs: Map<string, string>,
+  seen = new Set<string>(),
+): Promise<string | null> {
+  const normalized = value.replaceAll(/!important\b/g, '').trim()
+
+  const directColor = await resolveDirectColor(normalized)
+  if (directColor) {
+    return directColor
+  }
+
+  for (const m of normalized.matchAll(SCSS_VAR_REF_REGEX)) {
+    const refName = m[1]
+    if (seen.has(refName)) {
+      continue
+    }
+
+    const refValue = varDefs.get(refName)
+    if (!refValue) {
+      continue
+    }
+
+    const resolved = await resolveVarValue(
+      refValue,
+      varDefs,
+      new Set([...seen, refName]),
+    )
+    if (resolved) {
+      return resolved
+    }
+  }
+
+  return null
 }
 
 /**
@@ -54,7 +95,7 @@ export async function findScssVars(text: string): Promise<ColorMatch[]> {
   // Resolve variable values to colors
   await Promise.all(
     [...varDefs.entries()].map(async ([name, value]) => {
-      const color = await resolveVarValue(value)
+      const color = await resolveVarValue(value, varDefs)
       if (color) {
         varColors.set(name, color)
       }
@@ -71,9 +112,11 @@ export async function findScssVars(text: string): Promise<ColorMatch[]> {
   const matches: ColorMatch[] = []
 
   for (const m of text.matchAll(usageRegex)) {
-    const name = m[1]
-    const start = m.index ?? 0
-    const end = start + m[0].length
+    const prefix = m[1] ?? ''
+    const fullMatch = m[2]
+    const name = m[3]
+    const start = (m.index ?? 0) + prefix.length
+    const end = start + fullMatch.length
 
     const color = varColors.get(name)
     if (!color) continue
@@ -97,6 +140,5 @@ function buildScssVarUsageRegex(varNames: string[]): RegExp | null {
     .sort((a, b) => b.length - a.length)
     .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`))
     .join('|')
-  // Match $varName but not $varName: (definition) or $varName- (hyphenated)
-  return new RegExp(`\\$(${names})(?!-|\\s*:)`, 'g')
+  return new RegExp(`(^|[^-\\w$])(\\$(${names}))(?![-\\w])(?!(?:\\s*:))`, 'gm')
 }

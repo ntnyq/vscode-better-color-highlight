@@ -22,6 +22,43 @@ describe(findCssVars, () => {
     expect(result[0].color).toBe('rgb(0, 0, 255)')
   })
 
+  it('finds variable usages when the definition is inline in a rule block', async () => {
+    const text =
+      ':root { --named-red: #ff0000; } .cls { color: var(--named-red); }'
+    const result = await findCssVars(text)
+    expect(result).toHaveLength(1)
+    expect(result[0].color).toBe('rgb(255, 0, 0)')
+    expect(text.slice(result[0].start, result[0].end)).toBe('var(--named-red)')
+  })
+
+  it('finds CSS variable usages with named-color values', async () => {
+    const text = `
+      :root { --named-red: red; }
+      .cls { color: var(--named-red); }
+    `
+    const result = await findCssVars(text)
+    expect(result).toHaveLength(1)
+    expect(result[0].color).toBe('rgb(255, 0, 0)')
+    expect(text.slice(result[0].start, result[0].end)).toBe('var(--named-red)')
+  })
+
+  it('resolves nested CSS variable references', async () => {
+    const text = `
+      :root {
+        --base-red: #ff0000;
+        --named-red: var(--base-red);
+      }
+      .cls { color: var(--named-red); }
+    `
+    const result = await findCssVars(text)
+    expect(
+      result.some(
+        match => text.slice(match.start, match.end) === 'var(--named-red)',
+      ),
+    ).toBe(true)
+    expect(result.some(match => match.color === 'rgb(255, 0, 0)')).toBe(true)
+  })
+
   it('returns empty when no variables are defined', async () => {
     const result = await findCssVars('color: #ff0000;')
     expect(result).toEqual([])
