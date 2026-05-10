@@ -7,3 +7,6 @@ node_modules
 *.vsix
 
 *.tgz
+
+# pnpm
+**/.pnpm-store/**

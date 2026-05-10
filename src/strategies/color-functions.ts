@@ -18,7 +18,7 @@ import type { ColorMatch } from '../core/types'
  * (comma-delimited OR space-delimited, not mixed).
  */
 const COLOR_FUNC_REGEX =
-  /((?:rgba?|hsla?|lcha?|oklcha?|laba?|oklaba?)\(\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s*(?<sep>[\s,])\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s*\k<sep>\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*(?:\k<sep>|\/)\s*[-+]?[\d.*]*\.?[\d]+%?)?\s*\))/gi
+  /((?:rgba?|hsla?|lcha?|oklcha?|laba?|oklaba?)\(\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s*(?<sep>[\s,])\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s*\k<sep>\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*(?:\k<sep>|\/)\s*[-+]?[\d.*]*\.?[\d]+%?)?\s*\))/giu
 
 /**
  * Regex for CSS Color 4 color() syntax:
@@ -26,7 +26,7 @@ const COLOR_FUNC_REGEX =
  *   color(srgb 1 0 0 / 0.5)
  */
 const COLOR_SPACE_FUNC_REGEX =
-  /(color\(\s*(?:srgb|srgb-linear|display-p3|a98-rgb|prophoto-rgb|rec2020|xyz(?:-d50|-d65)?)\s+[-+]?[\d.*]*\.?[\d]+%?\s+[-+]?[\d.*]*\.?[\d]+%?\s+[-+]?[\d.*]*\.?[\d]+%?(?:\s*\/\s*[-+]?[\d.*]*\.?[\d]+%?)?\s*\))/gi
+  /(color\(\s*(?:srgb|srgb-linear|display-p3|a98-rgb|prophoto-rgb|rec2020|xyz(?:-d50|-d65)?)\s+[-+]?[\d.*]*\.?[\d]+%?\s+[-+]?[\d.*]*\.?[\d]+%?\s+[-+]?[\d.*]*\.?[\d]+%?(?:\s*\/\s*[-+]?[\d.*]*\.?[\d]+%?)?\s*\))/giu
 
 /**
  * Regex for CSS custom property color shorthands:
@@ -34,7 +34,7 @@ const COLOR_SPACE_FUNC_REGEX =
  *   --color-hsl: 0 100% 50%;
  */
 const CSS_VAR_SHORTHAND_REGEX =
-  /(--[\w-]+-(?:rgb|hsl|lch|oklch|lab|oklab))\s*:\s*([\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*\/\s*[\d.*]*\.?[\d]+%?)?)\s*;/gi
+  /(--[\w-]+-(?:rgb|hsl|lch|oklch|lab|oklab))\s*:\s*([\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*\/\s*[\d.*]*\.?[\d]+%?)?)\s*;/giu
 
 type ShorthandSpace = 'rgb' | 'hsl' | 'lch' | 'oklch' | 'lab' | 'oklab'
 
@@ -149,7 +149,7 @@ function parseColorFunction(func: string): string | null {
   }
 
   const fnMatch = func.match(
-    /^(rgba?|hsla?|lcha?|oklcha?|laba?|oklaba?)\((.*)\)$/i,
+    /^(rgba?|hsla?|lcha?|oklcha?|laba?|oklaba?)\((.*)\)$/iu,
   )
   if (!fnMatch) return null
 
@@ -160,7 +160,7 @@ function parseColorFunction(func: string): string | null {
   const hasComma = args.includes(',')
   const parts = hasComma
     ? args.split(',').map(s => s.trim())
-    : args.split(/\s+/).map(s => s.trim())
+    : args.split(/\s+/u).map(s => s.trim())
 
   // Handle slash-separated alpha in space-delimited syntax
   let alpha: number | undefined
@@ -190,7 +190,7 @@ function parseColorFunction(func: string): string | null {
  * @returns RGB tuple [r, g, b] or [null, null, null] if conversion fails
  */
 function parseColorSpaceFunction(func: string): string | null {
-  const fnMatch = func.match(/^color\(\s*([\w-]+)\s+(.+)\)$/i)
+  const fnMatch = func.match(/^color\(\s*([\w-]+)\s+(.+)\)$/iu)
   if (!fnMatch) return null
 
   const space = fnMatch[1].toLowerCase()
@@ -203,7 +203,7 @@ function parseColorSpaceFunction(func: string): string | null {
     alpha = parseChannelValue(a.trim(), 'percent')
   }
 
-  const parts = args.split(/\s+/).filter(Boolean)
+  const parts = args.split(/\s+/u).filter(Boolean)
   if (parts.length < 3) return null
 
   const c1 = parsePercent(parts[0])
@@ -220,7 +220,7 @@ function inferShorthandSpace(name?: string): ShorthandSpace | null {
   if (!name) return null
 
   const lower = name.toLowerCase()
-  const match = lower.match(/(?:^|[-_])(oklch|oklab|rgb|hsl|lch|lab)$/)
+  const match = lower.match(/(?:^|[-_])(oklch|oklab|rgb|hsl|lch|lab)$/u)
   return (match?.[1] as ShorthandSpace | undefined) ?? null
 }
 
@@ -232,8 +232,8 @@ export function resolveShorthandColor(
   value: string,
   hint?: string,
 ): string | null {
-  const normalized = value.replaceAll(/!important\b/g, '').trim()
-  const parts = normalized.split(/\s+/).filter(Boolean)
+  const normalized = value.replaceAll(/!important\b/gu, '').trim()
+  const parts = normalized.split(/\s+/u).filter(Boolean)
 
   if (parts.length < 3) {
     return null
@@ -259,7 +259,7 @@ function convertColorFunction(
   fn: string,
   parts: string[],
 ): [number, number, number] | [null, null, null] {
-  switch (fn.replace(/a$/, '')) {
+  switch (fn.replace(/a$/u, '')) {
     case 'rgb': {
       const r = parseChannelValue(parts[0], 'rgb')
       const g = parseChannelValue(parts[1], 'rgb')
@@ -318,7 +318,7 @@ export function parseShorthandValue(
   value: string,
   space: ShorthandSpace,
 ): string | null {
-  const parts = value.trim().split(/\s+/)
+  const parts = value.trim().split(/\s+/u)
 
   // Handle slash-separated alpha
   let alpha: number | undefined

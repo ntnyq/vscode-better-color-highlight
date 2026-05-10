@@ -17,7 +17,7 @@ describe(groupByColor, () => {
   })
 
   it('returns empty object for empty array', () => {
-    expect(groupByColor([])).toEqual({})
+    expect(groupByColor([])).toStrictEqual({})
   })
 })
 
@@ -30,12 +30,23 @@ describe(mergeMatches, () => {
     expect(result).toHaveLength(2)
   })
 
-  it('removes duplicates by start offset (earlier arrays take priority)', () => {
+  it('removes exact duplicates (earlier arrays take priority)', () => {
     const a: ColorMatch[] = [{ start: 0, end: 7, color: 'rgb(255, 0, 0)' }]
-    const b: ColorMatch[] = [{ start: 0, end: 7, color: 'rgb(0, 0, 255)' }]
+    const b: ColorMatch[] = [{ start: 0, end: 7, color: 'rgb(255, 0, 0)' }]
 
     const result = mergeMatches(a, b)
     expect(result).toHaveLength(1)
     expect(result[0].color).toBe('rgb(255, 0, 0)')
+  })
+
+  it('keeps matches that share start but differ in end or color', () => {
+    const a: ColorMatch[] = [{ start: 0, end: 7, color: 'rgb(255, 0, 0)' }]
+    const b: ColorMatch[] = [
+      { start: 0, end: 9, color: 'rgb(255, 0, 0)' },
+      { start: 0, end: 7, color: 'rgb(0, 0, 255)' },
+    ]
+
+    const result = mergeMatches(a, b)
+    expect(result).toHaveLength(3)
   })
 })

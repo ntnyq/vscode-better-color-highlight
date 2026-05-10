@@ -19,7 +19,7 @@ export class DecorationTypeCache {
    * @param markRuler - Whether to show the color in the overview ruler
    * @returns The cached or newly created TextEditorDecorationType
    */
-  getOrCreate(
+  public getOrCreate(
     color: string,
     markerType: MarkerType,
     markRuler: boolean,
@@ -37,7 +37,7 @@ export class DecorationTypeCache {
   /**
    * Dispose all cached decoration types and clear the cache.
    */
-  clear(): void {
+  public clear(): void {
     for (const type of this.cache.values()) {
       type.dispose()
     }
@@ -47,7 +47,7 @@ export class DecorationTypeCache {
   /**
    * Dispose the cache. Alias for clear().
    */
-  dispose(): void {
+  public dispose(): void {
     this.clear()
   }
 
@@ -55,7 +55,7 @@ export class DecorationTypeCache {
    * Get all cached decoration types.
    * @returns Array of TextEditorDecorationType instances
    */
-  getAll(): TextEditorDecorationType[] {
+  public getAll(): TextEditorDecorationType[] {
     return [...this.cache.values()]
   }
 }

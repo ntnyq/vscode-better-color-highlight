@@ -69,8 +69,10 @@ describe(findScssVars, () => {
     )
 
     expect(expectedUsages).toHaveLength(19)
-    expect(actualUniqueUsages).toEqual(expect.arrayContaining(expectedUsages))
-    expect(missingUsages).toEqual([])
-    expect(falsePropertyHits).toEqual([])
+    expect(actualUniqueUsages).toStrictEqual(
+      expect.arrayContaining(expectedUsages),
+    )
+    expect(missingUsages).toStrictEqual([])
+    expect(falsePropertyHits).toStrictEqual([])
   })
 })

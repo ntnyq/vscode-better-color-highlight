@@ -18,14 +18,14 @@ import { findNamedColors } from './named-colors'
  *   $my-color: #ff0000
  */
 const STYLUS_VAR_DEF_REGEX =
-  /(?:^|[;\n]\s*)(?:\$([-\w]+)\s*:\s*([^\n;]+)|\$?([-\w]+)\s*=\s*([^\n;]+))/gm
+  /(?:^|[;\n]\s*)(?:\$([-\w]+)\s*:\s*([^\n;]+)|\$?([-\w]+)\s*=\s*([^\n;]+))/gmu
 
 /**
  * Regex for Stylus variable references:
  *   my-color
  *   $my-color
  */
-const STYLUS_VAR_REF_REGEX = /\$?([-\w]+)/g
+const STYLUS_VAR_REF_REGEX = /\$?([-\w]+)/gu
 
 /**
  * Resolve a raw Stylus value to a color using the base color strategies.
@@ -52,7 +52,7 @@ async function resolveVarValue(
   currentName?: string,
   seen = new Set<string>(),
 ): Promise<string | null> {
-  const normalized = value.replaceAll(/!important\b/g, '').trim()
+  const normalized = value.replaceAll(/!important\b/gu, '').trim()
 
   const directColor = await resolveDirectColor(normalized)
   if (directColor) {
@@ -162,10 +162,10 @@ function buildStylusVarUsageRegex(varNames: string[]): RegExp | null {
   if (varNames.length === 0) return null
   const names = varNames
     .sort((a, b) => b.length - a.length)
-    .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`))
+    .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`))
     .join('|')
   return new RegExp(
     `(^|[^-\\w$])(\\$?(${names}))(?![-\\w])(?!(?:\\s*[:=]))`,
-    'gm',
+    'gmu',
   )
 }

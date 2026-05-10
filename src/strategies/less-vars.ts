@@ -7,12 +7,12 @@ import { findNamedColors } from './named-colors'
 /**
  * Less variable definitions anywhere in a stylesheet: @my-color: #ff0000;
  */
-const LESS_VAR_DEF_REGEX = /@([-\w]+)\s*:\s*([^;]+?)\s*;/g
+const LESS_VAR_DEF_REGEX = /@([-\w]+)\s*:\s*([^;]+?)\s*;/gu
 
 /**
  * Less variable references: @my-color
  */
-const LESS_VAR_REF_REGEX = /@([-\w]+)/g
+const LESS_VAR_REF_REGEX = /@([-\w]+)/gu
 
 /**
  * Resolve a raw Less value to a color using the base color strategies.
@@ -38,7 +38,7 @@ async function resolveVarValue(
   varDefs: Map<string, string>,
   seen = new Set<string>(),
 ): Promise<string | null> {
-  const normalized = value.replaceAll(/!important\b/g, '').trim()
+  const normalized = value.replaceAll(/!important\b/gu, '').trim()
 
   const directColor = await resolveDirectColor(normalized)
   if (directColor) {
@@ -134,7 +134,7 @@ function buildLessVarUsageRegex(varNames: string[]): RegExp | null {
   if (varNames.length === 0) return null
   const names = varNames
     .sort((a, b) => b.length - a.length)
-    .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`))
+    .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`))
     .join('|')
-  return new RegExp(`(^|[^-\\w@])(@(${names}))(?![-\\w])(?!(?:\\s*:))`, 'gm')
+  return new RegExp(`(^|[^-\\w@])(@(${names}))(?![-\\w])(?!(?:\\s*:))`, 'gmu')
 }

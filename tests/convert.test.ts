@@ -13,19 +13,24 @@ import {
 
 describe(hexToRgb, () => {
   it('parses 3-digit hex', () => {
-    expect(hexToRgb('#f00')).toEqual({ r: 255, g: 0, b: 0 })
+    expect(hexToRgb('#f00')).toStrictEqual({ r: 255, g: 0, b: 0 })
   })
 
   it('parses 6-digit hex', () => {
-    expect(hexToRgb('#ff0000')).toEqual({ r: 255, g: 0, b: 0 })
+    expect(hexToRgb('#ff0000')).toStrictEqual({ r: 255, g: 0, b: 0 })
   })
 
   it('parses 4-digit hex with alpha (RGBA)', () => {
-    expect(hexToRgb('#f00f')).toEqual({ r: 255, g: 0, b: 0, a: 1 })
+    expect(hexToRgb('#f00f')).toStrictEqual({ r: 255, g: 0, b: 0, a: 1 })
   })
 
   it('parses 8-digit hex with alpha (RGBA)', () => {
-    expect(hexToRgb('#ff000080')).toEqual({ r: 255, g: 0, b: 0, a: 128 / 255 })
+    expect(hexToRgb('#ff000080')).toStrictEqual({
+      r: 255,
+      g: 0,
+      b: 0,
+      a: 128 / 255,
+    })
   })
 
   it('returns null for invalid hex', () => {
@@ -34,7 +39,7 @@ describe(hexToRgb, () => {
   })
 
   it('handles 0x prefix', () => {
-    expect(hexToRgb('0xff0000')).toEqual({ r: 255, g: 0, b: 0 })
+    expect(hexToRgb('0xff0000')).toStrictEqual({ r: 255, g: 0, b: 0 })
   })
 })
 
@@ -49,7 +54,7 @@ describe(hexARGBToRgb, () => {
   })
 
   it('falls back to normal for non-alpha hex', () => {
-    expect(hexARGBToRgb('#ff0000')).toEqual({ r: 255, g: 0, b: 0 })
+    expect(hexARGBToRgb('#ff0000')).toStrictEqual({ r: 255, g: 0, b: 0 })
   })
 })
 

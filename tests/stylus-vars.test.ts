@@ -114,7 +114,7 @@ describe(findStylusVars, () => {
     const result = await findStylusVars(text)
     const usages = result.map(match => text.slice(match.start, match.end))
 
-    expect(usages).toEqual(
+    expect(usages).toStrictEqual(
       expect.arrayContaining([
         '$root-red',
         '$root-red-2',
@@ -148,7 +148,7 @@ describe(findStylusVars, () => {
           match.color === 'rgb(255, 0, 0)',
       ),
     ).toBe(true)
-    expect(usages).not.toEqual(
+    expect(usages).not.toStrictEqual(
       expect.arrayContaining(['color', 'background', 'border-color']),
     )
   })
@@ -194,10 +194,10 @@ describe(findStylusVars, () => {
     )
 
     expect(expectedClassUsages).toHaveLength(21)
-    expect(actualUniqueUsages).toEqual(
+    expect(actualUniqueUsages).toStrictEqual(
       expect.arrayContaining(expectedClassUsages),
     )
-    expect(missingUsages).toEqual([])
-    expect(falsePropertyHits).toEqual([])
+    expect(missingUsages).toStrictEqual([])
+    expect(falsePropertyHits).toStrictEqual([])
   })
 })

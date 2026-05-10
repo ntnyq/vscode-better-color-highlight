@@ -9,7 +9,7 @@ import type { MarkerType } from '../core/types'
  * @returns A tuple of [r, g, b] numeric values, defaults to [0, 0, 0] if parsing fails
  */
 function parseRgbString(color: string): [number, number, number] {
-  const match = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/)
+  const match = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/u)
   if (!match) return [0, 0, 0]
   return [
     Number.parseInt(match[1]),

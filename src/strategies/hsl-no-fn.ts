@@ -12,7 +12,7 @@ import type { ColorMatch } from '../core/types'
  * Terminates with ; | $ to avoid matching partial expressions
  */
 const HSL_NO_FN_REGEX =
-  /([\d.]+(?:deg|grad|rad|turn)?)[^\S\n]*(?<sep>[^\S\n]|,)[^\S\n]*([\d.]+)%[^\S\n]*\k<sep>[^\S\n]*([\d.]+)%(?:;| |$)/gi
+  /([\d.]+(?:deg|grad|rad|turn)?)[^\S\n]*(?<sep>[^\S\n]|,)[^\S\n]*([\d.]+)%[^\S\n]*\k<sep>[^\S\n]*([\d.]+)%(?:;| |$)/giu
 
 /**
  * Detect bare HSL triplets not wrapped in hsl() function.
@@ -40,7 +40,7 @@ export function findHslNoFunction(text: string): ColorMatch[] {
     if (r === 0 && g === 0 && b === 0) continue
 
     const start = m.index ?? 0
-    const fullMatch = m[0].replace(/[; ]$/, '')
+    const fullMatch = m[0].replace(/[; ]$/u, '')
     const end = start + fullMatch.length
 
     matches.push({

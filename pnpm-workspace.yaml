@@ -1,7 +1,8 @@
 packages:
   - playground
 
-onlyBuiltDependencies:
-  - '@vscode/vsce-sign'
-  - esbuild
-  - keytar
+allowBuilds:
+  '@vscode/vsce-sign': true
+  keytar: true
+
+minimumReleaseAge: 0

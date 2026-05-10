@@ -9,14 +9,14 @@ import { findNamedColors } from './named-colors'
  *   --my-color: #ff0000;
  *   :root { --my-color: #ff0000; }
  */
-const CSS_VAR_DEF_REGEX = /(--[-\w]+)\s*:\s*([^;]+?)\s*;/g
+const CSS_VAR_DEF_REGEX = /(--[-\w]+)\s*:\s*([^;]+?)\s*;/gu
 
 /**
  * Regex for CSS custom property references:
  *   var(--my-color)
  *   var(--my-color, #ff0000)
  */
-const CSS_VAR_REF_REGEX = /var\(\s*(--[-\w]+)\s*(?:,\s*([^)]*?))?\s*\)/g
+const CSS_VAR_REF_REGEX = /var\(\s*(--[-\w]+)\s*(?:,\s*([^)]*?))?\s*\)/gu
 
 /**
  * Build a regex that matches var() usages for the given variable names.
@@ -29,9 +29,9 @@ function buildVarUsageRegex(varNames: string[]): RegExp | null {
   if (varNames.length === 0) return null
   const names = varNames
     .sort((a, b) => b.length - a.length)
-    .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`))
+    .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`))
     .join('|')
-  return new RegExp(`(var\\(\\s*(${names})(?:\\s*,\\s*[^)]*?)?\\s*\\))`, 'g')
+  return new RegExp(`(var\\(\\s*(${names})(?:\\s*,\\s*[^)]*?)?\\s*\\))`, 'gu')
 }
 
 /**
@@ -64,7 +64,7 @@ async function resolveVarValue(
   currentName?: string,
   seen = new Set<string>(),
 ): Promise<string | null> {
-  const normalized = value.replaceAll(/!important\b/g, '').trim()
+  const normalized = value.replaceAll(/!important\b/gu, '').trim()
 
   const directColor = await resolveDirectColor(normalized)
   if (directColor) {

@@ -14,7 +14,43 @@ import { shouldTrackEditor } from '../core/editor-filter'
 import { getStrategies, shouldProcessLanguage } from '../core/strategy-registry'
 import type { ColorMatch, ColorMatchGroup, MarkerType } from '../core/types'
 import { DecorationTypeCache } from '../decorations/decoration-type'
+import type { NestedScopedConfigs } from '../meta'
 import { logger } from '../utils/logger'
+
+type HighlightRunConfig = Pick<
+  NestedScopedConfigs,
+  | 'enable'
+  | 'languages'
+  | 'useARGB'
+  | 'matchWords'
+  | 'matchRgbWithNoFunction'
+  | 'rgbWithNoFunctionLanguages'
+  | 'matchHslWithNoFunction'
+  | 'hslWithNoFunctionLanguages'
+  | 'markerType'
+  | 'markRuler'
+>
+
+function createHighlightRunSignature(
+  text: string | undefined,
+  languageId: string,
+  highlightConfig: HighlightRunConfig,
+): string {
+  return JSON.stringify({
+    text,
+    languageId,
+    enable: highlightConfig.enable,
+    languages: highlightConfig.languages,
+    useARGB: highlightConfig.useARGB,
+    matchWords: highlightConfig.matchWords,
+    matchRgbWithNoFunction: highlightConfig.matchRgbWithNoFunction,
+    rgbWithNoFunctionLanguages: highlightConfig.rgbWithNoFunctionLanguages,
+    matchHslWithNoFunction: highlightConfig.matchHslWithNoFunction,
+    hslWithNoFunctionLanguages: highlightConfig.hslWithNoFunctionLanguages,
+    markerType: highlightConfig.markerType,
+    markRuler: highlightConfig.markRuler,
+  })
+}
 
 /**
  * Debounce helper: delays updating a ref until after `ms` milliseconds
@@ -184,11 +220,27 @@ function setupEditorTracking(
 
   // Track the current config for this editor
   let pendingVersion = 0
+  let lastRunSignature: string | undefined
 
   // Watch debounced text and apply decorations
   const stopWatch = watch(
     debouncedText,
     async text => {
+      const runSignature = createHighlightRunSignature(
+        text,
+        doc.languageId,
+        config,
+      )
+      if (runSignature === lastRunSignature) {
+        if (config.debug) {
+          logger.info(
+            `[debug] Skipping unchanged run for ${doc.uri.fsPath} (language: ${doc.languageId})`,
+          )
+        }
+        return
+      }
+      lastRunSignature = runSignature
+
       if (!text) {
         clearDecorations(editor, cache)
         return
@@ -262,6 +314,8 @@ function setupEditorTracking(
           config.debug,
         )
       } catch (error) {
+        // Allow retry for the same text/config if a run fails unexpectedly.
+        lastRunSignature = undefined
         logger.error(`Color detection failed: ${error}`)
       }
     },

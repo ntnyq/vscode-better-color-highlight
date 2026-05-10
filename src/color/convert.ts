@@ -43,7 +43,7 @@ function degToRad(deg: number): number {
 export function hexToRgb(
   hex: string,
 ): { r: number; g: number; b: number; a?: number } | null {
-  const clean = hex.replace(/^(?:#|0x)/i, '')
+  const clean = hex.replace(/^(?:#|0x)/iu, '')
 
   let r: number
   let g: number
@@ -86,7 +86,7 @@ export function hexToRgb(
     r: clamp(r, 0, 255),
     g: clamp(g, 0, 255),
     b: clamp(b, 0, 255),
-    ...(a !== undefined ? { a: clamp(a, 0, 1) } : {}),
+    ...(a === undefined ? {} : { a: clamp(a, 0, 1) }),
   }
 }
 
@@ -101,7 +101,7 @@ export function hexToRgb(
 export function hexARGBToRgb(
   hex: string,
 ): { r: number; g: number; b: number; a?: number } | null {
-  const clean = hex.replace(/^(?:#|0x)/i, '')
+  const clean = hex.replace(/^(?:#|0x)/iu, '')
 
   if (clean.length === 4) {
     const a = Number.parseInt(`${clean[0]}${clean[0]}`, 16) / 255
@@ -414,13 +414,13 @@ export function oklabToRgb(
 ): [number, number, number] {
   L = clamp(L, 0, 1)
 
-  const l_ = L + 0.396_337_777_4 * a + 0.215_803_757_3 * b
-  const m_ = L - 0.105_561_345_8 * a - 0.063_854_172_8 * b
-  const s_ = L - 0.089_484_177_5 * a - 1.291_485_548 * b
+  const lPrime = L + 0.396_337_777_4 * a + 0.215_803_757_3 * b
+  const mPrime = L - 0.105_561_345_8 * a - 0.063_854_172_8 * b
+  const sPrime = L - 0.089_484_177_5 * a - 1.291_485_548 * b
 
-  const l = l_ ** 3
-  const m = m_ ** 3
-  const s = s_ ** 3
+  const l = lPrime ** 3
+  const m = mPrime ** 3
+  const s = sPrime ** 3
 
   // OKLab to linear sRGB
   const rl = +4.076_741_662_1 * l - 3.307_711_591_3 * m + 0.230_969_929_2 * s

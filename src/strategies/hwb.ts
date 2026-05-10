@@ -6,14 +6,14 @@ import type { ColorMatch } from '../core/types'
  * hwb(hue, whiteness%, blackness%[, alpha])
  */
 const HWB_REGEX =
-  /(hwb\(\s*\d+(?:deg|grad|rad|turn)?\s*,\s*(?:100|0*\d{1,2})%\s*,\s*(?:100|0*\d{1,2})%(?:\s*,\s*0?\.?\d+%?)?\s*\))/gi
+  /(hwb\(\s*\d+(?:deg|grad|rad|turn)?\s*,\s*(?:100|0*\d{1,2})%\s*,\s*(?:100|0*\d{1,2})%(?:\s*,\s*0?\.?\d+%?)?\s*\))/giu
 
 /**
  * Also match space-delimited hwb() syntax:
  * hwb(hue whiteness% blackness%[/ alpha])
  */
 const HWB_SPACE_REGEX =
-  /(hwb\(\s*\d+(?:deg|grad|rad|turn)?\s+(?:100|0*\d{1,2})%\s+(?:100|0*\d{1,2})%(?:\s*\/\s*[\d.]+%?)?\s*\))/gi
+  /(hwb\(\s*\d+(?:deg|grad|rad|turn)?\s+(?:100|0*\d{1,2})%\s+(?:100|0*\d{1,2})%(?:\s*\/\s*[\d.]+%?)?\s*\))/giu
 
 /**
  * Detect hwb() color functions.
@@ -65,7 +65,7 @@ function parseAngle(value: string): number {
  */
 function parseHwb(func: string): string | null {
   const innerMatch = func.match(
-    /^hwb\(\s*(\d+(?:deg|grad|rad|turn)?)\s*[, ]\s*(\d{1,3})%\s*[, ]\s*(\d{1,3})%(?:\s*[,/]\s*([\d.]+%?))?\s*\)$/i,
+    /^hwb\(\s*(\d+(?:deg|grad|rad|turn)?)\s*[, ]\s*(\d{1,3})%\s*[, ]\s*(\d{1,3})%(?:\s*[,/]\s*([\d.]+%?))?\s*\)$/iu,
   )
   if (!innerMatch) return null
 

@@ -86,7 +86,7 @@ describe(findCssVars, () => {
 
   it('returns empty when no variables are defined', async () => {
     const result = await findCssVars('color: #ff0000;')
-    expect(result).toEqual([])
+    expect(result).toStrictEqual([])
   })
 
   it('matches the expected playground CSS variable usages without false definition hits', async () => {
@@ -116,8 +116,10 @@ describe(findCssVars, () => {
     const falseDefinitionHits = usages.filter(usage => usage.startsWith('--'))
 
     expect(expectedUsages).toHaveLength(11)
-    expect(actualUniqueUsages).toEqual(expect.arrayContaining(expectedUsages))
-    expect(missingUsages).toEqual([])
-    expect(falseDefinitionHits).toEqual([])
+    expect(actualUniqueUsages).toStrictEqual(
+      expect.arrayContaining(expectedUsages),
+    )
+    expect(missingUsages).toStrictEqual([])
+    expect(falseDefinitionHits).toStrictEqual([])
   })
 })

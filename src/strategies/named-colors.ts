@@ -21,7 +21,7 @@ function buildNamedColorRegex(): RegExp {
   const names = [...NAMED_COLORS.keys()]
     .sort((a, b) => b.length - a.length)
     .join('|')
-  return new RegExp(`(^|[^-\\w$@#])(\\b(?:${names})\\b)(?!-)`, 'gi')
+  return new RegExp(`(^|[^-\\w$@#])(\\b(?:${names})\\b)(?!-)`, 'giu')
 }
 
 /**
