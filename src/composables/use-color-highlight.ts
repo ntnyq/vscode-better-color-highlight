@@ -7,7 +7,7 @@ import {
   type Ref,
 } from 'reactive-vscode'
 import type { TextEditor, Range } from 'vscode'
-import { window, Range as VscodeRange } from 'vscode'
+import { Range as VscodeRange } from 'vscode'
 import { config } from '../config'
 import { groupByColor } from '../core/color-match'
 import { shouldTrackEditor } from '../core/editor-filter'
@@ -381,16 +381,12 @@ function clearDecorations(
   editor: TextEditor,
   cache: DecorationTypeCache,
 ): void {
-  // First clear all decorations from the editor
-  // This requires access to all active decoration types
-  // Since we don't have direct access to the cache's internal map,
-  // we'll create a temporary decoration type and set it to empty ranges
-  // This is a workaround to clear all decorations
-  const tempDecorationType = window.createTextEditorDecorationType({})
-  editor.setDecorations(tempDecorationType, [])
-  tempDecorationType.dispose()
+  // Clear all currently tracked decoration types from the editor.
+  for (const decorationType of cache.getAll()) {
+    editor.setDecorations(decorationType, [])
+  }
 
-  // Then clear the cache
+  // Then dispose and clear the cache.
   cache.clear()
 }
 

@@ -23,4 +23,19 @@ describe(findHwb, () => {
     const result = findHwb('color: hwb(0deg, 0%, 0%);')
     expect(result).toHaveLength(1)
   })
+
+  it('finds hwb() with decimal percentages in comma syntax', () => {
+    const result = findHwb('color: hwb(0, 50.5%, 25.3%);')
+    expect(result).toHaveLength(1)
+  })
+
+  it('finds hwb() with decimal percentages in space syntax', () => {
+    const result = findHwb('color: hwb(120.5 40.25% 10.75% / 50%);')
+    expect(result).toHaveLength(1)
+  })
+
+  it('rejects hwb() percentages above 100', () => {
+    const result = findHwb('color: hwb(0, 100.1%, 0%);')
+    expect(result).toHaveLength(0)
+  })
 })
