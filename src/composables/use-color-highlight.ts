@@ -241,6 +241,11 @@ function setupEditorTracking(
       }
       lastRunSignature = runSignature
 
+      // Any changed run signature invalidates older async strategy results,
+      // even if this run exits early after clearing decorations.
+      pendingVersion++
+      const thisVersion = pendingVersion
+
       if (!text) {
         clearDecorations(editor, cache)
         return
@@ -266,10 +271,6 @@ function setupEditorTracking(
         clearDecorations(editor, cache)
         return
       }
-
-      // Version tracking for stale result guard
-      pendingVersion++
-      const thisVersion = pendingVersion
 
       if (config.debug) {
         logger.info(

@@ -16,6 +16,13 @@ describe(findHexRGBA, () => {
     ])
   })
 
+  it('finds hex colors at the start of the text', () => {
+    const result = findHexRGBA('#ff0000;')
+    expect(result).toStrictEqual([
+      { start: 0, end: 7, color: 'rgb(255, 0, 0)' },
+    ])
+  })
+
   it('finds 8-digit hex colors with alpha (RGBA)', () => {
     const result = findHexRGBA('color: #ff000080;')
     expect(result).toHaveLength(1)
@@ -44,6 +51,13 @@ describe(findHexARGB, () => {
     const result = findHexARGB('color: #ff0000;')
     expect(result).toStrictEqual([
       { start: 7, end: 14, color: 'rgb(255, 0, 0)' },
+    ])
+  })
+
+  it('finds ARGB hex colors at the start of the text', () => {
+    const result = findHexARGB('#80ff0000;')
+    expect(result).toStrictEqual([
+      { start: 0, end: 9, color: 'rgba(255, 0, 0, 0.502)' },
     ])
   })
 })

@@ -7,7 +7,7 @@ import type { ColorMatch } from '../core/types'
  * Named backreference is not needed here; we check the preceding char manually.
  */
 const HEX_REGEX =
-  /.?(?<hex>(?:#|0x)(?:[a-f0-9]{6}(?:[a-f0-9]{2})?|[a-f0-9]{3}(?:[a-f0-9])?))\b/giu
+  /(?<prefix>.?)(?<hex>(?:#|0x)(?:[a-f0-9]{6}(?:[a-f0-9]{2})?|[a-f0-9]{3}(?:[a-f0-9])?))\b/giu
 
 /**
  * Detect hex colors in RGBA mode (default).
@@ -23,7 +23,7 @@ export function findHexRGBA(text: string): ColorMatch[] {
     const fullMatch = m.groups?.hex
     if (!fullMatch) continue
 
-    const preceding = m[0][0]
+    const preceding = m.groups?.prefix ?? ''
 
     // Skip if preceded by a word character (e.g. font-size:0x...)
     if (/\w/u.test(preceding)) continue
@@ -31,7 +31,7 @@ export function findHexRGBA(text: string): ColorMatch[] {
     const result = hexToRgb(fullMatch)
     if (!result) continue
 
-    const start = (m.index ?? 0) + 1 // +1 for the captured preceding char
+    const start = (m.index ?? 0) + preceding.length
     const end = start + fullMatch.length
     const color = rgbString(result.r, result.g, result.b, result.a)
 
@@ -55,14 +55,14 @@ export function findHexARGB(text: string): ColorMatch[] {
     const fullMatch = m.groups?.hex
     if (!fullMatch) continue
 
-    const preceding = m[0][0]
+    const preceding = m.groups?.prefix ?? ''
 
     if (/\w/u.test(preceding)) continue
 
     const result = hexARGBToRgb(fullMatch)
     if (!result) continue
 
-    const start = (m.index ?? 0) + 1
+    const start = (m.index ?? 0) + preceding.length
     const end = start + fullMatch.length
     const color = rgbString(result.r, result.g, result.b, result.a)
 
