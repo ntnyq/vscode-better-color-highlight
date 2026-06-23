@@ -16,6 +16,7 @@ import type {
   ColorMatchGroup,
   HighlightRunConfig,
   MarkerType,
+  Disposable,
   StrategyRunOptions,
 } from '../types'
 import { groupByColor } from '../utils/color-match'
@@ -63,13 +64,17 @@ function createHighlightRunSignature(
  * @param ms - The debounce delay in milliseconds
  * @returns A debounced ref that updates after the specified delay
  */
-function useDebouncedRef<T>(source: Ref<T>, ms: number): Ref<T> {
+function useDebouncedRef<T>(source: Ref<T>, ms: number): Disposable<Ref<T>> {
   const debounced = ref(source.value) as Ref<T>
   let timer: ReturnType<typeof setTimeout> | undefined
+  let disposed = false
 
-  watch(
+  const stopWatch = watch(
     source,
     value => {
+      if (disposed) {
+        return
+      }
       if (timer) {
         clearTimeout(timer)
       }
@@ -80,13 +85,23 @@ function useDebouncedRef<T>(source: Ref<T>, ms: number): Ref<T> {
     { immediate: true },
   )
 
-  onDeactivate(() => {
+  const dispose = () => {
+    if (disposed) {
+      return
+    }
+    disposed = true
     if (timer) {
       clearTimeout(timer)
+      timer = undefined
     }
+    stopWatch()
+  }
+
+  onDeactivate(() => {
+    dispose()
   })
 
-  return debounced
+  return Object.assign(debounced, { dispose })
 }
 
 /**
@@ -239,13 +254,9 @@ function setupEditorTracking(
 
   // Watch debounced text and apply decorations
   const stopWatch = watch(
-    debouncedText,
-    async text => {
-      const runSignature = createHighlightRunSignature(
-        text,
-        doc.languageId,
-        config,
-      )
+    () =>
+      createHighlightRunSignature(debouncedText.value, doc.languageId, config),
+    async runSignature => {
       if (runSignature === lastRunSignature) {
         if (config.debug) {
           logger.info(
@@ -260,6 +271,7 @@ function setupEditorTracking(
       // even if this run exits early after clearing decorations.
       pendingVersion++
       const thisVersion = pendingVersion
+      const text = debouncedText.value
 
       if (!text) {
         clearDecorations(editor, cache)
@@ -347,7 +359,7 @@ function setupEditorTracking(
     { immediate: true },
   )
 
-  disposables.push(stopWatch)
+  disposables.push(debouncedText.dispose, stopWatch)
 }
 
 /**

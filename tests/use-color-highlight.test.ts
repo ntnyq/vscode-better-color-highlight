@@ -16,6 +16,9 @@ type LoggerFn = (message?: unknown) => void
 
 let documentTextRef: TestRef<string>
 let visibleEditorsRef: TestRef<unknown[]>
+let configSnapshot: Record<string, unknown>
+
+const getterWatchers = new Set<() => void>()
 
 const setDecorations =
   vi.fn<(decorationType: unknown, ranges: unknown[]) => void>()
@@ -39,16 +42,38 @@ function createRef<T>(initialValue: T): TestRef<T> {
       for (const watcher of watchers) {
         watcher(nextValue)
       }
+      triggerGetterWatchers()
     },
     watchers,
   }
 }
 
+function isTestRef<T>(source: TestRef<T> | (() => T)): source is TestRef<T> {
+  return typeof source !== 'function'
+}
+
+function triggerGetterWatchers() {
+  for (const watcher of getterWatchers) {
+    watcher()
+  }
+}
+
 function watchRef<T>(
-  source: TestRef<T>,
+  source: TestRef<T> | (() => T),
   listener: (value: T) => void,
   options?: { immediate?: boolean },
 ): DisposeFn {
+  if (!isTestRef(source)) {
+    const watcher = () => listener(source())
+    getterWatchers.add(watcher)
+    if (options?.immediate) {
+      watcher()
+    }
+    return () => {
+      getterWatchers.delete(watcher)
+    }
+  }
+
   source.watchers.add(listener)
   if (options?.immediate) {
     listener(source.value)
@@ -82,22 +107,7 @@ vi.mock(
   import('reactive-vscode'),
   () =>
     ({
-      defineConfig: vi.fn<() => Record<string, unknown>>(() => ({
-        enable: true,
-        languages: ['*'],
-        matchWords: false,
-        namedColorMatchMode: 'context',
-        resolveScssVariablesAcrossFiles: false,
-        scssLoadPaths: [],
-        useARGB: false,
-        matchRgbWithNoFunction: false,
-        rgbWithNoFunctionLanguages: ['*'],
-        matchHslWithNoFunction: false,
-        hslWithNoFunctionLanguages: ['*'],
-        markerType: 'background',
-        markRuler: true,
-        debug: false,
-      })),
+      defineConfig: vi.fn<() => Record<string, unknown>>(() => configSnapshot),
       onDeactivate: vi.fn<(dispose: DisposeFn) => void>(),
       ref: createRef,
       useDocumentText: vi.fn<() => TestRef<string>>(() => documentTextRef),
@@ -136,6 +146,44 @@ function createDocument(scheme: string) {
   } as Parameters<typeof shouldTrackDocument>[0]
 }
 
+function createEditor() {
+  return {
+    document: {
+      languageId: 'css',
+      uri: {
+        fsPath: '/tmp/example.css',
+        scheme: 'file',
+        toString: () => 'file:///tmp/example.css',
+      },
+      positionAt: (offset: number) => ({ offset }),
+    },
+    setDecorations,
+    viewColumn: 1,
+  }
+}
+
+function setupTest() {
+  vi.clearAllMocks()
+  vi.resetModules()
+  getterWatchers.clear()
+  configSnapshot = {
+    enable: true,
+    languages: ['*'],
+    matchWords: false,
+    namedColorMatchMode: 'context',
+    resolveScssVariablesAcrossFiles: false,
+    scssLoadPaths: [],
+    useARGB: false,
+    matchRgbWithNoFunction: false,
+    rgbWithNoFunctionLanguages: ['*'],
+    matchHslWithNoFunction: false,
+    hslWithNoFunctionLanguages: ['*'],
+    markerType: 'background',
+    markRuler: true,
+    debug: false,
+  }
+}
+
 describe(shouldTrackDocument, () => {
   it('tracks regular editable documents', () => {
     expect(shouldTrackDocument(createDocument('file'))).toBe(true)
@@ -152,25 +200,13 @@ describe(shouldTrackDocument, () => {
 
 describe('useColorHighlight', () => {
   it('discards async results from stale runs after text is cleared', async () => {
-    vi.clearAllMocks()
+    setupTest()
     vi.useFakeTimers()
 
     const { promise, resolve } = Promise.withResolvers<ColorMatch[]>()
     asyncStrategy.mockReturnValue(promise)
 
-    const editor = {
-      document: {
-        languageId: 'css',
-        uri: {
-          fsPath: '/tmp/example.css',
-          scheme: 'file',
-          toString: () => 'file:///tmp/example.css',
-        },
-        positionAt: (offset: number) => ({ offset }),
-      },
-      setDecorations,
-      viewColumn: 1,
-    }
+    const editor = createEditor()
 
     documentTextRef = createRef('.box { color: #ff0000; }')
     visibleEditorsRef = createRef<unknown[]>([editor])
@@ -191,5 +227,51 @@ describe('useColorHighlight', () => {
     expect(createTextEditorDecorationType).not.toHaveBeenCalled()
     expect(setDecorations).not.toHaveBeenCalled()
     vi.useRealTimers()
+  })
+
+  it('clears decorations when highlighting is disabled without editing text', async () => {
+    setupTest()
+    vi.useFakeTimers()
+    asyncStrategy.mockResolvedValue([
+      { start: 14, end: 21, color: 'rgb(255, 0, 0)' },
+    ])
+
+    const editor = createEditor()
+    documentTextRef = createRef('.box { color: #ff0000; }')
+    visibleEditorsRef = createRef<unknown[]>([editor])
+
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+
+    useColorHighlight()
+    await vi.runAllTimersAsync()
+
+    expect(setDecorations).toHaveBeenLastCalledWith(expect.anything(), [
+      expect.anything(),
+    ])
+
+    configSnapshot.enable = false
+    triggerGetterWatchers()
+    await vi.runAllTimersAsync()
+
+    expect(setDecorations).toHaveBeenLastCalledWith(expect.anything(), [])
+    vi.useRealTimers()
+  })
+
+  it('disposes document text watcher when editor is no longer visible', async () => {
+    setupTest()
+    const editor = createEditor()
+    documentTextRef = createRef('.box { color: #ff0000; }')
+    visibleEditorsRef = createRef<unknown[]>([editor])
+
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+
+    useColorHighlight()
+    expect(documentTextRef.watchers.size).toBe(1)
+
+    visibleEditorsRef.value = []
+
+    expect(documentTextRef.watchers.size).toBe(0)
   })
 })
