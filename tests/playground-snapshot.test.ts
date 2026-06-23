@@ -16,6 +16,7 @@ const EXTENSION_LANGUAGE_MAP = new Map<string, string>([
   ['.styl', 'stylus'],
   ['.html', 'html'],
   ['.ts', 'typescript'],
+  ['.dart', 'dart'],
 ])
 
 const snapshotConfig: NestedScopedConfigs = {

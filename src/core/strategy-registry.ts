@@ -8,6 +8,7 @@ import {
   findRgbNoFunction,
   findHslNoFunction,
   findCssVars,
+  findDartColors,
   findLessVars,
   findScssVars,
   findStylusVars,
@@ -112,6 +113,9 @@ export function getStrategies(
   }
   if (languageId === 'stylus' || languageId === 'styl') {
     strategies.push(findStylusVars)
+  }
+  if (languageId === 'dart') {
+    strategies.push(findDartColors)
   }
 
   return strategies

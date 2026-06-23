@@ -1,0 +1,151 @@
+{
+  "file": "dart.dart",
+  "languageId": "dart",
+  "strategyNames": [
+    "findHexRGBA",
+    "findColorFunctions",
+    "findHwb",
+    "findNamedColors",
+    "findRgbNoFunction",
+    "findHslNoFunction",
+    "findDartColors"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 3,
+      "column": 26,
+      "text": "Color(0xffB11016)",
+      "range": [
+        99,
+        116
+      ],
+      "color": "rgb(177, 16, 22)",
+      "render": {
+        "backgroundColor": "rgb(177, 16, 22)",
+        "color": "#FFFFFF",
+        "border": "3px solid rgb(177, 16, 22)",
+        "overviewRulerColor": "rgb(177, 16, 22)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 4,
+      "column": 25,
+      "text": "Color(0xff39C5BB)",
+      "range": [
+        142,
+        159
+      ],
+      "color": "rgb(57, 197, 187)",
+      "render": {
+        "backgroundColor": "rgb(57, 197, 187)",
+        "color": "#000000",
+        "border": "3px solid rgb(57, 197, 187)",
+        "overviewRulerColor": "rgb(57, 197, 187)"
+      }
+    },
+    {
+      "index": 2,
+      "line": 5,
+      "column": 37,
+      "text": "Color(0x8039C5BB)",
+      "range": [
+        197,
+        214
+      ],
+      "color": "rgba(57, 197, 187, 0.502)",
+      "render": {
+        "backgroundColor": "rgba(57, 197, 187, 0.502)",
+        "color": "#000000",
+        "border": "3px solid rgba(57, 197, 187, 0.502)",
+        "overviewRulerColor": "rgba(57, 197, 187, 0.502)"
+      }
+    },
+    {
+      "index": 3,
+      "line": 8,
+      "column": 26,
+      "text": "Color.fromARGB(255, 226, 226, 226)",
+      "range": [
+        272,
+        306
+      ],
+      "color": "rgb(226, 226, 226)",
+      "render": {
+        "backgroundColor": "rgb(226, 226, 226)",
+        "color": "#000000",
+        "border": "3px solid rgb(226, 226, 226)",
+        "overviewRulerColor": "rgb(226, 226, 226)"
+      }
+    },
+    {
+      "index": 4,
+      "line": 9,
+      "column": 26,
+      "text": "Color.fromARGB(128, 57, 197, 187)",
+      "range": [
+        333,
+        366
+      ],
+      "color": "rgba(57, 197, 187, 0.502)",
+      "render": {
+        "backgroundColor": "rgba(57, 197, 187, 0.502)",
+        "color": "#000000",
+        "border": "3px solid rgba(57, 197, 187, 0.502)",
+        "overviewRulerColor": "rgba(57, 197, 187, 0.502)"
+      }
+    },
+    {
+      "index": 5,
+      "line": 12,
+      "column": 28,
+      "text": "#efca19",
+      "range": [
+        472,
+        479
+      ],
+      "color": "rgb(239, 202, 25)",
+      "render": {
+        "backgroundColor": "rgb(239, 202, 25)",
+        "color": "#000000",
+        "border": "3px solid rgb(239, 202, 25)",
+        "overviewRulerColor": "rgb(239, 202, 25)"
+      }
+    },
+    {
+      "index": 6,
+      "line": 12,
+      "column": 40,
+      "text": "rgb(57, 197, 187)",
+      "range": [
+        484,
+        501
+      ],
+      "color": "rgb(57, 197, 187)",
+      "render": {
+        "backgroundColor": "rgb(57, 197, 187)",
+        "color": "#000000",
+        "border": "3px solid rgb(57, 197, 187)",
+        "overviewRulerColor": "rgb(57, 197, 187)"
+      }
+    },
+    {
+      "index": 7,
+      "line": 13,
+      "column": 30,
+      "text": "rgb(57, 197, 187)",
+      "range": [
+        531,
+        548
+      ],
+      "color": "rgb(57, 197, 187)",
+      "render": {
+        "backgroundColor": "rgb(57, 197, 187)",
+        "color": "#000000",
+        "border": "3px solid rgb(57, 197, 187)",
+        "overviewRulerColor": "rgb(57, 197, 187)"
+      }
+    }
+  ]
+}

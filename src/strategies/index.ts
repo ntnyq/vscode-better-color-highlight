@@ -1,5 +1,6 @@
 export * from './hex'
 export { findColorFunctions } from './color-functions'
+export { findDartColors } from './dart-colors'
 export { findHwb } from './hwb'
 export { findNamedColors } from './named-colors'
 export { findRgbNoFunction } from './rgb-no-fn'

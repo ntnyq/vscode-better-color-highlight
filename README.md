@@ -52,6 +52,7 @@ Highlight and preview colors in multiple formats across code, comments, and stri
 - [ ] Named color（`red` `rebeccapurple`）
 - [ ] CSS variables：`var(--color)`
 - [ ] Extra expressions：bare RGB / HSL triplets、`--color-rgb: 255 0 0` shorthands
+- [ ] Flutter/Dart：`Color(0xffRRGGBB)`、`Color.fromARGB(a, r, g, b)`
 - [ ] Design tokens：Tailwind、tokens（JSON/YAML）
 
 ## License

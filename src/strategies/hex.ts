@@ -1,5 +1,5 @@
 import { hexToRgb, hexARGBToRgb, rgbString } from '../color/convert'
-import type { ColorMatch } from '../core/types'
+import type { ColorMatch, StrategyContext } from '../core/types'
 
 /**
  * Regex for hex colors: #RGB, #RRGGBB, #RGBA, #RRGGBBAA, and 0x prefix.
@@ -13,6 +13,15 @@ function isShortNumericHex(hex: string): boolean {
   return hex.toLowerCase().startsWith('0x') && hex.length <= 6
 }
 
+function isDartColorConstructorHex(
+  text: string,
+  start: number,
+  context?: StrategyContext,
+): boolean {
+  if (context?.languageId !== 'dart') return false
+  return /Color\(\s*$/u.test(text.slice(Math.max(0, start - 16), start))
+}
+
 /**
  * Detect hex colors in RGBA mode (default).
  * Matches #RGB, #RRGGBB, #RGBA, #RRGGBBAA and 0x prefix variants.
@@ -20,7 +29,10 @@ function isShortNumericHex(hex: string): boolean {
  * @param text - The document text to scan for hex colors
  * @returns Array of color matches found in the text
  */
-export function findHexRGBA(text: string): ColorMatch[] {
+export function findHexRGBA(
+  text: string,
+  context?: StrategyContext,
+): ColorMatch[] {
   const matches: ColorMatch[] = []
 
   for (const m of text.matchAll(HEX_REGEX)) {
@@ -37,6 +49,8 @@ export function findHexRGBA(text: string): ColorMatch[] {
     if (!result) continue
 
     const start = (m.index ?? 0) + preceding.length
+    if (isDartColorConstructorHex(text, start, context)) continue
+
     const end = start + fullMatch.length
     const color = rgbString(result.r, result.g, result.b, result.a)
 
@@ -53,7 +67,10 @@ export function findHexRGBA(text: string): ColorMatch[] {
  * @param text - The document text to scan for hex colors
  * @returns Array of color matches found in the text
  */
-export function findHexARGB(text: string): ColorMatch[] {
+export function findHexARGB(
+  text: string,
+  context?: StrategyContext,
+): ColorMatch[] {
   const matches: ColorMatch[] = []
 
   for (const m of text.matchAll(HEX_REGEX)) {
@@ -69,6 +86,8 @@ export function findHexARGB(text: string): ColorMatch[] {
     if (!result) continue
 
     const start = (m.index ?? 0) + preceding.length
+    if (isDartColorConstructorHex(text, start, context)) continue
+
     const end = start + fullMatch.length
     const color = rgbString(result.r, result.g, result.b, result.a)
 
