@@ -1,77 +1,57 @@
-# Agent Guide for vscode-better-color-highlight
+# Repository Guidelines
 
-This file helps AI coding agents become productive quickly in this repository.
+## Project Structure & Module Organization
 
-## Scope and Priority
+This is a TypeScript VS Code extension built with `reactive-vscode` and bundled by
+`tsdown`. Source files live in `src/`: extension lifecycle code is in
+`src/index.ts`, commands in `src/commands/`, color parsing strategies in
+`src/strategies/`, editor/decorator logic in `src/core/` and
+`src/decorations/`, and shared color utilities in `src/color/`. Tests live in
+`tests/` with fixtures and snapshots under `tests/fixtures/` and
+`tests/__snapshots__/`. `playground/` contains sample files used for manual and
+snapshot coverage.
 
-- Follow this file first for repo-specific guidance.
-- For user-facing behavior, commands, and extension settings, link to and reuse [README.md](README.md) instead of duplicating content.
+## Build, Test, and Development Commands
 
-## Setup and Commands
+Use `pnpm` for all package tasks.
 
-- Package manager: `pnpm`.
-- Install deps: `pnpm install`.
-- Dev build (watch): `pnpm dev`.
-- Production build: `pnpm build`.
-- Test: `pnpm test`.
-- Typecheck: `pnpm typecheck`.
-- Lint: `pnpm lint`.
-- Format: `pnpm format`.
+- `pnpm dev`: run `tsdown` in watch mode for local extension development.
+- `pnpm build`: bundle the extension into `dist/`.
+- `pnpm typecheck`: run TypeScript checks with `tsgo --noEmit`.
+- `pnpm lint`: run `oxlint`.
+- `pnpm format` / `pnpm format:check`: format or verify formatting with
+  `oxfmt`.
+- `pnpm test` / `pnpm test:watch`: run Vitest once or in watch mode.
+- `pnpm pack`: create a VS Code extension package with `vsce`.
 
-Before finishing code changes, run at least:
+## Coding Style & Naming Conventions
 
-1. `pnpm test`
-2. `pnpm typecheck`
+Follow `.editorconfig` and `.oxfmtrc.jsonc`: 2-space indentation, LF endings,
+single quotes for TypeScript, no semicolons, trailing commas, and 80-column
+formatting where practical. Keep modules ESM-only and prefer explicit, focused
+exports. Name strategy files by the color syntax they detect, such as
+`hex.ts`, `scss-vars.ts`, or `named-colors.ts`; test files should mirror the
+feature name with `*.test.ts`.
 
-When touching style-sensitive code, also run:
+## Testing Guidelines
 
-1. `pnpm lint`
-2. `pnpm format:check`
+Vitest is the test framework. Add focused unit tests for parser and utility
+changes, and update playground snapshots when behavior intentionally changes.
+Run `pnpm test` before submitting. For changes touching extension runtime,
+configuration, or VS Code web support, also run `pnpm typecheck` and consider
+manual checks against files in `playground/`.
 
-## Project Structure
+## Commit & Pull Request Guidelines
 
-- `src/index.ts`: extension activation entry.
-- `src/composables/use-color-highlight.ts`: reactive lifecycle for listening, matching, and decorating.
-- `src/core/strategy-registry.ts`: selects strategies by language/config.
-- `src/strategies/`: pure color-detection strategies (`find*` style functions).
-- `src/core/color-match.ts`: merge/group of matched color ranges.
-- `src/decorations/`: VS Code decoration type creation and caching.
-- `src/color/`: pure color conversion and contrast helpers.
-- `src/config.ts`: reactive settings access.
-- `tests/`: Vitest unit tests and playground snapshot tests.
+Recent history uses Conventional Commits, for example `feat: support vscode web
+runtime`, `fix: harden workspace path handling`, and `docs: credit original
+color highlight extension`. Keep commit subjects imperative and scoped to one
+change. Pull requests should describe the behavioral change, list tests run,
+link related issues, and include screenshots or short recordings when decoration
+rendering changes.
 
-## Conventions for Changes
+## Agent-Specific Instructions
 
-- Keep color parsing and matching logic pure in `src/strategies/` and `src/color/`.
-- Avoid importing `vscode` in strategy and color utility files.
-- Keep VS Code API usage in activation/composable/decoration layers.
-- Prefer extending existing strategy modules before introducing new architecture.
-- Keep naming consistent:
-  - strategies: `find*`
-  - composables: `use*`
-- Preserve ESM TypeScript style used across the repo.
-
-## Testing Expectations
-
-- Add or update Vitest coverage in `tests/` for every behavior change.
-- For parser/regex updates, include both positive and negative cases.
-- If a change impacts multiple syntaxes (hex/rgb/hsl/vars), add cross-format regression tests.
-- For output/stability changes that affect rendered examples, update snapshot tests as needed.
-
-## Pitfalls and Safety Checks
-
-- Strategy performance matters: avoid expensive regex/backtracking for large files.
-- Keep editor filtering behavior intact (`src/core/editor-filter.ts`) so non-code panels are not processed.
-- Decoration resources must be disposed correctly; avoid leaks in cache/lifecycle code.
-- `src/meta.ts` is generated from extension metadata. Regenerate using:
-  - `pnpm generate:meta`
-  - Do not hand-edit generated sections unless necessary.
-
-## Useful References
-
-- User docs and settings: [README.md](README.md)
-- Build config: [tsdown.config.ts](tsdown.config.ts)
-- TypeScript config: [tsconfig.json](tsconfig.json)
-- Representative strategy: [src/strategies/hex.ts](src/strategies/hex.ts)
-- Complex strategy: [src/strategies/color-functions.ts](src/strategies/color-functions.ts)
-- Lifecycle/decorations integration: [src/composables/use-color-highlight.ts](src/composables/use-color-highlight.ts)
+When running shell commands as an agent in this repository, prefix commands with
+`rtk` as requested by the local Codex instructions, for example
+`rtk pnpm test`.
