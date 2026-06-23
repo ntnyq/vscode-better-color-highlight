@@ -104,6 +104,13 @@
   background: hsl(120deg 100% 50%);
 }
 
+/* hsl() with alternate angle units */
+.hsl-alt-units {
+  color: hsl(0.333turn 100% 50%);
+  background: hsl(133.333grad 100% 50%);
+  border-color: hsl(2.094rad 100% 50%);
+}
+
 /* =============================================
  * HWB Function
  * ============================================= */
@@ -132,6 +139,13 @@
   background: hwb(120deg 20% 30%);
 }
 
+/* hwb() with alternate angle units */
+.hwb-alt-units {
+  color: hwb(0.333turn 20% 30%);
+  background: hwb(133.333grad 20% 30%);
+  border-color: hwb(2.094rad 20% 30%);
+}
+
 /* =============================================
  * LCH Function
  * ============================================= */
@@ -154,6 +168,13 @@
   background: lch(70 40 120deg);
 }
 
+/* lch() with alternate angle units */
+.lch-alt-units {
+  color: lch(70 40 0.333turn);
+  background: lch(70 40 133.333grad);
+  border-color: lch(70 40 2.094rad);
+}
+
 /* =============================================
  * OKLCH Function
  * ============================================= */
@@ -174,6 +195,13 @@
 .oklch-units {
   color: oklch(0.5 0.15 0deg);
   background: oklch(0.7 0.2 200deg);
+}
+
+/* oklch() with alternate angle units */
+.oklch-alt-units {
+  color: oklch(0.7 0.2 0.333turn);
+  background: oklch(0.7 0.2 133.333grad);
+  border-color: oklch(0.7 0.2 2.094rad);
 }
 
 /* =============================================
@@ -238,6 +266,15 @@
   outline-color: color(xyz 0.4 0.3 0.2);
 }
 
+/* Full supported color() space coverage */
+.color-space-all {
+  color: color(srgb 1 0.2 0.1);
+  background: color(srgb-linear 0.8 0.2 0.1);
+  border-color: color(a98-rgb 0.6 0.2 0.9);
+  outline-color: color(xyz-d50 0.4 0.3 0.2 / 0.7);
+  text-decoration-color: color(xyz-d65 0.4 0.3 0.2);
+}
+
 /* Extra expression samples for manual checking:
  * 0xff6600
  * 255 0 0
@@ -290,7 +327,16 @@
 .css-var-shorthand {
   --brand-rgb: 255 0 0;
   --brand-hsl: 0 100% 50%;
+  --brand-lch: 70 40 120 / 0.8;
+  --brand-oklch: 0.7 0.2 200 / 0.8;
+  --brand-lab: 70 20 -30;
+  --brand-oklab: 0.7 0.1 -0.05;
   color: var(--brand-rgb);
+  background: var(--brand-hsl);
+  border-color: var(--brand-lch);
+  outline-color: var(--brand-oklch);
+  text-decoration-color: var(--brand-lab);
+  caret-color: var(--brand-oklab);
 }
 
 /* =============================================

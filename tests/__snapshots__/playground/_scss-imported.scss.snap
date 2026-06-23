@@ -1,0 +1,50 @@
+{
+  "file": "_scss-imported.scss",
+  "languageId": "scss",
+  "strategyNames": [
+    "findHexRGBA",
+    "findColorFunctions",
+    "findHwb",
+    "findNamedColors",
+    "findRgbNoFunction",
+    "findHslNoFunction",
+    "findCssVars",
+    "findScssVars"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 3,
+      "column": 25,
+      "text": "color(srgb 0.1 0.5 0.9)",
+      "range": [
+        65,
+        88
+      ],
+      "color": "rgb(25, 128, 230)",
+      "render": {
+        "backgroundColor": "rgb(25, 128, 230)",
+        "color": "#000000",
+        "border": "3px solid rgb(25, 128, 230)",
+        "overviewRulerColor": "rgb(25, 128, 230)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 4,
+      "column": 32,
+      "text": "$imported-from-partial",
+      "range": [
+        121,
+        143
+      ],
+      "color": "rgb(25, 128, 230)",
+      "render": {
+        "backgroundColor": "rgb(25, 128, 230)",
+        "color": "#000000",
+        "border": "3px solid rgb(25, 128, 230)",
+        "overviewRulerColor": "rgb(25, 128, 230)"
+      }
+    }
+  ]
+}

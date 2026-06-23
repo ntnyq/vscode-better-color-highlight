@@ -1,0 +1,4 @@
+// Legacy @import SCSS variable samples
+
+$imported-from-partial: color(srgb 0.1 0.5 0.9);
+$imported-nested-from-partial: $imported-from-partial;

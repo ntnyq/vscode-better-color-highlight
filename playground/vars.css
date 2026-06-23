@@ -136,17 +136,45 @@
 
 /* These custom properties exercise both color() parsing and shorthand token values */
 :root {
+  --srgb-accent: color(srgb 1 0.2 0.1);
+  --srgb-linear-accent: color(srgb-linear 0.8 0.2 0.1);
   --display-p3-accent: color(display-p3 1 0.2 0.1);
+  --a98-accent: color(a98-rgb 0.6 0.2 0.9);
   --rec2020-accent: color(rec2020 0.8 0.2 0.1 / 0.75);
-  --wide-gamut-outline: color(a98-rgb 0.6 0.2 0.9);
+  --prophoto-accent: color(prophoto-rgb 0.7 0.3 0.2);
+  --xyz-accent: color(xyz 0.4 0.3 0.2);
+  --xyz-d50-accent: color(xyz-d50 0.4 0.3 0.2 / 0.7);
+  --xyz-d65-accent: color(xyz-d65 0.4 0.3 0.2);
 
   /* Bare triplet shorthands are also useful for manual checks */
   --token-rgb: 255 0 0;
   --token-hsl: 210 60% 50%;
+  --token-lch: 70 40 120 / 0.8;
+  --token-oklch: 0.7 0.2 200 / 0.8;
+  --token-lab: 70 20 -30;
+  --token-oklab: 0.7 0.1 -0.05;
 }
 
 .color-space-vars {
-  color: var(--display-p3-accent);
-  background: var(--rec2020-accent);
-  border-color: var(--wide-gamut-outline);
+  color: var(--srgb-accent);
+  background: var(--srgb-linear-accent);
+  border-color: var(--display-p3-accent);
+  outline-color: var(--a98-accent);
+  text-decoration-color: var(--rec2020-accent);
+  caret-color: var(--prophoto-accent);
+  column-rule-color: var(--xyz-accent);
+}
+
+.color-space-xyz-vars {
+  color: var(--xyz-d50-accent);
+  background: var(--xyz-d65-accent);
+}
+
+.shorthand-token-vars {
+  color: var(--token-rgb);
+  background: var(--token-hsl);
+  border-color: var(--token-lch);
+  outline-color: var(--token-oklch);
+  text-decoration-color: var(--token-lab);
+  caret-color: var(--token-oklab);
 }

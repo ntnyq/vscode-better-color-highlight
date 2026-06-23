@@ -1,0 +1,50 @@
+{
+  "file": "_scss-star-tokens.scss",
+  "languageId": "scss",
+  "strategyNames": [
+    "findHexRGBA",
+    "findColorFunctions",
+    "findHwb",
+    "findNamedColors",
+    "findRgbNoFunction",
+    "findHslNoFunction",
+    "findCssVars",
+    "findScssVars"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 3,
+      "column": 21,
+      "text": "hsl(280, 70%, 50%)",
+      "range": [
+        56,
+        74
+      ],
+      "color": "rgb(157, 38, 217)",
+      "render": {
+        "backgroundColor": "rgb(157, 38, 217)",
+        "color": "#FFFFFF",
+        "border": "3px solid rgb(157, 38, 217)",
+        "overviewRulerColor": "rgb(157, 38, 217)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 4,
+      "column": 28,
+      "text": "$star-from-partial",
+      "range": [
+        103,
+        121
+      ],
+      "color": "rgb(157, 38, 217)",
+      "render": {
+        "backgroundColor": "rgb(157, 38, 217)",
+        "color": "#FFFFFF",
+        "border": "3px solid rgb(157, 38, 217)",
+        "overviewRulerColor": "rgb(157, 38, 217)"
+      }
+    }
+  ]
+}

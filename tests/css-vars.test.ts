@@ -104,9 +104,21 @@ describe(findCssVars, () => {
       'var(--hwb)',
       'var(--oklch)',
       'var(--hex-4)',
+      'var(--srgb-accent)',
+      'var(--srgb-linear-accent)',
       'var(--display-p3-accent)',
+      'var(--a98-accent)',
       'var(--rec2020-accent)',
-      'var(--wide-gamut-outline)',
+      'var(--prophoto-accent)',
+      'var(--xyz-accent)',
+      'var(--xyz-d50-accent)',
+      'var(--xyz-d65-accent)',
+      'var(--token-rgb)',
+      'var(--token-hsl)',
+      'var(--token-lch)',
+      'var(--token-oklch)',
+      'var(--token-lab)',
+      'var(--token-oklab)',
     ]
 
     const actualUniqueUsages = [...new Set(usages)]
@@ -115,7 +127,7 @@ describe(findCssVars, () => {
     )
     const falseDefinitionHits = usages.filter(usage => usage.startsWith('--'))
 
-    expect(expectedUsages).toHaveLength(11)
+    expect(expectedUsages).toHaveLength(23)
     expect(actualUniqueUsages).toStrictEqual(
       expect.arrayContaining(expectedUsages),
     )

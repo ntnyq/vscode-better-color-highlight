@@ -1,0 +1,15 @@
+{
+  "file": "_scss-forwarded.scss",
+  "languageId": "scss",
+  "strategyNames": [
+    "findHexRGBA",
+    "findColorFunctions",
+    "findHwb",
+    "findNamedColors",
+    "findRgbNoFunction",
+    "findHslNoFunction",
+    "findCssVars",
+    "findScssVars"
+  ],
+  "matches": []
+}

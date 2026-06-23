@@ -3,6 +3,9 @@
 // =============================================
 
 @use "scss-tokens";
+@use "scss-forwarded";
+@use "scss-star-tokens" as *;
+@import "scss-imported";
 
 // #RGB — 3-digit hex
 $hex-3: #f00;
@@ -156,11 +159,19 @@ $red-long: $red2;
 $display-p3-accent: color(display-p3 1 0.2 0.1);
 $rec2020-accent: color(rec2020 0.8 0.2 0.1 / 0.75);
 $prophoto-accent: color(prophoto-rgb 0.7 0.3 0.2);
+$srgb-accent: color(srgb 1 0.2 0.1);
+$srgb-linear-accent: color(srgb-linear 0.8 0.2 0.1);
+$xyz-d50-accent: color(xyz-d50 0.4 0.3 0.2 / 0.7);
+$xyz-d65-accent: color(xyz-d65 0.4 0.3 0.2);
 
 .color-space-demo {
   color: $display-p3-accent;
   background: $rec2020-accent;
   border-color: $prophoto-accent;
+  outline-color: $srgb-accent;
+  text-decoration-color: $srgb-linear-accent;
+  caret-color: $xyz-d50-accent;
+  column-rule-color: $xyz-d65-accent;
 }
 
 // =============================================
@@ -170,6 +181,15 @@ $prophoto-accent: color(prophoto-rgb 0.7 0.3 0.2);
 .cross-file-scss {
   color: scss-tokens.$brand-from-partial;
   background: scss-tokens.$accent-from-partial;
+  border-color: scss-forwarded.$forwarded-from-source;
+  outline-color: scss-forwarded.$forwarded-named-from-source;
+}
+
+.cross-file-star-and-import {
+  color: $star-from-partial;
+  background: $star-nested-from-partial;
+  border-color: $imported-from-partial;
+  outline-color: $imported-nested-from-partial;
 }
 
 // Optional plain-text samples for extra manual checking:

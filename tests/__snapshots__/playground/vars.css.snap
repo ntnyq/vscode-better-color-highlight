@@ -745,11 +745,45 @@
     {
       "index": 43,
       "line": 139,
+      "column": 18,
+      "text": "color(srgb 1 0.2 0.1)",
+      "range": [
+        2795,
+        2816
+      ],
+      "color": "rgb(255, 51, 26)",
+      "render": {
+        "backgroundColor": "rgb(255, 51, 26)",
+        "color": "#000000",
+        "border": "3px solid rgb(255, 51, 26)",
+        "overviewRulerColor": "rgb(255, 51, 26)"
+      }
+    },
+    {
+      "index": 44,
+      "line": 140,
+      "column": 25,
+      "text": "color(srgb-linear 0.8 0.2 0.1)",
+      "range": [
+        2842,
+        2872
+      ],
+      "color": "rgb(231, 124, 89)",
+      "render": {
+        "backgroundColor": "rgb(231, 124, 89)",
+        "color": "#000000",
+        "border": "3px solid rgb(231, 124, 89)",
+        "overviewRulerColor": "rgb(231, 124, 89)"
+      }
+    },
+    {
+      "index": 45,
+      "line": 141,
       "column": 24,
       "text": "color(display-p3 1 0.2 0.1)",
       "range": [
-        2801,
-        2828
+        2897,
+        2924
       ],
       "color": "rgb(255, 0, 0)",
       "render": {
@@ -760,13 +794,13 @@
       }
     },
     {
-      "index": 44,
-      "line": 139,
+      "index": 46,
+      "line": 141,
       "column": 39,
       "text": "3 1 0.2",
       "range": [
-        2816,
-        2823
+        2912,
+        2919
       ],
       "color": "rgb(3, 1, 0)",
       "render": {
@@ -777,30 +811,13 @@
       }
     },
     {
-      "index": 45,
-      "line": 140,
-      "column": 21,
-      "text": "color(rec2020 0.8 0.2 0.1 / 0.75)",
-      "range": [
-        2850,
-        2883
-      ],
-      "color": "rgba(255, 0, 22, 0.75)",
-      "render": {
-        "backgroundColor": "rgb(255, 0, 22)",
-        "color": "#000000",
-        "border": "3px solid rgb(255, 0, 22)",
-        "overviewRulerColor": "rgb(255, 0, 22)"
-      }
-    },
-    {
-      "index": 46,
-      "line": 141,
-      "column": 25,
+      "index": 47,
+      "line": 142,
+      "column": 17,
       "text": "color(a98-rgb 0.6 0.2 0.9)",
       "range": [
-        2909,
-        2935
+        2942,
+        2968
       ],
       "color": "rgb(178, 48, 234)",
       "render": {
@@ -811,81 +828,132 @@
       }
     },
     {
-      "index": 47,
-      "line": 144,
-      "column": 3,
-      "text": "--token-rgb: 255 0 0;",
-      "range": [
-        3006,
-        3027
-      ],
-      "color": "rgb(255, 0, 0)",
-      "render": {
-        "backgroundColor": "rgb(255, 0, 0)",
-        "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
-        "overviewRulerColor": "rgb(255, 0, 0)"
-      }
-    },
-    {
       "index": 48,
-      "line": 144,
-      "column": 16,
-      "text": "255 0 0",
+      "line": 143,
+      "column": 21,
+      "text": "color(rec2020 0.8 0.2 0.1 / 0.75)",
       "range": [
-        3019,
-        3026
+        2990,
+        3023
       ],
-      "color": "rgb(255, 0, 0)",
+      "color": "rgba(255, 0, 22, 0.75)",
       "render": {
-        "backgroundColor": "rgb(255, 0, 0)",
+        "backgroundColor": "rgb(255, 0, 22)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
-        "overviewRulerColor": "rgb(255, 0, 0)"
+        "border": "3px solid rgb(255, 0, 22)",
+        "overviewRulerColor": "rgb(255, 0, 22)"
       }
     },
     {
       "index": 49,
-      "line": 145,
-      "column": 3,
-      "text": "--token-hsl: 210 60% 50%;",
+      "line": 144,
+      "column": 22,
+      "text": "color(prophoto-rgb 0.7 0.3 0.2)",
       "range": [
-        3030,
-        3055
+        3046,
+        3077
       ],
-      "color": "rgb(51, 127, 204)",
+      "color": "rgb(252, 39, 58)",
       "render": {
-        "backgroundColor": "rgb(51, 127, 204)",
+        "backgroundColor": "rgb(252, 39, 58)",
         "color": "#000000",
-        "border": "3px solid rgb(51, 127, 204)",
-        "overviewRulerColor": "rgb(51, 127, 204)"
+        "border": "3px solid rgb(252, 39, 58)",
+        "overviewRulerColor": "rgb(252, 39, 58)"
       }
     },
     {
       "index": 50,
       "line": 145,
-      "column": 16,
-      "text": "210 60% 50%",
+      "column": 17,
+      "text": "color(xyz 0.4 0.3 0.2)",
       "range": [
-        3043,
-        3054
+        3095,
+        3117
       ],
-      "color": "rgb(51, 127, 204)",
+      "color": "rgb(223, 119, 115)",
       "render": {
-        "backgroundColor": "rgb(51, 127, 204)",
+        "backgroundColor": "rgb(223, 119, 115)",
         "color": "#000000",
-        "border": "3px solid rgb(51, 127, 204)",
-        "overviewRulerColor": "rgb(51, 127, 204)"
+        "border": "3px solid rgb(223, 119, 115)",
+        "overviewRulerColor": "rgb(223, 119, 115)"
       }
     },
     {
       "index": 51,
-      "line": 149,
-      "column": 10,
-      "text": "var(--display-p3-accent)",
+      "line": 146,
+      "column": 21,
+      "text": "color(xyz-d50 0.4 0.3 0.2 / 0.7)",
       "range": [
-        3088,
-        3112
+        3139,
+        3171
+      ],
+      "color": "rgba(214, 121, 135, 0.7)",
+      "render": {
+        "backgroundColor": "rgb(214, 121, 135)",
+        "color": "#000000",
+        "border": "3px solid rgb(214, 121, 135)",
+        "overviewRulerColor": "rgb(214, 121, 135)"
+      }
+    },
+    {
+      "index": 52,
+      "line": 146,
+      "column": 32,
+      "text": "50 0.4 0.3",
+      "range": [
+        3150,
+        3160
+      ],
+      "color": "rgb(50, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(50, 0, 0)",
+        "color": "#FFFFFF",
+        "border": "3px solid rgb(50, 0, 0)",
+        "overviewRulerColor": "rgb(50, 0, 0)"
+      }
+    },
+    {
+      "index": 53,
+      "line": 147,
+      "column": 21,
+      "text": "color(xyz-d65 0.4 0.3 0.2)",
+      "range": [
+        3193,
+        3219
+      ],
+      "color": "rgb(223, 119, 115)",
+      "render": {
+        "backgroundColor": "rgb(223, 119, 115)",
+        "color": "#000000",
+        "border": "3px solid rgb(223, 119, 115)",
+        "overviewRulerColor": "rgb(223, 119, 115)"
+      }
+    },
+    {
+      "index": 54,
+      "line": 147,
+      "column": 32,
+      "text": "65 0.4 0.3",
+      "range": [
+        3204,
+        3214
+      ],
+      "color": "rgb(65, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(65, 0, 0)",
+        "color": "#FFFFFF",
+        "border": "3px solid rgb(65, 0, 0)",
+        "overviewRulerColor": "rgb(65, 0, 0)"
+      }
+    },
+    {
+      "index": 55,
+      "line": 150,
+      "column": 3,
+      "text": "--token-rgb: 255 0 0;",
+      "range": [
+        3290,
+        3311
       ],
       "color": "rgb(255, 0, 0)",
       "render": {
@@ -896,13 +964,200 @@
       }
     },
     {
-      "index": 52,
+      "index": 56,
       "line": 150,
+      "column": 16,
+      "text": "255 0 0",
+      "range": [
+        3303,
+        3310
+      ],
+      "color": "rgb(255, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": "3px solid rgb(255, 0, 0)",
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 57,
+      "line": 151,
+      "column": 3,
+      "text": "--token-hsl: 210 60% 50%;",
+      "range": [
+        3314,
+        3339
+      ],
+      "color": "rgb(51, 127, 204)",
+      "render": {
+        "backgroundColor": "rgb(51, 127, 204)",
+        "color": "#000000",
+        "border": "3px solid rgb(51, 127, 204)",
+        "overviewRulerColor": "rgb(51, 127, 204)"
+      }
+    },
+    {
+      "index": 58,
+      "line": 151,
+      "column": 16,
+      "text": "210 60% 50%",
+      "range": [
+        3327,
+        3338
+      ],
+      "color": "rgb(51, 127, 204)",
+      "render": {
+        "backgroundColor": "rgb(51, 127, 204)",
+        "color": "#000000",
+        "border": "3px solid rgb(51, 127, 204)",
+        "overviewRulerColor": "rgb(51, 127, 204)"
+      }
+    },
+    {
+      "index": 59,
+      "line": 152,
+      "column": 3,
+      "text": "--token-lch: 70 40 120 / 0.8;",
+      "range": [
+        3342,
+        3371
+      ],
+      "color": "rgba(210, 233, 156, 0.8)",
+      "render": {
+        "backgroundColor": "rgb(210, 233, 156)",
+        "color": "#000000",
+        "border": "3px solid rgb(210, 233, 156)",
+        "overviewRulerColor": "rgb(210, 233, 156)"
+      }
+    },
+    {
+      "index": 60,
+      "line": 152,
+      "column": 16,
+      "text": "70 40 120",
+      "range": [
+        3355,
+        3364
+      ],
+      "color": "rgb(70, 40, 120)",
+      "render": {
+        "backgroundColor": "rgb(70, 40, 120)",
+        "color": "#FFFFFF",
+        "border": "3px solid rgb(70, 40, 120)",
+        "overviewRulerColor": "rgb(70, 40, 120)"
+      }
+    },
+    {
+      "index": 61,
+      "line": 153,
+      "column": 3,
+      "text": "--token-oklch: 0.7 0.2 200 / 0.8;",
+      "range": [
+        3374,
+        3407
+      ],
+      "color": "rgba(0, 192, 207, 0.8)",
+      "render": {
+        "backgroundColor": "rgb(0, 192, 207)",
+        "color": "#000000",
+        "border": "3px solid rgb(0, 192, 207)",
+        "overviewRulerColor": "rgb(0, 192, 207)"
+      }
+    },
+    {
+      "index": 62,
+      "line": 153,
+      "column": 18,
+      "text": "0.7 0.2 200",
+      "range": [
+        3389,
+        3400
+      ],
+      "color": "rgb(1, 0, 200)",
+      "render": {
+        "backgroundColor": "rgb(1, 0, 200)",
+        "color": "#FFFFFF",
+        "border": "3px solid rgb(1, 0, 200)",
+        "overviewRulerColor": "rgb(1, 0, 200)"
+      }
+    },
+    {
+      "index": 63,
+      "line": 159,
+      "column": 10,
+      "text": "var(--srgb-accent)",
+      "range": [
+        3498,
+        3516
+      ],
+      "color": "rgb(255, 51, 26)",
+      "render": {
+        "backgroundColor": "rgb(255, 51, 26)",
+        "color": "#000000",
+        "border": "3px solid rgb(255, 51, 26)",
+        "overviewRulerColor": "rgb(255, 51, 26)"
+      }
+    },
+    {
+      "index": 64,
+      "line": 160,
       "column": 15,
+      "text": "var(--srgb-linear-accent)",
+      "range": [
+        3532,
+        3557
+      ],
+      "color": "rgb(231, 124, 89)",
+      "render": {
+        "backgroundColor": "rgb(231, 124, 89)",
+        "color": "#000000",
+        "border": "3px solid rgb(231, 124, 89)",
+        "overviewRulerColor": "rgb(231, 124, 89)"
+      }
+    },
+    {
+      "index": 65,
+      "line": 161,
+      "column": 17,
+      "text": "var(--display-p3-accent)",
+      "range": [
+        3575,
+        3599
+      ],
+      "color": "rgb(255, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": "3px solid rgb(255, 0, 0)",
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 66,
+      "line": 162,
+      "column": 18,
+      "text": "var(--a98-accent)",
+      "range": [
+        3618,
+        3635
+      ],
+      "color": "rgb(178, 48, 234)",
+      "render": {
+        "backgroundColor": "rgb(178, 48, 234)",
+        "color": "#FFFFFF",
+        "border": "3px solid rgb(178, 48, 234)",
+        "overviewRulerColor": "rgb(178, 48, 234)"
+      }
+    },
+    {
+      "index": 67,
+      "line": 163,
+      "column": 26,
       "text": "var(--rec2020-accent)",
       "range": [
-        3128,
-        3149
+        3662,
+        3683
       ],
       "color": "rgba(255, 0, 22, 0.75)",
       "render": {
@@ -913,20 +1168,173 @@
       }
     },
     {
-      "index": 53,
-      "line": 151,
-      "column": 17,
-      "text": "var(--wide-gamut-outline)",
+      "index": 68,
+      "line": 164,
+      "column": 16,
+      "text": "var(--prophoto-accent)",
       "range": [
-        3167,
-        3192
+        3700,
+        3722
       ],
-      "color": "rgb(178, 48, 234)",
+      "color": "rgb(252, 39, 58)",
       "render": {
-        "backgroundColor": "rgb(178, 48, 234)",
-        "color": "#FFFFFF",
-        "border": "3px solid rgb(178, 48, 234)",
-        "overviewRulerColor": "rgb(178, 48, 234)"
+        "backgroundColor": "rgb(252, 39, 58)",
+        "color": "#000000",
+        "border": "3px solid rgb(252, 39, 58)",
+        "overviewRulerColor": "rgb(252, 39, 58)"
+      }
+    },
+    {
+      "index": 69,
+      "line": 165,
+      "column": 22,
+      "text": "var(--xyz-accent)",
+      "range": [
+        3745,
+        3762
+      ],
+      "color": "rgb(223, 119, 115)",
+      "render": {
+        "backgroundColor": "rgb(223, 119, 115)",
+        "color": "#000000",
+        "border": "3px solid rgb(223, 119, 115)",
+        "overviewRulerColor": "rgb(223, 119, 115)"
+      }
+    },
+    {
+      "index": 70,
+      "line": 169,
+      "column": 10,
+      "text": "var(--xyz-d50-accent)",
+      "range": [
+        3800,
+        3821
+      ],
+      "color": "rgba(214, 121, 135, 0.7)",
+      "render": {
+        "backgroundColor": "rgb(214, 121, 135)",
+        "color": "#000000",
+        "border": "3px solid rgb(214, 121, 135)",
+        "overviewRulerColor": "rgb(214, 121, 135)"
+      }
+    },
+    {
+      "index": 71,
+      "line": 170,
+      "column": 15,
+      "text": "var(--xyz-d65-accent)",
+      "range": [
+        3837,
+        3858
+      ],
+      "color": "rgb(223, 119, 115)",
+      "render": {
+        "backgroundColor": "rgb(223, 119, 115)",
+        "color": "#000000",
+        "border": "3px solid rgb(223, 119, 115)",
+        "overviewRulerColor": "rgb(223, 119, 115)"
+      }
+    },
+    {
+      "index": 72,
+      "line": 174,
+      "column": 10,
+      "text": "var(--token-rgb)",
+      "range": [
+        3896,
+        3912
+      ],
+      "color": "rgb(255, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": "3px solid rgb(255, 0, 0)",
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 73,
+      "line": 175,
+      "column": 15,
+      "text": "var(--token-hsl)",
+      "range": [
+        3928,
+        3944
+      ],
+      "color": "rgb(51, 127, 204)",
+      "render": {
+        "backgroundColor": "rgb(51, 127, 204)",
+        "color": "#000000",
+        "border": "3px solid rgb(51, 127, 204)",
+        "overviewRulerColor": "rgb(51, 127, 204)"
+      }
+    },
+    {
+      "index": 74,
+      "line": 176,
+      "column": 17,
+      "text": "var(--token-lch)",
+      "range": [
+        3962,
+        3978
+      ],
+      "color": "rgba(210, 233, 156, 0.8)",
+      "render": {
+        "backgroundColor": "rgb(210, 233, 156)",
+        "color": "#000000",
+        "border": "3px solid rgb(210, 233, 156)",
+        "overviewRulerColor": "rgb(210, 233, 156)"
+      }
+    },
+    {
+      "index": 75,
+      "line": 177,
+      "column": 18,
+      "text": "var(--token-oklch)",
+      "range": [
+        3997,
+        4015
+      ],
+      "color": "rgba(0, 192, 207, 0.8)",
+      "render": {
+        "backgroundColor": "rgb(0, 192, 207)",
+        "color": "#000000",
+        "border": "3px solid rgb(0, 192, 207)",
+        "overviewRulerColor": "rgb(0, 192, 207)"
+      }
+    },
+    {
+      "index": 76,
+      "line": 178,
+      "column": 26,
+      "text": "var(--token-lab)",
+      "range": [
+        4042,
+        4058
+      ],
+      "color": "rgb(234, 213, 255)",
+      "render": {
+        "backgroundColor": "rgb(234, 213, 255)",
+        "color": "#000000",
+        "border": "3px solid rgb(234, 213, 255)",
+        "overviewRulerColor": "rgb(234, 213, 255)"
+      }
+    },
+    {
+      "index": 77,
+      "line": 179,
+      "column": 16,
+      "text": "var(--token-oklab)",
+      "range": [
+        4075,
+        4093
+      ],
+      "color": "rgb(200, 131, 188)",
+      "render": {
+        "backgroundColor": "rgb(200, 131, 188)",
+        "color": "#000000",
+        "border": "3px solid rgb(200, 131, 188)",
+        "overviewRulerColor": "rgb(200, 131, 188)"
       }
     }
   ]
