@@ -40,7 +40,29 @@ interface WorkspacePathParts {
  * @returns Whether the value starts with a URI scheme
  */
 function isUriString(value: string): boolean {
-  return /^[a-z][\d+.a-z-]*:/iu.test(value)
+  return !/^[a-z]:[/\\]/iu.test(value) && /^[a-z][\d+.a-z-]*:/iu.test(value)
+}
+
+/**
+ * Encode a URI path without treating `#` or `?` as URI syntax.
+ *
+ * @param path - Decoded path component
+ * @returns Encoded path component
+ */
+function encodeUriPath(path: string): string {
+  if (path === '/') {
+    return '/'
+  }
+
+  const prefix = path.startsWith('/') ? '/' : ''
+  const suffix = path.endsWith('/') ? '/' : ''
+  const body = path
+    .split('/')
+    .filter(Boolean)
+    .map(segment => encodeURIComponent(segment))
+    .join('/')
+
+  return `${prefix}${body}${body ? suffix : ''}`
 }
 
 /**
@@ -53,7 +75,7 @@ function parseWorkspacePath(value: string): WorkspacePathParts {
   if (!isUriString(value)) {
     return {
       prefix: '',
-      path: value,
+      path: normalizeWorkspacePath(value),
       isUri: false,
     }
   }
@@ -75,7 +97,7 @@ function parseWorkspacePath(value: string): WorkspacePathParts {
  * @returns Formatted path or URI string
  */
 function formatWorkspacePath(parts: WorkspacePathParts, path: string): string {
-  return parts.isUri ? `${parts.prefix}${encodeURI(path)}` : path
+  return parts.isUri ? `${parts.prefix}${encodeUriPath(path)}` : path
 }
 
 /**
