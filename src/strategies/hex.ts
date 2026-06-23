@@ -9,6 +9,10 @@ import type { ColorMatch } from '../core/types'
 const HEX_REGEX =
   /(?<prefix>.?)(?<hex>(?:#|0x)(?:[a-f0-9]{6}(?:[a-f0-9]{2})?|[a-f0-9]{3}(?:[a-f0-9])?))\b/giu
 
+function isShortNumericHex(hex: string): boolean {
+  return hex.toLowerCase().startsWith('0x') && hex.length <= 6
+}
+
 /**
  * Detect hex colors in RGBA mode (default).
  * Matches #RGB, #RRGGBB, #RGBA, #RRGGBBAA and 0x prefix variants.
@@ -27,6 +31,7 @@ export function findHexRGBA(text: string): ColorMatch[] {
 
     // Skip if preceded by a word character (e.g. font-size:0x...)
     if (/\w/u.test(preceding)) continue
+    if (isShortNumericHex(fullMatch)) continue
 
     const result = hexToRgb(fullMatch)
     if (!result) continue
@@ -58,6 +63,7 @@ export function findHexARGB(text: string): ColorMatch[] {
     const preceding = m.groups?.prefix ?? ''
 
     if (/\w/u.test(preceding)) continue
+    if (isShortNumericHex(fullMatch)) continue
 
     const result = hexARGBToRgb(fullMatch)
     if (!result) continue

@@ -360,12 +360,12 @@
         879,
         899
       ],
-      "color": "rgb(0, 128, 255)",
+      "color": "rgba(0, 128, 255, 0.5)",
       "render": {
-        "backgroundColor": "rgb(0, 128, 255)",
+        "backgroundColor": "rgba(0, 128, 255, 0.5)",
         "color": "#000000",
-        "border": "3px solid rgb(0, 128, 255)",
-        "overviewRulerColor": "rgb(0, 128, 255)"
+        "border": "3px solid rgba(0, 128, 255, 0.5)",
+        "overviewRulerColor": "rgba(0, 128, 255, 0.5)"
       }
     },
     {

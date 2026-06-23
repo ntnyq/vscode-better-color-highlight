@@ -67,4 +67,16 @@ describe(findColorFunctions, () => {
     expect(result).toHaveLength(1)
     expect(result[0].color).toBe('rgba(255, 0, 0, 0.5)')
   })
+
+  it('preserves slash alpha in space-delimited rgb()', () => {
+    const result = findColorFunctions('color: rgb(42 42 42 / 0.42);')
+    expect(result).toHaveLength(1)
+    expect(result[0].color).toBe('rgba(42, 42, 42, 0.42)')
+  })
+
+  it('preserves slash alpha in space-delimited hsl()', () => {
+    const result = findColorFunctions('color: hsl(0 100% 50% / 42%);')
+    expect(result).toHaveLength(1)
+    expect(result[0].color).toBe('rgba(255, 0, 0, 0.42)')
+  })
 })

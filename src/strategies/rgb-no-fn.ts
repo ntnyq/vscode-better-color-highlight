@@ -7,10 +7,10 @@ import type { ColorMatch } from '../core/types'
  *
  * [^\S\n] matches whitespace but not newlines
  * Named backreference `sep` enforces consistent separator
- * Terminates with ; | $ to avoid matching partial expressions
+ * Terminates before ; | whitespace | < | end to avoid matching partial expressions
  */
 const RGB_NO_FN_REGEX =
-  /(?<red>[.\d]{1,5})[^\S\n]*(?<sep>[^\S\n]|,)[^\S\n]*(?<green>[.\d]{1,5})[^\S\n]*\k<sep>[^\S\n]*(?<blue>[.\d]{1,5})(?:;| |$)/gu
+  /(?<red>[.\d]{1,5})[^\S\n]*(?<sep>[^\S\n]|,)[^\S\n]*(?<green>[.\d]{1,5})[^\S\n]*\k<sep>[^\S\n]*(?<blue>[.\d]{1,5})(?=;|[^\S\n]|<|$)/gu
 
 /**
  * Detect bare RGB triplets not wrapped in rgb() function.
@@ -36,9 +36,7 @@ export function findRgbNoFunction(text: string): ColorMatch[] {
     if (r === 0 && g === 0 && b === 0) continue
 
     const start = m.index ?? 0
-    // Trim trailing separator from match
-    const fullMatch = m[0].replace(/[; ]$/u, '')
-    const end = start + fullMatch.length
+    const end = start + m[0].length
 
     matches.push({
       start,

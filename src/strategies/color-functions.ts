@@ -171,14 +171,25 @@ function parseColorFunction(func: string): string | null {
 
   // Handle slash-separated alpha in space-delimited syntax
   let alpha: number | undefined
-  const lastPart = parts[parts.length - 1]
-  if (!hasComma && lastPart.includes('/')) {
-    const [value, a] = lastPart.split('/')
-    parts[parts.length - 1] = value.trim()
-    alpha = parseChannelValue(a.trim(), 'percent')
+  if (!hasComma) {
+    const slashIndex = parts.indexOf('/')
+    if (slashIndex === -1) {
+      const lastPart = parts[parts.length - 1]
+      if (lastPart.includes('/')) {
+        const [value, a] = lastPart.split('/')
+        parts[parts.length - 1] = value.trim()
+        alpha = parseChannelValue(a.trim(), 'percent')
+      }
+    } else {
+      const alphaPart = parts[slashIndex + 1]
+      if (alphaPart) {
+        alpha = parseChannelValue(alphaPart, 'percent')
+      }
+      parts.splice(slashIndex)
+    }
   }
   // Handle comma-separated alpha
-  else if (parts.length === 4 && hasComma) {
+  else if (parts.length === 4) {
     alpha = parseChannelValue(parts[3], 'percent')
     parts.pop()
   }
@@ -330,11 +341,20 @@ export function parseShorthandValue(
 
   // Handle slash-separated alpha
   let alpha: number | undefined
-  const lastPart = parts[parts.length - 1]
-  if (lastPart.includes('/')) {
-    const [, a] = lastPart.split('/')
-    parts[parts.length - 1] = parts[parts.length - 1].split('/')[0]
-    alpha = parseChannelValue(a.trim(), 'percent')
+  const slashIndex = parts.indexOf('/')
+  if (slashIndex === -1) {
+    const lastPart = parts[parts.length - 1]
+    if (lastPart.includes('/')) {
+      const [channel, a] = lastPart.split('/')
+      parts[parts.length - 1] = channel
+      alpha = parseChannelValue(a.trim(), 'percent')
+    }
+  } else {
+    const alphaPart = parts[slashIndex + 1]
+    if (alphaPart) {
+      alpha = parseChannelValue(alphaPart, 'percent')
+    }
+    parts.splice(slashIndex)
   }
 
   const [r, g, b] = convertColorFunction(space, parts)

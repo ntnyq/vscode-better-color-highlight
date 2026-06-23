@@ -38,6 +38,14 @@ describe(findHexRGBA, () => {
     const result = findHexRGBA('color: #ff0000; bg: #0000ff;')
     expect(result).toHaveLength(2)
   })
+
+  it('skips short 0x-prefixed numeric hex values', () => {
+    const result = findHexRGBA('values: 0xf00 0xff00 #f00 #ff00;')
+    expect(result).toStrictEqual([
+      { start: 21, end: 25, color: 'rgb(255, 0, 0)' },
+      { start: 26, end: 31, color: 'rgba(255, 255, 0, 0)' },
+    ])
+  })
 })
 
 describe(findHexARGB, () => {

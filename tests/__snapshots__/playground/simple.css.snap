@@ -139,12 +139,12 @@
         752,
         770
       ],
-      "color": "rgb(255, 0, 0)",
+      "color": "rgba(255, 0, 0, 0.5)",
       "render": {
-        "backgroundColor": "rgb(255, 0, 0)",
+        "backgroundColor": "rgba(255, 0, 0, 0.5)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
-        "overviewRulerColor": "rgb(255, 0, 0)"
+        "border": "3px solid rgba(255, 0, 0, 0.5)",
+        "overviewRulerColor": "rgba(255, 0, 0, 0.5)"
       }
     },
     {
