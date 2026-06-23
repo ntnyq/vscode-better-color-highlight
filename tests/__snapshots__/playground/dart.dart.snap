@@ -56,10 +56,10 @@
       ],
       "color": "rgba(57, 197, 187, 0.502)",
       "render": {
-        "backgroundColor": "rgba(57, 197, 187, 0.502)",
+        "backgroundColor": "rgb(57, 197, 187)",
         "color": "#000000",
-        "border": "3px solid rgba(57, 197, 187, 0.502)",
-        "overviewRulerColor": "rgba(57, 197, 187, 0.502)"
+        "border": "3px solid rgb(57, 197, 187)",
+        "overviewRulerColor": "rgb(57, 197, 187)"
       }
     },
     {
@@ -90,10 +90,10 @@
       ],
       "color": "rgba(57, 197, 187, 0.502)",
       "render": {
-        "backgroundColor": "rgba(57, 197, 187, 0.502)",
+        "backgroundColor": "rgb(57, 197, 187)",
         "color": "#000000",
-        "border": "3px solid rgba(57, 197, 187, 0.502)",
-        "overviewRulerColor": "rgba(57, 197, 187, 0.502)"
+        "border": "3px solid rgb(57, 197, 187)",
+        "overviewRulerColor": "rgb(57, 197, 187)"
       }
     },
     {

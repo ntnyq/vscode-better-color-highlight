@@ -141,10 +141,10 @@
       ],
       "color": "rgba(0, 255, 0, 0.8)",
       "render": {
-        "backgroundColor": "rgba(0, 255, 0, 0.8)",
+        "backgroundColor": "rgb(0, 255, 0)",
         "color": "#000000",
-        "border": "3px solid rgba(0, 255, 0, 0.8)",
-        "overviewRulerColor": "rgba(0, 255, 0, 0.8)"
+        "border": "3px solid rgb(0, 255, 0)",
+        "overviewRulerColor": "rgb(0, 255, 0)"
       }
     },
     {
@@ -158,10 +158,10 @@
       ],
       "color": "rgba(0, 0, 255, 0.533)",
       "render": {
-        "backgroundColor": "rgba(0, 0, 255, 0.533)",
+        "backgroundColor": "rgb(0, 0, 255)",
         "color": "#FFFFFF",
-        "border": "3px solid rgba(0, 0, 255, 0.533)",
-        "overviewRulerColor": "rgba(0, 0, 255, 0.533)"
+        "border": "3px solid rgb(0, 0, 255)",
+        "overviewRulerColor": "rgb(0, 0, 255)"
       }
     },
     {
@@ -175,10 +175,10 @@
       ],
       "color": "rgba(255, 0, 0, 0.502)",
       "render": {
-        "backgroundColor": "rgba(255, 0, 0, 0.502)",
+        "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgba(255, 0, 0, 0.502)",
-        "overviewRulerColor": "rgba(255, 0, 0, 0.502)"
+        "border": "3px solid rgb(255, 0, 0)",
+        "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
     {
@@ -192,10 +192,10 @@
       ],
       "color": "rgba(0, 255, 0, 0.8)",
       "render": {
-        "backgroundColor": "rgba(0, 255, 0, 0.8)",
+        "backgroundColor": "rgb(0, 255, 0)",
         "color": "#000000",
-        "border": "3px solid rgba(0, 255, 0, 0.8)",
-        "overviewRulerColor": "rgba(0, 255, 0, 0.8)"
+        "border": "3px solid rgb(0, 255, 0)",
+        "overviewRulerColor": "rgb(0, 255, 0)"
       }
     },
     {
@@ -311,10 +311,10 @@
       ],
       "color": "rgba(0, 128, 255, 0.5)",
       "render": {
-        "backgroundColor": "rgba(0, 128, 255, 0.5)",
+        "backgroundColor": "rgb(0, 128, 255)",
         "color": "#000000",
-        "border": "3px solid rgba(0, 128, 255, 0.5)",
-        "overviewRulerColor": "rgba(0, 128, 255, 0.5)"
+        "border": "3px solid rgb(0, 128, 255)",
+        "overviewRulerColor": "rgb(0, 128, 255)"
       }
     },
     {
@@ -396,10 +396,10 @@
       ],
       "color": "rgba(0, 128, 255, 0.5)",
       "render": {
-        "backgroundColor": "rgba(0, 128, 255, 0.5)",
+        "backgroundColor": "rgb(0, 128, 255)",
         "color": "#000000",
-        "border": "3px solid rgba(0, 128, 255, 0.5)",
-        "overviewRulerColor": "rgba(0, 128, 255, 0.5)"
+        "border": "3px solid rgb(0, 128, 255)",
+        "overviewRulerColor": "rgb(0, 128, 255)"
       }
     },
     {
@@ -515,10 +515,10 @@
       ],
       "color": "rgba(64, 127, 191, 0.5)",
       "render": {
-        "backgroundColor": "rgba(64, 127, 191, 0.5)",
+        "backgroundColor": "rgb(64, 127, 191)",
         "color": "#000000",
-        "border": "3px solid rgba(64, 127, 191, 0.5)",
-        "overviewRulerColor": "rgba(64, 127, 191, 0.5)"
+        "border": "3px solid rgb(64, 127, 191)",
+        "overviewRulerColor": "rgb(64, 127, 191)"
       }
     },
     {
@@ -600,10 +600,10 @@
       ],
       "color": "rgba(64, 127, 191, 0.5)",
       "render": {
-        "backgroundColor": "rgba(64, 127, 191, 0.5)",
+        "backgroundColor": "rgb(64, 127, 191)",
         "color": "#000000",
-        "border": "3px solid rgba(64, 127, 191, 0.5)",
-        "overviewRulerColor": "rgba(64, 127, 191, 0.5)"
+        "border": "3px solid rgb(64, 127, 191)",
+        "overviewRulerColor": "rgb(64, 127, 191)"
       }
     },
     {
@@ -736,10 +736,10 @@
       ],
       "color": "rgba(255, 0, 0, 0.5)",
       "render": {
-        "backgroundColor": "rgba(255, 0, 0, 0.5)",
+        "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgba(255, 0, 0, 0.5)",
-        "overviewRulerColor": "rgba(255, 0, 0, 0.5)"
+        "border": "3px solid rgb(255, 0, 0)",
+        "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
     {
@@ -753,10 +753,10 @@
       ],
       "color": "rgba(51, 115, 179, 0.8)",
       "render": {
-        "backgroundColor": "rgba(51, 115, 179, 0.8)",
+        "backgroundColor": "rgb(51, 115, 179)",
         "color": "#FFFFFF",
-        "border": "3px solid rgba(51, 115, 179, 0.8)",
-        "overviewRulerColor": "rgba(51, 115, 179, 0.8)"
+        "border": "3px solid rgb(51, 115, 179)",
+        "overviewRulerColor": "rgb(51, 115, 179)"
       }
     },
     {
@@ -855,10 +855,10 @@
       ],
       "color": "rgba(253, 178, 200, 0.5)",
       "render": {
-        "backgroundColor": "rgba(253, 178, 200, 0.5)",
+        "backgroundColor": "rgb(253, 178, 200)",
         "color": "#000000",
-        "border": "3px solid rgba(253, 178, 200, 0.5)",
-        "overviewRulerColor": "rgba(253, 178, 200, 0.5)"
+        "border": "3px solid rgb(253, 178, 200)",
+        "overviewRulerColor": "rgb(253, 178, 200)"
       }
     },
     {
@@ -872,10 +872,10 @@
       ],
       "color": "rgba(210, 233, 156, 0.8)",
       "render": {
-        "backgroundColor": "rgba(210, 233, 156, 0.8)",
+        "backgroundColor": "rgb(210, 233, 156)",
         "color": "#000000",
-        "border": "3px solid rgba(210, 233, 156, 0.8)",
-        "overviewRulerColor": "rgba(210, 233, 156, 0.8)"
+        "border": "3px solid rgb(210, 233, 156)",
+        "overviewRulerColor": "rgb(210, 233, 156)"
       }
     },
     {
@@ -974,10 +974,10 @@
       ],
       "color": "rgba(163, 52, 96, 0.5)",
       "render": {
-        "backgroundColor": "rgba(163, 52, 96, 0.5)",
+        "backgroundColor": "rgb(163, 52, 96)",
         "color": "#FFFFFF",
-        "border": "3px solid rgba(163, 52, 96, 0.5)",
-        "overviewRulerColor": "rgba(163, 52, 96, 0.5)"
+        "border": "3px solid rgb(163, 52, 96)",
+        "overviewRulerColor": "rgb(163, 52, 96)"
       }
     },
     {
@@ -991,10 +991,10 @@
       ],
       "color": "rgba(0, 192, 207, 0.8)",
       "render": {
-        "backgroundColor": "rgba(0, 192, 207, 0.8)",
+        "backgroundColor": "rgb(0, 192, 207)",
         "color": "#000000",
-        "border": "3px solid rgba(0, 192, 207, 0.8)",
-        "overviewRulerColor": "rgba(0, 192, 207, 0.8)"
+        "border": "3px solid rgb(0, 192, 207)",
+        "overviewRulerColor": "rgb(0, 192, 207)"
       }
     },
     {
@@ -1093,10 +1093,10 @@
       ],
       "color": "rgba(199, 199, 199, 0.5)",
       "render": {
-        "backgroundColor": "rgba(199, 199, 199, 0.5)",
+        "backgroundColor": "rgb(199, 199, 199)",
         "color": "#000000",
-        "border": "3px solid rgba(199, 199, 199, 0.5)",
-        "overviewRulerColor": "rgba(199, 199, 199, 0.5)"
+        "border": "3px solid rgb(199, 199, 199)",
+        "overviewRulerColor": "rgb(199, 199, 199)"
       }
     },
     {
@@ -1110,10 +1110,10 @@
       ],
       "color": "rgba(234, 213, 255, 0.8)",
       "render": {
-        "backgroundColor": "rgba(234, 213, 255, 0.8)",
+        "backgroundColor": "rgb(234, 213, 255)",
         "color": "#000000",
-        "border": "3px solid rgba(234, 213, 255, 0.8)",
-        "overviewRulerColor": "rgba(234, 213, 255, 0.8)"
+        "border": "3px solid rgb(234, 213, 255)",
+        "overviewRulerColor": "rgb(234, 213, 255)"
       }
     },
     {
@@ -1161,10 +1161,10 @@
       ],
       "color": "rgba(99, 99, 99, 0.5)",
       "render": {
-        "backgroundColor": "rgba(99, 99, 99, 0.5)",
+        "backgroundColor": "rgb(99, 99, 99)",
         "color": "#FFFFFF",
-        "border": "3px solid rgba(99, 99, 99, 0.5)",
-        "overviewRulerColor": "rgba(99, 99, 99, 0.5)"
+        "border": "3px solid rgb(99, 99, 99)",
+        "overviewRulerColor": "rgb(99, 99, 99)"
       }
     },
     {
@@ -1178,10 +1178,10 @@
       ],
       "color": "rgba(200, 131, 188, 0.8)",
       "render": {
-        "backgroundColor": "rgba(200, 131, 188, 0.8)",
+        "backgroundColor": "rgb(200, 131, 188)",
         "color": "#000000",
-        "border": "3px solid rgba(200, 131, 188, 0.8)",
-        "overviewRulerColor": "rgba(200, 131, 188, 0.8)"
+        "border": "3px solid rgb(200, 131, 188)",
+        "overviewRulerColor": "rgb(200, 131, 188)"
       }
     },
     {
@@ -1280,10 +1280,10 @@
       ],
       "color": "rgba(255, 0, 22, 0.75)",
       "render": {
-        "backgroundColor": "rgba(255, 0, 22, 0.75)",
+        "backgroundColor": "rgb(255, 0, 22)",
         "color": "#000000",
-        "border": "3px solid rgba(255, 0, 22, 0.75)",
-        "overviewRulerColor": "rgba(255, 0, 22, 0.75)"
+        "border": "3px solid rgb(255, 0, 22)",
+        "overviewRulerColor": "rgb(255, 0, 22)"
       }
     },
     {
@@ -1569,10 +1569,10 @@
       ],
       "color": "rgba(128, 128, 128, 0.502)",
       "render": {
-        "backgroundColor": "rgba(128, 128, 128, 0.502)",
+        "backgroundColor": "rgb(128, 128, 128)",
         "color": "#000000",
-        "border": "3px solid rgba(128, 128, 128, 0.502)",
-        "overviewRulerColor": "rgba(128, 128, 128, 0.502)"
+        "border": "3px solid rgb(128, 128, 128)",
+        "overviewRulerColor": "rgb(128, 128, 128)"
       }
     },
     {
@@ -1654,10 +1654,10 @@
       ],
       "color": "rgba(128, 128, 128, 0.502)",
       "render": {
-        "backgroundColor": "rgba(128, 128, 128, 0.502)",
+        "backgroundColor": "rgb(128, 128, 128)",
         "color": "#000000",
-        "border": "3px solid rgba(128, 128, 128, 0.502)",
-        "overviewRulerColor": "rgba(128, 128, 128, 0.502)"
+        "border": "3px solid rgb(128, 128, 128)",
+        "overviewRulerColor": "rgb(128, 128, 128)"
       }
     },
     {
@@ -1807,10 +1807,10 @@
       ],
       "color": "rgba(0, 0, 255, 0.5)",
       "render": {
-        "backgroundColor": "rgba(0, 0, 255, 0.5)",
+        "backgroundColor": "rgb(0, 0, 255)",
         "color": "#FFFFFF",
-        "border": "3px solid rgba(0, 0, 255, 0.5)",
-        "overviewRulerColor": "rgba(0, 0, 255, 0.5)"
+        "border": "3px solid rgb(0, 0, 255)",
+        "overviewRulerColor": "rgb(0, 0, 255)"
       }
     },
     {
