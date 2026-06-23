@@ -55,6 +55,11 @@ export interface StrategyContext {
    * Whether SCSS @use/@forward/@import dependencies may be read from disk.
    */
   resolveScssVariablesAcrossFiles?: boolean
+
+  /**
+   * Additional Sass load paths for resolving non-relative SCSS modules.
+   */
+  scssLoadPaths?: string[]
 }
 
 /**

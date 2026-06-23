@@ -1,4 +1,4 @@
-import { mkdtemp, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
@@ -57,6 +57,129 @@ describe(findScssVars, () => {
         start: text.indexOf('tokens.$brand'),
         end: text.indexOf('tokens.$brand') + 'tokens.$brand'.length,
         color: 'rgb(51, 102, 153)',
+      },
+    ])
+  })
+
+  it('resolves directory modules from partial index files', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'better-color-scss-'))
+    const componentsDir = join(dir, 'components')
+    const indexPath = join(componentsDir, '_index.scss')
+    const entryPath = join(dir, 'entry.scss')
+
+    await mkdir(componentsDir, { recursive: true })
+    await writeFile(indexPath, '$brand: #2563eb;\n', 'utf8')
+
+    const text = `
+      @use "components";
+      .button { color: components.$brand; }
+    `
+    await writeFile(entryPath, text, 'utf8')
+
+    const result = await findScssVars(text, {
+      languageId: 'scss',
+      filePath: entryPath,
+      resolveScssVariablesAcrossFiles: true,
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.indexOf('components.$brand'),
+        end: text.indexOf('components.$brand') + 'components.$brand'.length,
+        color: 'rgb(37, 99, 235)',
+      },
+    ])
+  })
+
+  it('resolves @use modules with explicit aliases', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'better-color-scss-'))
+    const themePath = join(dir, '_theme.scss')
+    const entryPath = join(dir, 'entry.scss')
+
+    await writeFile(themePath, '$brand: #dc2626;\n', 'utf8')
+
+    const text = `
+      @use "theme" as brand-theme;
+      .button { color: brand-theme.$brand; }
+    `
+    await writeFile(entryPath, text, 'utf8')
+
+    const result = await findScssVars(text, {
+      languageId: 'scss',
+      filePath: entryPath,
+      resolveScssVariablesAcrossFiles: true,
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.indexOf('brand-theme.$brand'),
+        end: text.indexOf('brand-theme.$brand') + 'brand-theme.$brand'.length,
+        color: 'rgb(220, 38, 38)',
+      },
+    ])
+  })
+
+  it('resolves modules from configured SCSS load paths', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'better-color-scss-'))
+    const loadPath = join(dir, 'styles')
+    const entryPath = join(dir, 'src', 'entry.scss')
+    const packageDir = join(loadPath, '@acme', 'tokens')
+    const packageIndexPath = join(packageDir, '_index.scss')
+
+    await mkdir(packageDir, { recursive: true })
+    await mkdir(join(dir, 'src'), { recursive: true })
+    await writeFile(packageIndexPath, '$brand: #0891b2;\n', 'utf8')
+
+    const text = `
+      @use "@acme/tokens" as acme;
+      .button { color: acme.$brand; }
+    `
+    await writeFile(entryPath, text, 'utf8')
+
+    const result = await findScssVars(text, {
+      languageId: 'scss',
+      filePath: entryPath,
+      resolveScssVariablesAcrossFiles: true,
+      scssLoadPaths: [loadPath],
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.indexOf('acme.$brand'),
+        end: text.indexOf('acme.$brand') + 'acme.$brand'.length,
+        color: 'rgb(8, 145, 178)',
+      },
+    ])
+  })
+
+  it('resolves package modules from nearest node_modules', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'better-color-scss-'))
+    const packageDir = join(dir, 'node_modules', '@acme', 'tokens')
+    const entryDir = join(dir, 'src', 'components')
+    const entryPath = join(entryDir, 'entry.scss')
+    const packageIndexPath = join(packageDir, '_index.scss')
+
+    await mkdir(packageDir, { recursive: true })
+    await mkdir(entryDir, { recursive: true })
+    await writeFile(packageIndexPath, '$brand: #7c3aed;\n', 'utf8')
+
+    const text = `
+      @use "@acme/tokens";
+      .button { color: tokens.$brand; }
+    `
+    await writeFile(entryPath, text, 'utf8')
+
+    const result = await findScssVars(text, {
+      languageId: 'scss',
+      filePath: entryPath,
+      resolveScssVariablesAcrossFiles: true,
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.indexOf('tokens.$brand'),
+        end: text.indexOf('tokens.$brand') + 'tokens.$brand'.length,
+        color: 'rgb(124, 58, 237)',
       },
     ])
   })
@@ -202,6 +325,154 @@ describe(findScssVars, () => {
         start: text.indexOf('a.$b'),
         end: text.indexOf('a.$b') + 'a.$b'.length,
         color: 'rgb(20, 83, 45)',
+      },
+    ])
+  })
+
+  it('skips missing @use modules without failing the run', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'better-color-scss-'))
+    const entryPath = join(dir, 'entry.scss')
+
+    const text = `
+      @use "missing";
+      .button { color: missing.$brand; }
+    `
+    await writeFile(entryPath, text, 'utf8')
+
+    const result = await findScssVars(text, {
+      languageId: 'scss',
+      filePath: entryPath,
+      resolveScssVariablesAcrossFiles: true,
+    })
+
+    expect(result).toStrictEqual([])
+  })
+
+  it('handles duplicate imports and forwards without duplicate matches', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'better-color-scss-'))
+    const tokensPath = join(dir, '_tokens.scss')
+    const themePath = join(dir, '_theme.scss')
+    const entryPath = join(dir, 'entry.scss')
+
+    await writeFile(tokensPath, '$brand: #be123c;\n', 'utf8')
+    await writeFile(
+      themePath,
+      '@forward "tokens";\n@forward "tokens";\n',
+      'utf8',
+    )
+
+    const text = `
+      @import "tokens";
+      @import "tokens";
+      @use "theme";
+      .button {
+        color: $brand;
+        background: theme.$brand;
+      }
+    `
+    await writeFile(entryPath, text, 'utf8')
+
+    const result = await findScssVars(text, {
+      languageId: 'scss',
+      filePath: entryPath,
+      resolveScssVariablesAcrossFiles: true,
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.indexOf('$brand', text.indexOf('color')),
+        end: text.indexOf('$brand', text.indexOf('color')) + '$brand'.length,
+        color: 'rgb(190, 18, 60)',
+      },
+      {
+        start: text.indexOf('theme.$brand'),
+        end: text.indexOf('theme.$brand') + 'theme.$brand'.length,
+        color: 'rgb(190, 18, 60)',
+      },
+    ])
+  })
+
+  it('stops resolving forwarded modules at the configured depth limit', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'better-color-scss-'))
+    const entryPath = join(dir, 'entry.scss')
+
+    await writeFile(join(dir, '_a.scss'), '@forward "b";\n', 'utf8')
+    await writeFile(join(dir, '_b.scss'), '@forward "c";\n', 'utf8')
+    await writeFile(join(dir, '_c.scss'), '@forward "d";\n', 'utf8')
+    await writeFile(join(dir, '_d.scss'), '@forward "e";\n', 'utf8')
+    await writeFile(
+      join(dir, '_e.scss'),
+      '@forward "f";\n$near: #047857;\n',
+      'utf8',
+    )
+    await writeFile(join(dir, '_f.scss'), '$too-deep: #ef4444;\n', 'utf8')
+
+    const text = `
+      @use "a";
+      .button {
+        color: a.$near;
+        background: a.$too-deep;
+      }
+    `
+    await writeFile(entryPath, text, 'utf8')
+
+    const result = await findScssVars(text, {
+      languageId: 'scss',
+      filePath: entryPath,
+      resolveScssVariablesAcrossFiles: true,
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.indexOf('a.$near'),
+        end: text.indexOf('a.$near') + 'a.$near'.length,
+        color: 'rgb(4, 120, 87)',
+      },
+    ])
+  })
+
+  it('stops resolving modules after the per-run file limit', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'better-color-scss-'))
+    const entryPath = join(dir, 'entry.scss')
+    const moduleCount = 34
+
+    await Promise.all(
+      Array.from({ length: moduleCount }, async (_, index) => {
+        const hex = index.toString(16).padStart(2, '0')
+        await writeFile(
+          join(dir, `_m${index}.scss`),
+          `$v${index}: #${hex}${hex}${hex};\n`,
+          'utf8',
+        )
+      }),
+    )
+
+    const text = `
+      ${Array.from({ length: moduleCount }, (_, index) => `@use "m${index}" as *;`).join('\n')}
+      .button {
+        color: $v0;
+        border-color: $v31;
+        background: $v32;
+      }
+    `
+    await writeFile(entryPath, text, 'utf8')
+
+    const result = await findScssVars(text, {
+      languageId: 'scss',
+      filePath: entryPath,
+      resolveScssVariablesAcrossFiles: true,
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.indexOf('$v0'),
+        end: text.indexOf('$v0') + '$v0'.length,
+        color: 'rgb(0, 0, 0)',
+      },
+      {
+        start: text.indexOf('$v31'),
+        end: text.indexOf('$v31') + '$v31'.length,
+        color: 'rgb(31, 31, 31)',
       },
     ])
   })

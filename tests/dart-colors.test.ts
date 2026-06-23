@@ -9,6 +9,7 @@ const defaultConfig: NestedScopedConfigs = {
   matchWords: false,
   namedColorMatchMode: 'context',
   resolveScssVariablesAcrossFiles: false,
+  scssLoadPaths: [],
   useARGB: false,
   matchRgbWithNoFunction: false,
   rgbWithNoFunctionLanguages: ['*'],

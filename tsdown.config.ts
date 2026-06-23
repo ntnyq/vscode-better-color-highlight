@@ -8,9 +8,7 @@ export default defineConfig({
   deps: {
     neverBundle: ['vscode'],
   },
-  dts: {
-    tsgo: true,
-  },
+  dts: false,
   entry: ['src/index.ts'],
   minify: !isDev(),
   shims: true,

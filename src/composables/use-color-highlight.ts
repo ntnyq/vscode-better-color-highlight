@@ -28,6 +28,7 @@ type HighlightRunConfig = Pick<
   | 'matchWords'
   | 'namedColorMatchMode'
   | 'resolveScssVariablesAcrossFiles'
+  | 'scssLoadPaths'
   | 'matchRgbWithNoFunction'
   | 'rgbWithNoFunctionLanguages'
   | 'matchHslWithNoFunction'
@@ -35,6 +36,46 @@ type HighlightRunConfig = Pick<
   | 'markerType'
   | 'markRuler'
 >
+
+/**
+ * Options used when running color detection strategies.
+ */
+interface StrategyRunOptions {
+  /**
+   * The document text to analyze.
+   */
+  readonly text: string
+
+  /**
+   * The language identifier for strategy selection.
+   */
+  readonly languageId: string
+
+  /**
+   * The current document file path.
+   */
+  readonly filePath?: string
+
+  /**
+   * The named-color matching mode to pass to strategies.
+   */
+  readonly namedColorMatchMode: HighlightRunConfig['namedColorMatchMode']
+
+  /**
+   * Whether SCSS strategies may read dependencies from disk.
+   */
+  readonly resolveScssVariablesAcrossFiles: HighlightRunConfig['resolveScssVariablesAcrossFiles']
+
+  /**
+   * Additional Sass load paths for SCSS dependency resolution.
+   */
+  readonly scssLoadPaths: HighlightRunConfig['scssLoadPaths']
+
+  /**
+   * Whether to emit debug log messages.
+   */
+  readonly debug: boolean
+}
 
 /**
  * Create a stable signature for the current text, language, and config.
@@ -59,6 +100,7 @@ function createHighlightRunSignature(
     namedColorMatchMode: highlightConfig.namedColorMatchMode,
     resolveScssVariablesAcrossFiles:
       highlightConfig.resolveScssVariablesAcrossFiles,
+    scssLoadPaths: highlightConfig.scssLoadPaths,
     matchRgbWithNoFunction: highlightConfig.matchRgbWithNoFunction,
     rgbWithNoFunctionLanguages: highlightConfig.rgbWithNoFunctionLanguages,
     matchHslWithNoFunction: highlightConfig.matchHslWithNoFunction,
@@ -106,20 +148,22 @@ function useDebouncedRef<T>(source: Ref<T>, ms: number): Ref<T> {
  * Run all applicable strategies on the given text.
  * Uses Promise.all for async strategies (fixes reference repo Promise.race bug).
  *
- * @param text - The document text to analyze
- * @param languageId - The language identifier for strategy selection
- * @param namedColorMatchMode - The named-color matching mode to pass to strategies
- * @param resolveScssVariablesAcrossFiles - Whether SCSS strategies may read dependencies from disk
- * @param debug - Whether to emit debug log messages
+ * @param options - Strategy run options
  * @returns Flat array of all color matches from all strategies
  */
 async function runStrategies(
-  text: string,
-  languageId: string,
-  namedColorMatchMode: HighlightRunConfig['namedColorMatchMode'],
-  resolveScssVariablesAcrossFiles: HighlightRunConfig['resolveScssVariablesAcrossFiles'],
-  debug: boolean,
+  options: StrategyRunOptions,
 ): Promise<ColorMatch[]> {
+  const {
+    text,
+    languageId,
+    filePath,
+    namedColorMatchMode,
+    resolveScssVariablesAcrossFiles,
+    scssLoadPaths,
+    debug,
+  } = options
+
   if (!config.enable) {
     return []
   }
@@ -137,8 +181,10 @@ async function runStrategies(
       const strategyName = fn.name || 'anonymous'
       const matches = await fn(text, {
         languageId,
+        filePath,
         namedColorMatchMode,
         resolveScssVariablesAcrossFiles,
+        scssLoadPaths,
       })
       if (debug && matches.length > 0) {
         logger.info(
@@ -303,13 +349,16 @@ function setupEditorTracking(
       }
 
       try {
-        const matches = await runStrategies(
+        const matches = await runStrategies({
           text,
-          doc.languageId,
-          config.namedColorMatchMode,
-          config.resolveScssVariablesAcrossFiles,
-          config.debug,
-        )
+          languageId: doc.languageId,
+          filePath: doc.uri.fsPath,
+          namedColorMatchMode: config.namedColorMatchMode,
+          resolveScssVariablesAcrossFiles:
+            config.resolveScssVariablesAcrossFiles,
+          scssLoadPaths: config.scssLoadPaths,
+          debug: config.debug,
+        })
 
         // Guard: discard stale results if document changed while strategies ran
         if (thisVersion !== pendingVersion) {

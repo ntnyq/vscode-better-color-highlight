@@ -125,6 +125,14 @@
           "default": false,
           "description": "Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work."
         },
+        "color-highlight.scssLoadPaths": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "Additional Sass load paths for resolving non-relative SCSS @use, @forward, and @import modules."
+        },
         "color-highlight.useARGB": {
           "type": "boolean",
           "default": false,

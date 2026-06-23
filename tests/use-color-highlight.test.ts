@@ -88,6 +88,7 @@ vi.mock(
         matchWords: false,
         namedColorMatchMode: 'context',
         resolveScssVariablesAcrossFiles: false,
+        scssLoadPaths: [],
         useARGB: false,
         matchRgbWithNoFunction: false,
         rgbWithNoFunctionLanguages: ['*'],

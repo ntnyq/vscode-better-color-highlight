@@ -1,5 +1,12 @@
-import { access, readFile } from 'node:fs/promises'
-import { basename, dirname, extname, join } from 'node:path'
+import { access, readFile, stat } from 'node:fs/promises'
+import {
+  basename,
+  dirname,
+  extname,
+  isAbsolute,
+  join,
+  resolve,
+} from 'node:path'
 import type { ColorMatch, ColorDetector, StrategyContext } from '../core/types'
 import { findColorFunctions } from './color-functions'
 import { findHexRGBA } from './hex'
@@ -45,6 +52,36 @@ const MAX_SCSS_RESOLVE_DEPTH = 5
  * Maximum number of SCSS dependency files to read per strategy run.
  */
 const MAX_SCSS_RESOLVE_FILES = 32
+
+/**
+ * Maximum number of SCSS dependency file contents kept in memory.
+ */
+const MAX_SCSS_FILE_CONTENT_CACHE_SIZE = 256
+
+/**
+ * Cached SCSS dependency file content and metadata used for invalidation.
+ */
+interface ScssFileContentCacheEntry {
+  /**
+   * Last known file modification timestamp.
+   */
+  readonly mtimeMs: number
+
+  /**
+   * Last known file size in bytes.
+   */
+  readonly size: number
+
+  /**
+   * File text read with UTF-8 encoding.
+   */
+  readonly text: string
+}
+
+/**
+ * Process-wide cache for dependency file contents.
+ */
+const scssFileContentCache = new Map<string, ScssFileContentCacheEntry>()
 
 /**
  * Resolve a raw SCSS value to a color using the base color strategies.
@@ -141,6 +178,11 @@ interface ScssResolveState {
   readonly resolvingFiles: Set<string>
 
   /**
+   * Additional Sass load paths for non-relative module specifiers.
+   */
+  readonly loadPaths: readonly string[]
+
+  /**
    * Number of files read during the current resolution run.
    */
   filesRead: number
@@ -205,9 +247,7 @@ function mergeMissingScssVarDefs(
  * @param specifier - The raw Sass module specifier
  * @returns Candidate file paths in Sass resolution order
  */
-function getScssModuleCandidates(fromFilePath: string, specifier: string) {
-  const baseDir = dirname(fromFilePath)
-  const specPath = join(baseDir, specifier)
+function getScssModuleCandidatesForPath(specPath: string): string[] {
   const specBase = basename(specPath)
   const ext = extname(specBase)
   const withoutExt = ext ? specPath.slice(0, -ext.length) : specPath
@@ -222,6 +262,89 @@ function getScssModuleCandidates(fromFilePath: string, specifier: string) {
     join(withoutExt, 'index.scss'),
     join(withoutExt, '_index.scss'),
   ]
+}
+
+/**
+ * Check whether a Sass module specifier is relative to the current file.
+ *
+ * @param specifier - The raw Sass module specifier
+ * @returns Whether the specifier starts with `.` path syntax
+ */
+function isRelativeScssSpecifier(specifier: string): boolean {
+  return /^\.{1,2}(?:[/\\]|$)/u.test(specifier)
+}
+
+/**
+ * Collect nearest `node_modules` directories from the current file upward.
+ *
+ * @param fromFilePath - The file path containing the Sass statement
+ * @returns Candidate `node_modules` directories from nearest to farthest
+ */
+function getNearestNodeModulesPaths(fromFilePath: string): string[] {
+  const paths: string[] = []
+  let currentDir = dirname(fromFilePath)
+
+  while (true) {
+    paths.push(join(currentDir, 'node_modules'))
+
+    const parentDir = dirname(currentDir)
+    if (parentDir === currentDir) {
+      break
+    }
+    currentDir = parentDir
+  }
+
+  return paths
+}
+
+/**
+ * Normalize configured Sass load paths relative to the current file.
+ *
+ * @param fromFilePath - The file path containing the Sass statement
+ * @param loadPaths - Raw configured Sass load paths
+ * @returns Absolute load paths in declaration order
+ */
+function normalizeScssLoadPaths(
+  fromFilePath: string,
+  loadPaths: readonly string[],
+): string[] {
+  const baseDir = dirname(fromFilePath)
+
+  return loadPaths.map(loadPath =>
+    isAbsolute(loadPath) ? loadPath : resolve(baseDir, loadPath),
+  )
+}
+
+/**
+ * Build local filesystem candidates for a Sass module specifier.
+ *
+ * @param fromFilePath - The file path containing the Sass statement
+ * @param specifier - The raw Sass module specifier
+ * @param loadPaths - Additional Sass load paths for bare specifiers
+ * @returns Candidate file paths in Sass resolution order
+ */
+function getScssModuleCandidates(
+  fromFilePath: string,
+  specifier: string,
+  loadPaths: readonly string[],
+): string[] {
+  const baseDir = dirname(fromFilePath)
+  const initialPaths = [
+    isAbsolute(specifier) ? specifier : join(baseDir, specifier),
+  ]
+
+  if (!isAbsolute(specifier) && !isRelativeScssSpecifier(specifier)) {
+    initialPaths.push(
+      ...normalizeScssLoadPaths(fromFilePath, loadPaths).map(loadPath =>
+        join(loadPath, specifier),
+      ),
+      ...getNearestNodeModulesPaths(fromFilePath).map(nodeModulesPath =>
+        join(nodeModulesPath, specifier),
+      ),
+    )
+  }
+
+  return initialPaths.flatMap(getScssModuleCandidatesForPath)
 }
 
 /**
@@ -240,6 +363,41 @@ async function pathExists(filePath: string): Promise<boolean> {
 }
 
 /**
+ * Read a SCSS dependency file using mtime and size based cache invalidation.
+ *
+ * @param filePath - The dependency file path to read
+ * @returns Cached or freshly read UTF-8 file text
+ */
+async function readCachedScssFile(filePath: string): Promise<string> {
+  const stats = await stat(filePath)
+  const cached = scssFileContentCache.get(filePath)
+
+  if (
+    cached &&
+    cached.mtimeMs === stats.mtimeMs &&
+    cached.size === stats.size
+  ) {
+    return cached.text
+  }
+
+  const text = await readFile(filePath, 'utf8')
+  scssFileContentCache.set(filePath, {
+    mtimeMs: stats.mtimeMs,
+    size: stats.size,
+    text,
+  })
+
+  if (scssFileContentCache.size > MAX_SCSS_FILE_CONTENT_CACHE_SIZE) {
+    const oldestKey = scssFileContentCache.keys().next().value
+    if (oldestKey) {
+      scssFileContentCache.delete(oldestKey)
+    }
+  }
+
+  return text
+}
+
+/**
  * Resolve a local Sass module specifier to a concrete file path.
  *
  * @param fromFilePath - The file path containing the Sass statement
@@ -249,12 +407,17 @@ async function pathExists(filePath: string): Promise<boolean> {
 async function resolveScssModulePath(
   fromFilePath: string,
   specifier: string,
+  loadPaths: readonly string[],
 ): Promise<string | null> {
   if (/^(?:sass:|https?:|npm:)/u.test(specifier)) {
     return null
   }
 
-  for (const candidate of getScssModuleCandidates(fromFilePath, specifier)) {
+  for (const candidate of getScssModuleCandidates(
+    fromFilePath,
+    specifier,
+    loadPaths,
+  )) {
     if (await pathExists(candidate)) {
       return candidate
     }
@@ -287,7 +450,11 @@ async function loadScssModule(
     return null
   }
 
-  const filePath = await resolveScssModulePath(fromFilePath, specifier)
+  const filePath = await resolveScssModulePath(
+    fromFilePath,
+    specifier,
+    state.loadPaths,
+  )
   if (!filePath || state.resolvingFiles.has(filePath)) {
     return null
   }
@@ -295,7 +462,7 @@ async function loadScssModule(
   state.resolvingFiles.add(filePath)
   state.filesRead += 1
 
-  const text = await readFile(filePath, 'utf8')
+  const text = await readCachedScssFile(filePath)
   const varDefs = collectScssVarDefs(text)
   const importedVarDefs = await collectImportedScssVarDefs(
     text,
@@ -390,6 +557,7 @@ async function collectImportedScssVarDefs(
 
   const resolveState = state ?? {
     resolvingFiles: new Set([context.filePath]),
+    loadPaths: context.scssLoadPaths ?? [],
     filesRead: 0,
   }
 
@@ -432,6 +600,7 @@ async function collectUsedStarScssVarDefs(
 
   const state: ScssResolveState = {
     resolvingFiles: new Set([context.filePath]),
+    loadPaths: context.scssLoadPaths ?? [],
     filesRead: 0,
   }
 
@@ -473,6 +642,7 @@ async function collectUsedScssModules(
 
   const state: ScssResolveState = {
     resolvingFiles: new Set([context.filePath]),
+    loadPaths: context.scssLoadPaths ?? [],
     filesRead: 0,
   }
   const modules: ScssModule[] = []
@@ -663,7 +833,8 @@ function findNamespacedScssVarUsages(
 
 /**
  * Build a regex that matches SCSS $var usages for the given variable names.
- * Skips definitions ($varName:) and hyphenated names ($varName-xxx).
+ * Skips definitions ($varName:), hyphenated names ($varName-xxx),
+ * and namespaced usages (namespace.$varName).
  *
  * @param varNames - Array of SCSS variable names without the $ prefix
  * @returns A RegExp matching $name usages, or null if no names provided
@@ -675,7 +846,7 @@ function buildScssVarUsageRegex(varNames: string[]): RegExp | null {
     .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`))
     .join('|')
   return new RegExp(
-    `(?<prefix>^|[^-\\w$])(?<full>\\$(?<name>${names}))(?![-\\w])(?!(?:\\s*:))`,
+    `(?<prefix>^|[^-\\w$.])(?<full>\\$(?<name>${names}))(?![-\\w])(?!(?:\\s*:))`,
     'gmu',
   )
 }

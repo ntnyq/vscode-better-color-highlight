@@ -29,6 +29,7 @@ Highlight and preview colors in multiple formats across code, comments, and stri
 | `color-highlight.matchWords`                      | Highlight named CSS colors (e.g., 'red', 'blue') in non-style languages.                                                                                                  | `boolean` | `false`        |
 | `color-highlight.namedColorMatchMode`             | Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches any named color word, and 'never' disables named color matching. | `string`  | `"context"`    |
 | `color-highlight.resolveScssVariablesAcrossFiles` | Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work.                                       | `boolean` | `false`        |
+| `color-highlight.scssLoadPaths`                   | Additional Sass load paths for resolving non-relative SCSS @use, @forward, and @import modules.                                                                           | `array`   | `[]`           |
 | `color-highlight.useARGB`                         | Interpret 8-digit hex colors as ARGB instead of RGBA.                                                                                                                     | `boolean` | `false`        |
 | `color-highlight.matchRgbWithNoFunction`          | Highlight RGB values not wrapped in rgb() function.                                                                                                                       | `boolean` | `false`        |
 | `color-highlight.rgbWithNoFunctionLanguages`      | Language IDs for rgb-without-function matching. Use '\*' / '!' syntax.                                                                                                    | `array`   | `["*"]`        |
@@ -76,31 +77,32 @@ Compared with the original Color Highlight extension, this project keeps the fam
 - Hyprland `rgba(rrggbb)` and `rgba(rrggbbaa)` syntax.
 - Transparent colors stay visible by rendering markers with an opaque display color while preserving the represented color value.
 - Named CSS color matching is more configurable through `color-highlight.namedColorMatchMode`.
-- Optional SCSS cross-file variable resolution through local `@use`, `@forward`, and `@import` dependencies.
+- Optional SCSS cross-file variable resolution through local `@use`, `@forward`, `@import`, directory indexes, nearest `node_modules`, and configured Sass load paths.
 - Broader test coverage, including parser regression tests and playground snapshots.
 
 ## Migration from Color Highlight
 
 Most settings from `naumovs.color-highlight` can be kept as-is because this extension intentionally keeps the same `color-highlight.*` configuration namespace for compatible options.
 
-| Original setting                               | In this extension                                          | Migration note                                                                                                                                                   |
-| ---------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `color-highlight.enable`                       | `color-highlight.enable`                                   | Keep as-is.                                                                                                                                                      |
-| `color-highlight.languages`                    | `color-highlight.languages`                                | Keep as-is. Supports `*` and `!languageId` exclusions.                                                                                                           |
-| `color-highlight.matchWords`                   | `color-highlight.matchWords`                               | Keep as-is for non-style languages. For style languages, also review `color-highlight.namedColorMatchMode`.                                                      |
-| `color-highlight.useARGB`                      | `color-highlight.useARGB`                                  | Keep as-is. This still controls whether 8-digit hex is interpreted as ARGB instead of RGBA.                                                                      |
-| `color-highlight.matchRgbWithNoFunction`       | `color-highlight.matchRgbWithNoFunction`                   | Keep as-is.                                                                                                                                                      |
-| `color-highlight.rgbWithNoFunctionLanguages`   | `color-highlight.rgbWithNoFunctionLanguages`               | Keep as-is.                                                                                                                                                      |
-| `color-highlight.matchHslWithNoFunction`       | `color-highlight.matchHslWithNoFunction`                   | Keep as-is.                                                                                                                                                      |
-| `color-highlight.hslWithNoFunctionLanguages`   | `color-highlight.hslWithNoFunctionLanguages`               | Keep as-is.                                                                                                                                                      |
-| `color-highlight.markerType`                   | `color-highlight.markerType`                               | Keep as-is. Supported values are `background`, `outline`, `foreground`, `underline`, `dot-before`, and `dot-after`.                                              |
-| `color-highlight.markRuler`                    | `color-highlight.markRuler`                                | Keep as-is.                                                                                                                                                      |
-| `color-highlight.sass.includePaths`            | No direct equivalent                                       | Remove it for now. This extension resolves local SCSS dependencies relative to the current file when `color-highlight.resolveScssVariablesAcrossFiles` is true.  |
-| Not available                                  | `color-highlight.namedColorMatchMode`                      | New. Default `context` avoids highlighting selectors, variable names, and words like `@layer red`. Use `always` for legacy broad matching or `never` to disable. |
-| Not available                                  | `color-highlight.resolveScssVariablesAcrossFiles`          | New. Default `false`. Set to `true` to resolve SCSS variables across local `@use`, `@forward`, and `@import` files.                                              |
-| Not available                                  | `color-highlight.debug`                                    | New. Set to `true` to enable debug logging for detection and decoration.                                                                                         |
-| Command `extension.colorHighlight`             | Commands `color-highlight.enable` / `disable`              | Replace old command usage with the explicit enable/disable commands.                                                                                             |
-| Extension identifier `naumovs.color-highlight` | Extension identifier `ntnyq.vscode-better-color-highlight` | Install this extension and disable/uninstall the original one to avoid duplicate decorations.                                                                    |
+| Original setting                               | In this extension                                          | Migration note                                                                                                                                                           |
+| ---------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `color-highlight.enable`                       | `color-highlight.enable`                                   | Keep as-is.                                                                                                                                                              |
+| `color-highlight.languages`                    | `color-highlight.languages`                                | Keep as-is. Supports `*` and `!languageId` exclusions.                                                                                                                   |
+| `color-highlight.matchWords`                   | `color-highlight.matchWords`                               | Keep as-is for non-style languages. For style languages, also review `color-highlight.namedColorMatchMode`.                                                              |
+| `color-highlight.useARGB`                      | `color-highlight.useARGB`                                  | Keep as-is. This still controls whether 8-digit hex is interpreted as ARGB instead of RGBA.                                                                              |
+| `color-highlight.matchRgbWithNoFunction`       | `color-highlight.matchRgbWithNoFunction`                   | Keep as-is.                                                                                                                                                              |
+| `color-highlight.rgbWithNoFunctionLanguages`   | `color-highlight.rgbWithNoFunctionLanguages`               | Keep as-is.                                                                                                                                                              |
+| `color-highlight.matchHslWithNoFunction`       | `color-highlight.matchHslWithNoFunction`                   | Keep as-is.                                                                                                                                                              |
+| `color-highlight.hslWithNoFunctionLanguages`   | `color-highlight.hslWithNoFunctionLanguages`               | Keep as-is.                                                                                                                                                              |
+| `color-highlight.markerType`                   | `color-highlight.markerType`                               | Keep as-is. Supported values are `background`, `outline`, `foreground`, `underline`, `dot-before`, and `dot-after`.                                                      |
+| `color-highlight.markRuler`                    | `color-highlight.markRuler`                                | Keep as-is.                                                                                                                                                              |
+| `color-highlight.sass.includePaths`            | `color-highlight.scssLoadPaths`                            | Rename this setting. Load paths are used for non-relative SCSS `@use`, `@forward`, and `@import` modules when `color-highlight.resolveScssVariablesAcrossFiles` is true. |
+| Not available                                  | `color-highlight.namedColorMatchMode`                      | New. Default `context` avoids highlighting selectors, variable names, and words like `@layer red`. Use `always` for legacy broad matching or `never` to disable.         |
+| Not available                                  | `color-highlight.resolveScssVariablesAcrossFiles`          | New. Default `false`. Set to `true` to resolve SCSS variables across local `@use`, `@forward`, and `@import` files.                                                      |
+| Not available                                  | `color-highlight.scssLoadPaths`                            | New. Default `[]`. Add absolute paths, or paths relative to the current SCSS file, for package-style Sass module resolution.                                             |
+| Not available                                  | `color-highlight.debug`                                    | New. Set to `true` to enable debug logging for detection and decoration.                                                                                                 |
+| Command `extension.colorHighlight`             | Commands `color-highlight.enable` / `disable`              | Replace old command usage with the explicit enable/disable commands.                                                                                                     |
+| Extension identifier `naumovs.color-highlight` | Extension identifier `ntnyq.vscode-better-color-highlight` | Install this extension and disable/uninstall the original one to avoid duplicate decorations.                                                                            |
 
 Suggested migration example:
 
@@ -111,6 +113,7 @@ Suggested migration example:
   "color-highlight.matchWords": false,
   "color-highlight.namedColorMatchMode": "context",
   "color-highlight.resolveScssVariablesAcrossFiles": false,
+  "color-highlight.scssLoadPaths": [],
 }
 ```
 
