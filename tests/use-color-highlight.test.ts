@@ -22,6 +22,7 @@ const getterWatchers = new Set<() => void>()
 
 const setDecorations =
   vi.fn<(decorationType: unknown, ranges: unknown[]) => void>()
+const onDeactivateMock = vi.fn<(dispose: DisposeFn) => void>()
 const createTextEditorDecorationType = vi.fn<() => { dispose: DisposeFn }>(
   () => ({
     dispose: vi.fn<DisposeFn>(),
@@ -108,7 +109,7 @@ vi.mock(
   () =>
     ({
       defineConfig: vi.fn<() => Record<string, unknown>>(() => configSnapshot),
-      onDeactivate: vi.fn<(dispose: DisposeFn) => void>(),
+      onDeactivate: onDeactivateMock,
       ref: createRef,
       useDocumentText: vi.fn<() => TestRef<string>>(() => documentTextRef),
       useVisibleTextEditors: vi.fn<() => TestRef<unknown[]>>(
@@ -273,5 +274,19 @@ describe('useColorHighlight', () => {
     visibleEditorsRef.value = []
 
     expect(documentTextRef.watchers.size).toBe(0)
+  })
+
+  it('registers only one extension deactivate handler', async () => {
+    setupTest()
+    const editor = createEditor()
+    documentTextRef = createRef('.box { color: #ff0000; }')
+    visibleEditorsRef = createRef<unknown[]>([editor])
+
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+
+    useColorHighlight()
+
+    expect(onDeactivateMock.mock.calls).toStrictEqual([[expect.any(Function)]])
   })
 })

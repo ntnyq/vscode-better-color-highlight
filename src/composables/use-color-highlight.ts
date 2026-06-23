@@ -97,10 +97,6 @@ function useDebouncedRef<T>(source: Ref<T>, ms: number): Disposable<Ref<T>> {
     stopWatch()
   }
 
-  onDeactivate(() => {
-    dispose()
-  })
-
   return Object.assign(debounced, { dispose })
 }
 
