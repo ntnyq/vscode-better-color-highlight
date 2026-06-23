@@ -2,34 +2,11 @@
 // @see https://github.com/antfu/vscode-ext-gen
 
 // Meta info
-/**
- * Extension publisher identifier.
- */
 export const publisher = "ntnyq"
-
-/**
- * Extension package name.
- */
 export const name = "vscode-better-color-highlight"
-
-/**
- * Extension package version.
- */
 export const version = "0.0.0"
-
-/**
- * Human-readable extension display name.
- */
 export const displayName = "Better Color Highlight"
-
-/**
- * Short extension marketplace description.
- */
 export const description = "Highlight and preview colors in multiple formats across code, comments, and strings."
-
-/**
- * Fully qualified extension identifier.
- */
 export const extensionId = `${publisher}.${name}`
 
 /**
@@ -74,9 +51,6 @@ export type ConfigKey =
   | "color-highlight.markRuler"
   | "color-highlight.debug"
 
-/**
- * Mapping from fully qualified configuration keys to their value types.
- */
 export interface ConfigKeyTypeMap {
   "color-highlight.enable": boolean,
   "color-highlight.languages": string[],
@@ -94,9 +68,6 @@ export interface ConfigKeyTypeMap {
   "color-highlight.debug": boolean,
 }
 
-/**
- * Mapping from shorthand configuration names to fully qualified keys.
- */
 export interface ConfigShorthandMap {
   enable: "color-highlight.enable",
   languages: "color-highlight.languages",
@@ -114,9 +85,6 @@ export interface ConfigShorthandMap {
   debug: "color-highlight.debug",
 }
 
-/**
- * Mapping from shorthand configuration names to their value types.
- */
 export interface ConfigShorthandTypeMap {
   enable: boolean,
   languages: string[],
@@ -134,11 +102,6 @@ export interface ConfigShorthandTypeMap {
   debug: boolean,
 }
 
-/**
- * Metadata for a registered configuration entry.
- *
- * @typeParam T - Fully qualified configuration key represented by the item.
- */
 export interface ConfigItem<T extends keyof ConfigKeyTypeMap> {
   key: T,
   default: ConfigKeyTypeMap[T],
@@ -291,9 +254,6 @@ export const configs = {
   } as ConfigItem<"color-highlight.debug">,
 }
 
-/**
- * Mapping from scoped configuration keys to their value types.
- */
 export interface ScopedConfigKeyTypeMap {
   "enable": boolean,
   "languages": string[],
@@ -311,9 +271,6 @@ export interface ScopedConfigKeyTypeMap {
   "debug": boolean,
 }
 
-/**
- * Scoped configuration metadata for the extension.
- */
 export const scopedConfigs = {
   scope: "color-highlight",
   defaults: {
@@ -334,9 +291,6 @@ export const scopedConfigs = {
   } satisfies ScopedConfigKeyTypeMap,
 }
 
-/**
- * Nested configuration shape grouped by extension scope.
- */
 export interface NestedConfigs {
   "color-highlight": {
     "enable": boolean,
@@ -356,9 +310,6 @@ export interface NestedConfigs {
   },
 }
 
-/**
- * Nested configuration shape for scoped extension settings.
- */
 export interface NestedScopedConfigs {
   "enable": boolean,
   "languages": string[],
@@ -375,3 +326,4 @@ export interface NestedScopedConfigs {
   "markRuler": boolean,
   "debug": boolean,
 }
+

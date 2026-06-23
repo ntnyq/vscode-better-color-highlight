@@ -2,6 +2,7 @@
   "name": "vscode-better-color-highlight",
   "displayName": "Better Color Highlight",
   "version": "0.0.0",
+  "private": true,
   "description": "Highlight and preview colors in multiple formats across code, comments, and strings.",
   "categories": [
     "Other"
@@ -41,7 +42,10 @@
     "name": "ntnyq",
     "email": "ntnyq13@gmail.com"
   },
-  "repository": "ntnyq/vscode-better-color-highlight",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ntnyq/vscode-better-color-highlight.git"
+  },
   "publisher": "ntnyq",
   "files": [
     "LICENSE",
@@ -81,6 +85,7 @@
     "bumpp": "^11.1.0",
     "husky": "^9.1.7",
     "nano-staged": "^1.0.2",
+    "npm-run-all2": "^9.0.2",
     "oxfmt": "^0.56.0",
     "oxlint": "^1.71.0",
     "tsdown": "^0.22.3",
@@ -88,7 +93,7 @@
     "vscode-ext-gen": "^1.6.0"
   },
   "nano-staged": {
-    "*.{js,ts,mjs,tsx}": "oxlint --fix",
+    "*.{js,ts,mjs,tsx}": "oxlint --fix --no-error-on-unmatched-pattern",
     "*": "oxfmt --no-error-on-unmatched-pattern"
   },
   "contributes": {
@@ -214,7 +219,8 @@
   "activationEvents": [
     "onStartupFinished"
   ],
-  "icon": "https://ntnyq.com/static/icons/icon-192x192.png",
+  "icon": "./res/icon.png",
+  "preview": true,
   "engines": {
     "vscode": "^1.125.0"
   },
