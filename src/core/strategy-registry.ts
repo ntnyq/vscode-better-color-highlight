@@ -55,7 +55,8 @@ function isLanguageMatch(
  * - hwb
  *
  * Conditional strategies:
- * - named colors: only for style languages, or when matchWords is true
+ * - named colors: controlled by namedColorMatchMode for style languages,
+ *   or when matchWords is true
  * - rgb-no-fn: when matchRgbWithNoFunction is true AND language matches
  * - hsl-no-fn: when matchHslWithNoFunction is true AND language matches
  * - css-vars: only for css/scss/less languages
@@ -81,7 +82,10 @@ export function getStrategies(
 
   // Named colors: for style languages or when explicitly enabled
   const isStyleLang = STYLE_LANGUAGES.has(languageId)
-  if (isStyleLang || config.matchWords) {
+  if (
+    config.namedColorMatchMode !== 'never' &&
+    (isStyleLang || config.matchWords)
+  ) {
     strategies.push(findNamedColors)
   }
 

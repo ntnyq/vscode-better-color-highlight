@@ -39,6 +39,7 @@ export type ConfigKey =
   | "color-highlight.enable"
   | "color-highlight.languages"
   | "color-highlight.matchWords"
+  | "color-highlight.namedColorMatchMode"
   | "color-highlight.useARGB"
   | "color-highlight.matchRgbWithNoFunction"
   | "color-highlight.rgbWithNoFunctionLanguages"
@@ -52,6 +53,7 @@ export interface ConfigKeyTypeMap {
   "color-highlight.enable": boolean,
   "color-highlight.languages": string[],
   "color-highlight.matchWords": boolean,
+  "color-highlight.namedColorMatchMode": ("context" | "always" | "never"),
   "color-highlight.useARGB": boolean,
   "color-highlight.matchRgbWithNoFunction": boolean,
   "color-highlight.rgbWithNoFunctionLanguages": string[],
@@ -66,6 +68,7 @@ export interface ConfigShorthandMap {
   enable: "color-highlight.enable",
   languages: "color-highlight.languages",
   matchWords: "color-highlight.matchWords",
+  namedColorMatchMode: "color-highlight.namedColorMatchMode",
   useARGB: "color-highlight.useARGB",
   matchRgbWithNoFunction: "color-highlight.matchRgbWithNoFunction",
   rgbWithNoFunctionLanguages: "color-highlight.rgbWithNoFunctionLanguages",
@@ -80,6 +83,7 @@ export interface ConfigShorthandTypeMap {
   enable: boolean,
   languages: string[],
   matchWords: boolean,
+  namedColorMatchMode: ("context" | "always" | "never"),
   useARGB: boolean,
   matchRgbWithNoFunction: boolean,
   rgbWithNoFunctionLanguages: string[],
@@ -121,7 +125,7 @@ export const configs = {
     default: ["*"],
   } as ConfigItem<"color-highlight.languages">,
   /**
-   * Highlight named CSS colors (e.g., 'red', 'blue') in all file types.
+   * Highlight named CSS colors (e.g., 'red', 'blue') in non-style languages.
    * @key `color-highlight.matchWords`
    * @default `false`
    * @type `boolean`
@@ -130,6 +134,16 @@ export const configs = {
     key: "color-highlight.matchWords",
     default: false,
   } as ConfigItem<"color-highlight.matchWords">,
+  /**
+   * Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches any named color word, and 'never' disables named color matching.
+   * @key `color-highlight.namedColorMatchMode`
+   * @default `"context"`
+   * @type `string`
+   */
+  namedColorMatchMode: {
+    key: "color-highlight.namedColorMatchMode",
+    default: "context",
+  } as ConfigItem<"color-highlight.namedColorMatchMode">,
   /**
    * Interpret 8-digit hex colors as ARGB instead of RGBA.
    * @key `color-highlight.useARGB`
@@ -216,6 +230,7 @@ export interface ScopedConfigKeyTypeMap {
   "enable": boolean,
   "languages": string[],
   "matchWords": boolean,
+  "namedColorMatchMode": ("context" | "always" | "never"),
   "useARGB": boolean,
   "matchRgbWithNoFunction": boolean,
   "rgbWithNoFunctionLanguages": string[],
@@ -232,6 +247,7 @@ export const scopedConfigs = {
     "enable": true,
     "languages": ["*"],
     "matchWords": false,
+    "namedColorMatchMode": "context",
     "useARGB": false,
     "matchRgbWithNoFunction": false,
     "rgbWithNoFunctionLanguages": ["*"],
@@ -248,6 +264,7 @@ export interface NestedConfigs {
     "enable": boolean,
     "languages": string[],
     "matchWords": boolean,
+    "namedColorMatchMode": ("context" | "always" | "never"),
     "useARGB": boolean,
     "matchRgbWithNoFunction": boolean,
     "rgbWithNoFunctionLanguages": string[],
@@ -263,6 +280,7 @@ export interface NestedScopedConfigs {
   "enable": boolean,
   "languages": string[],
   "matchWords": boolean,
+  "namedColorMatchMode": ("context" | "always" | "never"),
   "useARGB": boolean,
   "matchRgbWithNoFunction": boolean,
   "rgbWithNoFunctionLanguages": string[],

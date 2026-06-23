@@ -23,6 +23,7 @@ type HighlightRunConfig = Pick<
   | 'languages'
   | 'useARGB'
   | 'matchWords'
+  | 'namedColorMatchMode'
   | 'matchRgbWithNoFunction'
   | 'rgbWithNoFunctionLanguages'
   | 'matchHslWithNoFunction'
@@ -43,6 +44,7 @@ function createHighlightRunSignature(
     languages: highlightConfig.languages,
     useARGB: highlightConfig.useARGB,
     matchWords: highlightConfig.matchWords,
+    namedColorMatchMode: highlightConfig.namedColorMatchMode,
     matchRgbWithNoFunction: highlightConfig.matchRgbWithNoFunction,
     rgbWithNoFunctionLanguages: highlightConfig.rgbWithNoFunctionLanguages,
     matchHslWithNoFunction: highlightConfig.matchHslWithNoFunction,
@@ -98,6 +100,7 @@ function useDebouncedRef<T>(source: Ref<T>, ms: number): Ref<T> {
 async function runStrategies(
   text: string,
   languageId: string,
+  namedColorMatchMode: HighlightRunConfig['namedColorMatchMode'],
   debug: boolean,
 ): Promise<ColorMatch[]> {
   if (!config.enable) {
@@ -115,7 +118,7 @@ async function runStrategies(
   const results = await Promise.all(
     strategies.map(async fn => {
       const strategyName = fn.name || 'anonymous'
-      const matches = await fn(text, { languageId })
+      const matches = await fn(text, { languageId, namedColorMatchMode })
       if (debug && matches.length > 0) {
         logger.info(
           `[debug] Strategy "${strategyName}" found ${matches.length} matches`,
@@ -279,7 +282,12 @@ function setupEditorTracking(
       }
 
       try {
-        const matches = await runStrategies(text, doc.languageId, config.debug)
+        const matches = await runStrategies(
+          text,
+          doc.languageId,
+          config.namedColorMatchMode,
+          config.debug,
+        )
 
         // Guard: discard stale results if document changed while strategies ran
         if (thisVersion !== pendingVersion) {

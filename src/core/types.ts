@@ -34,7 +34,11 @@ export interface StrategyContext {
   languageId: string
   /** The document's URI fsPath, for variable resolution strategies */
   filePath?: string
+  /** How named CSS colors should be matched. */
+  namedColorMatchMode?: NamedColorMatchMode
 }
+
+export type NamedColorMatchMode = 'context' | 'always' | 'never'
 
 /**
  * Marker type for decoration styling.

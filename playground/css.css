@@ -219,6 +219,13 @@
   border-color: green;
 }
 
+/* Named color false positives */
+.red {
+  color: red;
+}
+
+@layer blue;
+
 /* =============================================
  * Newly Supported CSS Color 4 Spaces
  * ============================================= */

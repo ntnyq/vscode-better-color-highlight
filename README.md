@@ -22,19 +22,20 @@ Highlight and preview colors in multiple formats across code, comments, and stri
 
 <!-- configs -->
 
-| Key                                          | Description                                                                                        | Type      | Default        |
-| -------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------- | -------------- |
-| `color-highlight.enable`                     | Enable or disable color highlighting.                                                              | `boolean` | `true`         |
-| `color-highlight.languages`                  | Language IDs where colors are highlighted. Use '\*' for all languages, prefix with '!' to exclude. | `array`   | `["*"]`        |
-| `color-highlight.matchWords`                 | Highlight named CSS colors (e.g., 'red', 'blue') in all file types.                                | `boolean` | `false`        |
-| `color-highlight.useARGB`                    | Interpret 8-digit hex colors as ARGB instead of RGBA.                                              | `boolean` | `false`        |
-| `color-highlight.matchRgbWithNoFunction`     | Highlight RGB values not wrapped in rgb() function.                                                | `boolean` | `false`        |
-| `color-highlight.rgbWithNoFunctionLanguages` | Language IDs for rgb-without-function matching. Use '\*' / '!' syntax.                             | `array`   | `["*"]`        |
-| `color-highlight.matchHslWithNoFunction`     | Highlight HSL values not wrapped in hsl() function.                                                | `boolean` | `false`        |
-| `color-highlight.hslWithNoFunctionLanguages` | Language IDs for hsl-without-function matching. Use '\*' / '!' syntax.                             | `array`   | `["*"]`        |
-| `color-highlight.markerType`                 | Style of the color highlight marker.                                                               | `string`  | `"background"` |
-| `color-highlight.markRuler`                  | Show color indicators on the scrollbar ruler.                                                      | `boolean` | `true`         |
-| `color-highlight.debug`                      | Enable debug logging for color detection and decoration.                                           | `boolean` | `false`        |
+| Key                                          | Description                                                                                                                                                               | Type      | Default        |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | -------------- |
+| `color-highlight.enable`                     | Enable or disable color highlighting.                                                                                                                                     | `boolean` | `true`         |
+| `color-highlight.languages`                  | Language IDs where colors are highlighted. Use '\*' for all languages, prefix with '!' to exclude.                                                                        | `array`   | `["*"]`        |
+| `color-highlight.matchWords`                 | Highlight named CSS colors (e.g., 'red', 'blue') in non-style languages.                                                                                                  | `boolean` | `false`        |
+| `color-highlight.namedColorMatchMode`        | Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches any named color word, and 'never' disables named color matching. | `string`  | `"context"`    |
+| `color-highlight.useARGB`                    | Interpret 8-digit hex colors as ARGB instead of RGBA.                                                                                                                     | `boolean` | `false`        |
+| `color-highlight.matchRgbWithNoFunction`     | Highlight RGB values not wrapped in rgb() function.                                                                                                                       | `boolean` | `false`        |
+| `color-highlight.rgbWithNoFunctionLanguages` | Language IDs for rgb-without-function matching. Use '\*' / '!' syntax.                                                                                                    | `array`   | `["*"]`        |
+| `color-highlight.matchHslWithNoFunction`     | Highlight HSL values not wrapped in hsl() function.                                                                                                                       | `boolean` | `false`        |
+| `color-highlight.hslWithNoFunctionLanguages` | Language IDs for hsl-without-function matching. Use '\*' / '!' syntax.                                                                                                    | `array`   | `["*"]`        |
+| `color-highlight.markerType`                 | Style of the color highlight marker.                                                                                                                                      | `string`  | `"background"` |
+| `color-highlight.markRuler`                  | Show color indicators on the scrollbar ruler.                                                                                                                             | `boolean` | `true`         |
+| `color-highlight.debug`                      | Enable debug logging for color detection and decoration.                                                                                                                  | `boolean` | `false`        |
 
 <!-- configs -->
 

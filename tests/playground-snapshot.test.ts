@@ -23,6 +23,7 @@ const snapshotConfig: NestedScopedConfigs = {
   enable: true,
   languages: ['*'],
   matchWords: true,
+  namedColorMatchMode: 'context',
   useARGB: false,
   matchRgbWithNoFunction: true,
   rgbWithNoFunctionLanguages: ['*'],
@@ -75,7 +76,13 @@ async function collectFileSnapshot(fileName: string) {
   const strategies = getStrategies(languageId, snapshotConfig)
 
   const results = await Promise.all(
-    strategies.map(strategy => strategy(text, { languageId, filePath })),
+    strategies.map(strategy =>
+      strategy(text, {
+        languageId,
+        filePath,
+        namedColorMatchMode: snapshotConfig.namedColorMatchMode,
+      }),
+    ),
   )
 
   const matches = dedupeAndSortMatches(results.flat())

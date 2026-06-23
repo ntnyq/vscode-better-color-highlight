@@ -1,6 +1,6 @@
 import { rgbString } from '../color/convert'
 import { NAMED_COLORS } from '../color/named-color-map'
-import type { ColorMatch } from '../core/types'
+import type { ColorMatch, StrategyContext } from '../core/types'
 
 /**
  * Regex for CSS named color keywords.
@@ -10,6 +10,9 @@ import type { ColorMatch } from '../core/types'
  * Negative lookahead (?!-) prevents matching partial hyphenated names.
  */
 const NAMED_COLOR_REGEX = buildNamedColorRegex()
+const CSS_LIKE_LANGUAGES = new Set(['css', 'scss', 'sass', 'less'])
+const CSS_DECLARATION_HEAD_REGEX =
+  /^\s*(?:(?:[$@]?[-_a-z][-\w]*)|(?:--[-\w]+))\s*:/iu
 
 /**
  * Build a regex that matches any CSS named color keyword.
@@ -31,7 +34,10 @@ function buildNamedColorRegex(): RegExp {
  * @param text - The document text to scan for named colors
  * @returns Array of color matches found in the text
  */
-export function findNamedColors(text: string): ColorMatch[] {
+export function findNamedColors(
+  text: string,
+  context?: StrategyContext,
+): ColorMatch[] {
   const matches: ColorMatch[] = []
 
   for (const m of text.matchAll(NAMED_COLOR_REGEX)) {
@@ -43,10 +49,45 @@ export function findNamedColors(text: string): ColorMatch[] {
 
     const start = (m.index ?? 0) + prefix.length
     const end = start + name.length
+    if (!isNamedColorAllowed(text, start, context)) continue
+
     const color = rgbString(rgb[0], rgb[1], rgb[2])
 
     matches.push({ start, end, color })
   }
 
   return matches
+}
+
+function isNamedColorAllowed(
+  text: string,
+  start: number,
+  context?: StrategyContext,
+): boolean {
+  if (context?.namedColorMatchMode === 'always') {
+    return true
+  }
+
+  if (!context || !CSS_LIKE_LANGUAGES.has(context.languageId)) {
+    return true
+  }
+
+  return isInCssDeclarationValue(text, start)
+}
+
+function isInCssDeclarationValue(text: string, start: number): boolean {
+  const boundary = Math.max(
+    text.lastIndexOf('{', start),
+    text.lastIndexOf('}', start),
+    text.lastIndexOf(';', start),
+  )
+  const declarationSegment = text.slice(boundary + 1, start)
+
+  return CSS_DECLARATION_HEAD_REGEX.test(stripCssComments(declarationSegment))
+}
+
+function stripCssComments(text: string): string {
+  return text
+    .replaceAll(/\/\*[\s\S]*?\*\//gu, '')
+    .replaceAll(/\/\/[^\n\r]*/gu, '')
 }

@@ -42,4 +42,60 @@ describe(findNamedColors, () => {
     const result = findNamedColors('color: red; bg: blue;')
     expect(result).toHaveLength(2)
   })
+
+  it('skips selector names in CSS-like languages', () => {
+    const result = findNamedColors('.red { color: blue; }', {
+      languageId: 'css',
+    })
+
+    expect(result).toStrictEqual([
+      { start: 14, end: 18, color: 'rgb(0, 0, 255)' },
+    ])
+  })
+
+  it('matches selector names when named color mode is always', () => {
+    const result = findNamedColors('.red { color: blue; }', {
+      languageId: 'css',
+      namedColorMatchMode: 'always',
+    })
+
+    expect(result).toStrictEqual([
+      { start: 1, end: 4, color: 'rgb(255, 0, 0)' },
+      { start: 14, end: 18, color: 'rgb(0, 0, 255)' },
+    ])
+  })
+
+  it('skips named colors in CSS at-rules', () => {
+    const result = findNamedColors('@layer red;', {
+      languageId: 'css',
+    })
+
+    expect(result).toStrictEqual([])
+  })
+
+  it('skips named colors in CSS at-rule conditions', () => {
+    const result = findNamedColors('@supports (color: red) { .item {} }', {
+      languageId: 'css',
+    })
+
+    expect(result).toStrictEqual([])
+  })
+
+  it('skips named colors in CSS custom property names', () => {
+    const result = findNamedColors(':root { --red: #f00; color: red; }', {
+      languageId: 'css',
+    })
+
+    expect(result).toStrictEqual([
+      { start: 28, end: 31, color: 'rgb(255, 0, 0)' },
+    ])
+  })
+
+  it('keeps explicit word matching permissive without a CSS-like context', () => {
+    const result = findNamedColors('const color = "red"')
+
+    expect(result).toStrictEqual([
+      { start: 15, end: 18, color: 'rgb(255, 0, 0)' },
+    ])
+  })
 })

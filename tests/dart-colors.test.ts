@@ -7,6 +7,7 @@ const defaultConfig: NestedScopedConfigs = {
   enable: true,
   languages: ['*'],
   matchWords: false,
+  namedColorMatchMode: 'context',
   useARGB: false,
   matchRgbWithNoFunction: false,
   rgbWithNoFunctionLanguages: ['*'],

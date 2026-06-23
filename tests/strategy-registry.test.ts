@@ -13,6 +13,7 @@ const defaultConfig: NestedScopedConfigs = {
   enable: true,
   languages: ['*'],
   matchWords: false,
+  namedColorMatchMode: 'context',
   useARGB: false,
   matchRgbWithNoFunction: false,
   rgbWithNoFunctionLanguages: ['*'],
@@ -41,6 +42,13 @@ describe(getStrategies, () => {
   it('includes named colors for CSS languages', () => {
     const strategies = getStrategies('css', defaultConfig)
     expect(strategies).toContain(findNamedColors)
+  })
+
+  it('excludes named colors when named color mode is never', () => {
+    const config = { ...defaultConfig, namedColorMatchMode: 'never' as const }
+    const strategies = getStrategies('css', config)
+
+    expect(strategies).not.toContain(findNamedColors)
   })
 
   it('includes named colors when matchWords is true', () => {

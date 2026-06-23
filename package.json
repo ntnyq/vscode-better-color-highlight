@@ -108,7 +108,17 @@
         "color-highlight.matchWords": {
           "type": "boolean",
           "default": false,
-          "description": "Highlight named CSS colors (e.g., 'red', 'blue') in all file types."
+          "description": "Highlight named CSS colors (e.g., 'red', 'blue') in non-style languages."
+        },
+        "color-highlight.namedColorMatchMode": {
+          "type": "string",
+          "default": "context",
+          "enum": [
+            "context",
+            "always",
+            "never"
+          ],
+          "description": "Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches any named color word, and 'never' disables named color matching."
         },
         "color-highlight.useARGB": {
           "type": "boolean",
