@@ -3,10 +3,16 @@
  * Pure data — no VS Code dependency.
  */
 export interface ColorMatch {
-  /** Start offset in the document text (inclusive) */
+  /**
+   * Start offset in the document text (inclusive).
+   */
   readonly start: number
-  /** End offset in the document text (exclusive) */
+
+  /**
+   * End offset in the document text (exclusive).
+   */
   readonly end: number
+
   /**
    * The resolved color as a CSS rgb()/rgba() string, e.g. "rgb(255, 0, 0)".
    * Used as the decoration key and for contrast calculation.
@@ -30,14 +36,30 @@ export type ColorDetector = (
  * Context passed to strategies that may need additional info.
  */
 export interface StrategyContext {
-  /** The document's language ID (e.g., "css", "scss") */
+  /**
+   * The document's language ID, e.g. "css" or "scss".
+   */
   languageId: string
-  /** The document's URI fsPath, for variable resolution strategies */
+
+  /**
+   * The document's URI fsPath, for variable resolution strategies.
+   */
   filePath?: string
-  /** How named CSS colors should be matched. */
+
+  /**
+   * How named CSS colors should be matched.
+   */
   namedColorMatchMode?: NamedColorMatchMode
+
+  /**
+   * Whether SCSS @use/@forward/@import dependencies may be read from disk.
+   */
+  resolveScssVariablesAcrossFiles?: boolean
 }
 
+/**
+ * Supported named-color matching modes.
+ */
 export type NamedColorMatchMode = 'context' | 'always' | 'never'
 
 /**

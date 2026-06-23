@@ -40,6 +40,7 @@ export type ConfigKey =
   | "color-highlight.languages"
   | "color-highlight.matchWords"
   | "color-highlight.namedColorMatchMode"
+  | "color-highlight.resolveScssVariablesAcrossFiles"
   | "color-highlight.useARGB"
   | "color-highlight.matchRgbWithNoFunction"
   | "color-highlight.rgbWithNoFunctionLanguages"
@@ -54,6 +55,7 @@ export interface ConfigKeyTypeMap {
   "color-highlight.languages": string[],
   "color-highlight.matchWords": boolean,
   "color-highlight.namedColorMatchMode": ("context" | "always" | "never"),
+  "color-highlight.resolveScssVariablesAcrossFiles": boolean,
   "color-highlight.useARGB": boolean,
   "color-highlight.matchRgbWithNoFunction": boolean,
   "color-highlight.rgbWithNoFunctionLanguages": string[],
@@ -69,6 +71,7 @@ export interface ConfigShorthandMap {
   languages: "color-highlight.languages",
   matchWords: "color-highlight.matchWords",
   namedColorMatchMode: "color-highlight.namedColorMatchMode",
+  resolveScssVariablesAcrossFiles: "color-highlight.resolveScssVariablesAcrossFiles",
   useARGB: "color-highlight.useARGB",
   matchRgbWithNoFunction: "color-highlight.matchRgbWithNoFunction",
   rgbWithNoFunctionLanguages: "color-highlight.rgbWithNoFunctionLanguages",
@@ -84,6 +87,7 @@ export interface ConfigShorthandTypeMap {
   languages: string[],
   matchWords: boolean,
   namedColorMatchMode: ("context" | "always" | "never"),
+  resolveScssVariablesAcrossFiles: boolean,
   useARGB: boolean,
   matchRgbWithNoFunction: boolean,
   rgbWithNoFunctionLanguages: string[],
@@ -144,6 +148,16 @@ export const configs = {
     key: "color-highlight.namedColorMatchMode",
     default: "context",
   } as ConfigItem<"color-highlight.namedColorMatchMode">,
+  /**
+   * Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work.
+   * @key `color-highlight.resolveScssVariablesAcrossFiles`
+   * @default `false`
+   * @type `boolean`
+   */
+  resolveScssVariablesAcrossFiles: {
+    key: "color-highlight.resolveScssVariablesAcrossFiles",
+    default: false,
+  } as ConfigItem<"color-highlight.resolveScssVariablesAcrossFiles">,
   /**
    * Interpret 8-digit hex colors as ARGB instead of RGBA.
    * @key `color-highlight.useARGB`
@@ -231,6 +245,7 @@ export interface ScopedConfigKeyTypeMap {
   "languages": string[],
   "matchWords": boolean,
   "namedColorMatchMode": ("context" | "always" | "never"),
+  "resolveScssVariablesAcrossFiles": boolean,
   "useARGB": boolean,
   "matchRgbWithNoFunction": boolean,
   "rgbWithNoFunctionLanguages": string[],
@@ -248,6 +263,7 @@ export const scopedConfigs = {
     "languages": ["*"],
     "matchWords": false,
     "namedColorMatchMode": "context",
+    "resolveScssVariablesAcrossFiles": false,
     "useARGB": false,
     "matchRgbWithNoFunction": false,
     "rgbWithNoFunctionLanguages": ["*"],
@@ -265,6 +281,7 @@ export interface NestedConfigs {
     "languages": string[],
     "matchWords": boolean,
     "namedColorMatchMode": ("context" | "always" | "never"),
+    "resolveScssVariablesAcrossFiles": boolean,
     "useARGB": boolean,
     "matchRgbWithNoFunction": boolean,
     "rgbWithNoFunctionLanguages": string[],
@@ -281,6 +298,7 @@ export interface NestedScopedConfigs {
   "languages": string[],
   "matchWords": boolean,
   "namedColorMatchMode": ("context" | "always" | "never"),
+  "resolveScssVariablesAcrossFiles": boolean,
   "useARGB": boolean,
   "matchRgbWithNoFunction": boolean,
   "rgbWithNoFunctionLanguages": string[],

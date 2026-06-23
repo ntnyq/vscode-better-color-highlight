@@ -16,6 +16,9 @@ const LESS_VAR_REF_REGEX = /@(?<name>[-\w]+)/gu
 
 /**
  * Resolve a raw Less value to a color using the base color strategies.
+ *
+ * @param value - The raw Less value to resolve
+ * @returns The resolved rgb() color string, or null if no color is found
  */
 async function resolveDirectColor(value: string): Promise<string | null> {
   const strategies: ColorDetector[] = [
@@ -32,6 +35,11 @@ async function resolveDirectColor(value: string): Promise<string | null> {
 
 /**
  * Resolve Less variable values to colors, following nested variable references.
+ *
+ * @param value - The raw Less variable value
+ * @param varDefs - All Less variable definitions in the document
+ * @param seen - Variables already visited to avoid cycles
+ * @returns The resolved rgb() color string, or null if no color is found
  */
 async function resolveVarValue(
   value: string,

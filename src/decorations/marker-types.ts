@@ -27,6 +27,12 @@ function parseRgbString(color: string): {
   }
 }
 
+/**
+ * Convert an rgb()/rgba() string to an opaque rgb() string for marker display.
+ *
+ * @param color - The CSS rgb() or rgba() color string
+ * @returns An opaque CSS rgb() string
+ */
 function toOpaqueRgbString(color: string): string {
   const { b, g, r } = parseRgbString(color)
   return `rgb(${r}, ${g}, ${b})`

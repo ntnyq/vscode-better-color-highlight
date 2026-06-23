@@ -40,6 +40,9 @@ function buildVarUsageRegex(varNames: string[]): RegExp | null {
 
 /**
  * Resolve a raw CSS value to a color using the base color strategies.
+ *
+ * @param value - The raw CSS value to resolve
+ * @returns The resolved rgb() color string, or null if no color is found
  */
 async function resolveDirectColor(value: string): Promise<string | null> {
   const strategies: ColorDetector[] = [
@@ -59,6 +62,7 @@ async function resolveDirectColor(value: string): Promise<string | null> {
  *
  * @param value - The raw variable value string to resolve
  * @param varDefs - All CSS variable definitions in the document
+ * @param currentName - Optional current variable name used as shorthand hint
  * @param seen - Variables already visited to avoid cycles
  * @returns The resolved rgb() color string, or null if no color found
  */

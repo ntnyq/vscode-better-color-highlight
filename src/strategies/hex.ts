@@ -9,10 +9,24 @@ import type { ColorMatch, StrategyContext } from '../core/types'
 const HEX_REGEX =
   /(?<prefix>.?)(?<hex>(?:#|0x)(?:[a-f0-9]{6}(?:[a-f0-9]{2})?|[a-f0-9]{3}(?:[a-f0-9])?))\b/giu
 
+/**
+ * Check whether a numeric `0x` hex literal is too short to be a color.
+ *
+ * @param hex - The matched hex literal
+ * @returns Whether the literal should be skipped
+ */
 function isShortNumericHex(hex: string): boolean {
   return hex.toLowerCase().startsWith('0x') && hex.length <= 6
 }
 
+/**
+ * Check whether a hex match is handled by the Dart-specific color strategy.
+ *
+ * @param text - The source text containing the match
+ * @param start - The start offset of the matched hex literal
+ * @param context - Optional strategy context with language metadata
+ * @returns Whether the match is inside a Dart `Color(...)` constructor
+ */
 function isDartColorConstructorHex(
   text: string,
   start: number,
@@ -27,6 +41,7 @@ function isDartColorConstructorHex(
  * Matches #RGB, #RRGGBB, #RGBA, #RRGGBBAA and 0x prefix variants.
  *
  * @param text - The document text to scan for hex colors
+ * @param context - Optional strategy context with language metadata
  * @returns Array of color matches found in the text
  */
 export function findHexRGBA(
@@ -65,6 +80,7 @@ export function findHexRGBA(
  * For 8-digit and 4-digit hex: first digits are alpha.
  *
  * @param text - The document text to scan for hex colors
+ * @param context - Optional strategy context with language metadata
  * @returns Array of color matches found in the text
  */
 export function findHexARGB(

@@ -29,6 +29,9 @@ const COLOR_FUNC_REGEX =
 const COLOR_SPACE_FUNC_REGEX =
   /(?<colorSpaceFunc>color\(\s*(?:srgb|srgb-linear|display-p3|a98-rgb|prophoto-rgb|rec2020|xyz(?:-d50|-d65)?)\s+[-+]?[\d.*]*\.?[\d]+%?\s+[-+]?[\d.*]*\.?[\d]+%?\s+[-+]?[\d.*]*\.?[\d]+%?(?:\s*\/\s*[-+]?[\d.*]*\.?[\d]+%?)?\s*\))/giu
 
+/**
+ * Regex for Hyprland's rgba(rrggbb) and rgba(rrggbbaa) syntax.
+ */
 const HYPRLAND_RGBA_HEX_REGEX =
   /(?<hyprlandRgba>rgba\(\s*(?<hex>[a-f0-9]{6}(?:[a-f0-9]{2})?)\s*\))/giu
 
@@ -40,6 +43,9 @@ const HYPRLAND_RGBA_HEX_REGEX =
 const CSS_VAR_SHORTHAND_REGEX =
   /(?<propName>--[\w-]+-(?:rgb|hsl|lch|oklch|lab|oklab))\s*:\s*(?<value>[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*\/\s*[\d.*]*\.?[\d]+%?)?)\s*;/giu
 
+/**
+ * Supported shorthand color spaces for bare channel values.
+ */
 type ShorthandSpace = 'rgb' | 'hsl' | 'lch' | 'oklch' | 'lab' | 'oklab'
 
 /**
@@ -151,6 +157,12 @@ export function findColorFunctions(text: string): ColorMatch[] {
   return matches
 }
 
+/**
+ * Detect Hyprland rgba(hex) colors.
+ *
+ * @param text - The document text to scan
+ * @returns Array of color matches found in Hyprland rgba(hex) syntax
+ */
 function findHyprlandRgbaHexColors(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
 
@@ -232,11 +244,10 @@ function parseColorFunction(func: string): string | null {
 }
 
 /**
- * Convert parsed function arguments to RGB based on the color space.
+ * Parse a CSS Color 4 color() function string.
  *
- * @param fn - The color function name (e.g. 'rgb', 'hsl', 'lch')
- * @param parts - Array of raw string arguments from the color function
- * @returns RGB tuple [r, g, b] or [null, null, null] if conversion fails
+ * @param func - The full color() function string
+ * @returns The resolved rgb() color string, or null if parsing fails
  */
 function parseColorSpaceFunction(func: string): string | null {
   const fnMatch = func.match(/^color\(\s*(?<space>[\w-]+)\s+(?<args>.+)\)$/iu)
@@ -266,6 +277,12 @@ function parseColorSpaceFunction(func: string): string | null {
   return rgbString(r, g, b, alpha)
 }
 
+/**
+ * Infer a shorthand color space from a variable or property name.
+ *
+ * @param name - Optional variable or property name hint
+ * @returns The inferred shorthand color space, or null when unknown
+ */
 function inferShorthandSpace(name?: string): ShorthandSpace | null {
   if (!name) return null
 
@@ -277,6 +294,10 @@ function inferShorthandSpace(name?: string): ShorthandSpace | null {
 /**
  * Resolve raw shorthand values such as "255 0 0" or "0 100% 50%".
  * Uses an explicit variable-name hint when available, with safe heuristics as fallback.
+ *
+ * @param value - The raw shorthand value to resolve
+ * @param hint - Optional variable or property name hint
+ * @returns The resolved rgb() color string, or null if parsing fails
  */
 export function resolveShorthandColor(
   value: string,
@@ -305,6 +326,13 @@ export function resolveShorthandColor(
   return space ? parseShorthandValue(normalized, space) : null
 }
 
+/**
+ * Convert parsed function arguments to RGB based on the color space.
+ *
+ * @param fn - The color function name, e.g. 'rgb', 'hsl', or 'lch'
+ * @param parts - Array of raw string arguments from the color function
+ * @returns RGB tuple [r, g, b] or [null, null, null] if conversion fails
+ */
 function convertColorFunction(
   fn: string,
   parts: string[],

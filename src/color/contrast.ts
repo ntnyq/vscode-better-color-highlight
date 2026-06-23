@@ -3,7 +3,9 @@
  * Determines whether white or black text provides better contrast against a given background color.
  */
 
-/** 256-entry sRGB to linear lookup table for performance */
+/**
+ * 256-entry sRGB to linear lookup table for performance.
+ */
 const srgb8ToLinear = new Float64Array(256)
 for (let i = 0; i < 256; i++) {
   const c = i / 255
@@ -37,8 +39,15 @@ export function contrastRatio(l1: number, l2: number): number {
   return (0.05 + lighter) / (0.05 + darker)
 }
 
-const WHITE_LUMINANCE = relativeLuminance(255, 255, 255) // ~1.0
-const BLACK_LUMINANCE = relativeLuminance(0, 0, 0) // ~0.0
+/**
+ * Relative luminance for white.
+ */
+const WHITE_LUMINANCE = relativeLuminance(255, 255, 255)
+
+/**
+ * Relative luminance for black.
+ */
+const BLACK_LUMINANCE = relativeLuminance(0, 0, 0)
 
 /**
  * Get the best contrast text color (white or black) for a given background color.

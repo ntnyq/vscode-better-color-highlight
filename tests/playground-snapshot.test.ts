@@ -24,6 +24,7 @@ const snapshotConfig: NestedScopedConfigs = {
   languages: ['*'],
   matchWords: true,
   namedColorMatchMode: 'context',
+  resolveScssVariablesAcrossFiles: true,
   useARGB: false,
   matchRgbWithNoFunction: true,
   rgbWithNoFunctionLanguages: ['*'],
@@ -81,6 +82,8 @@ async function collectFileSnapshot(fileName: string) {
         languageId,
         filePath,
         namedColorMatchMode: snapshotConfig.namedColorMatchMode,
+        resolveScssVariablesAcrossFiles:
+          snapshotConfig.resolveScssVariablesAcrossFiles,
       }),
     ),
   )

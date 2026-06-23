@@ -2,6 +2,8 @@
 // Hex Colors
 // =============================================
 
+@use "scss-tokens";
+
 // #RGB — 3-digit hex
 $hex-3: #f00;
 $hex-3b: #0f0;
@@ -159,6 +161,15 @@ $prophoto-accent: color(prophoto-rgb 0.7 0.3 0.2);
   color: $display-p3-accent;
   background: $rec2020-accent;
   border-color: $prophoto-accent;
+}
+
+// =============================================
+// Cross-file SCSS Variables
+// =============================================
+
+.cross-file-scss {
+  color: scss-tokens.$brand-from-partial;
+  background: scss-tokens.$accent-from-partial;
 }
 
 // Optional plain-text samples for extra manual checking:

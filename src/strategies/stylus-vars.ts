@@ -27,11 +27,27 @@ const STYLUS_VAR_DEF_REGEX =
  */
 const STYLUS_VAR_REF_REGEX = /\$?(?<name>[-\w]+)/gu
 
+/**
+ * Parsed Stylus variable definition.
+ */
 interface StylusVarDefinition {
+  /**
+   * Variable name without a leading `$`.
+   */
   name: string
+
+  /**
+   * Raw variable value.
+   */
   value: string
 }
 
+/**
+ * Extract a Stylus variable definition from a regex match.
+ *
+ * @param match - The regex match from `STYLUS_VAR_DEF_REGEX`
+ * @returns The parsed variable definition, or null if the match is incomplete
+ */
 function getStylusVarDefinition(
   match: RegExpMatchArray,
 ): StylusVarDefinition | null {
@@ -44,6 +60,9 @@ function getStylusVarDefinition(
 
 /**
  * Resolve a raw Stylus value to a color using the base color strategies.
+ *
+ * @param value - The raw Stylus value to resolve
+ * @returns The resolved rgb() color string, or null if no color is found
  */
 async function resolveDirectColor(value: string): Promise<string | null> {
   const strategies: ColorDetector[] = [
@@ -60,6 +79,12 @@ async function resolveDirectColor(value: string): Promise<string | null> {
 
 /**
  * Resolve Stylus variable values to colors, following nested variable references.
+ *
+ * @param value - The raw Stylus variable value
+ * @param varDefs - All Stylus variable definitions in the document
+ * @param currentName - Optional current variable name used as shorthand hint
+ * @param seen - Variables already visited to avoid cycles
+ * @returns The resolved rgb() color string, or null if no color is found
  */
 async function resolveVarValue(
   value: string,

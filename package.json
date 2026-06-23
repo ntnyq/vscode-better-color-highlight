@@ -120,6 +120,11 @@
           ],
           "description": "Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches any named color word, and 'never' disables named color matching."
         },
+        "color-highlight.resolveScssVariablesAcrossFiles": {
+          "type": "boolean",
+          "default": false,
+          "description": "Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work."
+        },
         "color-highlight.useARGB": {
           "type": "boolean",
           "default": false,

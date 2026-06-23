@@ -5,7 +5,7 @@ import { commands } from '../meta'
 /**
  * Register the enable and disable commands for color highlighting.
  */
-export function useCommands(): void {
+export function useCommands() {
   useCommand(commands.enable, () => {
     config.update('enable', true)
   })

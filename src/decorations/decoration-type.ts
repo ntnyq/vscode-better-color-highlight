@@ -9,6 +9,9 @@ import { buildDecorationOptions } from './marker-types'
  * The cache is lazily populated and must be disposed when no longer needed.
  */
 export class DecorationTypeCache {
+  /**
+   * Cached decoration types keyed by marker type, color, and ruler setting.
+   */
   private cache = new Map<string, TextEditorDecorationType>()
 
   /**
@@ -37,7 +40,7 @@ export class DecorationTypeCache {
   /**
    * Dispose all cached decoration types and clear the cache.
    */
-  public clear(): void {
+  public clear() {
     for (const type of this.cache.values()) {
       type.dispose()
     }
@@ -47,7 +50,7 @@ export class DecorationTypeCache {
   /**
    * Dispose the cache. Alias for clear().
    */
-  public dispose(): void {
+  public dispose() {
     this.clear()
   }
 

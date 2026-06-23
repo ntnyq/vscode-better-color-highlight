@@ -17,6 +17,9 @@ import { DecorationTypeCache } from '../decorations/decoration-type'
 import type { NestedScopedConfigs } from '../meta'
 import { logger } from '../utils/logger'
 
+/**
+ * Configuration fields that affect a single highlight run.
+ */
 type HighlightRunConfig = Pick<
   NestedScopedConfigs,
   | 'enable'
@@ -24,6 +27,7 @@ type HighlightRunConfig = Pick<
   | 'useARGB'
   | 'matchWords'
   | 'namedColorMatchMode'
+  | 'resolveScssVariablesAcrossFiles'
   | 'matchRgbWithNoFunction'
   | 'rgbWithNoFunctionLanguages'
   | 'matchHslWithNoFunction'
@@ -32,6 +36,14 @@ type HighlightRunConfig = Pick<
   | 'markRuler'
 >
 
+/**
+ * Create a stable signature for the current text, language, and config.
+ *
+ * @param text - The current document text
+ * @param languageId - The document language ID
+ * @param highlightConfig - The highlight configuration snapshot
+ * @returns Serialized signature for detecting unchanged highlight runs
+ */
 function createHighlightRunSignature(
   text: string | undefined,
   languageId: string,
@@ -45,6 +57,8 @@ function createHighlightRunSignature(
     useARGB: highlightConfig.useARGB,
     matchWords: highlightConfig.matchWords,
     namedColorMatchMode: highlightConfig.namedColorMatchMode,
+    resolveScssVariablesAcrossFiles:
+      highlightConfig.resolveScssVariablesAcrossFiles,
     matchRgbWithNoFunction: highlightConfig.matchRgbWithNoFunction,
     rgbWithNoFunctionLanguages: highlightConfig.rgbWithNoFunctionLanguages,
     matchHslWithNoFunction: highlightConfig.matchHslWithNoFunction,
@@ -94,6 +108,8 @@ function useDebouncedRef<T>(source: Ref<T>, ms: number): Ref<T> {
  *
  * @param text - The document text to analyze
  * @param languageId - The language identifier for strategy selection
+ * @param namedColorMatchMode - The named-color matching mode to pass to strategies
+ * @param resolveScssVariablesAcrossFiles - Whether SCSS strategies may read dependencies from disk
  * @param debug - Whether to emit debug log messages
  * @returns Flat array of all color matches from all strategies
  */
@@ -101,6 +117,7 @@ async function runStrategies(
   text: string,
   languageId: string,
   namedColorMatchMode: HighlightRunConfig['namedColorMatchMode'],
+  resolveScssVariablesAcrossFiles: HighlightRunConfig['resolveScssVariablesAcrossFiles'],
   debug: boolean,
 ): Promise<ColorMatch[]> {
   if (!config.enable) {
@@ -118,7 +135,11 @@ async function runStrategies(
   const results = await Promise.all(
     strategies.map(async fn => {
       const strategyName = fn.name || 'anonymous'
-      const matches = await fn(text, { languageId, namedColorMatchMode })
+      const matches = await fn(text, {
+        languageId,
+        namedColorMatchMode,
+        resolveScssVariablesAcrossFiles,
+      })
       if (debug && matches.length > 0) {
         logger.info(
           `[debug] Strategy "${strategyName}" found ${matches.length} matches`,
@@ -214,7 +235,7 @@ function setupEditorTracking(
   editor: TextEditor,
   cache: DecorationTypeCache,
   disposables: (() => void)[],
-): void {
+) {
   const doc = editor.document
   const textRef = useDocumentText(doc)
 
@@ -286,6 +307,7 @@ function setupEditorTracking(
           text,
           doc.languageId,
           config.namedColorMatchMode,
+          config.resolveScssVariablesAcrossFiles,
           config.debug,
         )
 
@@ -352,7 +374,7 @@ function applyDecorations(
   markerType: MarkerType,
   markRuler: boolean,
   debug: boolean,
-): void {
+) {
   const doc = editor.document
 
   if (debug) {
@@ -383,13 +405,10 @@ function applyDecorations(
 /**
  * Clear all decorations from an editor by disposing the decoration cache.
  *
- * @param _editor - The VS Code text editor (unused, kept for API consistency)
+ * @param editor - The VS Code text editor whose decorations should be cleared
  * @param cache - The decoration type cache to clear
  */
-function clearDecorations(
-  editor: TextEditor,
-  cache: DecorationTypeCache,
-): void {
+function clearDecorations(editor: TextEditor, cache: DecorationTypeCache) {
   // Clear all currently tracked decoration types from the editor.
   for (const decorationType of cache.getAll()) {
     editor.setDecorations(decorationType, [])

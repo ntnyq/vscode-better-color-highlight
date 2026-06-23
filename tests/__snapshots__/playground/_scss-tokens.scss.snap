@@ -1,0 +1,50 @@
+{
+  "file": "_scss-tokens.scss",
+  "languageId": "scss",
+  "strategyNames": [
+    "findHexRGBA",
+    "findColorFunctions",
+    "findHwb",
+    "findNamedColors",
+    "findRgbNoFunction",
+    "findHslNoFunction",
+    "findCssVars",
+    "findScssVars"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 3,
+      "column": 22,
+      "text": "#2563eb",
+      "range": [
+        58,
+        65
+      ],
+      "color": "rgb(37, 99, 235)",
+      "render": {
+        "backgroundColor": "rgb(37, 99, 235)",
+        "color": "#FFFFFF",
+        "border": "3px solid rgb(37, 99, 235)",
+        "overviewRulerColor": "rgb(37, 99, 235)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 4,
+      "column": 23,
+      "text": "rebeccapurple",
+      "range": [
+        89,
+        102
+      ],
+      "color": "rgb(102, 51, 153)",
+      "render": {
+        "backgroundColor": "rgb(102, 51, 153)",
+        "color": "#FFFFFF",
+        "border": "3px solid rgb(102, 51, 153)",
+        "overviewRulerColor": "rgb(102, 51, 153)"
+      }
+    }
+  ]
+}

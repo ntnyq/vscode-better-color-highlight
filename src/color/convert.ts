@@ -212,6 +212,12 @@ export function hwbToRgb(
 
   const [r, g, bl] = hslToRgb(h, 1, 0.5)
 
+  /**
+   * Apply HWB whiteness and blackness to a channel.
+   *
+   * @param x - RGB channel value in [0, 255].
+   * @returns Scaled RGB channel value in [0, 255].
+   */
   function scale(x: number): number {
     return Math.round((x / 255) * (1 - w - b) * 255 + w * 255)
   }
@@ -268,6 +274,9 @@ function prophotoToLinear(c: number): number {
   return c <= 16 / 512 ? c / 16 : Math.sign(c) * Math.abs(c) ** 1.8
 }
 
+/**
+ * A 3x3 numeric matrix used for color-space conversions.
+ */
 type Matrix3x3 = [
   [number, number, number],
   [number, number, number],
@@ -276,6 +285,10 @@ type Matrix3x3 = [
 
 /**
  * Multiply a 3×3 matrix by a 3×1 vector.
+ *
+ * @param matrix - The 3x3 matrix to multiply
+ * @param vector - The 3-channel vector to multiply
+ * @returns The transformed 3-channel vector
  */
 function multiplyMatrixAndVector(
   matrix: Matrix3x3,
@@ -296,6 +309,11 @@ function multiplyMatrixAndVector(
 
 /**
  * Adapt XYZ values from D50 to D65 white point.
+ *
+ * @param x - The X channel in D50 XYZ
+ * @param y - The Y channel in D50 XYZ
+ * @param z - The Z channel in D50 XYZ
+ * @returns The adapted D65 XYZ tuple
  */
 function adaptD50ToD65(
   x: number,
@@ -314,6 +332,11 @@ function adaptD50ToD65(
 
 /**
  * Convert D65 XYZ to gamma-corrected sRGB.
+ *
+ * @param x - The X channel in D65 XYZ
+ * @param y - The Y channel in D65 XYZ
+ * @param z - The Z channel in D65 XYZ
+ * @returns Tuple of [r, g, b] in [0, 255]
  */
 function xyzD65ToRgb(
   x: number,
@@ -331,9 +354,19 @@ function xyzD65ToRgb(
   ]
 }
 
-/** D65 white point constants */
+/**
+ * D65 reference white X channel.
+ */
 const D65_XN = 0.950489
+
+/**
+ * D65 reference white Y channel.
+ */
 const D65_YN = 1
+
+/**
+ * D65 reference white Z channel.
+ */
 const D65_ZN = 1.08884
 
 /**
