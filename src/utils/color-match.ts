@@ -1,4 +1,4 @@
-import type { ColorMatch, ColorMatchGroup } from './types'
+import type { ColorMatch, ColorMatchGroup } from '../types'
 
 /**
  * Group color matches by their resolved color string.

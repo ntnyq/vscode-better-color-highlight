@@ -1,5 +1,5 @@
-import { hexToRgb, hexARGBToRgb, rgbString } from '../color/convert'
-import type { ColorMatch, StrategyContext } from '../core/types'
+import type { ColorMatch, StrategyContext } from '../types'
+import { hexToRgb, hexARGBToRgb, rgbString } from '../utils/color'
 
 /**
  * Regex for hex colors: #RGB, #RRGGBB, #RGBA, #RRGGBBAA, and 0x prefix.

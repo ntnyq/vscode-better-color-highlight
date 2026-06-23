@@ -1,5 +1,5 @@
-import { hwbToRgb, rgbString } from '../color/convert'
-import type { ColorMatch } from '../core/types'
+import type { ColorMatch } from '../types'
+import { hwbToRgb, rgbString } from '../utils/color'
 
 /**
  * Regex for hwb() color function.

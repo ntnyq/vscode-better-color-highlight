@@ -131,7 +131,11 @@
   },
   "overrides": [
     {
-      "files": ["src/color/**/*.ts", "src/strategies/**/*.ts"],
+      "files": [
+        "src/constants/css-named-colors.ts",
+        "src/utils/color/**/*.ts",
+        "src/strategies/**/*.ts",
+      ],
       "rules": {
         "id-length": "off",
         "no-magic-numbers": "off",

@@ -3,7 +3,7 @@ import {
   relativeLuminance,
   contrastRatio,
   getContrastColor,
-} from '../src/color/contrast'
+} from '../src/utils/color'
 
 describe(relativeLuminance, () => {
   it('returns ~1.0 for white', () => {

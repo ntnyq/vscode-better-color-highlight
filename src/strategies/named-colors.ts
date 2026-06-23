@@ -1,6 +1,6 @@
-import { rgbString } from '../color/convert'
-import { NAMED_COLORS } from '../color/named-color-map'
-import type { ColorMatch, StrategyContext } from '../core/types'
+import { NAMED_COLORS } from '../constants'
+import type { ColorMatch, StrategyContext } from '../types'
+import { rgbString } from '../utils/color'
 
 /**
  * Regex for CSS named color keywords.

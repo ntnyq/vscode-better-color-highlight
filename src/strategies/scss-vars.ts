@@ -1,4 +1,4 @@
-import type { ColorMatch, ColorDetector, StrategyContext } from '../core/types'
+import type { ColorMatch, ColorDetector, StrategyContext } from '../types'
 import {
   basenameWorkspacePath,
   dirnameWorkspacePath,
@@ -9,7 +9,7 @@ import {
   resolveWorkspacePath,
   statWorkspaceFile,
   workspacePathExists,
-} from '../core/workspace-file-system'
+} from '../utils/workspace-file-system'
 import { findColorFunctions } from './color-functions'
 import { findHexRGBA } from './hex'
 import { findHwb } from './hwb'

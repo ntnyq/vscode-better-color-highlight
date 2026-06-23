@@ -1,9 +1,9 @@
 import type * as ReactiveVscode from 'reactive-vscode'
 import { describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
-import { shouldTrackDocument } from '../src/core/editor-filter'
 import type * as StrategyRegistry from '../src/core/strategy-registry'
-import type { ColorMatch } from '../src/core/types'
+import type { ColorMatch } from '../src/types'
+import { shouldTrackDocument } from '../src/utils/editor-filter'
 import type * as LoggerModule from '../src/utils/logger'
 
 interface TestRef<T> {

@@ -9,13 +9,13 @@ import {
 } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import { getStrategies } from '../src/core/strategy-registry'
-import type { ColorMatch } from '../src/core/types'
-import type * as WorkspaceFileSystem from '../src/core/workspace-file-system'
 import { buildDecorationOptions } from '../src/decorations/marker-types'
 import type { NestedScopedConfigs } from '../src/meta'
+import type { ColorMatch } from '../src/types'
+import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
 
 vi.mock(
-  import('../src/core/workspace-file-system'),
+  import('../src/utils/workspace-file-system'),
   () =>
     ({
       basenameWorkspacePath: basename,

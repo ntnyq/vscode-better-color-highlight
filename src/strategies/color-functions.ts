@@ -1,3 +1,4 @@
+import type { ColorMatch } from '../types'
 import {
   colorSpaceToRgb,
   hexToRgb,
@@ -8,8 +9,7 @@ import {
   oklabToRgb,
   parsePercent,
   rgbString,
-} from '../color/convert'
-import type { ColorMatch } from '../core/types'
+} from '../utils/color'
 
 /**
  * Regex for CSS color functions: rgb(), hsl(), lch(), oklch(), lab(), oklab()

@@ -1,3 +1,4 @@
+import { STYLE_LANGUAGES } from '../constants'
 import type { NestedScopedConfigs } from '../meta'
 import {
   findHexRGBA,
@@ -13,8 +14,7 @@ import {
   findScssVars,
   findStylusVars,
 } from '../strategies'
-import type { ColorDetector } from './types'
-import { STYLE_LANGUAGES } from './types'
+import type { ColorDetector } from '../types'
 
 /**
  * Check if a language ID matches a pattern list.

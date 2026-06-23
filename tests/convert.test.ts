@@ -9,7 +9,7 @@ import {
   oklabToRgb,
   oklchToRgb,
   rgbString,
-} from '../src/color/convert'
+} from '../src/utils/color'
 
 describe(hexToRgb, () => {
   it('parses 3-digit hex', () => {

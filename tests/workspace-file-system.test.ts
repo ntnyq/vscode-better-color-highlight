@@ -6,7 +6,7 @@ import {
   isAbsoluteWorkspacePath,
   joinWorkspacePath,
   resolveWorkspacePath,
-} from '../src/core/workspace-file-system'
+} from '../src/utils/workspace-file-system'
 
 describe('workspace file system path helpers', () => {
   it('treats Windows drive paths as local paths instead of URI schemes', () => {

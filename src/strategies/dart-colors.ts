@@ -1,5 +1,5 @@
-import { hexARGBToRgb, rgbString } from '../color/convert'
-import type { ColorMatch } from '../core/types'
+import type { ColorMatch } from '../types'
+import { hexARGBToRgb, rgbString } from '../utils/color'
 
 /**
  * Regex for Flutter `Color(0xffRRGGBB)` constructor calls.

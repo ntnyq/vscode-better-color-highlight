@@ -1,37 +1,4 @@
-/**
- * Workspace file metadata used by the SCSS resolver cache.
- */
-export interface WorkspaceFileStat {
-  /**
-   * Last known file modification timestamp.
-   */
-  readonly mtimeMs: number
-
-  /**
-   * File size in bytes.
-   */
-  readonly size: number
-}
-
-/**
- * Parsed workspace path parts.
- */
-interface WorkspacePathParts {
-  /**
-   * URI prefix before the path, or empty for plain paths.
-   */
-  readonly prefix: string
-
-  /**
-   * Path component.
-   */
-  readonly path: string
-
-  /**
-   * Whether the original value was a URI string.
-   */
-  readonly isUri: boolean
-}
+import type { WorkspaceFileStat, WorkspacePathParts } from '../types'
 
 /**
  * Check whether a path string is a VS Code URI string.

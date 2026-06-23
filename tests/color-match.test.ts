@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { groupByColor, mergeMatches } from '../src/core/color-match'
-import type { ColorMatch } from '../src/core/types'
+import type { ColorMatch } from '../src/types'
+import { groupByColor, mergeMatches } from '../src/utils/color-match'
 
 describe(groupByColor, () => {
   it('groups matches by color', () => {

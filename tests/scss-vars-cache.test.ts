@@ -7,7 +7,7 @@ import {
   resolve,
 } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import type * as WorkspaceFileSystem from '../src/core/workspace-file-system'
+import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
 
 const fileStats = new Map<string, { mtimeMs: number; size: number }>()
 const fileTexts = new Map<string, string>()
@@ -36,7 +36,7 @@ const statMock = vi.fn<
 })
 
 vi.mock(
-  import('../src/core/workspace-file-system'),
+  import('../src/utils/workspace-file-system'),
   () =>
     ({
       basenameWorkspacePath: basename,

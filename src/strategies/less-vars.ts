@@ -1,4 +1,4 @@
-import type { ColorMatch, ColorDetector } from '../core/types'
+import type { ColorMatch, ColorDetector } from '../types'
 import { findColorFunctions } from './color-functions'
 import { findHexRGBA } from './hex'
 import { findHwb } from './hwb'

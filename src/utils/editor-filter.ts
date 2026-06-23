@@ -1,9 +1,5 @@
 import type { TextDocument, TextEditor } from 'vscode'
-
-/**
- * URI scheme keywords for VS Code panels that should be ignored.
- */
-const EXCLUDED_SCHEME_KEYWORDS = ['output', 'debug', 'terminal'] as const
+import { EXCLUDED_SCHEME_KEYWORDS } from '../constants'
 
 /**
  * Exclude VS Code panel-backed documents that should not be color-highlighted.

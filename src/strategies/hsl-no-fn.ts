@@ -1,5 +1,5 @@
-import { hslToRgb, rgbString } from '../color/convert'
-import type { ColorMatch } from '../core/types'
+import type { ColorMatch } from '../types'
+import { hslToRgb, rgbString } from '../utils/color'
 
 /**
  * Regex for bare HSL triplets (not wrapped in hsl() function).
