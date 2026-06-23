@@ -20,9 +20,7 @@ function clamp(value: number, min: number, max: number): number {
  * @returns The parsed number (50% -> 0.5)
  */
 function parsePercent(value: string): number {
-  return value.endsWith('%')
-    ? Number.parseFloat(value) / 100
-    : Number.parseFloat(value)
+  return value.endsWith('%') ? Number(value.slice(0, -1)) / 100 : Number(value)
 }
 
 /**
@@ -229,7 +227,7 @@ export function hwbToRgb(
  * @returns Gamma-corrected sRGB value
  */
 function linearToSrgb(c: number): number {
-  return c <= 0.003_130_8 ? c * 12.92 : 1.055 * c ** (1 / 2.4) - 0.055
+  return c <= 0.0031308 ? c * 12.92 : 1.055 * c ** (1 / 2.4) - 0.055
 }
 
 /**
@@ -238,7 +236,7 @@ function linearToSrgb(c: number): number {
  * @returns Linear sRGB value
  */
 function srgbToLinear(c: number): number {
-  return c <= 0.040_45 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
 }
 
 /**
@@ -247,8 +245,8 @@ function srgbToLinear(c: number): number {
  * @returns Linear Rec.2020 channel
  */
 function rec2020ToLinear(c: number): number {
-  const alpha = 1.099_296_826_809_44
-  const beta = 0.018_053_968_510_807
+  const alpha = 1.09929682680944
+  const beta = 0.018053968510807
   return c < beta * 4.5 ? c / 4.5 : ((c + alpha - 1) / alpha) ** (1 / 0.45)
 }
 
@@ -258,7 +256,7 @@ function rec2020ToLinear(c: number): number {
  * @returns Linear Adobe RGB channel
  */
 function a98RgbToLinear(c: number): number {
-  return Math.sign(c) * Math.abs(c) ** 2.199_218_75
+  return Math.sign(c) * Math.abs(c) ** 2.19921875
 }
 
 /**
@@ -306,9 +304,9 @@ function adaptD50ToD65(
 ): [number, number, number] {
   return multiplyMatrixAndVector(
     [
-      [0.955_576_6, -0.023_039_3, 0.063_163_6],
-      [-0.028_289_5, 1.009_941_6, 0.021_007_7],
-      [0.012_298_2, -0.020_483, 1.329_909_8],
+      [0.9555766, -0.0230393, 0.0631636],
+      [-0.0282895, 1.0099416, 0.0210077],
+      [0.0122982, -0.020483, 1.3299098],
     ],
     [x, y, z],
   )
@@ -322,9 +320,9 @@ function xyzD65ToRgb(
   y: number,
   z: number,
 ): [number, number, number] {
-  const rl = x * 3.240_454_2 + y * -1.537_138_5 + z * -0.498_531_4
-  const gl = x * -0.969_266 + y * 1.876_010_8 + z * 0.041_556
-  const bl = x * 0.055_643_4 + y * -0.204_025_9 + z * 1.057_225_2
+  const rl = x * 3.2404542 + y * -1.5371385 + z * -0.4985314
+  const gl = x * -0.969266 + y * 1.8760108 + z * 0.041556
+  const bl = x * 0.0556434 + y * -0.2040259 + z * 1.0572252
 
   return [
     clamp(Math.round(linearToSrgb(rl) * 255), 0, 255),
@@ -334,9 +332,9 @@ function xyzD65ToRgb(
 }
 
 /** D65 white point constants */
-const D65_XN = 0.950_489
+const D65_XN = 0.950489
 const D65_YN = 1
-const D65_ZN = 1.088_84
+const D65_ZN = 1.08884
 
 /**
  * Lab forward transform function.
@@ -414,18 +412,18 @@ export function oklabToRgb(
 ): [number, number, number] {
   L = clamp(L, 0, 1)
 
-  const lPrime = L + 0.396_337_777_4 * a + 0.215_803_757_3 * b
-  const mPrime = L - 0.105_561_345_8 * a - 0.063_854_172_8 * b
-  const sPrime = L - 0.089_484_177_5 * a - 1.291_485_548 * b
+  const lPrime = L + 0.3963377774 * a + 0.2158037573 * b
+  const mPrime = L - 0.1055613458 * a - 0.0638541728 * b
+  const sPrime = L - 0.0894841775 * a - 1.291485548 * b
 
   const l = lPrime ** 3
   const m = mPrime ** 3
   const s = sPrime ** 3
 
   // OKLab to linear sRGB
-  const rl = +4.076_741_662_1 * l - 3.307_711_591_3 * m + 0.230_969_929_2 * s
-  const gl = -1.268_438_004_6 * l + 2.609_757_401_1 * m - 0.341_319_396_5 * s
-  const bl = -0.004_196_086_3 * l - 0.703_418_614_7 * m + 1.707_614_701 * s
+  const rl = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s
+  const gl = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s
+  const bl = -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s
 
   return [
     clamp(Math.round(linearToSrgb(rl) * 255), 0, 255),
@@ -472,9 +470,9 @@ export function colorSpaceToRgb(
       return xyzD65ToRgb(
         ...multiplyMatrixAndVector(
           [
-            [0.412_390_8, 0.357_584_34, 0.180_480_79],
-            [0.212_639, 0.715_168_68, 0.072_192_32],
-            [0.019_330_82, 0.119_194_78, 0.950_532_15],
+            [0.4123908, 0.35758434, 0.18048079],
+            [0.212639, 0.71516868, 0.07219232],
+            [0.01933082, 0.11919478, 0.95053215],
           ],
           [srgbToLinear(c1), srgbToLinear(c2), srgbToLinear(c3)],
         ),
@@ -484,9 +482,9 @@ export function colorSpaceToRgb(
       return xyzD65ToRgb(
         ...multiplyMatrixAndVector(
           [
-            [0.412_390_8, 0.357_584_34, 0.180_480_79],
-            [0.212_639, 0.715_168_68, 0.072_192_32],
-            [0.019_330_82, 0.119_194_78, 0.950_532_15],
+            [0.4123908, 0.35758434, 0.18048079],
+            [0.212639, 0.71516868, 0.07219232],
+            [0.01933082, 0.11919478, 0.95053215],
           ],
           [c1, c2, c3],
         ),
@@ -496,9 +494,9 @@ export function colorSpaceToRgb(
       return xyzD65ToRgb(
         ...multiplyMatrixAndVector(
           [
-            [0.486_570_95, 0.265_667_69, 0.198_217_29],
-            [0.228_974_56, 0.691_738_52, 0.079_286_91],
-            [0, 0.045_113_38, 1.043_944_37],
+            [0.48657095, 0.26566769, 0.19821729],
+            [0.22897456, 0.69173852, 0.07928691],
+            [0, 0.04511338, 1.04394437],
           ],
           [srgbToLinear(c1), srgbToLinear(c2), srgbToLinear(c3)],
         ),
@@ -508,9 +506,9 @@ export function colorSpaceToRgb(
       return xyzD65ToRgb(
         ...multiplyMatrixAndVector(
           [
-            [0.576_730_9, 0.185_554, 0.188_185_2],
-            [0.297_376_9, 0.627_349_1, 0.075_274_1],
-            [0.027_034_3, 0.070_687_2, 0.991_108_5],
+            [0.5767309, 0.185554, 0.1881852],
+            [0.2973769, 0.6273491, 0.0752741],
+            [0.0270343, 0.0706872, 0.9911085],
           ],
           [a98RgbToLinear(c1), a98RgbToLinear(c2), a98RgbToLinear(c3)],
         ),
@@ -519,9 +517,9 @@ export function colorSpaceToRgb(
     case 'prophoto-rgb': {
       const [x, y, z] = multiplyMatrixAndVector(
         [
-          [0.797_674_9, 0.135_191_7, 0.031_353_4],
-          [0.288_040_2, 0.711_874_1, 0.000_085_7],
-          [0, 0, 0.825_21],
+          [0.7976749, 0.1351917, 0.0313534],
+          [0.2880402, 0.7118741, 0.0000857],
+          [0, 0, 0.82521],
         ],
         [prophotoToLinear(c1), prophotoToLinear(c2), prophotoToLinear(c3)],
       )
@@ -531,9 +529,9 @@ export function colorSpaceToRgb(
       return xyzD65ToRgb(
         ...multiplyMatrixAndVector(
           [
-            [0.636_958_05, 0.144_616_9, 0.168_880_98],
-            [0.262_700_21, 0.677_998_07, 0.059_301_72],
-            [0, 0.028_072_69, 1.060_985_06],
+            [0.63695805, 0.1446169, 0.16888098],
+            [0.26270021, 0.67799807, 0.05930172],
+            [0, 0.02807269, 1.06098506],
           ],
           [rec2020ToLinear(c1), rec2020ToLinear(c2), rec2020ToLinear(c3)],
         ),

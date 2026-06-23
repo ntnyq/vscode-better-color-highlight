@@ -7,7 +7,7 @@
 const srgb8ToLinear = new Float64Array(256)
 for (let i = 0; i < 256; i++) {
   const c = i / 255
-  srgb8ToLinear[i] = c <= 0.040_45 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  srgb8ToLinear[i] = c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
 }
 
 /**

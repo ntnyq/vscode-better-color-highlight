@@ -12,7 +12,7 @@ import type { ColorMatch } from '../core/types'
  * Terminates with ; | $ to avoid matching partial expressions
  */
 const HSL_NO_FN_REGEX =
-  /([\d.]+(?:deg|grad|rad|turn)?)[^\S\n]*(?<sep>[^\S\n]|,)[^\S\n]*([\d.]+)%[^\S\n]*\k<sep>[^\S\n]*([\d.]+)%(?:;| |$)/giu
+  /(?<hue>[\d.]+(?:deg|grad|rad|turn)?)[^\S\n]*(?<sep>[^\S\n]|,)[^\S\n]*(?<saturation>[\d.]+)%[^\S\n]*\k<sep>[^\S\n]*(?<lightness>[\d.]+)%(?:;| |$)/giu
 
 /**
  * Detect bare HSL triplets not wrapped in hsl() function.
@@ -25,13 +25,12 @@ export function findHslNoFunction(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
 
   for (const m of text.matchAll(HSL_NO_FN_REGEX)) {
-    const hStr = m[1]
-    const sStr = m[3]
-    const lStr = m[4]
+    const { hue, lightness, saturation } = m.groups ?? {}
+    if (!hue || !saturation || !lightness) continue
 
-    const h = parseAngle(hStr)
-    const s = Number.parseFloat(sStr) / 100
-    const l = Number.parseFloat(lStr) / 100
+    const h = parseAngle(hue)
+    const s = Number(saturation) / 100
+    const l = Number(lightness) / 100
 
     // Validate HSL ranges
     if (s < 0 || s > 1 || l < 0 || l > 1) continue
@@ -60,7 +59,7 @@ export function findHslNoFunction(text: string): ColorMatch[] {
  * @returns The angle in degrees
  */
 function parseAngle(value: string): number {
-  const num = Number.parseFloat(value)
+  const num = Number(value.replace(/(?:deg|grad|rad|turn)$/u, ''))
   if (value.endsWith('grad')) return (num * 360) / 400
   if (value.endsWith('rad')) return (num * 180) / Math.PI
   if (value.endsWith('turn')) return num * 360

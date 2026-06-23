@@ -70,14 +70,13 @@ export function getStrategies(
   languageId: string,
   config: NestedScopedConfigs,
 ): ColorDetector[] {
-  const strategies: ColorDetector[] = []
-
-  // Always-active: hex (mode depends on config)
-  strategies.push(config.useARGB ? findHexARGB : findHexRGBA)
-
-  // Always-active: color functions + hwb
-  strategies.push(findColorFunctions)
-  strategies.push(findHwb)
+  const strategies: ColorDetector[] = [
+    // Always-active: hex (mode depends on config)
+    config.useARGB ? findHexARGB : findHexRGBA,
+    // Always-active: color functions + hwb
+    findColorFunctions,
+    findHwb,
+  ]
 
   // Named colors: for style languages or when explicitly enabled
   const isStyleLang = STYLE_LANGUAGES.has(languageId)
@@ -106,8 +105,7 @@ export function getStrategies(
     strategies.push(findCssVars)
   }
   if (languageId === 'less') {
-    strategies.push(findCssVars)
-    strategies.push(findLessVars)
+    strategies.push(findCssVars, findLessVars)
   }
   if (languageId === 'scss') {
     strategies.push(findScssVars)

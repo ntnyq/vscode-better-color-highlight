@@ -6,14 +6,14 @@ import type { ColorMatch } from '../core/types'
  * hwb(hue, whiteness%, blackness%[, alpha])
  */
 const HWB_REGEX =
-  /(hwb\(\s*\d+(?:\.\d+)?(?:deg|grad|rad|turn)?\s*,\s*(?:100(?:\.0+)?|0*\d{1,2}(?:\.\d+)?)%\s*,\s*(?:100(?:\.0+)?|0*\d{1,2}(?:\.\d+)?)%(?:\s*,\s*0?\.?\d+%?)?\s*\))/giu
+  /(?<hwbFunc>hwb\(\s*\d+(?:\.\d+)?(?:deg|grad|rad|turn)?\s*,\s*(?:100(?:\.0+)?|0*\d{1,2}(?:\.\d+)?)%\s*,\s*(?:100(?:\.0+)?|0*\d{1,2}(?:\.\d+)?)%(?:\s*,\s*0?\.?\d+%?)?\s*\))/giu
 
 /**
  * Also match space-delimited hwb() syntax:
  * hwb(hue whiteness% blackness%[/ alpha])
  */
 const HWB_SPACE_REGEX =
-  /(hwb\(\s*\d+(?:\.\d+)?(?:deg|grad|rad|turn)?\s+(?:100(?:\.0+)?|0*\d{1,2}(?:\.\d+)?)%\s+(?:100(?:\.0+)?|0*\d{1,2}(?:\.\d+)?)%(?:\s*\/\s*[\d.]+%?)?\s*\))/giu
+  /(?<hwbFunc>hwb\(\s*\d+(?:\.\d+)?(?:deg|grad|rad|turn)?\s+(?:100(?:\.0+)?|0*\d{1,2}(?:\.\d+)?)%\s+(?:100(?:\.0+)?|0*\d{1,2}(?:\.\d+)?)%(?:\s*\/\s*[\d.]+%?)?\s*\))/giu
 
 /**
  * Detect hwb() color functions.
@@ -25,7 +25,9 @@ export function findHwb(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
 
   for (const m of text.matchAll(HWB_REGEX)) {
-    const fullMatch = m[1]
+    const fullMatch = m.groups?.hwbFunc
+    if (!fullMatch) continue
+
     const start = m.index ?? 0
     const end = start + fullMatch.length
     const color = parseHwb(fullMatch)
@@ -33,7 +35,9 @@ export function findHwb(text: string): ColorMatch[] {
   }
 
   for (const m of text.matchAll(HWB_SPACE_REGEX)) {
-    const fullMatch = m[1]
+    const fullMatch = m.groups?.hwbFunc
+    if (!fullMatch) continue
+
     const start = m.index ?? 0
     const end = start + fullMatch.length
     const color = parseHwb(fullMatch)
@@ -50,7 +54,7 @@ export function findHwb(text: string): ColorMatch[] {
  * @returns The angle in degrees
  */
 function parseAngle(value: string): number {
-  const num = Number.parseFloat(value)
+  const num = Number(value.replace(/(?:deg|grad|rad|turn)$/u, ''))
   if (value.endsWith('grad')) return (num * 360) / 400
   if (value.endsWith('rad')) return (num * 180) / Math.PI
   if (value.endsWith('turn')) return num * 360
@@ -65,22 +69,29 @@ function parseAngle(value: string): number {
  */
 function parseHwb(func: string): string | null {
   const innerMatch = func.match(
-    /^hwb\(\s*(\d+(?:\.\d+)?(?:deg|grad|rad|turn)?)\s*[, ]\s*(100(?:\.0+)?|\d{1,2}(?:\.\d+)?)%\s*[, ]\s*(100(?:\.0+)?|\d{1,2}(?:\.\d+)?)%(?:\s*[,/]\s*([\d.]+%?))?\s*\)$/iu,
+    /^hwb\(\s*(?<hue>\d+(?:\.\d+)?(?:deg|grad|rad|turn)?)\s*[, ]\s*(?<whiteness>100(?:\.0+)?|\d{1,2}(?:\.\d+)?)%\s*[, ]\s*(?<blackness>100(?:\.0+)?|\d{1,2}(?:\.\d+)?)%(?:\s*[,/]\s*(?<alpha>[\d.]+%?))?\s*\)$/iu,
   )
   if (!innerMatch) return null
 
-  const h = parseAngle(innerMatch[1])
-  const w = Number.parseFloat(innerMatch[2]) / 100
-  const b = Number.parseFloat(innerMatch[3]) / 100
+  const {
+    alpha: alphaString,
+    blackness,
+    hue,
+    whiteness,
+  } = innerMatch.groups ?? {}
+  if (!hue || !whiteness || !blackness) return null
+
+  const h = parseAngle(hue)
+  const w = Number(whiteness) / 100
+  const b = Number(blackness) / 100
 
   if (w < 0 || w > 1 || b < 0 || b > 1) return null
 
   let alpha: number | undefined
-  if (innerMatch[4]) {
-    const aStr = innerMatch[4]
-    alpha = aStr.endsWith('%')
-      ? Number.parseFloat(aStr) / 100
-      : Number.parseFloat(aStr)
+  if (alphaString) {
+    alpha = alphaString.endsWith('%')
+      ? Number(alphaString.slice(0, -1)) / 100
+      : Number(alphaString)
   }
 
   const [r, g, bl] = hwbToRgb(h, w, b)

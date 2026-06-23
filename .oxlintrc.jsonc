@@ -100,8 +100,7 @@
       "warn",
       {
         "max": 100,
-        "skipBlankLines": true,
-        "skipComments": true,
+        "ignoreTopLevelFunctions": true,
       },
     ],
     "max-lines-per-function": [

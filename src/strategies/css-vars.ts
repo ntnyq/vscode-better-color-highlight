@@ -9,14 +9,15 @@ import { findNamedColors } from './named-colors'
  *   --my-color: #ff0000;
  *   :root { --my-color: #ff0000; }
  */
-const CSS_VAR_DEF_REGEX = /(--[-\w]+)\s*:\s*([^;]+?)\s*;/gu
+const CSS_VAR_DEF_REGEX = /(?<name>--[-\w]+)\s*:\s*(?<value>[^;]+?)\s*;/gu
 
 /**
  * Regex for CSS custom property references:
  *   var(--my-color)
  *   var(--my-color, #ff0000)
  */
-const CSS_VAR_REF_REGEX = /var\(\s*(--[-\w]+)\s*(?:,\s*([^)]*?))?\s*\)/gu
+const CSS_VAR_REF_REGEX =
+  /var\(\s*(?<name>--[-\w]+)\s*(?:,\s*(?<fallback>[^)]*?))?\s*\)/gu
 
 /**
  * Build a regex that matches var() usages for the given variable names.
@@ -31,7 +32,10 @@ function buildVarUsageRegex(varNames: string[]): RegExp | null {
     .sort((a, b) => b.length - a.length)
     .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`))
     .join('|')
-  return new RegExp(`(var\\(\\s*(${names})(?:\\s*,\\s*[^)]*?)?\\s*\\))`, 'gu')
+  return new RegExp(
+    `(?<full>var\\(\\s*(?<name>${names})(?:\\s*,\\s*[^)]*?)?\\s*\\))`,
+    'gu',
+  )
 }
 
 /**
@@ -77,8 +81,10 @@ async function resolveVarValue(
   }
 
   for (const m of normalized.matchAll(CSS_VAR_REF_REGEX)) {
-    const refName = m[1]
-    const fallback = m[2]?.trim()
+    const refName = m.groups?.name
+    if (!refName) continue
+
+    const fallback = m.groups?.fallback?.trim()
 
     if (!seen.has(refName)) {
       const refValue = varDefs.get(refName)
@@ -125,8 +131,10 @@ export async function findCssVars(text: string): Promise<ColorMatch[]> {
   const varColors = new Map<string, string>() // name -> resolved color
 
   for (const m of text.matchAll(CSS_VAR_DEF_REGEX)) {
-    const name = m[1]
-    const value = m[2].trim()
+    const name = m.groups?.name
+    const value = m.groups?.value?.trim()
+    if (!name || !value) continue
+
     varDefs.set(name, value)
   }
 
@@ -150,8 +158,10 @@ export async function findCssVars(text: string): Promise<ColorMatch[]> {
   const matches: ColorMatch[] = []
 
   for (const m of text.matchAll(usageRegex)) {
-    const fullMatch = m[1]
-    const varName = m[2]
+    const fullMatch = m.groups?.full
+    const varName = m.groups?.name
+    if (!fullMatch || !varName) continue
+
     const start = m.index ?? 0
     const end = start + fullMatch.length
 

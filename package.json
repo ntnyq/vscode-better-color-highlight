@@ -69,17 +69,17 @@
     "reactive-vscode": "^1.0.2"
   },
   "devDependencies": {
-    "@types/node": "^25.9.1",
-    "@types/vscode": "^1.120.0",
-    "@typescript/native-preview": "^7.0.0-dev.20260601.1",
-    "@vscode/vsce": "^3.9.1",
+    "@types/node": "^26.0.0",
+    "@types/vscode": "^1.125.0",
+    "@typescript/native-preview": "^7.0.0-dev.20260622.1",
+    "@vscode/vsce": "^3.9.2",
     "bumpp": "^11.1.0",
     "husky": "^9.1.7",
     "nano-staged": "^1.0.2",
-    "oxfmt": "^0.53.0",
-    "oxlint": "^1.68.0",
-    "tsdown": "^0.22.1",
-    "vitest": "^4.1.8",
+    "oxfmt": "^0.56.0",
+    "oxlint": "^1.71.0",
+    "tsdown": "^0.22.3",
+    "vitest": "^4.1.9",
     "vscode-ext-gen": "^1.6.0"
   },
   "nano-staged": {
@@ -188,7 +188,7 @@
   ],
   "icon": "https://ntnyq.com/static/icons/icon-192x192.png",
   "engines": {
-    "vscode": "^1.120.0"
+    "vscode": "^1.125.0"
   },
-  "packageManager": "pnpm@11.5.0"
+  "packageManager": "pnpm@11.8.0"
 }

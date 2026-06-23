@@ -8,13 +8,13 @@ import { findNamedColors } from './named-colors'
  * Regex for SCSS variable definitions anywhere in a stylesheet:
  *   $my-color: #ff0000;
  */
-const SCSS_VAR_DEF_REGEX = /\$([-\w]+)\s*:\s*([^;]+?)\s*;/gu
+const SCSS_VAR_DEF_REGEX = /\$(?<name>[-\w]+)\s*:\s*(?<value>[^;]+?)\s*;/gu
 
 /**
  * Regex for SCSS variable references:
  *   $my-color
  */
-const SCSS_VAR_REF_REGEX = /\$([-\w]+)/gu
+const SCSS_VAR_REF_REGEX = /\$(?<name>[-\w]+)/gu
 
 /**
  * Resolve a raw SCSS value to a color using the base color strategies.
@@ -48,7 +48,9 @@ async function resolveVarValue(
   }
 
   for (const m of normalized.matchAll(SCSS_VAR_REF_REGEX)) {
-    const refName = m[1]
+    const refName = m.groups?.name
+    if (!refName) continue
+
     if (seen.has(refName)) {
       continue
     }
@@ -87,8 +89,10 @@ export async function findScssVars(text: string): Promise<ColorMatch[]> {
   const varColors = new Map<string, string>() // name (without $) -> resolved color
 
   for (const m of text.matchAll(SCSS_VAR_DEF_REGEX)) {
-    const name = m[1]
-    const value = m[2].trim()
+    const name = m.groups?.name
+    const value = m.groups?.value?.trim()
+    if (!name || !value) continue
+
     varDefs.set(name, value)
   }
 
@@ -112,9 +116,11 @@ export async function findScssVars(text: string): Promise<ColorMatch[]> {
   const matches: ColorMatch[] = []
 
   for (const m of text.matchAll(usageRegex)) {
-    const prefix = m[1] ?? ''
-    const fullMatch = m[2]
-    const name = m[3]
+    const prefix = m.groups?.prefix ?? ''
+    const fullMatch = m.groups?.full
+    const name = m.groups?.name
+    if (!fullMatch || !name) continue
+
     const start = (m.index ?? 0) + prefix.length
     const end = start + fullMatch.length
 
@@ -140,5 +146,8 @@ function buildScssVarUsageRegex(varNames: string[]): RegExp | null {
     .sort((a, b) => b.length - a.length)
     .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`))
     .join('|')
-  return new RegExp(`(^|[^-\\w$])(\\$(${names}))(?![-\\w])(?!(?:\\s*:))`, 'gmu')
+  return new RegExp(
+    `(?<prefix>^|[^-\\w$])(?<full>\\$(?<name>${names}))(?![-\\w])(?!(?:\\s*:))`,
+    'gmu',
+  )
 }

@@ -10,7 +10,7 @@ import type { ColorMatch } from '../core/types'
  * Terminates with ; | $ to avoid matching partial expressions
  */
 const RGB_NO_FN_REGEX =
-  /([.\d]{1,5})[^\S\n]*(?<sep>[^\S\n]|,)[^\S\n]*([.\d]{1,5})[^\S\n]*\k<sep>[^\S\n]*([.\d]{1,5})(?:;| |$)/gu
+  /(?<red>[.\d]{1,5})[^\S\n]*(?<sep>[^\S\n]|,)[^\S\n]*(?<green>[.\d]{1,5})[^\S\n]*\k<sep>[^\S\n]*(?<blue>[.\d]{1,5})(?:;| |$)/gu
 
 /**
  * Detect bare RGB triplets not wrapped in rgb() function.
@@ -23,9 +23,12 @@ export function findRgbNoFunction(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
 
   for (const m of text.matchAll(RGB_NO_FN_REGEX)) {
-    const r = Number.parseFloat(m[1])
-    const g = Number.parseFloat(m[3])
-    const b = Number.parseFloat(m[4])
+    const { blue, green, red } = m.groups ?? {}
+    if (!red || !green || !blue) continue
+
+    const r = Number(red)
+    const g = Number(green)
+    const b = Number(blue)
 
     // Validate RGB range
     if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) continue

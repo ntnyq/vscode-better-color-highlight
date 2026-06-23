@@ -18,7 +18,7 @@ import type { ColorMatch } from '../core/types'
  * (comma-delimited OR space-delimited, not mixed).
  */
 const COLOR_FUNC_REGEX =
-  /((?:rgba?|hsla?|lcha?|oklcha?|laba?|oklaba?)\(\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s*(?<sep>[\s,])\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s*\k<sep>\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*(?:\k<sep>|\/)\s*[-+]?[\d.*]*\.?[\d]+%?)?\s*\))/giu
+  /(?<colorFunc>(?:rgba?|hsla?|lcha?|oklcha?|laba?|oklaba?)\(\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s*(?<sep>[\s,])\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s*\k<sep>\s*[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*(?:\k<sep>|\/)\s*[-+]?[\d.*]*\.?[\d]+%?)?\s*\))/giu
 
 /**
  * Regex for CSS Color 4 color() syntax:
@@ -26,7 +26,7 @@ const COLOR_FUNC_REGEX =
  *   color(srgb 1 0 0 / 0.5)
  */
 const COLOR_SPACE_FUNC_REGEX =
-  /(color\(\s*(?:srgb|srgb-linear|display-p3|a98-rgb|prophoto-rgb|rec2020|xyz(?:-d50|-d65)?)\s+[-+]?[\d.*]*\.?[\d]+%?\s+[-+]?[\d.*]*\.?[\d]+%?\s+[-+]?[\d.*]*\.?[\d]+%?(?:\s*\/\s*[-+]?[\d.*]*\.?[\d]+%?)?\s*\))/giu
+  /(?<colorSpaceFunc>color\(\s*(?:srgb|srgb-linear|display-p3|a98-rgb|prophoto-rgb|rec2020|xyz(?:-d50|-d65)?)\s+[-+]?[\d.*]*\.?[\d]+%?\s+[-+]?[\d.*]*\.?[\d]+%?\s+[-+]?[\d.*]*\.?[\d]+%?(?:\s*\/\s*[-+]?[\d.*]*\.?[\d]+%?)?\s*\))/giu
 
 /**
  * Regex for CSS custom property color shorthands:
@@ -34,7 +34,7 @@ const COLOR_SPACE_FUNC_REGEX =
  *   --color-hsl: 0 100% 50%;
  */
 const CSS_VAR_SHORTHAND_REGEX =
-  /(--[\w-]+-(?:rgb|hsl|lch|oklch|lab|oklab))\s*:\s*([\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*\/\s*[\d.*]*\.?[\d]+%?)?)\s*;/giu
+  /(?<propName>--[\w-]+-(?:rgb|hsl|lch|oklch|lab|oklab))\s*:\s*(?<value>[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*\/\s*[\d.*]*\.?[\d]+%?)?)\s*;/giu
 
 type ShorthandSpace = 'rgb' | 'hsl' | 'lch' | 'oklch' | 'lab' | 'oklab'
 
@@ -53,14 +53,14 @@ function parseChannelValue(
   const trimmed = value.trim()
 
   if (trimmed.endsWith('%')) {
-    return Number.parseFloat(trimmed) / 100
+    return Number(trimmed.slice(0, -1)) / 100
   }
 
   if (type === 'angle') {
     return parseAngle(trimmed)
   }
 
-  return Number.parseFloat(trimmed)
+  return Number(trimmed)
 }
 
 /**
@@ -70,7 +70,7 @@ function parseChannelValue(
  * @returns The angle in degrees
  */
 function parseAngle(value: string): number {
-  const num = Number.parseFloat(value)
+  const num = Number(value.replace(/(?:deg|grad|rad|turn)$/u, ''))
   if (value.endsWith('grad')) return (num * 360) / 400
   if (value.endsWith('rad')) return (num * 180) / Math.PI
   if (value.endsWith('turn')) return num * 360
@@ -88,7 +88,9 @@ export function findColorFunctions(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
 
   for (const m of text.matchAll(COLOR_FUNC_REGEX)) {
-    const fullMatch = m[1]
+    const fullMatch = m.groups?.colorFunc
+    if (!fullMatch) continue
+
     const start = m.index ?? 0
     const end = start + fullMatch.length
 
@@ -100,7 +102,9 @@ export function findColorFunctions(text: string): ColorMatch[] {
 
   // CSS Color 4 color() function syntax
   for (const m of text.matchAll(COLOR_SPACE_FUNC_REGEX)) {
-    const fullMatch = m[1]
+    const fullMatch = m.groups?.colorSpaceFunc
+    if (!fullMatch) continue
+
     const start = m.index ?? 0
     const end = start + fullMatch.length
 
@@ -112,8 +116,10 @@ export function findColorFunctions(text: string): ColorMatch[] {
 
   // CSS variable shorthand: --color-rgb: 255 0 0;
   for (const m of text.matchAll(CSS_VAR_SHORTHAND_REGEX)) {
-    const propName = m[1]
-    const value = m[2]
+    const propName = m.groups?.propName
+    const value = m.groups?.value
+    if (!propName || !value) continue
+
     const fullMatch = m[0]
 
     const start = m.index ?? 0
@@ -149,12 +155,13 @@ function parseColorFunction(func: string): string | null {
   }
 
   const fnMatch = func.match(
-    /^(rgba?|hsla?|lcha?|oklcha?|laba?|oklaba?)\((.*)\)$/iu,
+    /^(?<name>rgba?|hsla?|lcha?|oklcha?|laba?|oklaba?)\((?<args>.*)\)$/iu,
   )
   if (!fnMatch) return null
 
-  const fn = fnMatch[1].toLowerCase()
-  const args = fnMatch[2]
+  const fn = fnMatch.groups?.name?.toLowerCase()
+  const args = fnMatch.groups?.args
+  if (!fn || args === undefined) return null
 
   // Split args respecting the separator style
   const hasComma = args.includes(',')
@@ -190,11 +197,12 @@ function parseColorFunction(func: string): string | null {
  * @returns RGB tuple [r, g, b] or [null, null, null] if conversion fails
  */
 function parseColorSpaceFunction(func: string): string | null {
-  const fnMatch = func.match(/^color\(\s*([\w-]+)\s+(.+)\)$/iu)
+  const fnMatch = func.match(/^color\(\s*(?<space>[\w-]+)\s+(?<args>.+)\)$/iu)
   if (!fnMatch) return null
 
-  const space = fnMatch[1].toLowerCase()
-  let args = fnMatch[2].trim()
+  const space = fnMatch.groups?.space?.toLowerCase()
+  let args = fnMatch.groups?.args?.trim()
+  if (!space || !args) return null
 
   let alpha: number | undefined
   if (args.includes('/')) {
@@ -220,8 +228,8 @@ function inferShorthandSpace(name?: string): ShorthandSpace | null {
   if (!name) return null
 
   const lower = name.toLowerCase()
-  const match = lower.match(/(?:^|[-_])(oklch|oklab|rgb|hsl|lch|lab)$/u)
-  return (match?.[1] as ShorthandSpace | undefined) ?? null
+  const match = lower.match(/(?:^|[-_])(?<space>oklch|oklab|rgb|hsl|lch|lab)$/u)
+  return (match?.groups?.space as ShorthandSpace | undefined) ?? null
 }
 
 /**

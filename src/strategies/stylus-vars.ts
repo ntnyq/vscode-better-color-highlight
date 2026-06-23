@@ -18,14 +18,29 @@ import { findNamedColors } from './named-colors'
  *   $my-color: #ff0000
  */
 const STYLUS_VAR_DEF_REGEX =
-  /(?:^|[;\n]\s*)(?:\$([-\w]+)\s*:\s*([^\n;]+)|\$?([-\w]+)\s*=\s*([^\n;]+))/gmu
+  /(?:^|[;\n]\s*)(?:\$(?<colonName>[-\w]+)\s*:\s*(?<colonValue>[^\n;]+)|\$?(?<equalsName>[-\w]+)\s*=\s*(?<equalsValue>[^\n;]+))/gmu
 
 /**
  * Regex for Stylus variable references:
  *   my-color
  *   $my-color
  */
-const STYLUS_VAR_REF_REGEX = /\$?([-\w]+)/gu
+const STYLUS_VAR_REF_REGEX = /\$?(?<name>[-\w]+)/gu
+
+interface StylusVarDefinition {
+  name: string
+  value: string
+}
+
+function getStylusVarDefinition(
+  match: RegExpMatchArray,
+): StylusVarDefinition | null {
+  const name = match.groups?.colonName ?? match.groups?.equalsName
+  const rawValue = match.groups?.colonValue ?? match.groups?.equalsValue
+  const value = rawValue?.trim()
+
+  return name && value ? { name, value } : null
+}
 
 /**
  * Resolve a raw Stylus value to a color using the base color strategies.
@@ -65,7 +80,9 @@ async function resolveVarValue(
   }
 
   for (const m of normalized.matchAll(STYLUS_VAR_REF_REGEX)) {
-    const refName = m[1]
+    const refName = m.groups?.name
+    if (!refName) continue
+
     if (seen.has(refName)) {
       continue
     }
@@ -105,15 +122,12 @@ export async function findStylusVars(text: string): Promise<ColorMatch[]> {
   const varColors = new Map<string, string>() // name -> resolved color
 
   for (const m of text.matchAll(STYLUS_VAR_DEF_REGEX)) {
-    const name = m[1] ?? m[3]
-    const rawValue = m[2] ?? m[4]
-    const value = rawValue?.trim()
-
-    if (!name || !value) {
+    const definition = getStylusVarDefinition(m)
+    if (!definition) {
       continue
     }
 
-    varDefs.set(name, value)
+    varDefs.set(definition.name, definition.value)
   }
 
   // Resolve variable values to colors
@@ -136,9 +150,11 @@ export async function findStylusVars(text: string): Promise<ColorMatch[]> {
   const matches: ColorMatch[] = []
 
   for (const m of text.matchAll(usageRegex)) {
-    const prefix = m[1] ?? ''
-    const fullMatch = m[2]
-    const name = m[3]
+    const prefix = m.groups?.prefix ?? ''
+    const fullMatch = m.groups?.full
+    const name = m.groups?.name
+    if (!fullMatch || !name) continue
+
     const start = (m.index ?? 0) + prefix.length
     const end = start + fullMatch.length
 
@@ -165,7 +181,7 @@ function buildStylusVarUsageRegex(varNames: string[]): RegExp | null {
     .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`))
     .join('|')
   return new RegExp(
-    `(^|[^-\\w$])(\\$?(${names}))(?![-\\w])(?!(?:\\s*[:=]))`,
+    `(?<prefix>^|[^-\\w$])(?<full>\\$?(?<name>${names}))(?![-\\w])(?!(?:\\s*[:=]))`,
     'gmu',
   )
 }

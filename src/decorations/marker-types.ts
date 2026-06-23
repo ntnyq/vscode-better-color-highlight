@@ -9,13 +9,14 @@ import type { MarkerType } from '../core/types'
  * @returns A tuple of [r, g, b] numeric values, defaults to [0, 0, 0] if parsing fails
  */
 function parseRgbString(color: string): [number, number, number] {
-  const match = color.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/u)
+  const match = color.match(
+    /rgba?\(\s*(?<red>\d+)\s*,\s*(?<green>\d+)\s*,\s*(?<blue>\d+)/u,
+  )
   if (!match) return [0, 0, 0]
-  return [
-    Number.parseInt(match[1]),
-    Number.parseInt(match[2]),
-    Number.parseInt(match[3]),
-  ]
+  const { blue, green, red } = match.groups ?? {}
+  if (!red || !green || !blue) return [0, 0, 0]
+
+  return [Number.parseInt(red), Number.parseInt(green), Number.parseInt(blue)]
 }
 
 /**
