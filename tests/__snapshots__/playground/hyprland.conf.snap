@@ -1,0 +1,48 @@
+{
+  "file": "hyprland.conf",
+  "languageId": "plaintext",
+  "strategyNames": [
+    "findHexRGBA",
+    "findColorFunctions",
+    "findHwb",
+    "findNamedColors",
+    "findRgbNoFunction",
+    "findHslNoFunction"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 4,
+      "column": 23,
+      "text": "rgba(33ccffee)",
+      "range": [
+        58,
+        72
+      ],
+      "color": "rgba(51, 204, 255, 0.933)",
+      "render": {
+        "backgroundColor": "rgb(51, 204, 255)",
+        "color": "#000000",
+        "border": "3px solid rgb(51, 204, 255)",
+        "overviewRulerColor": "rgb(51, 204, 255)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 5,
+      "column": 25,
+      "text": "rgba(595959aa)",
+      "range": [
+        97,
+        111
+      ],
+      "color": "rgba(89, 89, 89, 0.667)",
+      "render": {
+        "backgroundColor": "rgb(89, 89, 89)",
+        "color": "#FFFFFF",
+        "border": "3px solid rgb(89, 89, 89)",
+        "overviewRulerColor": "rgb(89, 89, 89)"
+      }
+    }
+  ]
+}

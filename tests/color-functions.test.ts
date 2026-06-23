@@ -14,6 +14,24 @@ describe(findColorFunctions, () => {
     expect(result[0].color).toContain('rgba')
   })
 
+  it('finds Hyprland rgba() hex colors', () => {
+    const result = findColorFunctions('col.active_border = rgba(33ccffee)')
+
+    expect(result).toStrictEqual([
+      {
+        start: 20,
+        end: 34,
+        color: 'rgba(51, 204, 255, 0.933)',
+      },
+    ])
+  })
+
+  it('ignores short Hyprland rgba() hex colors', () => {
+    const result = findColorFunctions('col.active_border = rgba(f0ae)')
+
+    expect(result).toHaveLength(0)
+  })
+
   it('finds hsl() function', () => {
     const result = findColorFunctions('color: hsl(0, 100%, 50%);')
     expect(result).toHaveLength(1)

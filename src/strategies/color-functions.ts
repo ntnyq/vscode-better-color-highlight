@@ -1,5 +1,6 @@
 import {
   colorSpaceToRgb,
+  hexToRgb,
   hslToRgb,
   lchToRgb,
   oklchToRgb,
@@ -27,6 +28,9 @@ const COLOR_FUNC_REGEX =
  */
 const COLOR_SPACE_FUNC_REGEX =
   /(?<colorSpaceFunc>color\(\s*(?:srgb|srgb-linear|display-p3|a98-rgb|prophoto-rgb|rec2020|xyz(?:-d50|-d65)?)\s+[-+]?[\d.*]*\.?[\d]+%?\s+[-+]?[\d.*]*\.?[\d]+%?\s+[-+]?[\d.*]*\.?[\d]+%?(?:\s*\/\s*[-+]?[\d.*]*\.?[\d]+%?)?\s*\))/giu
+
+const HYPRLAND_RGBA_HEX_REGEX =
+  /(?<hyprlandRgba>rgba\(\s*(?<hex>[a-f0-9]{6}(?:[a-f0-9]{2})?)\s*\))/giu
 
 /**
  * Regex for CSS custom property color shorthands:
@@ -116,6 +120,8 @@ export function findColorFunctions(text: string): ColorMatch[] {
     matches.push({ start, end, color })
   }
 
+  matches.push(...findHyprlandRgbaHexColors(text))
+
   // CSS variable shorthand: --color-rgb: 255 0 0;
   for (const m of text.matchAll(CSS_VAR_SHORTHAND_REGEX)) {
     const propName = m.groups?.propName
@@ -138,6 +144,29 @@ export function findColorFunctions(text: string): ColorMatch[] {
 
     const color = parseShorthandValue(value, space)
     if (!color) continue
+
+    matches.push({ start, end, color })
+  }
+
+  return matches
+}
+
+function findHyprlandRgbaHexColors(text: string): ColorMatch[] {
+  const matches: ColorMatch[] = []
+
+  for (const m of text.matchAll(HYPRLAND_RGBA_HEX_REGEX)) {
+    const fullMatch = m.groups?.hyprlandRgba
+    const hex = m.groups?.hex
+    if (!fullMatch || !hex) continue
+
+    const start = m.index ?? 0
+    if (start > 0 && /[-\w]/u.test(text[start - 1])) continue
+
+    const result = hexToRgb(`#${hex}`)
+    if (!result) continue
+
+    const end = start + fullMatch.length
+    const color = rgbString(result.r, result.g, result.b, result.a)
 
     matches.push({ start, end, color })
   }
