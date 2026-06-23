@@ -1,9 +1,55 @@
-import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  stat,
+  writeFile,
+} from 'node:fs/promises'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import {
+  basename,
+  dirname,
+  extname,
+  isAbsolute,
+  join,
+  resolve,
+} from 'node:path'
+import { describe, expect, it, vi } from 'vitest'
+import type * as WorkspaceFileSystem from '../src/core/workspace-file-system'
 import { findScssVars } from '../src/strategies/scss-vars'
 import { FIXTURE_SCSS } from './fixtures'
+
+vi.mock(
+  import('../src/core/workspace-file-system'),
+  () =>
+    ({
+      basenameWorkspacePath: basename,
+      dirnameWorkspacePath: dirname,
+      extnameWorkspacePath: extname,
+      isAbsoluteWorkspacePath: isAbsolute,
+      joinWorkspacePath: join,
+      readWorkspaceFile: (filePath: string) => readFile(filePath, 'utf8'),
+      resolveWorkspacePath: (baseFilePath: string, value: string) =>
+        isAbsolute(value) ? value : resolve(dirname(baseFilePath), value),
+      statWorkspaceFile: async (filePath: string) => {
+        const fileStat = await stat(filePath)
+
+        return {
+          mtimeMs: fileStat.mtimeMs,
+          size: fileStat.size,
+        }
+      },
+      workspacePathExists: async (filePath: string) => {
+        try {
+          await access(filePath)
+          return true
+        } catch {
+          return false
+        }
+      },
+    }) as unknown as Partial<typeof WorkspaceFileSystem>,
+)
 
 describe(findScssVars, () => {
   it('finds SCSS variable usages with named-color values', async () => {

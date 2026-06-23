@@ -352,7 +352,7 @@ function setupEditorTracking(
         const matches = await runStrategies({
           text,
           languageId: doc.languageId,
-          filePath: doc.uri.fsPath,
+          filePath: doc.uri.toString(),
           namedColorMatchMode: config.namedColorMatchMode,
           resolveScssVariablesAcrossFiles:
             config.resolveScssVariablesAcrossFiles,

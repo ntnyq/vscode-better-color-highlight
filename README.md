@@ -7,6 +7,11 @@
 
 Highlight and preview colors in multiple formats across code, comments, and strings.
 
+## VS Code Web
+
+This extension supports browser-based VS Code environments, including [vscode.dev](https://vscode.dev) and [github.dev](https://github.dev).
+Runtime file access uses the VS Code Workspace FS API, so SCSS dependency resolution can work with web and virtual workspace file systems when those files are readable by VS Code.
+
 ## Commands
 
 <!-- commands -->
@@ -78,6 +83,7 @@ Compared with the original Color Highlight extension, this project keeps the fam
 - Transparent colors stay visible by rendering markers with an opaque display color while preserving the represented color value.
 - Named CSS color matching is more configurable through `color-highlight.namedColorMatchMode`.
 - Optional SCSS cross-file variable resolution through local `@use`, `@forward`, `@import`, directory indexes, nearest `node_modules`, and configured Sass load paths.
+- VS Code Workspace FS based dependency reads, avoiding Node `fs` APIs in extension runtime.
 - Broader test coverage, including parser regression tests and playground snapshots.
 
 ## Migration from Color Highlight

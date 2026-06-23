@@ -42,7 +42,7 @@ export interface StrategyContext {
   languageId: string
 
   /**
-   * The document's URI fsPath, for variable resolution strategies.
+   * The document URI string or local file path for variable resolution strategies.
    */
   filePath?: string
 

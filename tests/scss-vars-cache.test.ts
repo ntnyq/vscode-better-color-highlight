@@ -1,16 +1,20 @@
-import type * as FsPromises from 'node:fs/promises'
+import {
+  basename,
+  dirname,
+  extname,
+  isAbsolute,
+  join,
+  resolve,
+} from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
+import type * as WorkspaceFileSystem from '../src/core/workspace-file-system'
 
 const fileStats = new Map<string, { mtimeMs: number; size: number }>()
 const fileTexts = new Map<string, string>()
 
-const accessMock = vi.fn<(filePath: unknown) => Promise<void>>(filePath => {
-  const normalizedFilePath = String(filePath)
-  if (!fileTexts.has(normalizedFilePath)) {
-    throw new Error(`Missing file: ${normalizedFilePath}`)
-  }
-  return Promise.resolve()
-})
+const existsMock = vi.fn<(filePath: string) => Promise<boolean>>(filePath =>
+  Promise.resolve(fileTexts.has(filePath)),
+)
 const readFileMock = vi.fn<(filePath: unknown) => Promise<string>>(filePath => {
   const normalizedFilePath = String(filePath)
   const text = fileTexts.get(normalizedFilePath)
@@ -32,25 +36,31 @@ const statMock = vi.fn<
 })
 
 vi.mock(
-  import('node:fs/promises'),
+  import('../src/core/workspace-file-system'),
   () =>
     ({
-      access: accessMock,
-      readFile: readFileMock,
-      stat: statMock,
-    }) as unknown as Partial<typeof FsPromises>,
+      basenameWorkspacePath: basename,
+      dirnameWorkspacePath: dirname,
+      extnameWorkspacePath: extname,
+      isAbsoluteWorkspacePath: isAbsolute,
+      joinWorkspacePath: join,
+      readWorkspaceFile: readFileMock,
+      resolveWorkspacePath: (baseFilePath: string, value: string) =>
+        isAbsolute(value) ? value : resolve(dirname(baseFilePath), value),
+      statWorkspaceFile: statMock,
+      workspacePathExists: existsMock,
+    }) as unknown as Partial<typeof WorkspaceFileSystem>,
 )
 
 describe('scss variable dependency cache', () => {
   it('reuses unchanged dependency contents and invalidates when metadata changes', async () => {
     fileStats.clear()
     fileTexts.clear()
-    accessMock.mockClear()
+    existsMock.mockClear()
     readFileMock.mockClear()
     statMock.mockClear()
     vi.resetModules()
 
-    const { join } = await import('node:path')
     const { findScssVars } = await import('../src/strategies/scss-vars')
 
     const dir = '/tmp/better-color-scss-cache'

@@ -1,10 +1,49 @@
-import { readdir, readFile } from 'node:fs/promises'
-import { extname, join } from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { access, readdir, readFile, stat } from 'node:fs/promises'
+import {
+  basename,
+  dirname,
+  extname,
+  isAbsolute,
+  join,
+  resolve,
+} from 'node:path'
+import { describe, expect, it, vi } from 'vitest'
 import { getStrategies } from '../src/core/strategy-registry'
 import type { ColorMatch } from '../src/core/types'
+import type * as WorkspaceFileSystem from '../src/core/workspace-file-system'
 import { buildDecorationOptions } from '../src/decorations/marker-types'
 import type { NestedScopedConfigs } from '../src/meta'
+
+vi.mock(
+  import('../src/core/workspace-file-system'),
+  () =>
+    ({
+      basenameWorkspacePath: basename,
+      dirnameWorkspacePath: dirname,
+      extnameWorkspacePath: extname,
+      isAbsoluteWorkspacePath: isAbsolute,
+      joinWorkspacePath: join,
+      readWorkspaceFile: (filePath: string) => readFile(filePath, 'utf8'),
+      resolveWorkspacePath: (baseFilePath: string, value: string) =>
+        isAbsolute(value) ? value : resolve(dirname(baseFilePath), value),
+      statWorkspaceFile: async (filePath: string) => {
+        const fileStat = await stat(filePath)
+
+        return {
+          mtimeMs: fileStat.mtimeMs,
+          size: fileStat.size,
+        }
+      },
+      workspacePathExists: async (filePath: string) => {
+        try {
+          await access(filePath)
+          return true
+        } catch {
+          return false
+        }
+      },
+    }) as unknown as Partial<typeof WorkspaceFileSystem>,
+)
 
 const PLAYGROUND_DIR = join(process.cwd(), 'playground')
 const SNAPSHOT_DIR = join(process.cwd(), 'tests', '__snapshots__', 'playground')

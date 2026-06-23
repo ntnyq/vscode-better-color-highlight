@@ -1,13 +1,15 @@
-import { access, readFile, stat } from 'node:fs/promises'
-import {
-  basename,
-  dirname,
-  extname,
-  isAbsolute,
-  join,
-  resolve,
-} from 'node:path'
 import type { ColorMatch, ColorDetector, StrategyContext } from '../core/types'
+import {
+  basenameWorkspacePath,
+  dirnameWorkspacePath,
+  extnameWorkspacePath,
+  isAbsoluteWorkspacePath,
+  joinWorkspacePath,
+  readWorkspaceFile,
+  resolveWorkspacePath,
+  statWorkspaceFile,
+  workspacePathExists,
+} from '../core/workspace-file-system'
 import { findColorFunctions } from './color-functions'
 import { findHexRGBA } from './hex'
 import { findHwb } from './hwb'
@@ -196,8 +198,8 @@ interface ScssResolveState {
  */
 function getScssNamespace(specifier: string): string {
   const normalized = specifier.replaceAll(/[/\\]+$/gu, '')
-  const fileName = basename(normalized)
-  const ext = extname(fileName)
+  const fileName = basenameWorkspacePath(normalized)
+  const ext = extnameWorkspacePath(fileName)
   const bareName = ext ? fileName.slice(0, -ext.length) : fileName
 
   return bareName.replace(/^_/u, '')
@@ -248,19 +250,19 @@ function mergeMissingScssVarDefs(
  * @returns Candidate file paths in Sass resolution order
  */
 function getScssModuleCandidatesForPath(specPath: string): string[] {
-  const specBase = basename(specPath)
-  const ext = extname(specBase)
+  const specBase = basenameWorkspacePath(specPath)
+  const ext = extnameWorkspacePath(specBase)
   const withoutExt = ext ? specPath.slice(0, -ext.length) : specPath
-  const fileName = basename(withoutExt)
-  const fileDir = dirname(withoutExt)
+  const fileName = basenameWorkspacePath(withoutExt)
+  const fileDir = dirnameWorkspacePath(withoutExt)
 
   return [
     `${withoutExt}.scss`,
     `${withoutExt}.sass`,
-    join(fileDir, `_${fileName}.scss`),
-    join(fileDir, `_${fileName}.sass`),
-    join(withoutExt, 'index.scss'),
-    join(withoutExt, '_index.scss'),
+    joinWorkspacePath(fileDir, `_${fileName}.scss`),
+    joinWorkspacePath(fileDir, `_${fileName}.sass`),
+    joinWorkspacePath(withoutExt, 'index.scss'),
+    joinWorkspacePath(withoutExt, '_index.scss'),
   ]
 }
 
@@ -282,12 +284,12 @@ function isRelativeScssSpecifier(specifier: string): boolean {
  */
 function getNearestNodeModulesPaths(fromFilePath: string): string[] {
   const paths: string[] = []
-  let currentDir = dirname(fromFilePath)
+  let currentDir = dirnameWorkspacePath(fromFilePath)
 
   while (true) {
-    paths.push(join(currentDir, 'node_modules'))
+    paths.push(joinWorkspacePath(currentDir, 'node_modules'))
 
-    const parentDir = dirname(currentDir)
+    const parentDir = dirnameWorkspacePath(currentDir)
     if (parentDir === currentDir) {
       break
     }
@@ -308,10 +310,10 @@ function normalizeScssLoadPaths(
   fromFilePath: string,
   loadPaths: readonly string[],
 ): string[] {
-  const baseDir = dirname(fromFilePath)
-
   return loadPaths.map(loadPath =>
-    isAbsolute(loadPath) ? loadPath : resolve(baseDir, loadPath),
+    isAbsoluteWorkspacePath(loadPath)
+      ? loadPath
+      : resolveWorkspacePath(fromFilePath, loadPath),
   )
 }
 
@@ -328,18 +330,22 @@ function getScssModuleCandidates(
   specifier: string,
   loadPaths: readonly string[],
 ): string[] {
-  const baseDir = dirname(fromFilePath)
   const initialPaths = [
-    isAbsolute(specifier) ? specifier : join(baseDir, specifier),
+    isAbsoluteWorkspacePath(specifier)
+      ? specifier
+      : joinWorkspacePath(dirnameWorkspacePath(fromFilePath), specifier),
   ]
 
-  if (!isAbsolute(specifier) && !isRelativeScssSpecifier(specifier)) {
+  if (
+    !isAbsoluteWorkspacePath(specifier) &&
+    !isRelativeScssSpecifier(specifier)
+  ) {
     initialPaths.push(
       ...normalizeScssLoadPaths(fromFilePath, loadPaths).map(loadPath =>
-        join(loadPath, specifier),
+        joinWorkspacePath(loadPath, specifier),
       ),
       ...getNearestNodeModulesPaths(fromFilePath).map(nodeModulesPath =>
-        join(nodeModulesPath, specifier),
+        joinWorkspacePath(nodeModulesPath, specifier),
       ),
     )
   }
@@ -353,23 +359,8 @@ function getScssModuleCandidates(
  * @param filePath - The file path to check
  * @returns Whether the file exists and is accessible
  */
-async function pathExists(filePath: string): Promise<boolean> {
-  try {
-    await access(filePath)
-    return true
-  } catch {
-    return false
-  }
-}
-
-/**
- * Read a SCSS dependency file using mtime and size based cache invalidation.
- *
- * @param filePath - The dependency file path to read
- * @returns Cached or freshly read UTF-8 file text
- */
 async function readCachedScssFile(filePath: string): Promise<string> {
-  const stats = await stat(filePath)
+  const stats = await statWorkspaceFile(filePath)
   const cached = scssFileContentCache.get(filePath)
 
   if (
@@ -380,7 +371,7 @@ async function readCachedScssFile(filePath: string): Promise<string> {
     return cached.text
   }
 
-  const text = await readFile(filePath, 'utf8')
+  const text = await readWorkspaceFile(filePath)
   scssFileContentCache.set(filePath, {
     mtimeMs: stats.mtimeMs,
     size: stats.size,
@@ -418,7 +409,7 @@ async function resolveScssModulePath(
     specifier,
     loadPaths,
   )) {
-    if (await pathExists(candidate)) {
+    if (await workspacePathExists(candidate)) {
       return candidate
     }
   }

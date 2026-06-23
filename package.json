@@ -14,6 +14,7 @@
     "colour",
     "css",
     "design tokens",
+    "github.dev",
     "hex",
     "highlight",
     "hsl",
@@ -26,7 +27,10 @@
     "preview",
     "rgb",
     "rgba",
-    "tailwind"
+    "tailwind",
+    "vscode web",
+    "vscode.dev",
+    "web"
   ],
   "homepage": "https://github.com/ntnyq/vscode-better-color-highlight",
   "bugs": {
@@ -46,6 +50,7 @@
   ],
   "type": "module",
   "main": "./dist/index.mjs",
+  "browser": "./dist/index.mjs",
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
@@ -213,5 +218,13 @@
   "engines": {
     "vscode": "^1.125.0"
   },
-  "packageManager": "pnpm@11.8.0"
+  "packageManager": "pnpm@11.8.0",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": {
+      "supported": true
+    }
+  }
 }
