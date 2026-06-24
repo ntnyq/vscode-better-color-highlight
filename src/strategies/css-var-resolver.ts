@@ -24,7 +24,10 @@ type CandidateResolution =
       readonly declaration: CssVarDeclaration
     }
   | {
-      readonly status: 'missing' | 'ambiguous'
+      readonly status: 'missing'
+    }
+  | {
+      readonly status: 'ambiguous'
     }
 
 const MAX_RESOLUTION_DEPTH = 16
@@ -64,9 +67,10 @@ async function resolveCssVarUsage(
   }
 
   const candidate = selectCssVarDeclaration(usage.name, options)
-  if (candidate.status !== 'found') {
+  if (candidate.status === 'missing') {
     return resolveFallback(usage, options, seen, depth)
   }
+  if (candidate.status === 'ambiguous') return null
 
   const nextSeen = new Set(seen)
   nextSeen.add(usage.name)

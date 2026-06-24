@@ -360,6 +360,27 @@ describe(findCssVars, () => {
     ])
   })
 
+  it('skips fallback when external variable declarations are ambiguous', async () => {
+    const text = '.cls { color: var(--brand, #ffffff); }'
+    const externalDeclarations = collectCssVarDeclarations(
+      `
+        :root { --brand: #0ea5e9; }
+        [data-theme=dark] { --brand: #000; }
+      `,
+      {
+        filePath: '/workspace/tokens.css',
+        trustedSelectors: [':root'],
+      },
+    )
+
+    const result = await resolveCssVarMatches(text, {
+      currentDeclarations: [],
+      externalDeclarations,
+    })
+
+    expect(result).toStrictEqual([])
+  })
+
   it('skips cyclic CSS variable references', async () => {
     const text = `
       :root {
