@@ -30,9 +30,9 @@ Default : `true`
 
 #### `color-highlight.languages`
 
-Description : Language IDs where colors are highlighted. Use '\*' for all languages, prefix with '!' to exclude.  
+Description : Language IDs where colors are highlighted. Use '_' for all languages, prefix with '!' to exclude.  
 Type : `array`  
-Default : `["*"]`
+Default : `["_"]`
 
 #### `color-highlight.matchWords`
 
@@ -90,9 +90,9 @@ Default : `false`
 
 #### `color-highlight.rgbWithNoFunctionLanguages`
 
-Description : Language IDs for rgb-without-function matching. Use '\*' / '!' syntax.  
+Description : Language IDs for rgb-without-function matching. Use '_' / '!' syntax.  
 Type : `array`  
-Default : `["*"]`
+Default : `["_"]`
 
 #### `color-highlight.matchHslWithNoFunction`
 
@@ -102,9 +102,9 @@ Default : `false`
 
 #### `color-highlight.hslWithNoFunctionLanguages`
 
-Description : Language IDs for hsl-without-function matching. Use '\*' / '!' syntax.  
+Description : Language IDs for hsl-without-function matching. Use '_' / '!' syntax.  
 Type : `array`  
-Default : `["*"]`
+Default : `["_"]`
 
 #### `color-highlight.markerType`
 
