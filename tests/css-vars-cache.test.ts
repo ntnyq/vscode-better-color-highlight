@@ -1,11 +1,4 @@
-import {
-  basename,
-  dirname,
-  extname,
-  isAbsolute,
-  join,
-  resolve,
-} from 'node:path'
+import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
 import type { WorkspaceFindFilesPattern } from '../src/utils/workspace-file-system'
@@ -15,6 +8,7 @@ const fileTexts = new Map<string, string>()
 const directories = new Map<string, string[]>()
 const globMatches = new Map<string, string[]>()
 type WorkspaceFindFilesMockPattern = string | WorkspaceFindFilesPattern
+const cssVarSourcesModulePath = '../src/strategies/css-var-sources.ts'
 
 const readFileMock = vi.fn<(filePath: unknown) => Promise<string>>(filePath => {
   const normalizedFilePath = String(filePath)
@@ -49,18 +43,12 @@ const findFilesMock = vi.fn<
 
 vi.mock(
   import('../src/utils/workspace-file-system'),
-  () =>
+  async importActual =>
     ({
-      basenameWorkspacePath: basename,
-      dirnameWorkspacePath: dirname,
-      extnameWorkspacePath: extname,
+      ...(await importActual()),
       findWorkspaceFiles: findFilesMock,
-      isAbsoluteWorkspacePath: isAbsolute,
-      joinWorkspacePath: join,
       readWorkspaceDirectory: readDirectoryMock,
       readWorkspaceFile: readFileMock,
-      resolveWorkspacePath: (baseFilePath: string, value: string) =>
-        isAbsolute(value) ? value : resolve(dirname(baseFilePath), value),
       statWorkspaceFile: statMock,
       workspacePathIsDirectory: isDirectoryMock,
     }) as unknown as Partial<typeof WorkspaceFileSystem>,
@@ -69,8 +57,7 @@ vi.mock(
 describe('css variable source cache', () => {
   it('loads declarations from configured external file paths', async () => {
     resetTestState()
-    const { loadCssVarSourceDeclarations } =
-      await import('../src/strategies/css-var-sources')
+    const { loadCssVarSourceDeclarations } = await importCssVarSources()
 
     const dir = '/tmp/better-color-css-vars'
     const tokensPath = join(dir, 'tokens.css')
@@ -94,8 +81,7 @@ describe('css variable source cache', () => {
 
   it('reuses cached file text until mtime or size changes', async () => {
     resetTestState()
-    const { loadCssVarSourceDeclarations } =
-      await import('../src/strategies/css-var-sources')
+    const { loadCssVarSourceDeclarations } = await importCssVarSources()
 
     const dir = '/tmp/better-color-css-vars-cache'
     const tokensPath = join(dir, 'tokens.css')
@@ -129,8 +115,7 @@ describe('css variable source cache', () => {
 
   it('invalidates cached file text when only file size changes', async () => {
     resetTestState()
-    const { loadCssVarSourceDeclarations } =
-      await import('../src/strategies/css-var-sources')
+    const { loadCssVarSourceDeclarations } = await importCssVarSources()
 
     const dir = '/tmp/better-color-css-vars-cache-size'
     const tokensPath = join(dir, 'tokens.css')
@@ -155,8 +140,7 @@ describe('css variable source cache', () => {
 
   it('loads declarations from configured current-file-relative globs', async () => {
     resetTestState()
-    const { loadCssVarSourceDeclarations } =
-      await import('../src/strategies/css-var-sources')
+    const { loadCssVarSourceDeclarations } = await importCssVarSources()
 
     const dir = '/tmp/better-color-css-vars-glob'
     const tokensPath = join(dir, 'tokens', 'colors.css')
@@ -194,19 +178,127 @@ describe('css variable source cache', () => {
     ])
   })
 
+  it('normalizes relative Windows glob separators before searching', async () => {
+    resetTestState()
+    const { loadCssVarSourceDeclarations } = await importCssVarSources()
+
+    const dir = '/tmp/better-color-css-vars-windows-relative-glob'
+    const tokensPath = `${dir}/tokens/colors.css`
+
+    globMatches.set(
+      createGlobMatchKey({
+        basePath: dir,
+        pattern: 'tokens/**/*.css',
+      }),
+      [tokensPath],
+    )
+    setFile(tokensPath, ':root { --brand: #336699; }\n')
+
+    const declarations = await loadCssVarSourceDeclarations({
+      filePath: `${dir}/entry.css`,
+      paths: [String.raw`tokens\**\*.css`],
+      trustedSelectors: [':root'],
+    })
+
+    expect(findFilesMock).toHaveBeenCalledWith(
+      {
+        basePath: dir,
+        pattern: 'tokens/**/*.css',
+      },
+      64,
+    )
+    expect(declarations.map(declaration => declaration.name)).toStrictEqual([
+      '--brand',
+    ])
+  })
+
+  it('normalizes absolute Windows glob separators before splitting', async () => {
+    resetTestState()
+    const { loadCssVarSourceDeclarations } = await importCssVarSources()
+
+    const entryPath = String.raw`C:\repo\src\entry.css`
+    const tokensPath = String.raw`C:\repo\tokens\colors.css`
+
+    globMatches.set(
+      createGlobMatchKey({
+        basePath: 'C:/repo/tokens',
+        pattern: '**/*.css',
+      }),
+      [tokensPath],
+    )
+    setFile(tokensPath, ':root { --brand: #336699; }\n')
+
+    const declarations = await loadCssVarSourceDeclarations({
+      filePath: entryPath,
+      paths: [String.raw`C:\repo\tokens\**\*.css`],
+      trustedSelectors: [':root'],
+    })
+
+    expect(findFilesMock).toHaveBeenCalledWith(
+      {
+        basePath: 'C:/repo/tokens',
+        pattern: '**/*.css',
+      },
+      64,
+    )
+    expect(declarations.map(declaration => declaration.name)).toStrictEqual([
+      '--brand',
+    ])
+  })
+
+  it('preserves URI glob prefixes while normalizing path separators', async () => {
+    resetTestState()
+    const { loadCssVarSourceDeclarations } = await importCssVarSources()
+
+    const basePath = 'vscode-remote://ssh-remote+host/home/me/tokens'
+    const tokensPath = `${basePath}/colors.css`
+
+    globMatches.set(
+      createGlobMatchKey({
+        basePath,
+        pattern: '**/*.css',
+      }),
+      [tokensPath],
+    )
+    setFile(tokensPath, ':root { --brand: #336699; }\n')
+
+    const declarations = await loadCssVarSourceDeclarations({
+      filePath: 'vscode-remote://ssh-remote+host/home/me/src/entry.css',
+      paths: [
+        String.raw`vscode-remote://ssh-remote+host/home/me/tokens\**\*.css`,
+      ],
+      trustedSelectors: [':root'],
+    })
+
+    expect(findFilesMock).toHaveBeenCalledWith(
+      {
+        basePath,
+        pattern: '**/*.css',
+      },
+      64,
+    )
+    expect(declarations.map(declaration => declaration.name)).toStrictEqual([
+      '--brand',
+    ])
+  })
+
   it('recursively loads css-like files from configured directories', async () => {
     resetTestState()
-    const { loadCssVarSourceDeclarations } =
-      await import('../src/strategies/css-var-sources')
+    const { loadCssVarSourceDeclarations } = await importCssVarSources()
 
     const dir = '/tmp/better-color-css-vars-dir'
-    const nestedDir = join(dir, 'nested')
     const tokensPath = join(dir, 'tokens.css')
-    const themePath = join(nestedDir, 'theme.scss')
-    const ignoredPath = join(nestedDir, 'notes.txt')
+    const themePath = join(dir, 'nested', 'theme.scss')
+    const ignoredPath = join(dir, 'nested', 'notes.txt')
 
-    directories.set(dir, [tokensPath, nestedDir])
-    directories.set(nestedDir, [themePath, ignoredPath])
+    directories.set(dir, [])
+    globMatches.set(
+      createGlobMatchKey({
+        basePath: dir,
+        pattern: '**/*.{css,scss,less}',
+      }),
+      [tokensPath, themePath, ignoredPath],
+    )
     setFile(tokensPath, ':root { --brand: #336699; }\n')
     setFile(themePath, ':root { --accent: #663399; }\n')
     setFile(ignoredPath, ':root { --ignored: #ff0000; }\n')
@@ -217,6 +309,14 @@ describe('css variable source cache', () => {
       trustedSelectors: [':root'],
     })
 
+    expect(findFilesMock).toHaveBeenCalledWith(
+      {
+        basePath: dir,
+        pattern: '**/*.{css,scss,less}',
+      },
+      64,
+    )
+    expect(readDirectoryMock).not.toHaveBeenCalled()
     expect(declarations.map(declaration => declaration.name)).toStrictEqual([
       '--brand',
       '--accent',
@@ -225,8 +325,7 @@ describe('css variable source cache', () => {
 
   it('skips unreadable external files', async () => {
     resetTestState()
-    const { loadCssVarSourceDeclarations } =
-      await import('../src/strategies/css-var-sources')
+    const { loadCssVarSourceDeclarations } = await importCssVarSources()
 
     const dir = '/tmp/better-color-css-vars-unreadable'
     const readablePath = join(dir, 'readable.css')
@@ -245,6 +344,12 @@ describe('css variable source cache', () => {
     ])
   })
 })
+
+async function importCssVarSources() {
+  return import(cssVarSourcesModulePath) as Promise<
+    typeof import('../src/strategies/css-var-sources')
+  >
+}
 
 function resetTestState() {
   fileStats.clear()

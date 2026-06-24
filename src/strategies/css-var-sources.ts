@@ -3,7 +3,6 @@ import {
   extnameWorkspacePath,
   findWorkspaceFiles,
   isAbsoluteWorkspacePath,
-  readWorkspaceDirectory,
   readWorkspaceFile,
   resolveWorkspacePath,
   statWorkspaceFile,
@@ -101,9 +100,11 @@ async function expandCssVarSourcePath(
   debug?: (message: string) => void,
 ): Promise<string[]> {
   if (isGlobPath(sourcePath)) {
+    const normalizedSourcePath = normalizeCssVarSourceGlobPath(sourcePath)
+
     try {
       return await findWorkspaceFiles(
-        resolveCssVarSourceGlob(baseFilePath, sourcePath),
+        resolveCssVarSourceGlob(baseFilePath, normalizedSourcePath),
         MAX_CSS_VAR_SOURCE_FILES,
       )
     } catch {
@@ -137,13 +138,14 @@ function resolveCssVarSourceGlob(
 function splitAbsoluteCssVarSourceGlob(
   sourcePath: string,
 ): WorkspaceFindFilesPattern {
-  const segments = sourcePath.split('/')
+  const normalizedSourcePath = normalizeCssVarSourceGlobPath(sourcePath)
+  const segments = normalizedSourcePath.split('/')
   const globIndex = segments.findIndex(segment => isGlobPath(segment))
 
   if (globIndex <= 0) {
     return {
-      basePath: dirnameWorkspacePath(sourcePath),
-      pattern: segments.at(-1) ?? sourcePath,
+      basePath: dirnameWorkspacePath(normalizedSourcePath),
+      pattern: segments.at(-1) ?? normalizedSourcePath,
     }
   }
 
@@ -157,35 +159,17 @@ async function collectDirectoryCssVarSourceFilePaths(
   dirPath: string,
   debug?: (message: string) => void,
 ): Promise<string[]> {
-  const filePaths: string[] = []
-  const pending = [dirPath]
-
-  while (pending.length > 0 && filePaths.length < MAX_CSS_VAR_SOURCE_FILES) {
-    const currentDir = pending.shift()
-    if (!currentDir) break
-
-    let children: string[]
-    try {
-      children = await readWorkspaceDirectory(currentDir)
-    } catch {
-      children = skipPath(currentDir, debug)
-    }
-
-    for (const childPath of children) {
-      if (filePaths.length >= MAX_CSS_VAR_SOURCE_FILES) break
-
-      if (await workspacePathIsDirectory(childPath)) {
-        pending.push(childPath)
-        continue
-      }
-
-      if (isCssLikeSourcePath(childPath)) {
-        filePaths.push(childPath)
-      }
-    }
+  try {
+    return await findWorkspaceFiles(
+      {
+        basePath: dirPath,
+        pattern: '**/*.{css,scss,less}',
+      },
+      MAX_CSS_VAR_SOURCE_FILES,
+    )
+  } catch {
+    return skipPath(dirPath, debug)
   }
-
-  return filePaths
 }
 
 async function readCachedCssVarSourceFile(
@@ -242,6 +226,10 @@ function isCssLikeSourcePath(filePath: string): boolean {
 
 function isGlobPath(filePath: string): boolean {
   return GLOB_META_REGEX.test(filePath)
+}
+
+function normalizeCssVarSourceGlobPath(filePath: string): string {
+  return filePath.replaceAll('\\', '/')
 }
 
 function skipPath(
