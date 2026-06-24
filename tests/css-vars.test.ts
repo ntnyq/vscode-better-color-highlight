@@ -3,6 +3,7 @@ import {
   collectCssVarDeclarations,
   getCssSelectorSpecificity,
   isTrustedCssVarSelector,
+  splitCssSelectorList,
 } from '../src/strategies/css-var-parser'
 import { findCssVars } from '../src/strategies/css-vars'
 import { FIXTURE_VARS_CSS } from './fixtures'
@@ -39,6 +40,19 @@ describe(findCssVars, () => {
     ).toBe(false)
   })
 
+  it('splits selector lists without splitting inside strings, brackets, or parentheses', () => {
+    expect(
+      splitCssSelectorList(
+        String.raw`:root, [data-theme="light,dark"], :is(html, body), .icon[data-url="data:image/svg+xml,%3Csvg%3E"]`,
+      ),
+    ).toStrictEqual([
+      ':root',
+      '[data-theme="light,dark"]',
+      ':is(html, body)',
+      '.icon[data-url="data:image/svg+xml,%3Csvg%3E"]',
+    ])
+  })
+
   it('normalizes selector whitespace before trusted selector matching', () => {
     expect(
       isTrustedCssVarSelector('html   [data-theme=light]', [
@@ -52,6 +66,121 @@ describe(findCssVars, () => {
     expect(getCssSelectorSpecificity('html')).toStrictEqual([0, 0, 1])
     expect(getCssSelectorSpecificity('html[data-theme=light]')).toStrictEqual([
       0, 1, 1,
+    ])
+  })
+
+  it('walks nested at-rule bodies without treating at-rules as selectors', () => {
+    const declarations = collectCssVarDeclarations(
+      `
+        @media (prefers-color-scheme: dark) {
+          :root { --media-brand: #111111; }
+        }
+
+        @layer theme {
+          html { --layer-brand: #222222; }
+        }
+
+        @media screen {
+          @supports (color: color(display-p3 1 0 0)) {
+            body { --supports-brand: #333333; }
+          }
+        }
+      `,
+      {
+        trustedSelectors: [':root', 'html', 'body'],
+      },
+    )
+
+    expect(
+      declarations.map(({ name, normalizedSelector, value }) => ({
+        name,
+        normalizedSelector,
+        value,
+      })),
+    ).toStrictEqual([
+      {
+        name: '--media-brand',
+        normalizedSelector: ':root',
+        value: '#111111',
+      },
+      {
+        name: '--layer-brand',
+        normalizedSelector: 'html',
+        value: '#222222',
+      },
+      {
+        name: '--supports-brand',
+        normalizedSelector: 'body',
+        value: '#333333',
+      },
+    ])
+  })
+
+  it('emits selector list declarations per selector item', () => {
+    const declarations = collectCssVarDeclarations(
+      ':root, html, [data-theme="brand,primary"] { --brand: red; }',
+      {
+        trustedSelectors: [':root', 'html'],
+      },
+    )
+
+    expect(
+      declarations.map(
+        ({ normalizedSelector, specificity, isTrusted, sourceOrder }) => ({
+          normalizedSelector,
+          specificity,
+          isTrusted,
+          sourceOrder,
+        }),
+      ),
+    ).toStrictEqual([
+      {
+        normalizedSelector: ':root',
+        specificity: [0, 1, 0],
+        isTrusted: true,
+        sourceOrder: 0,
+      },
+      {
+        normalizedSelector: 'html',
+        specificity: [0, 0, 1],
+        isTrusted: true,
+        sourceOrder: 1,
+      },
+      {
+        normalizedSelector: '[data-theme="brand,primary"]',
+        specificity: [0, 1, 0],
+        isTrusted: false,
+        sourceOrder: 2,
+      },
+    ])
+  })
+
+  it('ignores commented declarations and preserves semicolons in values', () => {
+    const declarations = collectCssVarDeclarations(
+      String.raw`
+        :root {
+          /* --brand: red; */
+          --icon: url("data:image/svg+xml;utf8,<svg></svg>");
+          --label: "semi;colon";
+        }
+      `,
+      {
+        trustedSelectors: [':root'],
+      },
+    )
+
+    expect(declarations).toHaveLength(2)
+    expect(
+      declarations.map(({ name, value }) => ({ name, value })),
+    ).toStrictEqual([
+      {
+        name: '--icon',
+        value: 'url("data:image/svg+xml;utf8,<svg></svg>")',
+      },
+      {
+        name: '--label',
+        value: '"semi;colon"',
+      },
     ])
   })
 
