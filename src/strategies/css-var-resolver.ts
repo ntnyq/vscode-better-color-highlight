@@ -120,7 +120,13 @@ async function resolveFallback(
 ): Promise<CssVarResolution> {
   if (!usage.fallback) return { status: 'missing' }
 
-  return resolveCssVarValue(usage.fallback, undefined, options, seen, depth + 1)
+  return await resolveCssVarValue(
+    usage.fallback,
+    undefined,
+    options,
+    seen,
+    depth + 1,
+  )
 }
 
 async function resolveInvalidFallback(
@@ -131,7 +137,13 @@ async function resolveInvalidFallback(
 ): Promise<CssVarResolution> {
   if (!usage.fallback) return { status: 'invalid' }
 
-  return resolveCssVarValue(usage.fallback, undefined, options, seen, depth + 1)
+  return await resolveCssVarValue(
+    usage.fallback,
+    undefined,
+    options,
+    seen,
+    depth + 1,
+  )
 }
 
 async function resolveCssVarValue(
@@ -204,11 +216,16 @@ function selectCssVarDeclaration(
     declaration => declaration.name === name,
   )
   if (currentCandidates.length > 0) {
+    let latest = currentCandidates[0]
+    for (const declaration of currentCandidates.slice(1)) {
+      if (declaration.sourceOrder > latest.sourceOrder) {
+        latest = declaration
+      }
+    }
+
     return {
       status: 'found',
-      declaration: currentCandidates.reduce((latest, declaration) =>
-        declaration.sourceOrder > latest.sourceOrder ? declaration : latest,
-      ),
+      declaration: latest,
     }
   }
 

@@ -23,6 +23,7 @@ export function normalizeCssSelector(selector: string): string {
   return stripCssComments(selector).replaceAll(/\s+/gu, ' ').trim()
 }
 
+// eslint-disable-next-line complexity -- selector splitting uses a tiny lexer to avoid commas inside strings/functions.
 export function splitCssSelectorList(selector: string): string[] {
   const selectors: string[] = []
   let current = ''
@@ -163,6 +164,17 @@ export function collectCssVarDeclarations(
     }
   }
 
+  function collectRuleDeclarations(body: string, prelude: string): void {
+    const declarationsInRule = scanCssVarDeclarations(body)
+    const selectorItems = splitCssSelectorList(prelude)
+
+    for (const declaration of declarationsInRule) {
+      for (const normalizedSelector of selectorItems) {
+        pushDeclaration(declaration, normalizedSelector)
+      }
+    }
+  }
+
   function walkRange(start: number, end: number): void {
     let blockStart = start
 
@@ -191,14 +203,7 @@ export function collectCssVarDeclarations(
         if (prelude.startsWith('@')) {
           walkRange(bodyStart, closeBrace)
         } else {
-          const declarationsInRule = scanCssVarDeclarations(body)
-          const selectorItems = splitCssSelectorList(prelude)
-
-          for (const declaration of declarationsInRule) {
-            for (const normalizedSelector of selectorItems) {
-              pushDeclaration(declaration, normalizedSelector)
-            }
-          }
+          collectRuleDeclarations(body, prelude)
         }
       }
 

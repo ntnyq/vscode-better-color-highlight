@@ -1,5 +1,6 @@
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
+import type * as CssVarSourcesModule from '../src/strategies/css-var-sources'
 import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
 import type { WorkspaceFindFilesPattern } from '../src/utils/workspace-file-system'
 
@@ -345,10 +346,8 @@ describe('css variable source cache', () => {
   })
 })
 
-async function importCssVarSources() {
-  return import(cssVarSourcesModulePath) as Promise<
-    typeof import('../src/strategies/css-var-sources')
-  >
+function importCssVarSources(): Promise<typeof CssVarSourcesModule> {
+  return import(cssVarSourcesModulePath) as Promise<typeof CssVarSourcesModule>
 }
 
 function resetTestState() {
