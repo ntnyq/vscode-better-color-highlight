@@ -27,22 +27,25 @@ Runtime file access uses the VS Code Workspace FS API, so SCSS dependency resolu
 
 <!-- configs -->
 
-| Key                                               | Description                                                                                                                                                               | Type      | Default        |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | -------------- |
-| `color-highlight.enable`                          | Enable or disable color highlighting.                                                                                                                                     | `boolean` | `true`         |
-| `color-highlight.languages`                       | Language IDs where colors are highlighted. Use '\*' for all languages, prefix with '!' to exclude.                                                                        | `array`   | `["*"]`        |
-| `color-highlight.matchWords`                      | Highlight named CSS colors (e.g., 'red', 'blue') in non-style languages.                                                                                                  | `boolean` | `false`        |
-| `color-highlight.namedColorMatchMode`             | Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches any named color word, and 'never' disables named color matching. | `string`  | `"context"`    |
-| `color-highlight.resolveScssVariablesAcrossFiles` | Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work.                                       | `boolean` | `false`        |
-| `color-highlight.scssLoadPaths`                   | Additional Sass load paths for resolving non-relative SCSS @use, @forward, and @import modules.                                                                           | `array`   | `[]`           |
-| `color-highlight.useARGB`                         | Interpret 8-digit hex colors as ARGB instead of RGBA.                                                                                                                     | `boolean` | `false`        |
-| `color-highlight.matchRgbWithNoFunction`          | Highlight RGB values not wrapped in rgb() function.                                                                                                                       | `boolean` | `false`        |
-| `color-highlight.rgbWithNoFunctionLanguages`      | Language IDs for rgb-without-function matching. Use '\*' / '!' syntax.                                                                                                    | `array`   | `["*"]`        |
-| `color-highlight.matchHslWithNoFunction`          | Highlight HSL values not wrapped in hsl() function.                                                                                                                       | `boolean` | `false`        |
-| `color-highlight.hslWithNoFunctionLanguages`      | Language IDs for hsl-without-function matching. Use '\*' / '!' syntax.                                                                                                    | `array`   | `["*"]`        |
-| `color-highlight.markerType`                      | Style of the color highlight marker.                                                                                                                                      | `string`  | `"background"` |
-| `color-highlight.markRuler`                       | Show color indicators on the scrollbar ruler.                                                                                                                             | `boolean` | `true`         |
-| `color-highlight.debug`                           | Enable debug logging for color detection and decoration.                                                                                                                  | `boolean` | `false`        |
+| Key                                               | Description                                                                                                                                                               | Type      | Default                           |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | --------------------------------- |
+| `color-highlight.enable`                          | Enable or disable color highlighting.                                                                                                                                     | `boolean` | `true`                            |
+| `color-highlight.languages`                       | Language IDs where colors are highlighted. Use '\*' for all languages, prefix with '!' to exclude.                                                                        | `array`   | `["*"]`                           |
+| `color-highlight.matchWords`                      | Highlight named CSS colors (e.g., 'red', 'blue') in non-style languages.                                                                                                  | `boolean` | `false`                           |
+| `color-highlight.namedColorMatchMode`             | Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches any named color word, and 'never' disables named color matching. | `string`  | `"context"`                       |
+| `color-highlight.resolveScssVariablesAcrossFiles` | Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work.                                       | `boolean` | `false`                           |
+| `color-highlight.scssLoadPaths`                   | Additional Sass load paths for resolving non-relative SCSS @use, @forward, and @import modules.                                                                           | `array`   | `[]`                              |
+| `color-highlight.resolveCssVariablesAcrossFiles`  | Resolve CSS custom properties from configured CSS variable source paths. Disabled by default to avoid extra file-system work and ambiguous cascade guesses.               | `boolean` | `false`                           |
+| `color-highlight.cssVariablePaths`                | File, directory, or glob paths used as external CSS custom property sources when CSS variable resolution is enabled.                                                      | `array`   | `[]`                              |
+| `color-highlight.cssVariableTrustedSelectors`     | Selectors whose custom property declarations are trusted for cross-file CSS variable color resolution.                                                                    | `array`   | `[":root","html","body",":host"]` |
+| `color-highlight.useARGB`                         | Interpret 8-digit hex colors as ARGB instead of RGBA.                                                                                                                     | `boolean` | `false`                           |
+| `color-highlight.matchRgbWithNoFunction`          | Highlight RGB values not wrapped in rgb() function.                                                                                                                       | `boolean` | `false`                           |
+| `color-highlight.rgbWithNoFunctionLanguages`      | Language IDs for rgb-without-function matching. Use '\*' / '!' syntax.                                                                                                    | `array`   | `["*"]`                           |
+| `color-highlight.matchHslWithNoFunction`          | Highlight HSL values not wrapped in hsl() function.                                                                                                                       | `boolean` | `false`                           |
+| `color-highlight.hslWithNoFunctionLanguages`      | Language IDs for hsl-without-function matching. Use '\*' / '!' syntax.                                                                                                    | `array`   | `["*"]`                           |
+| `color-highlight.markerType`                      | Style of the color highlight marker.                                                                                                                                      | `string`  | `"background"`                    |
+| `color-highlight.markRuler`                       | Show color indicators on the scrollbar ruler.                                                                                                                             | `boolean` | `true`                            |
+| `color-highlight.debug`                           | Enable debug logging for color detection and decoration.                                                                                                                  | `boolean` | `false`                           |
 
 <!-- configs -->
 
@@ -63,6 +66,12 @@ Runtime file access uses the VS Code Workspace FS API, so SCSS dependency resolu
 - [x] Flutter/Dart：`Color(0xffRRGGBB)`、`Color.fromARGB(a, r, g, b)`
 - [x] Hyprland：`rgba(rrggbb)`、`rgba(rrggbbaa)`
 - [ ] Design tokens：Tailwind、tokens（JSON/YAML）
+
+Cross-file CSS custom property resolution is conservative. It only runs when
+`color-highlight.resolveCssVariablesAcrossFiles` is enabled, reads sources from
+`color-highlight.cssVariablePaths`, and trusts declarations only from selectors
+listed in `color-highlight.cssVariableTrustedSelectors`. Ambiguous runtime
+cascade cases are skipped instead of guessed.
 
 ## Credits
 
@@ -120,6 +129,14 @@ Suggested migration example:
   "color-highlight.namedColorMatchMode": "context",
   "color-highlight.resolveScssVariablesAcrossFiles": false,
   "color-highlight.scssLoadPaths": [],
+  "color-highlight.resolveCssVariablesAcrossFiles": false,
+  "color-highlight.cssVariablePaths": [],
+  "color-highlight.cssVariableTrustedSelectors": [
+    ":root",
+    "html",
+    "body",
+    ":host",
+  ],
 }
 ```
 
