@@ -1,7 +1,6 @@
 import type { ColorDetector, ColorMatch } from '../types'
 import { findColorFunctions, resolveShorthandColor } from './color-functions'
 import type { CssVarDeclaration } from './css-var-parser'
-import { compareCssSpecificity } from './css-var-parser'
 import { findHexRGBA } from './hex'
 import { findHwb } from './hwb'
 import { findNamedColors } from './named-colors'
@@ -159,17 +158,10 @@ async function resolveCssVarValue(
   const varUsages = findCssVarUsages(normalized)
 
   if (varUsages.length > 0) {
-    for (const usage of varUsages) {
-      const result = await resolveCssVarUsage(
-        usage,
-        options,
-        seen,
-        depth + 1,
-        false,
-      )
-      if (result.status !== 'missing') return result
-    }
-    return { status: 'missing' }
+    const usage = getExactCssVarAlias(normalized, varUsages)
+    if (!usage) return { status: 'missing' }
+
+    return await resolveCssVarUsage(usage, options, seen, depth + 1, false)
   }
 
   const directColor = await resolveDirectColor(normalized)
@@ -204,8 +196,11 @@ async function resolveDirectColor(value: string): Promise<string | null> {
   ]
   const results = await Promise.all(strategies.map(strategy => strategy(value)))
   const matches = results.flat().sort((left, right) => left.start - right.start)
+  const exactMatch = matches.find(
+    match => match.start === 0 && match.end === value.length,
+  )
 
-  return matches[0]?.color ?? null
+  return exactMatch?.color ?? null
 }
 
 function selectCssVarDeclaration(
@@ -240,35 +235,46 @@ function selectCssVarDeclaration(
     return { status: 'ambiguous' }
   }
 
-  const sortedCandidates = [...externalCandidates].sort(
-    compareCssVarDeclarations,
-  )
-  const winner = sortedCandidates.at(-1)
-  const runnerUp = sortedCandidates.at(-2)
-  if (!winner) {
-    return { status: 'missing' }
-  }
-  if (runnerUp && compareCssVarDeclarations(winner, runnerUp) === 0) {
+  const firstSelector = externalCandidates[0].normalizedSelector
+  if (
+    externalCandidates.some(
+      declaration => declaration.normalizedSelector !== firstSelector,
+    )
+  ) {
     return { status: 'ambiguous' }
   }
 
   return {
     status: 'found',
-    declaration: winner,
+    declaration: selectLatestDeclaration(externalCandidates),
   }
 }
 
-function compareCssVarDeclarations(
-  left: CssVarDeclaration,
-  right: CssVarDeclaration,
-): number {
-  const specificityDiff = compareCssSpecificity(
-    left.specificity,
-    right.specificity,
-  )
-  if (specificityDiff !== 0) return specificityDiff
+function selectLatestDeclaration(
+  declarations: readonly CssVarDeclaration[],
+): CssVarDeclaration {
+  let latest = declarations[0]
 
-  return left.sourceOrder - right.sourceOrder
+  for (const declaration of declarations.slice(1)) {
+    if (declaration.sourceOrder > latest.sourceOrder) {
+      latest = declaration
+    }
+  }
+
+  return latest
+}
+
+function getExactCssVarAlias(
+  value: string,
+  usages: readonly VarUsage[],
+): VarUsage | null {
+  if (usages.length !== 1) return null
+
+  const usage = usages[0]
+  if (value.slice(0, usage.start).trim()) return null
+  if (value.slice(usage.end).trim()) return null
+
+  return usage
 }
 
 function isCssCustomPropertyValueUsage(text: string, usage: VarUsage): boolean {

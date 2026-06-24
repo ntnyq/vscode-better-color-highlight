@@ -418,6 +418,10 @@ export function parseShorthandValue(
 
   const [r, g, b] = convertColorFunction(space, parts)
   if (r === null) return null
+  if (!Number.isFinite(r) || !Number.isFinite(g) || !Number.isFinite(b)) {
+    return null
+  }
+  if (alpha !== undefined && !Number.isFinite(alpha)) return null
 
   return rgbString(r, g, b, alpha)
 }

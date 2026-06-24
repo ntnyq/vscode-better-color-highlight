@@ -277,6 +277,31 @@ describe(findCssVars, () => {
     expect(result.some(match => match.color === 'rgb(255, 0, 0)')).toBe(true)
   })
 
+  it('skips nested variables inside composite declaration values', async () => {
+    const text = `
+      :root {
+        --base-red: #ff0000;
+        --mixed-red: color-mix(in srgb, var(--base-red), white);
+      }
+      .cls { color: var(--mixed-red); }
+    `
+    const result = await findCssVars(text)
+
+    expect(result).toStrictEqual([])
+  })
+
+  it('skips direct color tokens inside composite declaration values', async () => {
+    const text = `
+      :root {
+        --border-token: 1px solid red;
+      }
+      .cls { border-color: var(--border-token); }
+    `
+    const result = await findCssVars(text)
+
+    expect(result).toStrictEqual([])
+  })
+
   it('resolves CSS shorthand triplet custom properties inside rule blocks', async () => {
     const text = `
       .css-var-shorthand {
@@ -449,6 +474,54 @@ describe(findCssVars, () => {
         color: 'rgb(14, 165, 233)',
       },
     ])
+  })
+
+  it('uses latest external declaration for the same trusted selector', async () => {
+    const text = '.cls { color: var(--brand); }'
+    const externalDeclarations = collectCssVarDeclarations(
+      `
+        :root { --brand: #0ea5e9; }
+        :root { --brand: #ff0000; }
+      `,
+      {
+        filePath: '/workspace/tokens.css',
+        trustedSelectors: [':root'],
+      },
+    )
+
+    const result = await resolveCssVarMatches(text, {
+      currentDeclarations: [],
+      externalDeclarations,
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.indexOf('var(--brand)'),
+        end: text.indexOf('var(--brand)') + 'var(--brand)'.length,
+        color: 'rgb(255, 0, 0)',
+      },
+    ])
+  })
+
+  it('treats external trusted declarations from different selectors as ambiguous', async () => {
+    const text = '.cls { color: var(--brand); }'
+    const externalDeclarations = collectCssVarDeclarations(
+      `
+        :root { --brand: #0ea5e9; }
+        body { --brand: #ff0000; }
+      `,
+      {
+        filePath: '/workspace/tokens.css',
+        trustedSelectors: [':root', 'body'],
+      },
+    )
+
+    const result = await resolveCssVarMatches(text, {
+      currentDeclarations: [],
+      externalDeclarations,
+    })
+
+    expect(result).toStrictEqual([])
   })
 
   it('uses fallback when external variable missing', async () => {
