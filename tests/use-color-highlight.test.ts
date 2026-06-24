@@ -264,6 +264,32 @@ describe('useColorHighlight', () => {
     vi.useRealTimers()
   })
 
+  it('does not serialize full document text into run signatures', async () => {
+    setupTest()
+    asyncStrategy.mockResolvedValue([])
+    documentTextRef = createRef('.box { color: #ff0000; }')
+    visibleEditorsRef = createRef<unknown[]>([createEditor()])
+    const stringifySpy = vi.spyOn(JSON, 'stringify')
+
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+
+    useColorHighlight()
+    await flushPromises()
+
+    expect(
+      stringifySpy.mock.calls.some(
+        ([value]) =>
+          typeof value === 'object' &&
+          value !== null &&
+          'text' in value &&
+          value.text === '.box { color: #ff0000; }',
+      ),
+    ).toBe(false)
+
+    stringifySpy.mockRestore()
+  })
+
   it('disposes document text watcher when editor is no longer visible', async () => {
     setupTest()
     const editor = createEditor()

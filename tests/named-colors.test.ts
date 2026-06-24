@@ -53,6 +53,17 @@ describe(findNamedColors, () => {
     ])
   })
 
+  it('skips selector names in Stylus files', () => {
+    const text = '.red\n  color red'
+    const result = findNamedColors(text, {
+      languageId: 'stylus',
+    })
+
+    expect(result).toStrictEqual([
+      { start: 13, end: 16, color: 'rgb(255, 0, 0)' },
+    ])
+  })
+
   it('keeps CSS syntax filtering when named color mode is always', () => {
     const result = findNamedColors('.red { color: blue; }\n@layer red;', {
       languageId: 'css',

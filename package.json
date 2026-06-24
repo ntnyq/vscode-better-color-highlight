@@ -80,7 +80,7 @@
   "devDependencies": {
     "@types/node": "^26.0.0",
     "@types/vscode": "^1.125.0",
-    "@typescript/native-preview": "^7.0.0-dev.20260622.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260624.1",
     "@vscode/vsce": "^3.9.2",
     "bumpp": "^11.1.0",
     "husky": "^9.1.7",
@@ -250,7 +250,7 @@
   "engines": {
     "vscode": "^1.125.0"
   },
-  "packageManager": "pnpm@11.8.0",
+  "packageManager": "pnpm@11.9.0",
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": true

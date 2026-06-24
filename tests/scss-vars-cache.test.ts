@@ -57,6 +57,9 @@ describe('scss variable dependency cache', () => {
     fileStats.clear()
     fileTexts.clear()
     existsMock.mockClear()
+    existsMock.mockImplementation(filePath =>
+      Promise.resolve(fileTexts.has(filePath)),
+    )
     readFileMock.mockClear()
     statMock.mockClear()
     vi.resetModules()
@@ -142,5 +145,39 @@ describe('scss variable dependency cache', () => {
 
     expect(result).toStrictEqual([])
     expect(readFileMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('skips dependency files that exceed the size cap', async () => {
+    fileStats.clear()
+    fileTexts.clear()
+    existsMock.mockClear()
+    existsMock.mockImplementation(filePath =>
+      Promise.resolve(fileTexts.has(filePath)),
+    )
+    readFileMock.mockClear()
+    statMock.mockClear()
+    vi.resetModules()
+
+    const { findScssVars } = await import('../src/strategies/scss-vars')
+
+    const dir = '/tmp/better-color-scss-large'
+    const tokensPath = join(dir, '_tokens.scss')
+    const entryPath = join(dir, 'entry.scss')
+    const text = '@use "tokens";\n.button { color: tokens.$brand; }\n'
+
+    fileTexts.set(tokensPath, '$brand: #336699;\n')
+    fileStats.set(tokensPath, {
+      mtimeMs: 1,
+      size: 512 * 1024 + 1,
+    })
+
+    const result = await findScssVars(text, {
+      languageId: 'scss',
+      filePath: entryPath,
+      resolveScssVariablesAcrossFiles: true,
+    })
+
+    expect(result).toStrictEqual([])
+    expect(readFileMock).not.toHaveBeenCalled()
   })
 })

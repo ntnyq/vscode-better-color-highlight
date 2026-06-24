@@ -55,6 +55,11 @@ const MAX_SCSS_RESOLVE_FILES = 32
 const MAX_SCSS_FILE_CONTENT_CACHE_SIZE = 256
 
 /**
+ * Maximum SCSS dependency file size read during cross-file resolution.
+ */
+const MAX_SCSS_FILE_SIZE = 512 * 1024
+
+/**
  * Cached SCSS dependency file content and metadata used for invalidation.
  */
 interface ScssFileContentCacheEntry {
@@ -368,6 +373,10 @@ function getScssModuleCandidates(
 async function readCachedScssFile(filePath: string): Promise<string | null> {
   try {
     const stats = await statWorkspaceFile(filePath)
+    if (stats.size > MAX_SCSS_FILE_SIZE) {
+      return null
+    }
+
     const cached = scssFileContentCache.get(filePath)
 
     if (

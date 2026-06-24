@@ -17,6 +17,11 @@ const NAMED_COLOR_REGEX = buildNamedColorRegex()
 const CSS_LIKE_LANGUAGES = new Set(['css', 'scss', 'sass', 'less'])
 
 /**
+ * Stylus language IDs where named colors should be restricted to values.
+ */
+const STYLUS_LIKE_LANGUAGES = new Set(['stylus', 'styl'])
+
+/**
  * Regex that recognizes the start of a CSS declaration before a named value.
  */
 const CSS_DECLARATION_HEAD_REGEX =
@@ -83,18 +88,20 @@ function isNamedColorAllowed(
   context?: StrategyContext,
 ): boolean {
   const isCssLike = context && CSS_LIKE_LANGUAGES.has(context.languageId)
+  const isStylusLike = context && STYLUS_LIKE_LANGUAGES.has(context.languageId)
+  const isStyleLike = isCssLike || isStylusLike
 
-  if (context?.namedColorMatchMode === 'always' && !isCssLike) {
+  if (context?.namedColorMatchMode === 'always' && !isStyleLike) {
     return true
   }
 
-  if (!isCssLike) {
+  if (!isStyleLike) {
     return true
   }
 
   return (
     isStandaloneNamedColorValue(text, start, end) ||
-    isInCssDeclarationValue(text, start)
+    isInStyleDeclarationValue(text, start, context.languageId)
   )
 }
 
@@ -118,6 +125,26 @@ function isStandaloneNamedColorValue(
 }
 
 /**
+ * Check whether an offset is inside a style-language declaration value.
+ *
+ * @param text - The full document text
+ * @param start - The start offset of the candidate named color
+ * @param languageId - The current style language ID
+ * @returns Whether the candidate is in a declaration value segment
+ */
+function isInStyleDeclarationValue(
+  text: string,
+  start: number,
+  languageId: string,
+): boolean {
+  if (STYLUS_LIKE_LANGUAGES.has(languageId)) {
+    return isInStylusDeclarationValue(text, start)
+  }
+
+  return isInCssDeclarationValue(text, start)
+}
+
+/**
  * Check whether an offset is inside a CSS declaration value.
  *
  * @param text - The full document text
@@ -133,6 +160,25 @@ function isInCssDeclarationValue(text: string, start: number): boolean {
   const declarationSegment = text.slice(boundary + 1, start)
 
   return CSS_DECLARATION_HEAD_REGEX.test(stripCssComments(declarationSegment))
+}
+
+/**
+ * Check whether an offset is inside a Stylus property value.
+ *
+ * @param text - The full document text
+ * @param start - The start offset of the candidate named color
+ * @returns Whether the candidate is after a property name on the same line
+ */
+function isInStylusDeclarationValue(text: string, start: number): boolean {
+  const lineStart = Math.max(
+    text.lastIndexOf('\n', start),
+    text.lastIndexOf('\r', start),
+  )
+  const declarationSegment = text.slice(lineStart + 1, start)
+
+  return /^\s*(?:\$?[-_a-z][-\w]*\s*(?:=|:)\s*|[-_a-z][-\w]*\s+)$/iu.test(
+    stripCssComments(declarationSegment),
+  )
 }
 
 /**

@@ -24,20 +24,20 @@ import { shouldTrackEditor } from '../utils/editor-filter'
 import { logger } from '../utils/logger'
 
 /**
- * Create a stable signature for the current text, language, and config.
+ * Create a stable signature for the current text revision, language, and config.
  *
- * @param text - The current document text
+ * @param textRevision - The current debounced document text revision
  * @param languageId - The document language ID
  * @param highlightConfig - The highlight configuration snapshot
  * @returns Serialized signature for detecting unchanged highlight runs
  */
 function createHighlightRunSignature(
-  text: string | undefined,
+  textRevision: number,
   languageId: string,
   highlightConfig: HighlightRunConfig,
 ): string {
   return JSON.stringify({
-    text,
+    textRevision,
     languageId,
     enable: highlightConfig.enable,
     languages: highlightConfig.languages,
@@ -253,6 +253,14 @@ function setupEditorTracking(
 
   // Debounce text changes (100ms)
   const debouncedText = useDebouncedRef(textRef, 100)
+  const debouncedTextRevision = ref(0)
+  const stopRevisionWatch = watch(
+    debouncedText,
+    () => {
+      debouncedTextRevision.value++
+    },
+    { immediate: true },
+  )
 
   // Track the current config for this editor
   let pendingVersion = 0
@@ -261,7 +269,11 @@ function setupEditorTracking(
   // Watch debounced text and apply decorations
   const stopWatch = watch(
     () =>
-      createHighlightRunSignature(debouncedText.value, doc.languageId, config),
+      createHighlightRunSignature(
+        debouncedTextRevision.value,
+        doc.languageId,
+        config,
+      ),
     async runSignature => {
       if (runSignature === lastRunSignature) {
         if (config.debug) {
@@ -368,7 +380,7 @@ function setupEditorTracking(
     { immediate: true },
   )
 
-  disposables.push(debouncedText.dispose, stopWatch)
+  disposables.push(debouncedText.dispose, stopRevisionWatch, stopWatch)
 }
 
 /**

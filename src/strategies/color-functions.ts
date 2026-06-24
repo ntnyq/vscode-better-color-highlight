@@ -239,6 +239,10 @@ function parseColorFunction(func: string): string | null {
 
   const [r, g, b] = convertColorFunction(fn, parts)
   if (r === null) return null
+  if (!Number.isFinite(r) || !Number.isFinite(g) || !Number.isFinite(b)) {
+    return null
+  }
+  if (alpha !== undefined && !Number.isFinite(alpha)) return null
 
   return rgbString(r, g, b, alpha)
 }

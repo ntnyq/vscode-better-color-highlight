@@ -109,4 +109,10 @@ describe(findColorFunctions, () => {
     expect(result).toHaveLength(1)
     expect(result[0].color).toBe('rgba(255, 0, 0, 0.42)')
   })
+
+  it('skips malformed numeric channels', () => {
+    const result = findColorFunctions('color: rgb(1*2, 0, 0);')
+
+    expect(result).toStrictEqual([])
+  })
 })
