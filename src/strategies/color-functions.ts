@@ -41,7 +41,7 @@ const HYPRLAND_RGBA_HEX_REGEX =
  *   --color-hsl: 0 100% 50%;
  */
 const CSS_VAR_SHORTHAND_REGEX =
-  /(?<propName>--[\w-]+-(?:rgb|hsl|lch|oklch|lab|oklab))\s*:\s*(?<value>[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*\/\s*[\d.*]*\.?[\d]+%?)?)\s*;/giu
+  /(?<propName>--[\w-]+-(?:rgb|hsl|lch|oklch|lab|oklab))\s*:\s*(?<value>[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*\/\s*[-+]?[\d.*]*\.?[\d]+%?)?)\s*;/giu
 
 /**
  * Supported shorthand color spaces for bare channel values.

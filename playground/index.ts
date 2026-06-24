@@ -146,7 +146,7 @@ const namedTeal = 'teal'
 // =============================================
 
 // TODO: use #ff0000 for the primary
-// NOTE: the accent is rgb(128, 0, 128)
+// TODO: use rgb(128, 0, 128) for the accent
 // FIXME: hsl(210, 50%, 50%) should be the background
 
 // =============================================

@@ -7,6 +7,8 @@ class AppColors {
   // Explicit channel syntax.
   static final surface = Color.fromARGB(255, 226, 226, 226);
   static final overlay = Color.fromARGB(128, 57, 197, 187);
+  // NOTE: out-of-range ARGB channels should not be highlighted.
+  static final invalidOverlay = Color.fromARGB(256, 57, 197, 187);
 
   // Regular comments and CSS-like strings are still scanned in Dart files.
   // Design note: fallback #efca19 and rgb(57, 197, 187)

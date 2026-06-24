@@ -178,3 +178,14 @@
   text-decoration-color: var(--token-lab);
   caret-color: var(--token-oklab);
 }
+
+/* Signed channel shorthand tokens */
+:root {
+  --signed-token-lab: 70 +20 -30;
+  --signed-token-oklab: 0.7 +0.1 -0.05;
+}
+
+.signed-shorthand-token-vars {
+  color: var(--signed-token-lab);
+  background: var(--signed-token-oklab);
+}

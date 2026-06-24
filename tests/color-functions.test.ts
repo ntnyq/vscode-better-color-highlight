@@ -74,6 +74,18 @@ describe(findColorFunctions, () => {
     expect(result).toHaveLength(1)
   })
 
+  it('finds CSS variable shorthand with signed lab channels', () => {
+    const result = findColorFunctions('--token-lab: 70 +20 -30;')
+    expect(result).toHaveLength(1)
+    expect(result[0].color).toBe('rgb(234, 213, 255)')
+  })
+
+  it('finds CSS variable shorthand with signed oklab channels', () => {
+    const result = findColorFunctions('--token-oklab: 0.7 +0.1 -0.05;')
+    expect(result).toHaveLength(1)
+    expect(result[0].color).toBe('rgb(200, 131, 188)')
+  })
+
   it('finds color() in display-p3 space', () => {
     const result = findColorFunctions('color: color(display-p3 1 0 0);')
     expect(result).toHaveLength(1)

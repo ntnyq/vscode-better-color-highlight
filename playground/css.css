@@ -247,7 +247,7 @@
   border-color: green;
 }
 
-/* Named color false positives */
+/* NOTE: selector names and layer names below should not be highlighted as named colors. */
 .red {
   color: red;
 }
@@ -352,7 +352,7 @@
 
 /* Colors in comments should also be highlighted */
 /* TODO: fix the #ff0000 border */
-/* NOTE: use rgb(128, 0, 128) for the accent */
+/* TODO: use rgb(128, 0, 128) for the accent */
 
 /* Colors in strings */
 .content::after {
@@ -396,6 +396,18 @@
 .fallback-var-usage {
   color: var(--missing-brand, #1d4ed8);
   background: var(--missing-named, red);
+}
+
+/* NOTE: var() calls inside custom property composite values should not be highlighted. */
+:root {
+  --skip-var-fallback: var(--missing-skip, #ffffff);
+  --skip-var-composite: color-mix(in srgb, var(--named-red), white);
+  --cycle-a: var(--cycle-b);
+  --cycle-b: var(--cycle-a);
+}
+
+.cyclic-var-fallback {
+  color: var(--cycle-a, green);
 }
 
 /* Definition names that contain other variable names should not highlight partially */

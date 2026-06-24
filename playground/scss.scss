@@ -134,7 +134,7 @@ $root-panel: rgb(30, 64, 175);
   background: $local-bg;
 }
 
-// Only value usages should highlight. The new definition name itself should not.
+// NOTE: variable definition names in this block should not be highlighted.
 $red: #ff0000;
 $red2: $red;
 $red-long: $red2;

@@ -919,8 +919,8 @@
       "column": 7,
       "text": "#ff0000",
       "range": [
-        2943,
-        2950
+        2924,
+        2931
       ],
       "color": "rgb(255, 0, 0)",
       "render": {
@@ -936,8 +936,8 @@
       "column": 8,
       "text": "@red",
       "range": [
-        2959,
-        2963
+        2940,
+        2944
       ],
       "color": "rgb(255, 0, 0)",
       "render": {
@@ -953,8 +953,8 @@
       "column": 12,
       "text": "@red2",
       "range": [
-        2976,
-        2981
+        2957,
+        2962
       ],
       "color": "rgb(255, 0, 0)",
       "render": {
@@ -970,8 +970,8 @@
       "column": 10,
       "text": "@red2",
       "range": [
-        3014,
-        3019
+        2995,
+        3000
       ],
       "color": "rgb(255, 0, 0)",
       "render": {
@@ -987,8 +987,8 @@
       "column": 18,
       "text": "@red-long",
       "range": [
-        3038,
-        3047
+        3019,
+        3028
       ],
       "color": "rgb(255, 0, 0)",
       "render": {
@@ -1004,8 +1004,8 @@
       "column": 25,
       "text": "@red",
       "range": [
-        3073,
-        3077
+        3054,
+        3058
       ],
       "color": "rgb(255, 0, 0)",
       "render": {
@@ -1021,8 +1021,8 @@
       "column": 15,
       "text": "rebeccapurple",
       "range": [
-        3179,
-        3192
+        3160,
+        3173
       ],
       "color": "rgb(102, 51, 153)",
       "render": {
@@ -1038,8 +1038,8 @@
       "column": 10,
       "text": "@named-brand",
       "range": [
-        3218,
-        3230
+        3199,
+        3211
       ],
       "color": "rgb(102, 51, 153)",
       "render": {
@@ -1055,8 +1055,8 @@
       "column": 21,
       "text": "color(display-p3 1 0.2 0.1)",
       "range": [
-        3461,
-        3488
+        3442,
+        3469
       ],
       "color": "rgb(255, 0, 0)",
       "render": {
@@ -1072,8 +1072,8 @@
       "column": 36,
       "text": "3 1 0.2",
       "range": [
-        3476,
-        3483
+        3457,
+        3464
       ],
       "color": "rgb(3, 1, 0)",
       "render": {
@@ -1089,8 +1089,8 @@
       "column": 18,
       "text": "color(rec2020 0.8 0.2 0.1 / 0.75)",
       "range": [
-        3507,
-        3540
+        3488,
+        3521
       ],
       "color": "rgba(255, 0, 22, 0.75)",
       "render": {
@@ -1106,8 +1106,8 @@
       "column": 19,
       "text": "color(prophoto-rgb 0.7 0.3 0.2)",
       "range": [
-        3560,
-        3591
+        3541,
+        3572
       ],
       "color": "rgb(252, 39, 58)",
       "render": {
@@ -1123,8 +1123,8 @@
       "column": 10,
       "text": "@display-p3-accent",
       "range": [
-        3623,
-        3641
+        3604,
+        3622
       ],
       "color": "rgb(255, 0, 0)",
       "render": {
@@ -1140,8 +1140,8 @@
       "column": 15,
       "text": "@rec2020-accent",
       "range": [
-        3657,
-        3672
+        3638,
+        3653
       ],
       "color": "rgba(255, 0, 22, 0.75)",
       "render": {
@@ -1157,8 +1157,8 @@
       "column": 17,
       "text": "@prophoto-accent",
       "range": [
-        3690,
-        3706
+        3671,
+        3687
       ],
       "color": "rgb(252, 39, 58)",
       "render": {
@@ -1174,8 +1174,8 @@
       "column": 4,
       "text": "0xff6600",
       "range": [
-        3772,
-        3780
+        3753,
+        3761
       ],
       "color": "rgb(255, 102, 0)",
       "render": {
