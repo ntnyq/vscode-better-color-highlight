@@ -42,6 +42,9 @@ export type ConfigKey =
   | "color-highlight.namedColorMatchMode"
   | "color-highlight.resolveScssVariablesAcrossFiles"
   | "color-highlight.scssLoadPaths"
+  | "color-highlight.resolveCssVariablesAcrossFiles"
+  | "color-highlight.cssVariablePaths"
+  | "color-highlight.cssVariableTrustedSelectors"
   | "color-highlight.useARGB"
   | "color-highlight.matchRgbWithNoFunction"
   | "color-highlight.rgbWithNoFunctionLanguages"
@@ -58,6 +61,9 @@ export interface ConfigKeyTypeMap {
   "color-highlight.namedColorMatchMode": ("context" | "always" | "never"),
   "color-highlight.resolveScssVariablesAcrossFiles": boolean,
   "color-highlight.scssLoadPaths": string[],
+  "color-highlight.resolveCssVariablesAcrossFiles": boolean,
+  "color-highlight.cssVariablePaths": string[],
+  "color-highlight.cssVariableTrustedSelectors": string[],
   "color-highlight.useARGB": boolean,
   "color-highlight.matchRgbWithNoFunction": boolean,
   "color-highlight.rgbWithNoFunctionLanguages": string[],
@@ -75,6 +81,9 @@ export interface ConfigShorthandMap {
   namedColorMatchMode: "color-highlight.namedColorMatchMode",
   resolveScssVariablesAcrossFiles: "color-highlight.resolveScssVariablesAcrossFiles",
   scssLoadPaths: "color-highlight.scssLoadPaths",
+  resolveCssVariablesAcrossFiles: "color-highlight.resolveCssVariablesAcrossFiles",
+  cssVariablePaths: "color-highlight.cssVariablePaths",
+  cssVariableTrustedSelectors: "color-highlight.cssVariableTrustedSelectors",
   useARGB: "color-highlight.useARGB",
   matchRgbWithNoFunction: "color-highlight.matchRgbWithNoFunction",
   rgbWithNoFunctionLanguages: "color-highlight.rgbWithNoFunctionLanguages",
@@ -92,6 +101,9 @@ export interface ConfigShorthandTypeMap {
   namedColorMatchMode: ("context" | "always" | "never"),
   resolveScssVariablesAcrossFiles: boolean,
   scssLoadPaths: string[],
+  resolveCssVariablesAcrossFiles: boolean,
+  cssVariablePaths: string[],
+  cssVariableTrustedSelectors: string[],
   useARGB: boolean,
   matchRgbWithNoFunction: boolean,
   rgbWithNoFunctionLanguages: string[],
@@ -172,6 +184,36 @@ export const configs = {
     key: "color-highlight.scssLoadPaths",
     default: [],
   } as ConfigItem<"color-highlight.scssLoadPaths">,
+  /**
+   * Resolve CSS custom properties from configured CSS variable source paths. Disabled by default to avoid extra file-system work and ambiguous cascade guesses.
+   * @key `color-highlight.resolveCssVariablesAcrossFiles`
+   * @default `false`
+   * @type `boolean`
+   */
+  resolveCssVariablesAcrossFiles: {
+    key: "color-highlight.resolveCssVariablesAcrossFiles",
+    default: false,
+  } as ConfigItem<"color-highlight.resolveCssVariablesAcrossFiles">,
+  /**
+   * File, directory, or glob paths used as external CSS custom property sources when CSS variable resolution is enabled.
+   * @key `color-highlight.cssVariablePaths`
+   * @default `[]`
+   * @type `array`
+   */
+  cssVariablePaths: {
+    key: "color-highlight.cssVariablePaths",
+    default: [],
+  } as ConfigItem<"color-highlight.cssVariablePaths">,
+  /**
+   * Selectors whose custom property declarations are trusted for cross-file CSS variable color resolution.
+   * @key `color-highlight.cssVariableTrustedSelectors`
+   * @default `[":root","html","body",":host"]`
+   * @type `array`
+   */
+  cssVariableTrustedSelectors: {
+    key: "color-highlight.cssVariableTrustedSelectors",
+    default: [":root","html","body",":host"],
+  } as ConfigItem<"color-highlight.cssVariableTrustedSelectors">,
   /**
    * Interpret 8-digit hex colors as ARGB instead of RGBA.
    * @key `color-highlight.useARGB`
@@ -261,6 +303,9 @@ export interface ScopedConfigKeyTypeMap {
   "namedColorMatchMode": ("context" | "always" | "never"),
   "resolveScssVariablesAcrossFiles": boolean,
   "scssLoadPaths": string[],
+  "resolveCssVariablesAcrossFiles": boolean,
+  "cssVariablePaths": string[],
+  "cssVariableTrustedSelectors": string[],
   "useARGB": boolean,
   "matchRgbWithNoFunction": boolean,
   "rgbWithNoFunctionLanguages": string[],
@@ -280,6 +325,9 @@ export const scopedConfigs = {
     "namedColorMatchMode": "context",
     "resolveScssVariablesAcrossFiles": false,
     "scssLoadPaths": [],
+    "resolveCssVariablesAcrossFiles": false,
+    "cssVariablePaths": [],
+    "cssVariableTrustedSelectors": [":root","html","body",":host"],
     "useARGB": false,
     "matchRgbWithNoFunction": false,
     "rgbWithNoFunctionLanguages": ["*"],
@@ -299,6 +347,9 @@ export interface NestedConfigs {
     "namedColorMatchMode": ("context" | "always" | "never"),
     "resolveScssVariablesAcrossFiles": boolean,
     "scssLoadPaths": string[],
+    "resolveCssVariablesAcrossFiles": boolean,
+    "cssVariablePaths": string[],
+    "cssVariableTrustedSelectors": string[],
     "useARGB": boolean,
     "matchRgbWithNoFunction": boolean,
     "rgbWithNoFunctionLanguages": string[],
@@ -317,6 +368,9 @@ export interface NestedScopedConfigs {
   "namedColorMatchMode": ("context" | "always" | "never"),
   "resolveScssVariablesAcrossFiles": boolean,
   "scssLoadPaths": string[],
+  "resolveCssVariablesAcrossFiles": boolean,
+  "cssVariablePaths": string[],
+  "cssVariableTrustedSelectors": string[],
   "useARGB": boolean,
   "matchRgbWithNoFunction": boolean,
   "rgbWithNoFunctionLanguages": string[],

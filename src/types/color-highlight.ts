@@ -60,6 +60,21 @@ export interface StrategyContext {
    * Additional Sass load paths for resolving non-relative SCSS modules.
    */
   scssLoadPaths?: string[]
+
+  /**
+   * Whether CSS custom properties may be resolved from configured files.
+   */
+  resolveCssVariablesAcrossFiles?: boolean
+
+  /**
+   * File, directory, or glob paths used as CSS custom property sources.
+   */
+  cssVariablePaths?: string[]
+
+  /**
+   * Selectors trusted for cross-file CSS custom property resolution.
+   */
+  cssVariableTrustedSelectors?: string[]
 }
 
 /**

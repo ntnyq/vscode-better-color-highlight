@@ -185,6 +185,11 @@ function setupTest() {
   }
 }
 
+async function flushPromises() {
+  await Promise.resolve()
+  await Promise.resolve()
+}
+
 describe(shouldTrackDocument, () => {
   it('tracks regular editable documents', () => {
     expect(shouldTrackDocument(createDocument('file'))).toBe(true)
@@ -288,5 +293,30 @@ describe('useColorHighlight', () => {
     useColorHighlight()
 
     expect(onDeactivateMock.mock.calls).toStrictEqual([[expect.any(Function)]])
+  })
+
+  it('passes CSS variable resolver settings to strategies', async () => {
+    setupTest()
+    asyncStrategy.mockResolvedValue([])
+    documentTextRef = createRef('.box { color: var(--brand); }')
+    configSnapshot.resolveCssVariablesAcrossFiles = true
+    configSnapshot.cssVariablePaths = ['src/styles/tokens.css']
+    configSnapshot.cssVariableTrustedSelectors = [':root', '[data-theme=light]']
+    visibleEditorsRef = createRef<unknown[]>([createEditor()])
+
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+    useColorHighlight()
+
+    await flushPromises()
+
+    expect(asyncStrategy).toHaveBeenCalledWith(
+      '.box { color: var(--brand); }',
+      expect.objectContaining({
+        resolveCssVariablesAcrossFiles: true,
+        cssVariablePaths: ['src/styles/tokens.css'],
+        cssVariableTrustedSelectors: [':root', '[data-theme=light]'],
+      }),
+    )
   })
 })

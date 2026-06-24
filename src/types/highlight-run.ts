@@ -12,6 +12,9 @@ export type HighlightRunConfig = Pick<
   | 'namedColorMatchMode'
   | 'resolveScssVariablesAcrossFiles'
   | 'scssLoadPaths'
+  | 'resolveCssVariablesAcrossFiles'
+  | 'cssVariablePaths'
+  | 'cssVariableTrustedSelectors'
   | 'matchRgbWithNoFunction'
   | 'rgbWithNoFunctionLanguages'
   | 'matchHslWithNoFunction'
@@ -53,6 +56,21 @@ export interface StrategyRunOptions {
    * Additional Sass load paths for SCSS dependency resolution.
    */
   readonly scssLoadPaths: HighlightRunConfig['scssLoadPaths']
+
+  /**
+   * Whether CSS custom properties may be resolved from configured files.
+   */
+  readonly resolveCssVariablesAcrossFiles: HighlightRunConfig['resolveCssVariablesAcrossFiles']
+
+  /**
+   * File, directory, or glob paths used as CSS custom property sources.
+   */
+  readonly cssVariablePaths: HighlightRunConfig['cssVariablePaths']
+
+  /**
+   * Selectors trusted for cross-file CSS custom property resolution.
+   */
+  readonly cssVariableTrustedSelectors: HighlightRunConfig['cssVariableTrustedSelectors']
 
   /**
    * Whether to emit debug log messages.

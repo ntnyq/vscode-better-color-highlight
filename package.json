@@ -143,6 +143,32 @@
           },
           "description": "Additional Sass load paths for resolving non-relative SCSS @use, @forward, and @import modules."
         },
+        "color-highlight.resolveCssVariablesAcrossFiles": {
+          "type": "boolean",
+          "default": false,
+          "description": "Resolve CSS custom properties from configured CSS variable source paths. Disabled by default to avoid extra file-system work and ambiguous cascade guesses."
+        },
+        "color-highlight.cssVariablePaths": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "File, directory, or glob paths used as external CSS custom property sources when CSS variable resolution is enabled."
+        },
+        "color-highlight.cssVariableTrustedSelectors": {
+          "type": "array",
+          "default": [
+            ":root",
+            "html",
+            "body",
+            ":host"
+          ],
+          "items": {
+            "type": "string"
+          },
+          "description": "Selectors whose custom property declarations are trusted for cross-file CSS variable color resolution."
+        },
         "color-highlight.useARGB": {
           "type": "boolean",
           "default": false,

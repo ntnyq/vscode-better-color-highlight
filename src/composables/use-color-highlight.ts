@@ -47,6 +47,10 @@ function createHighlightRunSignature(
     resolveScssVariablesAcrossFiles:
       highlightConfig.resolveScssVariablesAcrossFiles,
     scssLoadPaths: highlightConfig.scssLoadPaths,
+    resolveCssVariablesAcrossFiles:
+      highlightConfig.resolveCssVariablesAcrossFiles,
+    cssVariablePaths: highlightConfig.cssVariablePaths,
+    cssVariableTrustedSelectors: highlightConfig.cssVariableTrustedSelectors,
     matchRgbWithNoFunction: highlightConfig.matchRgbWithNoFunction,
     rgbWithNoFunctionLanguages: highlightConfig.rgbWithNoFunctionLanguages,
     matchHslWithNoFunction: highlightConfig.matchHslWithNoFunction,
@@ -117,6 +121,9 @@ async function runStrategies(
     namedColorMatchMode,
     resolveScssVariablesAcrossFiles,
     scssLoadPaths,
+    resolveCssVariablesAcrossFiles,
+    cssVariablePaths,
+    cssVariableTrustedSelectors,
     debug,
   } = options
 
@@ -141,6 +148,9 @@ async function runStrategies(
         namedColorMatchMode,
         resolveScssVariablesAcrossFiles,
         scssLoadPaths,
+        resolveCssVariablesAcrossFiles,
+        cssVariablePaths,
+        cssVariableTrustedSelectors,
       })
       if (debug && matches.length > 0) {
         logger.info(
@@ -310,6 +320,9 @@ function setupEditorTracking(
           resolveScssVariablesAcrossFiles:
             config.resolveScssVariablesAcrossFiles,
           scssLoadPaths: config.scssLoadPaths,
+          resolveCssVariablesAcrossFiles: config.resolveCssVariablesAcrossFiles,
+          cssVariablePaths: config.cssVariablePaths,
+          cssVariableTrustedSelectors: config.cssVariableTrustedSelectors,
           debug: config.debug,
         })
 
