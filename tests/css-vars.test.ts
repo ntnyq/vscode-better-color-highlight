@@ -1,8 +1,60 @@
 import { describe, expect, it } from 'vitest'
+import {
+  collectCssVarDeclarations,
+  getCssSelectorSpecificity,
+  isTrustedCssVarSelector,
+} from '../src/strategies/css-var-parser'
 import { findCssVars } from '../src/strategies/css-vars'
 import { FIXTURE_VARS_CSS } from './fixtures'
 
 describe(findCssVars, () => {
+  it('marks default trusted selectors as trusted', () => {
+    const declarations = collectCssVarDeclarations(
+      ':root { --brand: #0ea5e9; } [data-theme=dark] { --brand: white; }',
+      {
+        filePath: '/workspace/src/app.css',
+        trustedSelectors: [':root', 'html', 'body', ':host'],
+      },
+    )
+
+    expect(declarations).toHaveLength(2)
+    expect(declarations[0]).toMatchObject({
+      name: '--brand',
+      value: '#0ea5e9',
+      selector: ':root',
+      isTrusted: true,
+    })
+    expect(declarations[1]).toMatchObject({
+      name: '--brand',
+      value: 'white',
+      selector: '[data-theme=dark]',
+      isTrusted: false,
+    })
+  })
+
+  it('requires every comma selector item to be trusted', () => {
+    expect(isTrustedCssVarSelector(':root, html', [':root', 'html'])).toBe(true)
+    expect(
+      isTrustedCssVarSelector(':root, [data-theme=dark]', [':root', 'html']),
+    ).toBe(false)
+  })
+
+  it('normalizes selector whitespace before trusted selector matching', () => {
+    expect(
+      isTrustedCssVarSelector('html   [data-theme=light]', [
+        'html [data-theme=light]',
+      ]),
+    ).toBe(true)
+  })
+
+  it('computes simple selector specificity for trusted candidate ordering', () => {
+    expect(getCssSelectorSpecificity(':root')).toStrictEqual([0, 1, 0])
+    expect(getCssSelectorSpecificity('html')).toStrictEqual([0, 0, 1])
+    expect(getCssSelectorSpecificity('html[data-theme=light]')).toStrictEqual([
+      0, 1, 1,
+    ])
+  })
+
   it('finds CSS variable usages with hex values', async () => {
     const text = `
       --my-color: #ff0000;
