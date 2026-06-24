@@ -218,6 +218,57 @@ export async function readWorkspaceFile(filePath: string): Promise<string> {
 }
 
 /**
+ * Check whether a workspace path points to a directory.
+ *
+ * @param filePath - The path or URI string to check
+ * @returns Whether the path exists and is a directory
+ */
+export async function workspacePathIsDirectory(
+  filePath: string,
+): Promise<boolean> {
+  const { FileType, workspace } = await import('vscode')
+
+  try {
+    const stat = await workspace.fs.stat(await toUri(filePath))
+    return stat.type === FileType.Directory
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Read a workspace directory and return child paths in the same path shape.
+ *
+ * @param dirPath - The path or URI string to read
+ * @returns Child paths joined to the directory path
+ */
+export async function readWorkspaceDirectory(
+  dirPath: string,
+): Promise<string[]> {
+  const { workspace } = await import('vscode')
+  const entries = await workspace.fs.readDirectory(await toUri(dirPath))
+
+  return entries.map(([name]) => joinWorkspacePath(dirPath, name))
+}
+
+/**
+ * Find workspace files matching a glob pattern.
+ *
+ * @param pattern - Workspace glob pattern
+ * @param maxResults - Optional maximum number of results
+ * @returns Matching file paths
+ */
+export async function findWorkspaceFiles(
+  pattern: string,
+  maxResults?: number,
+): Promise<string[]> {
+  const { workspace } = await import('vscode')
+  const uris = await workspace.findFiles(pattern, undefined, maxResults)
+
+  return uris.map(uri => (uri.scheme === 'file' ? uri.fsPath : uri.toString()))
+}
+
+/**
  * Stat a workspace file.
  *
  * @param filePath - The path or URI string to stat
