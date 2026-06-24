@@ -19,11 +19,24 @@ export interface CollectCssVarDeclarationOptions {
 
 const CSS_VAR_NAME_REGEX = /^--[-\w]+$/u
 
+/**
+ * Normalize a CSS selector for stable comparison.
+ *
+ * @param selector - Raw selector text
+ * @returns Selector with comments removed and whitespace collapsed
+ */
 export function normalizeCssSelector(selector: string): string {
   return stripCssComments(selector).replaceAll(/\s+/gu, ' ').trim()
 }
 
-// eslint-disable-next-line complexity -- selector splitting uses a tiny lexer to avoid commas inside strings/functions.
+/**
+ * Split a comma-separated selector list without splitting inside strings,
+ * attribute selectors, or function arguments.
+ *
+ * @param selector - Raw selector list text
+ * @returns Normalized selector items
+ */
+// oxlint-disable-next-line complexity -- selector splitting uses a tiny lexer to avoid commas inside strings/functions.
 export function splitCssSelectorList(selector: string): string[] {
   const selectors: string[] = []
   let current = ''
@@ -90,6 +103,13 @@ export function splitCssSelectorList(selector: string): string[] {
   return selectors
 }
 
+/**
+ * Check whether every selector item belongs to the trusted selector set.
+ *
+ * @param selector - Raw selector or selector list
+ * @param trustedSelectors - Trusted selector strings from configuration
+ * @returns Whether the selector list is non-empty and fully trusted
+ */
 export function isTrustedCssVarSelector(
   selector: string,
   trustedSelectors: readonly string[],
@@ -99,6 +119,12 @@ export function isTrustedCssVarSelector(
   return items.length > 0 && items.every(item => trusted.has(item))
 }
 
+/**
+ * Compute a conservative specificity tuple for simple selector ordering.
+ *
+ * @param selector - Raw selector text
+ * @returns Specificity tuple in `[id, class-like, type]` order
+ */
 export function getCssSelectorSpecificity(
   selector: string,
 ): readonly [number, number, number] {
@@ -116,6 +142,13 @@ export function getCssSelectorSpecificity(
   return [idCount, classLikeCount, typeCount]
 }
 
+/**
+ * Compare two CSS specificity tuples.
+ *
+ * @param left - First specificity tuple
+ * @param right - Second specificity tuple
+ * @returns Positive when left is more specific, negative when right is
+ */
 export function compareCssSpecificity(
   left: readonly [number, number, number],
   right: readonly [number, number, number],
@@ -127,6 +160,13 @@ export function compareCssSpecificity(
   return 0
 }
 
+/**
+ * Collect CSS custom property declarations from stylesheet text.
+ *
+ * @param text - Stylesheet source text
+ * @param options - Parser options controlling source metadata and trust
+ * @returns Declarations with selector, specificity, and source-order metadata
+ */
 export function collectCssVarDeclarations(
   text: string,
   options: CollectCssVarDeclarationOptions,
@@ -216,6 +256,12 @@ export function collectCssVarDeclarations(
   return declarations
 }
 
+/**
+ * Scan a rule body or declaration segment for custom property declarations.
+ *
+ * @param body - CSS declaration text
+ * @returns Parsed custom property name/value pairs
+ */
 function scanCssVarDeclarations(
   body: string,
 ): Pick<CssVarDeclaration, 'name' | 'value'>[] {
@@ -318,10 +364,22 @@ function scanCssVarDeclarations(
   return declarations
 }
 
+/**
+ * Remove block comments from CSS text.
+ *
+ * @param text - CSS text segment
+ * @returns Text with comments replaced by spaces
+ */
 function stripCssComments(text: string): string {
   return text.replaceAll(/\/\*[\s\S]*?\*\//gu, ' ')
 }
 
+/**
+ * Extract the selector or at-rule prelude before a block.
+ *
+ * @param text - Text before an opening brace
+ * @returns Prelude text after the last top-level declaration terminator
+ */
 function getCssPrelude(text: string): string {
   let quote: '"' | "'" | undefined
   let isEscaped = false
@@ -372,10 +430,26 @@ function getCssPrelude(text: string): string {
   return text.slice(preludeStart)
 }
 
+/**
+ * Find the next structural opening brace outside strings and comments.
+ *
+ * @param text - Source text
+ * @param start - Start offset
+ * @param end - End offset
+ * @returns Offset of the next opening brace, or -1
+ */
 function findNextOpenBrace(text: string, start: number, end: number): number {
   return scanCssStructuralChar(text, start, end, '{')
 }
 
+/**
+ * Find the matching closing brace for an opening brace.
+ *
+ * @param text - Source text
+ * @param openBrace - Offset of the opening brace
+ * @param end - End offset for scanning
+ * @returns Offset of the matching closing brace, or -1
+ */
 function findMatchingCloseBrace(
   text: string,
   openBrace: number,
@@ -401,6 +475,15 @@ function findMatchingCloseBrace(
   return -1
 }
 
+/**
+ * Scan for structural characters while ignoring strings and comments.
+ *
+ * @param text - Source text
+ * @param start - Start offset
+ * @param end - End offset
+ * @param targets - Characters to find
+ * @returns Offset of the first matching target, or -1
+ */
 function scanCssStructuralChar(
   text: string,
   start: number,

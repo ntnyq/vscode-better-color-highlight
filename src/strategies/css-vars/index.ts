@@ -1,7 +1,7 @@
-import type { ColorMatch, StrategyContext } from '../types'
-import { collectCssVarDeclarations } from './css-var-parser'
-import { resolveCssVarMatches } from './css-var-resolver'
-import { loadCssVarSourceDeclarations } from './css-var-sources'
+import type { ColorMatch, StrategyContext } from '../../types'
+import { collectCssVarDeclarations } from './parser'
+import { resolveCssVarMatches } from './resolver'
+import { loadCssVarSourceDeclarations } from './sources'
 
 const DEFAULT_TRUSTED_CSS_VAR_SELECTORS = [':root', 'html', 'body', ':host']
 

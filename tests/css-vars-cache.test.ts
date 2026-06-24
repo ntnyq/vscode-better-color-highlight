@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import type * as CssVarSourcesModule from '../src/strategies/css-var-sources'
+import type * as CssVarSourcesModule from '../src/strategies/css-vars/sources'
 import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
 import type { WorkspaceFindFilesPattern } from '../src/utils/workspace-file-system'
 
@@ -9,7 +9,7 @@ const fileTexts = new Map<string, string>()
 const directories = new Map<string, string[]>()
 const globMatches = new Map<string, string[]>()
 type WorkspaceFindFilesMockPattern = string | WorkspaceFindFilesPattern
-const cssVarSourcesModulePath = '../src/strategies/css-var-sources.ts'
+const cssVarSourcesModulePath = '../src/strategies/css-vars/sources.ts'
 
 const readFileMock = vi.fn<(filePath: unknown) => Promise<string>>(filePath => {
   const normalizedFilePath = String(filePath)

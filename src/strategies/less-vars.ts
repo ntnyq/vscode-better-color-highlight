@@ -75,6 +75,12 @@ async function resolveVarValue(
   return null
 }
 
+/**
+ * Parse a value that is exactly one Less variable alias.
+ *
+ * @param value - Normalized Less value
+ * @returns Variable name without `@`, or null when value is composite
+ */
 function getExactLessVarAlias(value: string): string | null {
   const match = value.match(/^@(?<name>[-\w]+)$/u)
   return match?.groups?.name ?? null

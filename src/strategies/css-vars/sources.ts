@@ -7,10 +7,10 @@ import {
   resolveWorkspacePath,
   statWorkspaceFile,
   workspacePathIsDirectory,
-} from '../utils/workspace-file-system'
-import type { WorkspaceFindFilesPattern } from '../utils/workspace-file-system'
-import type { CssVarDeclaration } from './css-var-parser'
-import { collectCssVarDeclarations } from './css-var-parser'
+} from '../../utils/workspace-file-system'
+import type { WorkspaceFindFilesPattern } from '../../utils/workspace-file-system'
+import type { CssVarDeclaration } from './parser'
+import { collectCssVarDeclarations } from './parser'
 
 const CSS_VAR_SOURCE_EXTENSIONS = new Set(['.css', '.scss', '.less'])
 const GLOB_META_REGEX = /[*?[\]{}]/u
@@ -33,6 +33,12 @@ export interface LoadCssVarSourceDeclarationsOptions {
 
 const cssVarSourceTextCache = new Map<string, CssVarSourceCacheEntry>()
 
+/**
+ * Load CSS custom property declarations from configured source paths.
+ *
+ * @param options - Source paths, current file path, and trusted selectors
+ * @returns Parsed external custom property declarations
+ */
 export async function loadCssVarSourceDeclarations(
   options: LoadCssVarSourceDeclarationsOptions,
 ): Promise<CssVarDeclaration[]> {
@@ -56,6 +62,12 @@ export async function loadCssVarSourceDeclarations(
   return declarations
 }
 
+/**
+ * Expand configured CSS variable source paths to concrete file paths.
+ *
+ * @param options - Source loading options
+ * @returns Deduplicated CSS-like source file paths
+ */
 async function collectCssVarSourceFilePaths(
   options: LoadCssVarSourceDeclarationsOptions,
 ): Promise<string[]> {
@@ -88,12 +100,27 @@ async function collectCssVarSourceFilePaths(
   return filePaths
 }
 
+/**
+ * Resolve a configured CSS variable source path against the current file.
+ *
+ * @param filePath - Current document file path or URI
+ * @param sourcePath - Configured source path
+ * @returns Absolute source path or URI
+ */
 function resolveCssVarSourcePath(filePath: string, sourcePath: string): string {
   return isAbsoluteWorkspacePath(sourcePath)
     ? sourcePath
     : resolveWorkspacePath(filePath, sourcePath)
 }
 
+/**
+ * Expand one configured source path, directory, or glob.
+ *
+ * @param baseFilePath - Current document file path or URI
+ * @param sourcePath - Configured source path
+ * @param debug - Optional debug logger
+ * @returns Candidate source file paths
+ */
 async function expandCssVarSourcePath(
   baseFilePath: string,
   sourcePath: string,
@@ -121,6 +148,13 @@ async function expandCssVarSourcePath(
   return [filePath]
 }
 
+/**
+ * Resolve a configured glob relative to the current file.
+ *
+ * @param baseFilePath - Current document file path or URI
+ * @param sourcePath - Configured glob path
+ * @returns VS Code findFiles pattern
+ */
 function resolveCssVarSourceGlob(
   baseFilePath: string,
   sourcePath: string,
@@ -135,6 +169,12 @@ function resolveCssVarSourceGlob(
   return splitAbsoluteCssVarSourceGlob(sourcePath)
 }
 
+/**
+ * Split an absolute glob into a static base path and relative pattern.
+ *
+ * @param sourcePath - Absolute glob path
+ * @returns VS Code relative pattern components
+ */
 function splitAbsoluteCssVarSourceGlob(
   sourcePath: string,
 ): WorkspaceFindFilesPattern {
@@ -155,6 +195,13 @@ function splitAbsoluteCssVarSourceGlob(
   }
 }
 
+/**
+ * Collect CSS-like source files from a configured directory.
+ *
+ * @param dirPath - Directory path or URI
+ * @param debug - Optional debug logger
+ * @returns Matching CSS, SCSS, and Less files
+ */
 async function collectDirectoryCssVarSourceFilePaths(
   dirPath: string,
   debug?: (message: string) => void,
@@ -172,6 +219,13 @@ async function collectDirectoryCssVarSourceFilePaths(
   }
 }
 
+/**
+ * Read and cache a CSS variable source file.
+ *
+ * @param filePath - Source file path or URI
+ * @param debug - Optional debug logger
+ * @returns File text, or null when skipped/unreadable
+ */
 async function readCachedCssVarSourceFile(
   filePath: string,
   debug?: (message: string) => void,
@@ -207,6 +261,9 @@ async function readCachedCssVarSourceFile(
   }
 }
 
+/**
+ * Keep the CSS variable source text cache under its size limit.
+ */
 function pruneCssVarSourceTextCache(): void {
   if (cssVarSourceTextCache.size <= MAX_CSS_VAR_SOURCE_CACHE_SIZE) {
     return
@@ -218,20 +275,45 @@ function pruneCssVarSourceTextCache(): void {
   }
 }
 
+/**
+ * Check whether a path has a supported stylesheet extension.
+ *
+ * @param filePath - Candidate file path or URI
+ * @returns Whether the path points to a CSS-like source file
+ */
 function isCssLikeSourcePath(filePath: string): boolean {
   return CSS_VAR_SOURCE_EXTENSIONS.has(
     extnameWorkspacePath(filePath).toLowerCase(),
   )
 }
 
+/**
+ * Check whether a path contains glob metacharacters.
+ *
+ * @param filePath - Candidate path
+ * @returns Whether the path should be treated as a glob
+ */
 function isGlobPath(filePath: string): boolean {
   return GLOB_META_REGEX.test(filePath)
 }
 
+/**
+ * Normalize a configured glob path to slash separators.
+ *
+ * @param filePath - Raw configured path
+ * @returns Glob path with forward slashes
+ */
 function normalizeCssVarSourceGlobPath(filePath: string): string {
   return filePath.replaceAll('\\', '/')
 }
 
+/**
+ * Report and skip a source path.
+ *
+ * @param filePath - Skipped path
+ * @param debug - Optional debug logger
+ * @returns Empty candidate list
+ */
 function skipPath(
   filePath: string,
   debug?: (message: string) => void,
@@ -240,6 +322,12 @@ function skipPath(
   return []
 }
 
+/**
+ * Emit a best-effort debug message.
+ *
+ * @param debug - Optional debug logger
+ * @param message - Message to log
+ */
 function debugLog(
   debug: ((message: string) => void) | undefined,
   message: string,

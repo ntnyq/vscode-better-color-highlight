@@ -1,9 +1,9 @@
-import type { ColorDetector, ColorMatch } from '../types'
-import { findColorFunctions, resolveShorthandColor } from './color-functions'
-import type { CssVarDeclaration } from './css-var-parser'
-import { findHexRGBA } from './hex'
-import { findHwb } from './hwb'
-import { findNamedColors } from './named-colors'
+import type { ColorDetector, ColorMatch } from '../../types'
+import { findColorFunctions, resolveShorthandColor } from '../color-functions'
+import { findHexRGBA } from '../hex'
+import { findHwb } from '../hwb'
+import { findNamedColors } from '../named-colors'
+import type { CssVarDeclaration } from './parser'
 
 export interface ResolveCssVarMatchOptions {
   readonly currentDeclarations: readonly CssVarDeclaration[]
@@ -46,6 +46,13 @@ type CssVarResolution =
 
 const MAX_RESOLUTION_DEPTH = 16
 
+/**
+ * Resolve CSS custom property usages in document text to highlight colors.
+ *
+ * @param text - Document text to scan
+ * @param options - Current-file and external declaration sets
+ * @returns Color matches for resolvable `var(...)` usages
+ */
 export async function resolveCssVarMatches(
   text: string,
   options: ResolveCssVarMatchOptions,
@@ -68,6 +75,16 @@ export async function resolveCssVarMatches(
   return matches
 }
 
+/**
+ * Resolve one parsed `var(...)` usage.
+ *
+ * @param usage - Variable name and optional fallback
+ * @param options - Resolver declaration sets
+ * @param seen - Variable names already visited in this chain
+ * @param depth - Current recursion depth
+ * @param canUseInvalidFallback - Whether invalid declarations may use caller fallback
+ * @returns Resolution state for the variable usage
+ */
 async function resolveCssVarUsage(
   usage: Pick<VarUsage, 'name' | 'fallback'>,
   options: ResolveCssVarMatchOptions,
@@ -111,6 +128,15 @@ async function resolveCssVarUsage(
   return resolveInvalidFallback(usage, options, seen, depth)
 }
 
+/**
+ * Resolve a normal CSS variable fallback.
+ *
+ * @param usage - Usage with an optional fallback value
+ * @param options - Resolver declaration sets
+ * @param seen - Variable names already visited in this chain
+ * @param depth - Current recursion depth
+ * @returns Resolved fallback color or missing state
+ */
 async function resolveFallback(
   usage: Pick<VarUsage, 'fallback'>,
   options: ResolveCssVarMatchOptions,
@@ -128,6 +154,15 @@ async function resolveFallback(
   )
 }
 
+/**
+ * Resolve a fallback used after an invalid declaration or cycle.
+ *
+ * @param usage - Usage with an optional fallback value
+ * @param options - Resolver declaration sets
+ * @param seen - Variable names already visited in this chain
+ * @param depth - Current recursion depth
+ * @returns Resolved fallback color or invalid state
+ */
 async function resolveInvalidFallback(
   usage: Pick<VarUsage, 'fallback'>,
   options: ResolveCssVarMatchOptions,
@@ -145,6 +180,16 @@ async function resolveInvalidFallback(
   )
 }
 
+/**
+ * Resolve a raw custom property value to a color.
+ *
+ * @param value - Raw custom property or fallback value
+ * @param currentName - Current custom property name used for shorthand hints
+ * @param options - Resolver declaration sets
+ * @param seen - Variable names already visited in this chain
+ * @param depth - Current recursion depth
+ * @returns Resolution state for the raw value
+ */
 async function resolveCssVarValue(
   value: string,
   currentName: string | undefined,
@@ -183,6 +228,12 @@ async function resolveCssVarValue(
   return { status: 'missing' }
 }
 
+/**
+ * Resolve a value that is itself a whole supported color.
+ *
+ * @param value - Normalized value text
+ * @returns Resolved rgb()/rgba() string, or null when value is not a color
+ */
 async function resolveDirectColor(value: string): Promise<string | null> {
   const strategies: ColorDetector[] = [
     findHexRGBA,
@@ -203,6 +254,13 @@ async function resolveDirectColor(value: string): Promise<string | null> {
   return exactMatch?.color ?? null
 }
 
+/**
+ * Select the declaration that should satisfy a variable name.
+ *
+ * @param name - CSS custom property name, including `--`
+ * @param options - Resolver declaration sets
+ * @returns Candidate selection state
+ */
 function selectCssVarDeclaration(
   name: string,
   options: ResolveCssVarMatchOptions,
@@ -250,6 +308,12 @@ function selectCssVarDeclaration(
   }
 }
 
+/**
+ * Select the latest declaration by source order.
+ *
+ * @param declarations - Declarations with the same name and selector context
+ * @returns Declaration with the highest source order
+ */
 function selectLatestDeclaration(
   declarations: readonly CssVarDeclaration[],
 ): CssVarDeclaration {
@@ -264,6 +328,13 @@ function selectLatestDeclaration(
   return latest
 }
 
+/**
+ * Get the usage when a value is exactly one `var(...)` alias.
+ *
+ * @param value - Normalized value text
+ * @param usages - Parsed variable usages in the value
+ * @returns The exact alias usage, or null when the value is composite
+ */
 function getExactCssVarAlias(
   value: string,
   usages: readonly VarUsage[],
@@ -277,6 +348,13 @@ function getExactCssVarAlias(
   return usage
 }
 
+/**
+ * Check whether a `var(...)` usage is inside a custom property definition.
+ *
+ * @param text - Full document text
+ * @param usage - Parsed variable usage
+ * @returns Whether the usage belongs to a `--name:` declaration value
+ */
 function isCssCustomPropertyValueUsage(text: string, usage: VarUsage): boolean {
   const declarationStart = Math.max(
     text.lastIndexOf(';', usage.start),
@@ -291,6 +369,12 @@ function isCssCustomPropertyValueUsage(text: string, usage: VarUsage): boolean {
   return /^--[-\w]+$/u.test(propertyName)
 }
 
+/**
+ * Find parseable CSS `var(...)` usages in text.
+ *
+ * @param text - Text to scan
+ * @returns Parsed variable usages with source offsets
+ */
 function findCssVarUsages(text: string): VarUsage[] {
   const usages: VarUsage[] = []
   let searchStart = 0
@@ -322,6 +406,13 @@ function findCssVarUsages(text: string): VarUsage[] {
   return usages
 }
 
+/**
+ * Find the next CSS `var(` function start.
+ *
+ * @param text - Text to scan
+ * @param start - Start offset
+ * @returns Offset of the next `var(`, or -1
+ */
 function findNextVarFunction(text: string, start: number): number {
   const regex = /\bvar\s*\(/gu
   regex.lastIndex = start
@@ -329,6 +420,12 @@ function findNextVarFunction(text: string, start: number): number {
   return match?.index ?? -1
 }
 
+/**
+ * Parse the content inside a CSS `var(...)` call.
+ *
+ * @param content - Text between the `var(` and matching `)`
+ * @returns Parsed variable name and fallback, or null for invalid content
+ */
 function parseCssVarContent(
   content: string,
 ): Pick<VarUsage, 'name' | 'fallback'> | null {
@@ -347,6 +444,12 @@ function parseCssVarContent(
   }
 }
 
+/**
+ * Find the first comma at top level in a `var(...)` argument list.
+ *
+ * @param text - Argument-list text
+ * @returns Comma offset, or -1 when no top-level comma exists
+ */
 function findTopLevelComma(text: string): number {
   let quote: '"' | "'" | undefined
   let isEscaped = false
@@ -390,6 +493,13 @@ function findTopLevelComma(text: string): number {
   return -1
 }
 
+/**
+ * Find the matching closing parenthesis for an opening parenthesis.
+ *
+ * @param text - Source text
+ * @param openParen - Offset of the opening parenthesis
+ * @returns Offset of the matching closing parenthesis, or -1
+ */
 function findMatchingParen(text: string, openParen: number): number {
   let quote: '"' | "'" | undefined
   let isEscaped = false
