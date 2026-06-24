@@ -276,6 +276,29 @@ describe(findCssVars, () => {
     expect(result.some(match => match.color === 'rgb(255, 0, 0)')).toBe(true)
   })
 
+  it('highlights exact CSS variable aliases inside custom property declarations', async () => {
+    const text = `
+      .partial-name-safe {
+        --red: #ff0000;
+        --red2: var(--red);
+        --red-long: var(--red2);
+        color: var(--red2);
+        border-color: var(--red-long);
+      }
+    `
+
+    const result = await findCssVars(text)
+    const usages = result.map(match => text.slice(match.start, match.end))
+
+    expect(usages).toStrictEqual([
+      'var(--red)',
+      'var(--red2)',
+      'var(--red2)',
+      'var(--red-long)',
+    ])
+    expect(result.every(match => match.color === 'rgb(255, 0, 0)')).toBe(true)
+  })
+
   it('skips nested variables inside composite declaration values', async () => {
     const text = `
       :root {

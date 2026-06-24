@@ -60,7 +60,7 @@ export async function resolveCssVarMatches(
   const matches: ColorMatch[] = []
 
   for (const usage of findCssVarUsages(text)) {
-    if (isCssCustomPropertyValueUsage(text, usage)) continue
+    if (isSkippedCssCustomPropertyValueUsage(text, usage)) continue
 
     const result = await resolveCssVarUsage(usage, options, new Set(), 0, true)
     if (result.status !== 'resolved') continue
@@ -349,13 +349,16 @@ function getExactCssVarAlias(
 }
 
 /**
- * Check whether a `var(...)` usage is inside a custom property definition.
+ * Check whether a `var(...)` usage inside a custom property should be skipped.
  *
  * @param text - Full document text
  * @param usage - Parsed variable usage
- * @returns Whether the usage belongs to a `--name:` declaration value
+ * @returns Whether the usage belongs to an unsupported `--name:` value
  */
-function isCssCustomPropertyValueUsage(text: string, usage: VarUsage): boolean {
+function isSkippedCssCustomPropertyValueUsage(
+  text: string,
+  usage: VarUsage,
+): boolean {
   const declarationStart = Math.max(
     text.lastIndexOf(';', usage.start),
     text.lastIndexOf('{', usage.start),
@@ -366,7 +369,86 @@ function isCssCustomPropertyValueUsage(text: string, usage: VarUsage): boolean {
   if (colonIndex === -1) return false
 
   const propertyName = declarationPrefix.slice(0, colonIndex).trim()
-  return /^--[-\w]+$/u.test(propertyName)
+  if (!/^--[-\w]+$/u.test(propertyName)) return false
+  if (usage.fallback !== undefined) return true
+
+  const declarationEnd = findCssDeclarationEnd(text, usage.end)
+  const valueBeforeUsage = declarationPrefix.slice(colonIndex + 1)
+  const valueAfterUsage = text.slice(usage.end, declarationEnd)
+
+  return hasCssValueText(valueBeforeUsage) || hasCssValueText(valueAfterUsage)
+}
+
+/**
+ * Check whether a CSS value segment contains non-ignored text.
+ *
+ * @param value - CSS value segment before or after a `var(...)` usage
+ * @returns Whether meaningful value text remains
+ */
+function hasCssValueText(value: string): boolean {
+  return Boolean(
+    value
+      .replaceAll(/\/\*[\s\S]*?\*\//gu, ' ')
+      .replaceAll(/!important\b/gu, ' ')
+      .trim(),
+  )
+}
+
+/**
+ * Find the end offset of the declaration containing a value usage.
+ *
+ * @param text - Full document text
+ * @param start - Offset after the usage
+ * @returns Offset of the declaration end marker, or text length
+ */
+function findCssDeclarationEnd(text: string, start: number): number {
+  let quote: '"' | "'" | undefined
+  let isEscaped = false
+  let parenDepth = 0
+
+  for (let index = start; index < text.length; index++) {
+    const char = text[index]
+    const next = text[index + 1]
+
+    if (quote) {
+      if (isEscaped) {
+        isEscaped = false
+        continue
+      }
+      if (char === '\\') {
+        isEscaped = true
+        continue
+      }
+      if (char === quote) {
+        quote = undefined
+      }
+      continue
+    }
+
+    if (char === '/' && next === '*') {
+      const close = text.indexOf('*/', index + 2)
+      index = close === -1 ? text.length : close + 1
+      continue
+    }
+
+    if (char === '"' || char === "'") {
+      quote = char
+      continue
+    }
+
+    if (char === '(') {
+      parenDepth++
+      continue
+    }
+    if (char === ')' && parenDepth > 0) {
+      parenDepth--
+      continue
+    }
+
+    if (parenDepth === 0 && (char === ';' || char === '}')) return index
+  }
+
+  return text.length
 }
 
 /**
