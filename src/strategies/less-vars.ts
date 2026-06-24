@@ -10,11 +10,6 @@ import { findNamedColors } from './named-colors'
 const LESS_VAR_DEF_REGEX = /@(?<name>[-\w]+)\s*:\s*(?<value>[^;]+?)\s*;/gu
 
 /**
- * Less variable references: @my-color
- */
-const LESS_VAR_REF_REGEX = /@(?<name>[-\w]+)/gu
-
-/**
  * Resolve a raw Less value to a color using the base color strategies.
  *
  * @param value - The raw Less value to resolve
@@ -30,7 +25,10 @@ async function resolveDirectColor(value: string): Promise<string | null> {
 
   const results = await Promise.all(strategies.map(fn => fn(value)))
   const allMatches = results.flat()
-  return allMatches.length > 0 ? allMatches[0].color : null
+  const exactMatch = allMatches.find(
+    match => match.start === 0 && match.end === value.length,
+  )
+  return exactMatch?.color ?? null
 }
 
 /**
@@ -53,17 +51,15 @@ async function resolveVarValue(
     return directColor
   }
 
-  for (const m of normalized.matchAll(LESS_VAR_REF_REGEX)) {
-    const refName = m.groups?.name
-    if (!refName) continue
-
+  const refName = getExactLessVarAlias(normalized)
+  if (refName) {
     if (seen.has(refName)) {
-      continue
+      return null
     }
 
     const refValue = varDefs.get(refName)
     if (!refValue) {
-      continue
+      return null
     }
 
     const resolved = await resolveVarValue(
@@ -77,6 +73,11 @@ async function resolveVarValue(
   }
 
   return null
+}
+
+function getExactLessVarAlias(value: string): string | null {
+  const match = value.match(/^@(?<name>[-\w]+)$/u)
+  return match?.groups?.name ?? null
 }
 
 /**

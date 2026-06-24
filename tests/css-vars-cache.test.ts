@@ -101,7 +101,6 @@ describe('css variable source cache', () => {
       '#336699',
     ])
     expect(second).toStrictEqual(first)
-    // oxlint-disable-next-line vitest/prefer-called-once
     expect(readFileMock).toHaveBeenCalledTimes(1)
 
     setFile(tokensPath, ':root { --brand: #663399; }\n', 2)

@@ -26,7 +26,6 @@ vi.mock(import('../src/strategies/css-var-sources'), () => ({
 }))
 
 describe(findCssVars, () => {
-  // oxlint-disable-next-line vitest/no-hooks -- the source-loader mock must be reset between async integration cases.
   beforeEach(() => {
     loadCssVarSourceDeclarationsMock.mockReset()
     loadCssVarSourceDeclarationsMock.mockResolvedValue([])

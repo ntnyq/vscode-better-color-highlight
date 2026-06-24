@@ -49,6 +49,24 @@ describe(findLessVars, () => {
     ).toBe(true)
   })
 
+  it('skips Less variable values that are composite expressions', async () => {
+    const text = `
+      @red: #ff0000;
+      @border-token: 1px solid red;
+      @mixed-token: color-mix(in srgb, @red, white);
+      .cls {
+        border: @border-token;
+        color: @mixed-token;
+      }
+    `
+    const result = await findLessVars(text)
+    const usages = result.map(match => text.slice(match.start, match.end))
+
+    expect(usages).not.toStrictEqual(
+      expect.arrayContaining(['@border-token', '@mixed-token']),
+    )
+  })
+
   it('matches the expected playground Less variable usages without false property hits', async () => {
     const result = await findLessVars(FIXTURE_LESS)
     const usages = result.map(match =>

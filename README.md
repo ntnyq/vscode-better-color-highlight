@@ -7,11 +7,6 @@
 
 Highlight and preview colors in multiple formats across code, comments, and strings.
 
-## VS Code Web
-
-This extension supports browser-based VS Code environments, including [vscode.dev](https://vscode.dev) and [github.dev](https://github.dev).
-Runtime file access uses the VS Code Workspace FS API, so SCSS dependency resolution can work with web and virtual workspace file systems when those files are readable by VS Code.
-
 ## Commands
 
 <!-- commands -->
@@ -148,6 +143,11 @@ If you want behavior closer to the original broad named-color matching, use:
   "color-highlight.namedColorMatchMode": "always",
 }
 ```
+
+## VS Code Web
+
+This extension supports browser-based VS Code environments, including [vscode.dev](https://vscode.dev) and [github.dev](https://github.dev).
+Runtime file access uses the VS Code Workspace FS API, so SCSS dependency resolution can work with web and virtual workspace file systems when those files are readable by VS Code.
 
 ## License
 

@@ -79,6 +79,24 @@ describe(findScssVars, () => {
     ).toBe(true)
   })
 
+  it('skips SCSS variable values that are composite expressions', async () => {
+    const text = `
+      $red: #ff0000;
+      $border-token: 1px solid red;
+      $mixed-token: color-mix(in srgb, $red, white);
+      .cls {
+        border: $border-token;
+        color: $mixed-token;
+      }
+    `
+    const result = await findScssVars(text)
+    const usages = result.map(match => text.slice(match.start, match.end))
+
+    expect(usages).not.toStrictEqual(
+      expect.arrayContaining(['$border-token', '$mixed-token']),
+    )
+  })
+
   it('resolves variables from @use namespaces', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'better-color-scss-'))
     const tokensPath = join(dir, '_tokens.scss')

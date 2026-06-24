@@ -21,13 +21,6 @@ const STYLUS_VAR_DEF_REGEX =
   /(?:^|[;\n]\s*)(?:\$(?<colonName>[-\w]+)\s*:\s*(?<colonValue>[^\n;]+)|\$?(?<equalsName>[-\w]+)\s*=\s*(?<equalsValue>[^\n;]+))/gmu
 
 /**
- * Regex for Stylus variable references:
- *   my-color
- *   $my-color
- */
-const STYLUS_VAR_REF_REGEX = /\$?(?<name>[-\w]+)/gu
-
-/**
  * Parsed Stylus variable definition.
  */
 interface StylusVarDefinition {
@@ -74,7 +67,10 @@ async function resolveDirectColor(value: string): Promise<string | null> {
 
   const results = await Promise.all(strategies.map(fn => fn(value)))
   const allMatches = results.flat()
-  return allMatches.length > 0 ? allMatches[0].color : null
+  const exactMatch = allMatches.find(
+    match => match.start === 0 && match.end === value.length,
+  )
+  return exactMatch?.color ?? null
 }
 
 /**
@@ -104,17 +100,15 @@ async function resolveVarValue(
     return shorthandColor
   }
 
-  for (const m of normalized.matchAll(STYLUS_VAR_REF_REGEX)) {
-    const refName = m.groups?.name
-    if (!refName) continue
-
+  const refName = getExactStylusVarAlias(normalized)
+  if (refName) {
     if (seen.has(refName)) {
-      continue
+      return null
     }
 
     const refValue = varDefs.get(refName)
     if (!refValue) {
-      continue
+      return null
     }
 
     const resolved = await resolveVarValue(
@@ -129,6 +123,11 @@ async function resolveVarValue(
   }
 
   return null
+}
+
+function getExactStylusVarAlias(value: string): string | null {
+  const match = value.match(/^\$?(?<name>[-\w]+)$/u)
+  return match?.groups?.name ?? null
 }
 
 /**

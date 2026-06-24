@@ -91,7 +91,6 @@ describe('scss variable dependency cache', () => {
       },
     ])
     expect(second).toStrictEqual(first)
-    // oxlint-disable-next-line vitest/prefer-called-once
     expect(readFileMock).toHaveBeenCalledTimes(1)
 
     fileTexts.set(tokensPath, '$brand: #663399;\n')
@@ -110,5 +109,38 @@ describe('scss variable dependency cache', () => {
       },
     ])
     expect(readFileMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('skips unreadable dependency files without failing the run', async () => {
+    fileStats.clear()
+    fileTexts.clear()
+    existsMock.mockClear()
+    readFileMock.mockClear()
+    statMock.mockClear()
+    vi.resetModules()
+
+    const { findScssVars } = await import('../src/strategies/scss-vars')
+
+    const dir = '/tmp/better-color-scss-unreadable'
+    const tokensPath = join(dir, '_tokens.scss')
+    const entryPath = join(dir, 'entry.scss')
+    const text = '@use "tokens";\n.button { color: tokens.$brand; }\n'
+
+    existsMock.mockImplementation(filePath =>
+      Promise.resolve(String(filePath) === tokensPath),
+    )
+    fileStats.set(tokensPath, {
+      mtimeMs: 1,
+      size: 24,
+    })
+
+    const result = await findScssVars(text, {
+      languageId: 'scss',
+      filePath: entryPath,
+      resolveScssVariablesAcrossFiles: true,
+    })
+
+    expect(result).toStrictEqual([])
+    expect(readFileMock).toHaveBeenCalledTimes(1)
   })
 })

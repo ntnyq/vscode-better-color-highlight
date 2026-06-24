@@ -22,12 +22,6 @@ import { findNamedColors } from './named-colors'
 const SCSS_VAR_DEF_REGEX = /\$(?<name>[-\w]+)\s*:\s*(?<value>[^;]+?)\s*;/gu
 
 /**
- * Regex for SCSS variable references:
- *   $my-color
- */
-const SCSS_VAR_REF_REGEX = /\$(?<name>[-\w]+)/gu
-
-/**
  * Regex for SCSS `@use` statements with optional namespace aliases.
  */
 const SCSS_USE_REGEX =
@@ -101,7 +95,10 @@ async function resolveDirectColor(value: string): Promise<string | null> {
 
   const results = await Promise.all(strategies.map(fn => fn(value)))
   const allMatches = results.flat()
-  return allMatches.length > 0 ? allMatches[0].color : null
+  const exactMatch = allMatches.find(
+    match => match.start === 0 && match.end === value.length,
+  )
+  return exactMatch?.color ?? null
 }
 
 /**
@@ -124,17 +121,15 @@ async function resolveVarValue(
     return directColor
   }
 
-  for (const m of normalized.matchAll(SCSS_VAR_REF_REGEX)) {
-    const refName = m.groups?.name
-    if (!refName) continue
-
+  const refName = getExactScssVarAlias(normalized)
+  if (refName) {
     if (seen.has(refName)) {
-      continue
+      return null
     }
 
     const refValue = varDefs.get(refName)
     if (!refValue) {
-      continue
+      return null
     }
 
     const resolved = await resolveVarValue(
@@ -148,6 +143,11 @@ async function resolveVarValue(
   }
 
   return null
+}
+
+function getExactScssVarAlias(value: string): string | null {
+  const match = value.match(/^\$(?<name>[-\w]+)$/u)
+  return match?.groups?.name ?? null
 }
 
 /**
@@ -359,33 +359,37 @@ function getScssModuleCandidates(
  * @param filePath - The file path to check
  * @returns Whether the file exists and is accessible
  */
-async function readCachedScssFile(filePath: string): Promise<string> {
-  const stats = await statWorkspaceFile(filePath)
-  const cached = scssFileContentCache.get(filePath)
+async function readCachedScssFile(filePath: string): Promise<string | null> {
+  try {
+    const stats = await statWorkspaceFile(filePath)
+    const cached = scssFileContentCache.get(filePath)
 
-  if (
-    cached &&
-    cached.mtimeMs === stats.mtimeMs &&
-    cached.size === stats.size
-  ) {
-    return cached.text
-  }
-
-  const text = await readWorkspaceFile(filePath)
-  scssFileContentCache.set(filePath, {
-    mtimeMs: stats.mtimeMs,
-    size: stats.size,
-    text,
-  })
-
-  if (scssFileContentCache.size > MAX_SCSS_FILE_CONTENT_CACHE_SIZE) {
-    const oldestKey = scssFileContentCache.keys().next().value
-    if (oldestKey) {
-      scssFileContentCache.delete(oldestKey)
+    if (
+      cached &&
+      cached.mtimeMs === stats.mtimeMs &&
+      cached.size === stats.size
+    ) {
+      return cached.text
     }
-  }
 
-  return text
+    const text = await readWorkspaceFile(filePath)
+    scssFileContentCache.set(filePath, {
+      mtimeMs: stats.mtimeMs,
+      size: stats.size,
+      text,
+    })
+
+    if (scssFileContentCache.size > MAX_SCSS_FILE_CONTENT_CACHE_SIZE) {
+      const oldestKey = scssFileContentCache.keys().next().value
+      if (oldestKey) {
+        scssFileContentCache.delete(oldestKey)
+      }
+    }
+
+    return text
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -450,41 +454,47 @@ async function loadScssModule(
     return null
   }
 
-  state.resolvingFiles.add(filePath)
-  state.filesRead += 1
+  try {
+    state.resolvingFiles.add(filePath)
+    state.filesRead += 1
 
-  const text = await readCachedScssFile(filePath)
-  const varDefs = collectScssVarDefs(text)
-  const importedVarDefs = await collectImportedScssVarDefs(
-    text,
-    { languageId: 'scss', filePath },
-    state,
-    depth + 1,
-  )
-  const forwardedVarDefs = await collectForwardedScssVarDefs(
-    filePath,
-    text,
-    state,
-    depth + 1,
-  )
-
-  for (const [name, value] of importedVarDefs) {
-    if (!varDefs.has(name)) {
-      varDefs.set(name, value)
+    const text = await readCachedScssFile(filePath)
+    if (text === null) {
+      return null
     }
-  }
-  for (const [name, value] of forwardedVarDefs) {
-    if (!varDefs.has(name)) {
-      varDefs.set(name, value)
+
+    const varDefs = collectScssVarDefs(text)
+    const importedVarDefs = await collectImportedScssVarDefs(
+      text,
+      { languageId: 'scss', filePath },
+      state,
+      depth + 1,
+    )
+    const forwardedVarDefs = await collectForwardedScssVarDefs(
+      filePath,
+      text,
+      state,
+      depth + 1,
+    )
+
+    for (const [name, value] of importedVarDefs) {
+      if (!varDefs.has(name)) {
+        varDefs.set(name, value)
+      }
     }
-  }
+    for (const [name, value] of forwardedVarDefs) {
+      if (!varDefs.has(name)) {
+        varDefs.set(name, value)
+      }
+    }
 
-  state.resolvingFiles.delete(filePath)
-
-  return {
-    filePath,
-    namespace,
-    varDefs,
+    return {
+      filePath,
+      namespace,
+      varDefs,
+    }
+  } finally {
+    state.resolvingFiles.delete(filePath)
   }
 }
 
