@@ -1,5 +1,10 @@
 import type { WorkspaceFileStat, WorkspacePathParts } from '../types'
 
+export interface WorkspaceFindFilesPattern {
+  readonly basePath: string
+  readonly pattern: string
+}
+
 /**
  * Check whether a path string is a VS Code URI string.
  *
@@ -254,16 +259,20 @@ export async function readWorkspaceDirectory(
 /**
  * Find workspace files matching a glob pattern.
  *
- * @param pattern - Workspace glob pattern
+ * @param pattern - Workspace glob pattern, or a base path plus relative pattern
  * @param maxResults - Optional maximum number of results
  * @returns Matching file paths
  */
 export async function findWorkspaceFiles(
-  pattern: string,
+  pattern: string | WorkspaceFindFilesPattern,
   maxResults?: number,
 ): Promise<string[]> {
-  const { workspace } = await import('vscode')
-  const uris = await workspace.findFiles(pattern, undefined, maxResults)
+  const { RelativePattern, workspace } = await import('vscode')
+  const globPattern =
+    typeof pattern === 'string'
+      ? pattern
+      : new RelativePattern(await toUri(pattern.basePath), pattern.pattern)
+  const uris = await workspace.findFiles(globPattern, undefined, maxResults)
 
   return uris.map(uri => (uri.scheme === 'file' ? uri.fsPath : uri.toString()))
 }

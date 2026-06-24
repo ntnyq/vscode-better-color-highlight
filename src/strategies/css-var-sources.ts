@@ -1,4 +1,5 @@
 import {
+  dirnameWorkspacePath,
   extnameWorkspacePath,
   findWorkspaceFiles,
   isAbsoluteWorkspacePath,
@@ -8,6 +9,7 @@ import {
   statWorkspaceFile,
   workspacePathIsDirectory,
 } from '../utils/workspace-file-system'
+import type { WorkspaceFindFilesPattern } from '../utils/workspace-file-system'
 import type { CssVarDeclaration } from './css-var-parser'
 import { collectCssVarDeclarations } from './css-var-parser'
 
@@ -64,8 +66,11 @@ async function collectCssVarSourceFilePaths(
   for (const sourcePath of options.paths) {
     if (filePaths.length >= MAX_CSS_VAR_SOURCE_FILES) break
 
-    const resolvedPath = resolveCssVarSourcePath(options.filePath, sourcePath)
-    const candidates = await expandCssVarSourcePath(resolvedPath, options.debug)
+    const candidates = await expandCssVarSourcePath(
+      options.filePath,
+      sourcePath,
+      options.debug,
+    )
 
     for (const candidate of candidates) {
       if (filePaths.length >= MAX_CSS_VAR_SOURCE_FILES) {
@@ -91,22 +96,61 @@ function resolveCssVarSourcePath(filePath: string, sourcePath: string): string {
 }
 
 async function expandCssVarSourcePath(
-  filePath: string,
+  baseFilePath: string,
+  sourcePath: string,
   debug?: (message: string) => void,
 ): Promise<string[]> {
-  if (isGlobPath(filePath)) {
+  if (isGlobPath(sourcePath)) {
     try {
-      return await findWorkspaceFiles(filePath, MAX_CSS_VAR_SOURCE_FILES)
+      return await findWorkspaceFiles(
+        resolveCssVarSourceGlob(baseFilePath, sourcePath),
+        MAX_CSS_VAR_SOURCE_FILES,
+      )
     } catch {
-      return skipPath(filePath, debug)
+      return skipPath(sourcePath, debug)
     }
   }
+
+  const filePath = resolveCssVarSourcePath(baseFilePath, sourcePath)
 
   if (await workspacePathIsDirectory(filePath)) {
     return collectDirectoryCssVarSourceFilePaths(filePath, debug)
   }
 
   return [filePath]
+}
+
+function resolveCssVarSourceGlob(
+  baseFilePath: string,
+  sourcePath: string,
+): WorkspaceFindFilesPattern {
+  if (!isAbsoluteWorkspacePath(sourcePath)) {
+    return {
+      basePath: dirnameWorkspacePath(baseFilePath),
+      pattern: sourcePath,
+    }
+  }
+
+  return splitAbsoluteCssVarSourceGlob(sourcePath)
+}
+
+function splitAbsoluteCssVarSourceGlob(
+  sourcePath: string,
+): WorkspaceFindFilesPattern {
+  const segments = sourcePath.split('/')
+  const globIndex = segments.findIndex(segment => isGlobPath(segment))
+
+  if (globIndex <= 0) {
+    return {
+      basePath: dirnameWorkspacePath(sourcePath),
+      pattern: segments.at(-1) ?? sourcePath,
+    }
+  }
+
+  return {
+    basePath: segments.slice(0, globIndex).join('/') || '/',
+    pattern: segments.slice(globIndex).join('/'),
+  }
 }
 
 async function collectDirectoryCssVarSourceFilePaths(

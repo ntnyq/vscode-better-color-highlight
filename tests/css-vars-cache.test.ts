@@ -8,11 +8,13 @@ import {
 } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
+import type { WorkspaceFindFilesPattern } from '../src/utils/workspace-file-system'
 
 const fileStats = new Map<string, { mtimeMs: number; size: number }>()
 const fileTexts = new Map<string, string>()
 const directories = new Map<string, string[]>()
 const globMatches = new Map<string, string[]>()
+type WorkspaceFindFilesMockPattern = string | WorkspaceFindFilesPattern
 
 const readFileMock = vi.fn<(filePath: unknown) => Promise<string>>(filePath => {
   const normalizedFilePath = String(filePath)
@@ -39,8 +41,10 @@ const isDirectoryMock = vi.fn<(filePath: unknown) => Promise<boolean>>(
 const readDirectoryMock = vi.fn<(filePath: unknown) => Promise<string[]>>(
   filePath => Promise.resolve(directories.get(String(filePath)) ?? []),
 )
-const findFilesMock = vi.fn<(pattern: string) => Promise<string[]>>(pattern =>
-  Promise.resolve(globMatches.get(pattern) ?? []),
+const findFilesMock = vi.fn<
+  (pattern: WorkspaceFindFilesMockPattern) => Promise<string[]>
+>(pattern =>
+  Promise.resolve(globMatches.get(createGlobMatchKey(pattern)) ?? []),
 )
 
 vi.mock(
@@ -123,6 +127,73 @@ describe('css variable source cache', () => {
     expect(readFileMock).toHaveBeenCalledTimes(2)
   })
 
+  it('invalidates cached file text when only file size changes', async () => {
+    resetTestState()
+    const { loadCssVarSourceDeclarations } =
+      await import('../src/strategies/css-var-sources')
+
+    const dir = '/tmp/better-color-css-vars-cache-size'
+    const tokensPath = join(dir, 'tokens.css')
+    const options = {
+      filePath: join(dir, 'entry.css'),
+      paths: ['tokens.css'],
+      trustedSelectors: [':root'],
+    }
+
+    setFile(tokensPath, ':root { --brand: red; }\n', 1)
+
+    const first = await loadCssVarSourceDeclarations(options)
+
+    setFile(tokensPath, ':root { --brand: blue; }\n', 1)
+
+    const second = await loadCssVarSourceDeclarations(options)
+
+    expect(first.map(declaration => declaration.value)).toStrictEqual(['red'])
+    expect(second.map(declaration => declaration.value)).toStrictEqual(['blue'])
+    expect(readFileMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('loads declarations from configured current-file-relative globs', async () => {
+    resetTestState()
+    const { loadCssVarSourceDeclarations } =
+      await import('../src/strategies/css-var-sources')
+
+    const dir = '/tmp/better-color-css-vars-glob'
+    const tokensPath = join(dir, 'tokens', 'colors.css')
+    const themePath = join(dir, 'tokens', 'theme.scss')
+    const ignoredPath = join(dir, 'tokens', 'notes.txt')
+    const pattern = 'tokens/**/*.{css,scss,less}'
+
+    globMatches.set(
+      createGlobMatchKey({
+        basePath: dir,
+        pattern,
+      }),
+      [tokensPath, themePath, ignoredPath],
+    )
+    setFile(tokensPath, ':root { --brand: #336699; }\n')
+    setFile(themePath, ':root { --accent: #663399; }\n')
+    setFile(ignoredPath, ':root { --ignored: #ff0000; }\n')
+
+    const declarations = await loadCssVarSourceDeclarations({
+      filePath: join(dir, 'entry.css'),
+      paths: [pattern],
+      trustedSelectors: [':root'],
+    })
+
+    expect(findFilesMock).toHaveBeenCalledWith(
+      {
+        basePath: dir,
+        pattern,
+      },
+      64,
+    )
+    expect(declarations.map(declaration => declaration.name)).toStrictEqual([
+      '--brand',
+      '--accent',
+    ])
+  })
+
   it('recursively loads css-like files from configured directories', async () => {
     resetTestState()
     const { loadCssVarSourceDeclarations } =
@@ -194,4 +265,12 @@ function setFile(filePath: string, text: string, mtimeMs = 1) {
     mtimeMs,
     size: text.length,
   })
+}
+
+function createGlobMatchKey(pattern: WorkspaceFindFilesMockPattern): string {
+  if (typeof pattern === 'string') {
+    return pattern
+  }
+
+  return `${pattern.basePath}\0${pattern.pattern}`
 }
