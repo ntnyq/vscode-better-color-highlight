@@ -5,6 +5,7 @@ import {
   isTrustedCssVarSelector,
   splitCssSelectorList,
 } from '../src/strategies/css-var-parser'
+import { resolveCssVarMatches } from '../src/strategies/css-var-resolver'
 import { findCssVars } from '../src/strategies/css-vars'
 import { FIXTURE_VARS_CSS } from './fixtures'
 
@@ -314,5 +315,89 @@ describe(findCssVars, () => {
     )
     expect(missingUsages).toStrictEqual([])
     expect(falseDefinitionHits).toStrictEqual([])
+  })
+
+  it('resolves external trusted declarations when cross-file data is provided', async () => {
+    const text = '.cls { color: var(--brand); }'
+    const externalDeclarations = collectCssVarDeclarations(
+      ':root { --brand: #0ea5e9; }',
+      {
+        filePath: '/workspace/tokens.css',
+        trustedSelectors: [':root'],
+      },
+    )
+
+    const result = await resolveCssVarMatches(text, {
+      currentDeclarations: [],
+      externalDeclarations,
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.indexOf('var(--brand)'),
+        end: text.indexOf('var(--brand)') + 'var(--brand)'.length,
+        color: 'rgb(14, 165, 233)',
+      },
+    ])
+  })
+
+  it('uses fallback when external variable missing', async () => {
+    const text = '.cls { color: var(--missing, #ff0000); }'
+
+    const result = await resolveCssVarMatches(text, {
+      currentDeclarations: [],
+      externalDeclarations: [],
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.indexOf('var(--missing, #ff0000)'),
+        end:
+          text.indexOf('var(--missing, #ff0000)') +
+          'var(--missing, #ff0000)'.length,
+        color: 'rgb(255, 0, 0)',
+      },
+    ])
+  })
+
+  it('skips cyclic CSS variable references', async () => {
+    const text = `
+      :root {
+        --brand: var(--accent);
+        --accent: var(--brand);
+      }
+      .cls { color: var(--brand); }
+    `
+    const currentDeclarations = collectCssVarDeclarations(text, {
+      trustedSelectors: [':root'],
+    })
+
+    const result = await resolveCssVarMatches(text, {
+      currentDeclarations,
+      externalDeclarations: [],
+    })
+
+    expect(result).toStrictEqual([])
+  })
+
+  it('treats external untrusted same-name declarations as ambiguous', async () => {
+    const text = '.cls { color: var(--brand); }'
+    const externalDeclarations = collectCssVarDeclarations(
+      `
+        :root { --brand: #0ea5e9; }
+        [data-theme=dark] { --brand: #ff0000; }
+      `,
+      {
+        filePath: '/workspace/tokens.css',
+        trustedSelectors: [':root'],
+      },
+    )
+
+    const result = await resolveCssVarMatches(text, {
+      currentDeclarations: [],
+      externalDeclarations,
+    })
+
+    expect(result).toStrictEqual([])
   })
 })
