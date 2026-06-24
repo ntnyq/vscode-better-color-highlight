@@ -410,11 +410,12 @@ export function parseShorthandValue(
     }
   } else {
     const alphaPart = parts[slashIndex + 1]
-    if (alphaPart) {
-      alpha = parseChannelValue(alphaPart, 'percent')
-    }
+    if (!alphaPart || parts.length !== slashIndex + 2) return null
+    alpha = parseChannelValue(alphaPart, 'percent')
     parts.splice(slashIndex)
   }
+
+  if (parts.length !== 3) return null
 
   const [r, g, b] = convertColorFunction(space, parts)
   if (r === null) return null
