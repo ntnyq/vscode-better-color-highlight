@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   collectCssVarDeclarations,
   getCssSelectorSpecificity,
@@ -26,6 +26,11 @@ vi.mock(import('../src/strategies/css-var-sources'), () => ({
 }))
 
 describe(findCssVars, () => {
+  beforeEach(() => {
+    loadCssVarSourceDeclarationsMock.mockReset()
+    loadCssVarSourceDeclarationsMock.mockResolvedValue([])
+  })
+
   it('marks default trusted selectors as trusted', () => {
     const declarations = collectCssVarDeclarations(
       ':root { --brand: #0ea5e9; } [data-theme=dark] { --brand: white; }',
