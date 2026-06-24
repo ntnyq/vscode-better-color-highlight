@@ -1,13 +1,29 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   collectCssVarDeclarations,
   getCssSelectorSpecificity,
   isTrustedCssVarSelector,
   splitCssSelectorList,
 } from '../src/strategies/css-var-parser'
+import type { CssVarDeclaration } from '../src/strategies/css-var-parser'
 import { resolveCssVarMatches } from '../src/strategies/css-var-resolver'
+import type { LoadCssVarSourceDeclarationsOptions } from '../src/strategies/css-var-sources'
 import { findCssVars } from '../src/strategies/css-vars'
 import { FIXTURE_VARS_CSS } from './fixtures'
+
+const { loadCssVarSourceDeclarationsMock } = vi.hoisted(() => ({
+  loadCssVarSourceDeclarationsMock: vi
+    .fn<
+      (
+        options: LoadCssVarSourceDeclarationsOptions,
+      ) => Promise<CssVarDeclaration[]>
+    >()
+    .mockResolvedValue([]),
+}))
+
+vi.mock(import('../src/strategies/css-var-sources'), () => ({
+  loadCssVarSourceDeclarations: loadCssVarSourceDeclarationsMock,
+}))
 
 describe(findCssVars, () => {
   it('marks default trusted selectors as trusted', () => {
@@ -282,6 +298,81 @@ describe(findCssVars, () => {
   it('returns empty when no variables are defined', async () => {
     const result = await findCssVars('color: #ff0000;')
     expect(result).toStrictEqual([])
+  })
+
+  it('does not read external paths when cross-file resolution is disabled by default', async () => {
+    const text = '.cls { color: var(--brand); }'
+
+    const result = await findCssVars(text, {
+      languageId: 'css',
+      filePath: '/workspace/src/app.css',
+      cssVariablePaths: ['/workspace/tokens.css'],
+    })
+
+    expect(result).toStrictEqual([])
+    expect(loadCssVarSourceDeclarationsMock).not.toHaveBeenCalled()
+  })
+
+  it('does not read external paths when cross-file resolution is false', async () => {
+    const text = '.cls { color: var(--brand); }'
+
+    const result = await findCssVars(text, {
+      languageId: 'css',
+      filePath: '/workspace/src/app.css',
+      resolveCssVariablesAcrossFiles: false,
+      cssVariablePaths: ['/workspace/tokens.css'],
+    })
+
+    expect(result).toStrictEqual([])
+    expect(loadCssVarSourceDeclarationsMock).not.toHaveBeenCalled()
+  })
+
+  it('resolves CSS variables from configured external declarations when enabled', async () => {
+    const text = '.cls { color: var(--brand); }'
+    loadCssVarSourceDeclarationsMock.mockResolvedValue(
+      collectCssVarDeclarations(':root { --brand: #0ea5e9; }', {
+        filePath: '/workspace/tokens.css',
+        trustedSelectors: [':root'],
+      }),
+    )
+
+    const result = await findCssVars(text, {
+      languageId: 'css',
+      filePath: '/workspace/src/app.css',
+      resolveCssVariablesAcrossFiles: true,
+      cssVariablePaths: ['/workspace/tokens.css'],
+      cssVariableTrustedSelectors: [':root'],
+    })
+
+    expect(loadCssVarSourceDeclarationsMock).toHaveBeenCalledWith({
+      filePath: '/workspace/src/app.css',
+      paths: ['/workspace/tokens.css'],
+      trustedSelectors: [':root'],
+    })
+    expect(result).toStrictEqual([
+      {
+        start: text.indexOf('var(--brand)'),
+        end: text.indexOf('var(--brand)') + 'var(--brand)'.length,
+        color: 'rgb(14, 165, 233)',
+      },
+    ])
+  })
+
+  it('uses default trusted selectors when loading external declarations', async () => {
+    const text = '.cls { color: var(--brand); }'
+
+    await findCssVars(text, {
+      languageId: 'css',
+      filePath: '/workspace/src/app.css',
+      resolveCssVariablesAcrossFiles: true,
+      cssVariablePaths: ['/workspace/tokens.css'],
+    })
+
+    expect(loadCssVarSourceDeclarationsMock).toHaveBeenCalledWith({
+      filePath: '/workspace/src/app.css',
+      paths: ['/workspace/tokens.css'],
+      trustedSelectors: [':root', 'html', 'body', ':host'],
+    })
   })
 
   it('matches the expected playground CSS variable usages without false definition hits', async () => {
