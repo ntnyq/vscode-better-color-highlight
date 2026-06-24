@@ -4,6 +4,7 @@ node_modules
 *.local
 
 /dist
+.vscode-test
 *.vsix
 
 *.tgz
