@@ -11,14 +11,11 @@ const DEFAULT_TRUSTED_CSS_VAR_SELECTORS = [':root', 'html', 'body', ':host']
  * @returns Array of color matches found in the text
  */
 export async function findCssVars(text: string): Promise<ColorMatch[]> {
-  const topLevelDeclarations = collectCssVarDeclarations(`:root {${text}}`, {
+  const currentDeclarations = collectCssVarDeclarations(text, {
+    includeTopLevelDeclarations: true,
+    topLevelSelector: ':root',
     trustedSelectors: DEFAULT_TRUSTED_CSS_VAR_SELECTORS,
   })
-  const blockDeclarations = collectCssVarDeclarations(text, {
-    sourceOrderOffset: topLevelDeclarations.length,
-    trustedSelectors: DEFAULT_TRUSTED_CSS_VAR_SELECTORS,
-  })
-  const currentDeclarations = [...topLevelDeclarations, ...blockDeclarations]
 
   return resolveCssVarMatches(text, {
     currentDeclarations,

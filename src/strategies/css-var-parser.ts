@@ -13,6 +13,8 @@ export interface CollectCssVarDeclarationOptions {
   readonly filePath?: string
   readonly trustedSelectors: readonly string[]
   readonly sourceOrderOffset?: number
+  readonly includeTopLevelDeclarations?: boolean
+  readonly topLevelSelector?: string
 }
 
 const CSS_VAR_NAME_REGEX = /^--[-\w]+$/u
@@ -133,32 +135,78 @@ export function collectCssVarDeclarations(
   const trustedSelectors = new Set(
     options.trustedSelectors.map(normalizeCssSelector),
   )
+  const topLevelSelector = normalizeCssSelector(
+    options.topLevelSelector ?? ':root',
+  )
 
-  walkCssBlocks(text, 0, text.length, (prelude, body) => {
-    if (prelude.startsWith('@')) {
-      return 'recurse'
+  function pushDeclaration(
+    declaration: Pick<CssVarDeclaration, 'name' | 'value'>,
+    normalizedSelector: string,
+  ): void {
+    declarations.push({
+      ...declaration,
+      selector: normalizedSelector,
+      normalizedSelector,
+      specificity: getCssSelectorSpecificity(normalizedSelector),
+      sourceOrder,
+      filePath: options.filePath,
+      isTrusted: trustedSelectors.has(normalizedSelector),
+    })
+    sourceOrder++
+  }
+
+  function collectTopLevelDeclarations(segment: string): void {
+    if (!options.includeTopLevelDeclarations || !topLevelSelector) return
+
+    for (const declaration of scanCssVarDeclarations(segment)) {
+      pushDeclaration(declaration, topLevelSelector)
     }
+  }
 
-    const declarationsInRule = scanCssVarDeclarations(body)
-    const selectorItems = splitCssSelectorList(prelude)
+  function walkRange(start: number, end: number): void {
+    let blockStart = start
 
-    for (const declaration of declarationsInRule) {
-      for (const normalizedSelector of selectorItems) {
-        declarations.push({
-          ...declaration,
-          selector: normalizedSelector,
-          normalizedSelector,
-          specificity: getCssSelectorSpecificity(normalizedSelector),
-          sourceOrder,
-          filePath: options.filePath,
-          isTrusted: trustedSelectors.has(normalizedSelector),
-        })
-        sourceOrder++
+    while (blockStart < end) {
+      const openBrace = findNextOpenBrace(text, blockStart, end)
+      if (openBrace === -1) {
+        collectTopLevelDeclarations(text.slice(blockStart, end))
+        return
       }
-    }
 
-    return 'skip'
-  })
+      const closeBrace = findMatchingCloseBrace(text, openBrace, end)
+      if (closeBrace === -1) {
+        collectTopLevelDeclarations(text.slice(blockStart, end))
+        return
+      }
+
+      collectTopLevelDeclarations(text.slice(blockStart, openBrace))
+
+      const prelude = normalizeCssSelector(
+        getCssPrelude(text.slice(blockStart, openBrace)),
+      )
+      const bodyStart = openBrace + 1
+      const body = text.slice(bodyStart, closeBrace)
+
+      if (prelude) {
+        if (prelude.startsWith('@')) {
+          walkRange(bodyStart, closeBrace)
+        } else {
+          const declarationsInRule = scanCssVarDeclarations(body)
+          const selectorItems = splitCssSelectorList(prelude)
+
+          for (const declaration of declarationsInRule) {
+            for (const normalizedSelector of selectorItems) {
+              pushDeclaration(declaration, normalizedSelector)
+            }
+          }
+        }
+      }
+
+      blockStart = closeBrace + 1
+    }
+  }
+
+  walkRange(0, text.length)
 
   return declarations
 }
@@ -263,38 +311,6 @@ function scanCssVarDeclarations(
   commit()
 
   return declarations
-}
-
-function walkCssBlocks(
-  text: string,
-  start: number,
-  end: number,
-  visit: (prelude: string, body: string) => 'recurse' | 'skip',
-): void {
-  let blockStart = start
-
-  while (blockStart < end) {
-    const openBrace = findNextOpenBrace(text, blockStart, end)
-    if (openBrace === -1) return
-
-    const closeBrace = findMatchingCloseBrace(text, openBrace, end)
-    if (closeBrace === -1) return
-
-    const prelude = normalizeCssSelector(
-      getCssPrelude(text.slice(blockStart, openBrace)),
-    )
-    const bodyStart = openBrace + 1
-    const body = text.slice(bodyStart, closeBrace)
-
-    if (prelude) {
-      const action = visit(prelude, body)
-      if (action === 'recurse') {
-        walkCssBlocks(text, bodyStart, closeBrace, visit)
-      }
-    }
-
-    blockStart = closeBrace + 1
-  }
 }
 
 function stripCssComments(text: string): string {

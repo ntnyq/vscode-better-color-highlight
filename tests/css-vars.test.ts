@@ -214,6 +214,19 @@ describe(findCssVars, () => {
     expect(text.slice(result[0].start, result[0].end)).toBe('var(--named-red)')
   })
 
+  it('resolves current-file variables using declaration document order', async () => {
+    const text = `
+      .a { --brand: #ff0000; }
+      --brand: #0000ff;
+      .b { color: var(--brand); }
+    `
+
+    const result = await findCssVars(text)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].color).toBe('rgb(0, 0, 255)')
+  })
+
   it('finds CSS variable usages with named-color values', async () => {
     const text = `
       :root { --named-red: red; }
