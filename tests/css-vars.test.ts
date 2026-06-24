@@ -414,6 +414,79 @@ describe(findCssVars, () => {
     expect(result).toStrictEqual([])
   })
 
+  it('uses only caller fallback for cyclic CSS variable references', async () => {
+    const text = `
+      :root {
+        --a: var(--b, red);
+        --b: var(--a, blue);
+      }
+      .x { color: var(--a, green); }
+    `
+    const currentDeclarations = collectCssVarDeclarations(text, {
+      trustedSelectors: [':root'],
+    })
+
+    const result = await resolveCssVarMatches(text, {
+      currentDeclarations,
+      externalDeclarations: [],
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.indexOf('var(--a, green)'),
+        end: text.indexOf('var(--a, green)') + 'var(--a, green)'.length,
+        color: 'rgb(0, 128, 0)',
+      },
+    ])
+  })
+
+  it('propagates ambiguity through aliases without using alias fallback', async () => {
+    const text = `
+      :root { --alias: var(--brand, #ffffff); }
+      .x { color: var(--alias); }
+    `
+    const currentDeclarations = collectCssVarDeclarations(text, {
+      trustedSelectors: [':root'],
+    })
+    const externalDeclarations = collectCssVarDeclarations(
+      `
+        :root { --brand: #0ea5e9; }
+        [data-theme=dark] { --brand: #ff0000; }
+      `,
+      {
+        filePath: '/workspace/tokens.css',
+        trustedSelectors: [':root'],
+      },
+    )
+
+    const result = await resolveCssVarMatches(text, {
+      currentDeclarations,
+      externalDeclarations,
+    })
+
+    expect(result).toStrictEqual([])
+  })
+
+  it('does not scrape fallback colors from cyclic nested variables', async () => {
+    const text = `
+      :root {
+        --alias: color-mix(in srgb, var(--cycle, #ffffff), black);
+        --cycle: var(--alias);
+      }
+      .x { color: var(--alias); }
+    `
+    const currentDeclarations = collectCssVarDeclarations(text, {
+      trustedSelectors: [':root'],
+    })
+
+    const result = await resolveCssVarMatches(text, {
+      currentDeclarations,
+      externalDeclarations: [],
+    })
+
+    expect(result).toStrictEqual([])
+  })
+
   it('treats external untrusted same-name declarations as ambiguous', async () => {
     const text = '.cls { color: var(--brand); }'
     const externalDeclarations = collectCssVarDeclarations(

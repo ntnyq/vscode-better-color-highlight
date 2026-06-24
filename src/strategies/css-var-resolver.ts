@@ -30,6 +30,21 @@ type CandidateResolution =
       readonly status: 'ambiguous'
     }
 
+type CssVarResolution =
+  | {
+      readonly status: 'resolved'
+      readonly color: string
+    }
+  | {
+      readonly status: 'missing'
+    }
+  | {
+      readonly status: 'ambiguous'
+    }
+  | {
+      readonly status: 'invalid'
+    }
+
 const MAX_RESOLUTION_DEPTH = 16
 
 export async function resolveCssVarMatches(
@@ -39,13 +54,15 @@ export async function resolveCssVarMatches(
   const matches: ColorMatch[] = []
 
   for (const usage of findCssVarUsages(text)) {
-    const color = await resolveCssVarUsage(usage, options, new Set(), 0)
-    if (!color) continue
+    if (isCssCustomPropertyValueUsage(text, usage)) continue
+
+    const result = await resolveCssVarUsage(usage, options, new Set(), 0, true)
+    if (result.status !== 'resolved') continue
 
     matches.push({
       start: usage.start,
       end: usage.end,
-      color,
+      color: result.color,
     })
   }
 
@@ -57,25 +74,30 @@ async function resolveCssVarUsage(
   options: ResolveCssVarMatchOptions,
   seen: ReadonlySet<string>,
   depth: number,
-): Promise<string | null> {
+  canUseInvalidFallback: boolean,
+): Promise<CssVarResolution> {
   if (depth > MAX_RESOLUTION_DEPTH) {
-    return resolveFallback(usage, options, seen, depth)
+    return canUseInvalidFallback
+      ? resolveInvalidFallback(usage, options, seen, depth)
+      : { status: 'invalid' }
   }
 
   if (seen.has(usage.name)) {
-    return resolveFallback(usage, options, seen, depth)
+    return canUseInvalidFallback
+      ? resolveInvalidFallback(usage, options, seen, depth)
+      : { status: 'invalid' }
   }
 
   const candidate = selectCssVarDeclaration(usage.name, options)
   if (candidate.status === 'missing') {
     return resolveFallback(usage, options, seen, depth)
   }
-  if (candidate.status === 'ambiguous') return null
+  if (candidate.status === 'ambiguous') return { status: 'ambiguous' }
 
   const nextSeen = new Set(seen)
   nextSeen.add(usage.name)
 
-  const color = await resolveCssVarValue(
+  const result = await resolveCssVarValue(
     candidate.declaration.value,
     candidate.declaration.name,
     options,
@@ -83,9 +105,11 @@ async function resolveCssVarUsage(
     depth + 1,
   )
 
-  if (color) return color
+  if (result.status !== 'invalid') return result
 
-  return resolveFallback(usage, options, seen, depth)
+  if (!canUseInvalidFallback) return { status: 'invalid' }
+
+  return resolveInvalidFallback(usage, options, seen, depth)
 }
 
 async function resolveFallback(
@@ -93,8 +117,19 @@ async function resolveFallback(
   options: ResolveCssVarMatchOptions,
   seen: ReadonlySet<string>,
   depth: number,
-): Promise<string | null> {
-  if (!usage.fallback) return null
+): Promise<CssVarResolution> {
+  if (!usage.fallback) return { status: 'missing' }
+
+  return resolveCssVarValue(usage.fallback, undefined, options, seen, depth + 1)
+}
+
+async function resolveInvalidFallback(
+  usage: Pick<VarUsage, 'fallback'>,
+  options: ResolveCssVarMatchOptions,
+  seen: ReadonlySet<string>,
+  depth: number,
+): Promise<CssVarResolution> {
+  if (!usage.fallback) return { status: 'invalid' }
 
   return resolveCssVarValue(usage.fallback, undefined, options, seen, depth + 1)
 }
@@ -105,26 +140,43 @@ async function resolveCssVarValue(
   options: ResolveCssVarMatchOptions,
   seen: ReadonlySet<string>,
   depth: number,
-): Promise<string | null> {
-  if (depth > MAX_RESOLUTION_DEPTH) return null
+): Promise<CssVarResolution> {
+  if (depth > MAX_RESOLUTION_DEPTH) return { status: 'invalid' }
 
   const normalized = value.replaceAll(/!important\b/gu, '').trim()
   const varUsages = findCssVarUsages(normalized)
 
   if (varUsages.length > 0) {
     for (const usage of varUsages) {
-      const color = await resolveCssVarUsage(usage, options, seen, depth + 1)
-      if (color) return color
+      const result = await resolveCssVarUsage(
+        usage,
+        options,
+        seen,
+        depth + 1,
+        false,
+      )
+      if (result.status !== 'missing') return result
     }
+    return { status: 'missing' }
   }
 
   const directColor = await resolveDirectColor(normalized)
-  if (directColor) return directColor
+  if (directColor) {
+    return {
+      status: 'resolved',
+      color: directColor,
+    }
+  }
 
   const shorthandColor = resolveShorthandColor(normalized, currentName)
-  if (shorthandColor) return shorthandColor
+  if (shorthandColor) {
+    return {
+      status: 'resolved',
+      color: shorthandColor,
+    }
+  }
 
-  return null
+  return { status: 'missing' }
 }
 
 async function resolveDirectColor(value: string): Promise<string | null> {
@@ -200,6 +252,20 @@ function compareCssVarDeclarations(
   if (specificityDiff !== 0) return specificityDiff
 
   return left.sourceOrder - right.sourceOrder
+}
+
+function isCssCustomPropertyValueUsage(text: string, usage: VarUsage): boolean {
+  const declarationStart = Math.max(
+    text.lastIndexOf(';', usage.start),
+    text.lastIndexOf('{', usage.start),
+    text.lastIndexOf('}', usage.start),
+  )
+  const declarationPrefix = text.slice(declarationStart + 1, usage.start)
+  const colonIndex = declarationPrefix.indexOf(':')
+  if (colonIndex === -1) return false
+
+  const propertyName = declarationPrefix.slice(0, colonIndex).trim()
+  return /^--[-\w]+$/u.test(propertyName)
 }
 
 function findCssVarUsages(text: string): VarUsage[] {

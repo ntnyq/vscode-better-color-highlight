@@ -2376,23 +2376,6 @@
     },
     {
       "index": 139,
-      "line": 369,
-      "column": 17,
-      "text": "var(--named-red)",
-      "range": [
-        7867,
-        7883
-      ],
-      "color": "rgb(255, 0, 0)",
-      "render": {
-        "backgroundColor": "rgb(255, 0, 0)",
-        "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
-        "overviewRulerColor": "rgb(255, 0, 0)"
-      }
-    },
-    {
-      "index": 140,
       "line": 370,
       "column": 18,
       "text": "rgb(12, 120, 220)",
@@ -2409,7 +2392,7 @@
       }
     },
     {
-      "index": 141,
+      "index": 140,
       "line": 374,
       "column": 10,
       "text": "var(--named-red)",
@@ -2426,7 +2409,7 @@
       }
     },
     {
-      "index": 142,
+      "index": 141,
       "line": 375,
       "column": 15,
       "text": "var(--root-brand)",
@@ -2443,7 +2426,7 @@
       }
     },
     {
-      "index": 143,
+      "index": 142,
       "line": 376,
       "column": 17,
       "text": "var(--root-accent)",
@@ -2460,7 +2443,7 @@
       }
     },
     {
-      "index": 144,
+      "index": 143,
       "line": 381,
       "column": 18,
       "text": "#7c3aed",
@@ -2477,7 +2460,7 @@
       }
     },
     {
-      "index": 145,
+      "index": 144,
       "line": 382,
       "column": 14,
       "text": "hsl(160, 70%, 45%)",
@@ -2494,7 +2477,7 @@
       }
     },
     {
-      "index": 146,
+      "index": 145,
       "line": 383,
       "column": 17,
       "text": "var(--card-border)",
@@ -2511,7 +2494,7 @@
       }
     },
     {
-      "index": 147,
+      "index": 146,
       "line": 384,
       "column": 15,
       "text": "var(--card-bg)",
@@ -2528,7 +2511,7 @@
       }
     },
     {
-      "index": 148,
+      "index": 147,
       "line": 389,
       "column": 17,
       "text": "#ff0000",
@@ -2545,24 +2528,7 @@
       }
     },
     {
-      "index": 149,
-      "line": 390,
-      "column": 19,
-      "text": "var(--inline-red)",
-      "range": [
-        8395,
-        8412
-      ],
-      "color": "rgb(255, 0, 0)",
-      "render": {
-        "backgroundColor": "rgb(255, 0, 0)",
-        "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
-        "overviewRulerColor": "rgb(255, 0, 0)"
-      }
-    },
-    {
-      "index": 150,
+      "index": 148,
       "line": 391,
       "column": 10,
       "text": "var(--inline-red)",
@@ -2579,7 +2545,7 @@
       }
     },
     {
-      "index": 151,
+      "index": 149,
       "line": 392,
       "column": 18,
       "text": "var(--inline-red-2)",
@@ -2596,7 +2562,7 @@
       }
     },
     {
-      "index": 152,
+      "index": 150,
       "line": 397,
       "column": 10,
       "text": "var(--missing-brand, #1d4ed8)",
@@ -2613,7 +2579,7 @@
       }
     },
     {
-      "index": 153,
+      "index": 151,
       "line": 397,
       "column": 31,
       "text": "#1d4ed8",
@@ -2630,7 +2596,7 @@
       }
     },
     {
-      "index": 154,
+      "index": 152,
       "line": 398,
       "column": 15,
       "text": "var(--missing-named, red)",
@@ -2647,7 +2613,7 @@
       }
     },
     {
-      "index": 155,
+      "index": 153,
       "line": 398,
       "column": 36,
       "text": "red",
@@ -2664,7 +2630,7 @@
       }
     },
     {
-      "index": 156,
+      "index": 154,
       "line": 403,
       "column": 10,
       "text": "#ff0000",
@@ -2681,41 +2647,7 @@
       }
     },
     {
-      "index": 157,
-      "line": 404,
-      "column": 11,
-      "text": "var(--red)",
-      "range": [
-        8811,
-        8821
-      ],
-      "color": "rgb(255, 0, 0)",
-      "render": {
-        "backgroundColor": "rgb(255, 0, 0)",
-        "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
-        "overviewRulerColor": "rgb(255, 0, 0)"
-      }
-    },
-    {
-      "index": 158,
-      "line": 405,
-      "column": 15,
-      "text": "var(--red2)",
-      "range": [
-        8837,
-        8848
-      ],
-      "color": "rgb(255, 0, 0)",
-      "render": {
-        "backgroundColor": "rgb(255, 0, 0)",
-        "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
-        "overviewRulerColor": "rgb(255, 0, 0)"
-      }
-    },
-    {
-      "index": 159,
+      "index": 155,
       "line": 406,
       "column": 10,
       "text": "var(--red2)",
@@ -2732,7 +2664,7 @@
       }
     },
     {
-      "index": 160,
+      "index": 156,
       "line": 407,
       "column": 17,
       "text": "var(--red-long)",
