@@ -58,7 +58,7 @@ export function findNamedColors(
 
     const start = (m.index ?? 0) + prefix.length
     const end = start + name.length
-    if (!isNamedColorAllowed(text, start, context)) continue
+    if (!isNamedColorAllowed(text, start, end, context)) continue
 
     const color = rgbString(rgb[0], rgb[1], rgb[2])
 
@@ -79,17 +79,42 @@ export function findNamedColors(
 function isNamedColorAllowed(
   text: string,
   start: number,
+  end: number,
   context?: StrategyContext,
 ): boolean {
-  if (context?.namedColorMatchMode === 'always') {
+  const isCssLike = context && CSS_LIKE_LANGUAGES.has(context.languageId)
+
+  if (context?.namedColorMatchMode === 'always' && !isCssLike) {
     return true
   }
 
-  if (!context || !CSS_LIKE_LANGUAGES.has(context.languageId)) {
+  if (!isCssLike) {
     return true
   }
 
-  return isInCssDeclarationValue(text, start)
+  return (
+    isStandaloneNamedColorValue(text, start, end) ||
+    isInCssDeclarationValue(text, start)
+  )
+}
+
+/**
+ * Check whether the candidate is the whole input value.
+ *
+ * CSS variable resolvers pass standalone declaration values through named-color
+ * detection, so those values must still work when CSS syntax filtering applies.
+ *
+ * @param text - The full text being scanned
+ * @param start - The start offset of the candidate named color
+ * @param end - The end offset of the candidate named color
+ * @returns Whether the candidate is the only non-whitespace input
+ */
+function isStandaloneNamedColorValue(
+  text: string,
+  start: number,
+  end: number,
+): boolean {
+  return text.slice(0, start).trim() === '' && text.slice(end).trim() === ''
 }
 
 /**

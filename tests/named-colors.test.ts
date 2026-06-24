@@ -53,15 +53,25 @@ describe(findNamedColors, () => {
     ])
   })
 
-  it('matches selector names when named color mode is always', () => {
-    const result = findNamedColors('.red { color: blue; }', {
+  it('keeps CSS syntax filtering when named color mode is always', () => {
+    const result = findNamedColors('.red { color: blue; }\n@layer red;', {
       languageId: 'css',
       namedColorMatchMode: 'always',
     })
 
     expect(result).toStrictEqual([
-      { start: 1, end: 4, color: 'rgb(255, 0, 0)' },
       { start: 14, end: 18, color: 'rgb(0, 0, 255)' },
+    ])
+  })
+
+  it('allows standalone CSS named values when named color mode is always', () => {
+    const result = findNamedColors('red', {
+      languageId: 'css',
+      namedColorMatchMode: 'always',
+    })
+
+    expect(result).toStrictEqual([
+      { start: 0, end: 3, color: 'rgb(255, 0, 0)' },
     ])
   })
 

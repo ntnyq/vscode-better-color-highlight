@@ -155,7 +155,7 @@ export const configs = {
     default: false,
   } as ConfigItem<"color-highlight.matchWords">,
   /**
-   * Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches any named color word, and 'never' disables named color matching.
+   * Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches standalone values and non-style language words, and 'never' disables named color matching.
    * @key `color-highlight.namedColorMatchMode`
    * @default `"context"`
    * @type `string`
@@ -380,4 +380,3 @@ export interface NestedScopedConfigs {
   "markRuler": boolean,
   "debug": boolean,
 }
-

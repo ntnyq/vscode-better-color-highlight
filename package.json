@@ -128,7 +128,7 @@
             "always",
             "never"
           ],
-          "description": "Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches any named color word, and 'never' disables named color matching."
+          "description": "Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches standalone values and non-style language words, and 'never' disables named color matching."
         },
         "color-highlight.resolveScssVariablesAcrossFiles": {
           "type": "boolean",
