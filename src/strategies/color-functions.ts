@@ -404,7 +404,8 @@ export function parseShorthandValue(
   if (slashIndex === -1) {
     const lastPart = parts[parts.length - 1]
     if (lastPart.includes('/')) {
-      const [channel, a] = lastPart.split('/')
+      const [channel, a, extra] = lastPart.split('/')
+      if (extra !== undefined || !channel || !a) return null
       parts[parts.length - 1] = channel
       alpha = parseChannelValue(a.trim(), 'percent')
     }

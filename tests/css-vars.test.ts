@@ -326,6 +326,18 @@ describe(findCssVars, () => {
     expect(result).toStrictEqual([])
   })
 
+  it('skips shorthand inline alpha values with extra slash segments', async () => {
+    const text = `
+      :root {
+        --brand-rgb: 255 0 0/50%/extra;
+      }
+      .cls { color: var(--brand-rgb); }
+    `
+    const result = await findCssVars(text)
+
+    expect(result).toStrictEqual([])
+  })
+
   it('resolves CSS shorthand triplet custom properties inside rule blocks', async () => {
     const text = `
       .css-var-shorthand {
