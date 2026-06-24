@@ -17,7 +17,9 @@ Use `pnpm` for all package tasks.
 
 - `pnpm dev`: run `tsdown` in watch mode for local extension development.
 - `pnpm build`: bundle the extension into `dist/`.
-- `pnpm typecheck`: run TypeScript checks with `tsgo --noEmit`.
+- `pnpm typecheck`: run TypeScript checks with `tsgo --noEmit`. Agents should
+  run this command directly, without the `rtk` prefix, because
+  `rtk pnpm typecheck` can leave generated `.js` files in the worktree.
 - `pnpm lint`: run `oxlint`.
 - `pnpm format` / `pnpm format:check`: format or verify formatting with
   `oxfmt`.
@@ -54,4 +56,5 @@ rendering changes.
 
 When running shell commands as an agent in this repository, prefix commands with
 `rtk` as requested by the local Codex instructions, for example
-`rtk pnpm test`.
+`rtk pnpm test`. The exception is typechecking: run `pnpm typecheck` directly,
+because `rtk pnpm typecheck` can leave generated `.js` files in the worktree.
