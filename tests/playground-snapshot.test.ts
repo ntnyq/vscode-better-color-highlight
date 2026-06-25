@@ -53,6 +53,8 @@ const EXTENSION_LANGUAGE_MAP = new Map<string, string>([
   ['.scss', 'scss'],
   ['.less', 'less'],
   ['.styl', 'stylus'],
+  ['.json', 'json'],
+  ['.jsonc', 'jsonc'],
   ['.html', 'html'],
   ['.ts', 'typescript'],
   ['.dart', 'dart'],
@@ -129,6 +131,7 @@ async function collectFileSnapshot(fileName: string) {
         resolveScssVariablesAcrossFiles:
           snapshotConfig.resolveScssVariablesAcrossFiles,
         scssLoadPaths: snapshotConfig.scssLoadPaths,
+        designTokenJsonMode: snapshotConfig.designTokenJsonMode,
       }),
     ),
   )

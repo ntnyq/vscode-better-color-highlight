@@ -61,13 +61,27 @@ Highlight and preview colors in multiple formats across code, comments, and stri
 - [x] Extra expressions：bare RGB / HSL triplets、`--color-rgb: 255 0 0` shorthands
 - [x] Flutter/Dart：`Color(0xffRRGGBB)`、`Color.fromARGB(a, r, g, b)`
 - [x] Hyprland：`rgba(rrggbb)`、`rgba(rrggbbaa)`
-- [ ] Design tokens：Tailwind、tokens（JSON/YAML）
+- [x] JSON / JSONC Design Tokens：`value` / `$value` color strings
+- [ ] Tailwind / YAML Design Tokens
 
 Cross-file CSS custom property resolution is conservative. It only runs when
 `color-highlight.resolveCssVariablesAcrossFiles` is enabled, reads sources from
 `color-highlight.cssVariablePaths`, and trusts declarations only from selectors
 listed in `color-highlight.cssVariableTrustedSelectors`. Ambiguous runtime
 cascade cases are skipped instead of guessed.
+
+JSON and JSONC design token matching is conservative by default. It highlights
+only `value` and `$value` string fields. To highlight any JSON string whose
+complete value is a supported color, configure:
+
+```jsonc
+{
+  "color-highlight.designTokenJsonMode": "strings",
+}
+```
+
+Use `"all"` to allow both token fields and broad string matching, or `"off"` to
+disable JSON token matching.
 
 ## Credits
 
