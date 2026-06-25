@@ -43,6 +43,25 @@ function isLanguageMatch(
   return matched
 }
 
+function isJsonLanguage(languageId: string): boolean {
+  return languageId === 'json' || languageId === 'jsonc'
+}
+
+function getDirectColorStrategies(
+  config: NestedScopedConfigs,
+  isJsonLang: boolean,
+): ColorDetector[] {
+  if (isJsonLang) {
+    return config.designTokenJsonMode === 'off' ? [] : [findJsonDesignTokens]
+  }
+
+  return [
+    config.useARGB ? findHexARGB : findHexRGBA,
+    findColorFunctions,
+    findHwb,
+  ]
+}
+
 /**
  * Get the list of color detection strategies for a given document context.
  *
@@ -76,20 +95,8 @@ export function getStrategies(
   languageId: string,
   config: NestedScopedConfigs,
 ): ColorDetector[] {
-  const isJsonLang = languageId === 'json' || languageId === 'jsonc'
-  const strategies: ColorDetector[] = []
-
-  if (isJsonLang) {
-    if (config.designTokenJsonMode !== 'off') {
-      strategies.push(findJsonDesignTokens)
-    }
-  } else {
-    strategies.push(
-      config.useARGB ? findHexARGB : findHexRGBA,
-      findColorFunctions,
-      findHwb,
-    )
-  }
+  const isJsonLang = isJsonLanguage(languageId)
+  const strategies = getDirectColorStrategies(config, isJsonLang)
 
   // Named colors: for style languages or when explicitly enabled
   const isStyleLang = STYLE_LANGUAGES.has(languageId)
