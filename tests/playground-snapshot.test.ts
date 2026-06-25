@@ -68,6 +68,7 @@ const snapshotConfig: NestedScopedConfigs = {
   resolveCssVariablesAcrossFiles: false,
   cssVariablePaths: [],
   cssVariableTrustedSelectors: [':root', 'html', 'body', ':host'],
+  designTokenJsonMode: 'token-values',
   useARGB: false,
   matchRgbWithNoFunction: true,
   rgbWithNoFunctionLanguages: ['*'],

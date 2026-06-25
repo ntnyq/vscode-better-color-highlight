@@ -171,6 +171,17 @@
           },
           "description": "Selectors whose custom property declarations are trusted for cross-file CSS variable color resolution."
         },
+        "color-highlight.designTokenJsonMode": {
+          "type": "string",
+          "default": "token-values",
+          "enum": [
+            "token-values",
+            "strings",
+            "all",
+            "off"
+          ],
+          "description": "Controls JSON and JSONC design token color matching. 'token-values' matches value and $value string fields, 'strings' matches any color string value, 'all' enables both modes, and 'off' disables JSON token matching."
+        },
         "color-highlight.useARGB": {
           "type": "boolean",
           "default": false,

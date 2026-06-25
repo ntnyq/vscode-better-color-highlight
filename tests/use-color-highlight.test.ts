@@ -175,6 +175,7 @@ function setupTest() {
     resolveScssVariablesAcrossFiles: false,
     scssLoadPaths: [],
     useARGB: false,
+    designTokenJsonMode: 'token-values',
     matchRgbWithNoFunction: false,
     rgbWithNoFunctionLanguages: ['*'],
     matchHslWithNoFunction: false,
@@ -342,6 +343,27 @@ describe('useColorHighlight', () => {
         resolveCssVariablesAcrossFiles: true,
         cssVariablePaths: ['src/styles/tokens.css'],
         cssVariableTrustedSelectors: [':root', '[data-theme=light]'],
+      }),
+    )
+  })
+
+  it('passes JSON design token mode to strategies', async () => {
+    setupTest()
+    asyncStrategy.mockResolvedValue([])
+    documentTextRef = createRef('{ "brand": { "value": "#0ea5e9" } }')
+    configSnapshot.designTokenJsonMode = 'all'
+    visibleEditorsRef = createRef<unknown[]>([createEditor()])
+
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+    useColorHighlight()
+
+    await flushPromises()
+
+    expect(asyncStrategy).toHaveBeenCalledWith(
+      '{ "brand": { "value": "#0ea5e9" } }',
+      expect.objectContaining({
+        designTokenJsonMode: 'all',
       }),
     )
   })
