@@ -5,6 +5,7 @@ import {
   findHexARGB,
   findColorFunctions,
   findHwb,
+  findJsonDesignTokens,
   findNamedColors,
   findRgbNoFunction,
   findHslNoFunction,
@@ -49,16 +50,19 @@ function isLanguageMatch(
  * - Document language ID
  * - User configuration (matchWords, useARGB, etc.)
  *
- * Always-active strategies:
+ * Default non-JSON strategies:
  * - hex detection (RGBA or ARGB mode based on config)
  * - color functions (rgb, hsl, lch, oklch, lab, oklab)
  * - hwb
  *
+ * JSON/JSONC strategies:
+ * - JSON design-token detection when designTokenJsonMode is not off
+ *
  * Conditional strategies:
  * - named colors: controlled by namedColorMatchMode for style languages,
  *   or when matchWords is true
- * - rgb-no-fn: when matchRgbWithNoFunction is true AND language matches
- * - hsl-no-fn: when matchHslWithNoFunction is true AND language matches
+ * - rgb-no-fn: for non-JSON documents when enabled AND language matches
+ * - hsl-no-fn: for non-JSON documents when enabled AND language matches
  * - css-vars: only for css/scss/less languages
  * - less-vars: only for less
  * - scss-vars: only for scss
@@ -72,13 +76,20 @@ export function getStrategies(
   languageId: string,
   config: NestedScopedConfigs,
 ): ColorDetector[] {
-  const strategies: ColorDetector[] = [
-    // Always-active: hex (mode depends on config)
-    config.useARGB ? findHexARGB : findHexRGBA,
-    // Always-active: color functions + hwb
-    findColorFunctions,
-    findHwb,
-  ]
+  const isJsonLang = languageId === 'json' || languageId === 'jsonc'
+  const strategies: ColorDetector[] = []
+
+  if (isJsonLang) {
+    if (config.designTokenJsonMode !== 'off') {
+      strategies.push(findJsonDesignTokens)
+    }
+  } else {
+    strategies.push(
+      config.useARGB ? findHexARGB : findHexRGBA,
+      findColorFunctions,
+      findHwb,
+    )
+  }
 
   // Named colors: for style languages or when explicitly enabled
   const isStyleLang = STYLE_LANGUAGES.has(languageId)
@@ -91,6 +102,7 @@ export function getStrategies(
 
   // Bare RGB triplets
   if (
+    !isJsonLang &&
     config.matchRgbWithNoFunction &&
     isLanguageMatch(languageId, config.rgbWithNoFunctionLanguages)
   ) {
@@ -99,6 +111,7 @@ export function getStrategies(
 
   // Bare HSL triplets
   if (
+    !isJsonLang &&
     config.matchHslWithNoFunction &&
     isLanguageMatch(languageId, config.hslWithNoFunctionLanguages)
   ) {
