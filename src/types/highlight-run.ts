@@ -79,6 +79,11 @@ export interface StrategyRunOptions {
   readonly designTokenJsonMode: HighlightRunConfig['designTokenJsonMode']
 
   /**
+   * Whether 8-digit hex colors should be interpreted as ARGB.
+   */
+  readonly useARGB: HighlightRunConfig['useARGB']
+
+  /**
    * Whether to emit debug log messages.
    */
   readonly debug: boolean

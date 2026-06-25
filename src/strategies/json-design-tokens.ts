@@ -1,6 +1,6 @@
 import type { ColorMatch, StrategyContext } from '../types'
 import { findColorFunctions } from './color-functions'
-import { findHexRGBA } from './hex'
+import { findHexARGB, findHexRGBA } from './hex'
 import { findHwb } from './hwb'
 import { findNamedColors } from './named-colors'
 
@@ -181,9 +181,10 @@ function findWholeStringColor(
     languageId: context?.languageId ?? 'json',
     namedColorMatchMode: 'always',
   }
+  const findHex = context?.useARGB ? findHexARGB : findHexRGBA
 
   return [
-    ...findHexRGBA(value, context),
+    ...findHex(value, context),
     ...findColorFunctions(value),
     ...findHwb(value),
     ...findNamedColors(value, namedColorContext),

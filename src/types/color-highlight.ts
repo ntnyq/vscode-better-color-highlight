@@ -80,6 +80,11 @@ export interface StrategyContext {
    * How JSON and JSONC design token colors should be matched.
    */
   designTokenJsonMode?: DesignTokenJsonMode
+
+  /**
+   * Whether 8-digit hex colors should be interpreted as ARGB.
+   */
+  useARGB?: boolean
 }
 
 /**

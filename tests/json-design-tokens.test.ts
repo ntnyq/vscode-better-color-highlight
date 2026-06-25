@@ -16,6 +16,23 @@ describe(findJsonDesignTokens, () => {
     expect(text.slice(result[0].start, result[0].end)).toBe('#0ea5e9')
   })
 
+  it('honors ARGB mode for 8-digit hex token values', () => {
+    const text = '{ "value": "#80ff0000" }'
+    const result = findJsonDesignTokens(text, {
+      languageId: 'json',
+      designTokenJsonMode: 'token-values',
+      useARGB: true,
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.indexOf('#80ff0000'),
+        end: text.indexOf('#80ff0000') + 9,
+        color: 'rgba(255, 0, 0, 0.502)',
+      },
+    ])
+  })
+
   it('highlights a $value CSS Color 4 function in token-values mode', () => {
     const text = '{ "$value": "color(display-p3 1 0 0)" }'
     const color = 'color(display-p3 1 0 0)'

@@ -126,6 +126,7 @@ async function runStrategies(
     cssVariablePaths,
     cssVariableTrustedSelectors,
     designTokenJsonMode,
+    useARGB,
     debug,
   } = options
 
@@ -154,6 +155,7 @@ async function runStrategies(
         cssVariablePaths,
         cssVariableTrustedSelectors,
         designTokenJsonMode,
+        useARGB,
       })
       if (debug && matches.length > 0) {
         logger.info(
@@ -339,6 +341,7 @@ function setupEditorTracking(
           cssVariablePaths: config.cssVariablePaths,
           cssVariableTrustedSelectors: config.cssVariableTrustedSelectors,
           designTokenJsonMode: config.designTokenJsonMode,
+          useARGB: config.useARGB,
           debug: config.debug,
         })
 
