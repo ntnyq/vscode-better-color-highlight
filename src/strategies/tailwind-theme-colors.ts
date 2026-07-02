@@ -1,6 +1,9 @@
 import type { ColorMatch } from '../types'
 import { hexToRgb, rgbString } from '../utils/color'
 
+/**
+ * Default Tailwind shade keys supported by the static theme palette.
+ */
 const TAILWIND_COLOR_SHADES = [
   '50',
   '100',
@@ -15,10 +18,22 @@ const TAILWIND_COLOR_SHADES = [
   '950',
 ] as const
 
+/**
+ * Supported Tailwind default color shade key.
+ */
 type TailwindColorShade = (typeof TAILWIND_COLOR_SHADES)[number]
 
+/**
+ * Hex colors for one Tailwind color scale keyed by shade.
+ */
 type TailwindColorScale = Record<TailwindColorShade, string>
 
+/**
+ * Tailwind utility prefixes whose suffix is interpreted as a color reference.
+ *
+ * Keep longer prefixes before shorter ones so border-x and ring-offset are not
+ * resolved as border or ring utilities.
+ */
 const COLOR_UTILITY_PREFIXES = [
   'ring-offset',
   'decoration',
@@ -47,20 +62,42 @@ const COLOR_UTILITY_PREFIXES = [
   'to',
 ] as const
 
+/**
+ * Alternation pattern used by the utility-anchor regex.
+ */
 const COLOR_UTILITY_PREFIX_PATTERN = COLOR_UTILITY_PREFIXES.join('|')
 
-const CANDIDATE_REGEX = new RegExp(
-  String.raw`(?<![\w-])(?:!?(?:[\w-]+|\[[^\]\s"'<>]+\]):)*!?` +
-    String.raw`(?:${COLOR_UTILITY_PREFIX_PATTERN})-` +
+/**
+ * Finds the actual color utility segment without trying to parse variant
+ * prefixes in the regex itself.
+ */
+const UTILITY_ANCHOR_REGEX = new RegExp(
+  String.raw`(?:${COLOR_UTILITY_PREFIX_PATTERN})-` +
     String.raw`[a-z]+(?:-[a-z]+)*(?:-[0-9]{2,3})?(?:/(?:\[[^\]\s"'<>]+\]|[.\d]+%?))?`,
   'gu',
 )
 
+/**
+ * Character matcher for token text that can be part of a utility or variant.
+ */
+const WORD_OR_HYPHEN_REGEX = /[\w-]/u
+
+/**
+ * Characters that make an arbitrary variant segment unsafe to consume.
+ */
+const INVALID_ARBITRARY_VARIANT_CHAR_REGEX = /[\]\s"'<>]/u
+
+/**
+ * Tailwind solid color utilities that do not use shade suffixes.
+ */
 const SOLID_COLORS = {
   black: '#000000',
   white: '#ffffff',
 } as const
 
+/**
+ * Static copy of Tailwind's default color palette.
+ */
 const TAILWIND_THEME_COLORS: Record<string, TailwindColorScale> = {
   slate: {
     '50': '#f8fafc',
@@ -359,21 +396,89 @@ const TAILWIND_THEME_COLORS: Record<string, TailwindColorScale> = {
 export function findTailwindThemeColors(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
 
-  for (const match of text.matchAll(CANDIDATE_REGEX)) {
-    const candidate = match[0]
-    const start = match.index ?? 0
+  for (const match of text.matchAll(UTILITY_ANCHOR_REGEX)) {
+    const utilityStart = match.index ?? 0
+    const start = findCandidateStart(text, utilityStart)
+
+    if (start === null) continue
+
+    const end = utilityStart + match[0].length
+    const candidate = text.slice(start, end)
     const color = resolveCandidateColor(candidate)
 
     if (!color) continue
 
     matches.push({
       start,
-      end: start + candidate.length,
+      end,
       color,
     })
   }
 
   return matches
+}
+
+/**
+ * Find the start of a utility candidate including optional variant prefixes.
+ *
+ * @param text - Full document text
+ * @param utilityStart - Offset where the actual utility prefix starts
+ * @returns Candidate start offset, or null when the utility is embedded in a word
+ */
+function findCandidateStart(text: string, utilityStart: number): number | null {
+  let start = utilityStart
+
+  if (text[start - 1] === '!') start--
+
+  while (text[start - 1] === ':') {
+    const segmentStart = findVariantSegmentStart(text, start - 1)
+
+    if (segmentStart === null) break
+
+    start = segmentStart
+
+    if (text[start - 1] === '!') start--
+  }
+
+  if (start > 0 && WORD_OR_HYPHEN_REGEX.test(text[start - 1])) {
+    return null
+  }
+
+  return start
+}
+
+/**
+ * Find the start of a Tailwind variant segment ending before a colon.
+ *
+ * @param text - Full document text
+ * @param separator - Offset of the trailing variant separator colon
+ * @returns Variant segment start, or null when the previous text is not a variant
+ */
+function findVariantSegmentStart(
+  text: string,
+  separator: number,
+): number | null {
+  if (separator <= 0) return null
+
+  if (text[separator - 1] === ']') {
+    const start = text.lastIndexOf('[', separator - 1)
+    if (start === -1) return null
+
+    const value = text.slice(start + 1, separator - 1)
+    if (!value || INVALID_ARBITRARY_VARIANT_CHAR_REGEX.test(value)) {
+      return null
+    }
+
+    return start
+  }
+
+  let start = separator
+
+  while (start > 0 && WORD_OR_HYPHEN_REGEX.test(text[start - 1])) {
+    start--
+  }
+
+  return start === separator ? null : start
 }
 
 /**

@@ -55,4 +55,15 @@ describe(findTailwindThemeColors, () => {
 
     expect(result).toStrictEqual([])
   })
+
+  it('does not backtrack through colon-heavy non-utility text', () => {
+    const text = `${'a:'.repeat(5000)}x`
+    const start = performance.now()
+
+    const result = findTailwindThemeColors(text)
+    const duration = performance.now() - start
+
+    expect(result).toStrictEqual([])
+    expect(duration).toBeLessThan(75)
+  })
 })

@@ -81,7 +81,7 @@
   "devDependencies": {
     "@types/node": "^26.1.0",
     "@types/vscode": "^1.125.0",
-    "@typescript/native-preview": "^7.0.0-dev.20260701.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260702.3",
     "@vscode/test-electron": "^3.0.0",
     "@vscode/vsce": "^3.9.2",
     "bumpp": "^11.1.0",
