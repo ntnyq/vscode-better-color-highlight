@@ -51,6 +51,7 @@ function createHighlightRunSignature(
       highlightConfig.resolveCssVariablesAcrossFiles,
     cssVariablePaths: highlightConfig.cssVariablePaths,
     cssVariableTrustedSelectors: highlightConfig.cssVariableTrustedSelectors,
+    designTokenJsonMode: highlightConfig.designTokenJsonMode,
     matchRgbWithNoFunction: highlightConfig.matchRgbWithNoFunction,
     rgbWithNoFunctionLanguages: highlightConfig.rgbWithNoFunctionLanguages,
     matchHslWithNoFunction: highlightConfig.matchHslWithNoFunction,
@@ -124,6 +125,8 @@ async function runStrategies(
     resolveCssVariablesAcrossFiles,
     cssVariablePaths,
     cssVariableTrustedSelectors,
+    designTokenJsonMode,
+    useARGB,
     debug,
   } = options
 
@@ -151,6 +154,8 @@ async function runStrategies(
         resolveCssVariablesAcrossFiles,
         cssVariablePaths,
         cssVariableTrustedSelectors,
+        designTokenJsonMode,
+        useARGB,
       })
       if (debug && matches.length > 0) {
         logger.info(
@@ -335,6 +340,8 @@ function setupEditorTracking(
           resolveCssVariablesAcrossFiles: config.resolveCssVariablesAcrossFiles,
           cssVariablePaths: config.cssVariablePaths,
           cssVariableTrustedSelectors: config.cssVariableTrustedSelectors,
+          designTokenJsonMode: config.designTokenJsonMode,
+          useARGB: config.useARGB,
           debug: config.debug,
         })
 

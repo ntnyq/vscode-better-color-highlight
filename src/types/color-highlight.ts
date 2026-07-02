@@ -75,12 +75,27 @@ export interface StrategyContext {
    * Selectors trusted for cross-file CSS custom property resolution.
    */
   cssVariableTrustedSelectors?: string[]
+
+  /**
+   * How JSON and JSONC design token colors should be matched.
+   */
+  designTokenJsonMode?: DesignTokenJsonMode
+
+  /**
+   * Whether 8-digit hex colors should be interpreted as ARGB.
+   */
+  useARGB?: boolean
 }
 
 /**
  * Supported named-color matching modes.
  */
 export type NamedColorMatchMode = 'context' | 'always' | 'never'
+
+/**
+ * JSON design token color matching modes.
+ */
+export type DesignTokenJsonMode = 'token-values' | 'strings' | 'all' | 'off'
 
 /**
  * Marker type for decoration styling.

@@ -45,6 +45,7 @@ export type ConfigKey =
   | "color-highlight.resolveCssVariablesAcrossFiles"
   | "color-highlight.cssVariablePaths"
   | "color-highlight.cssVariableTrustedSelectors"
+  | "color-highlight.designTokenJsonMode"
   | "color-highlight.useARGB"
   | "color-highlight.matchRgbWithNoFunction"
   | "color-highlight.rgbWithNoFunctionLanguages"
@@ -64,6 +65,7 @@ export interface ConfigKeyTypeMap {
   "color-highlight.resolveCssVariablesAcrossFiles": boolean,
   "color-highlight.cssVariablePaths": string[],
   "color-highlight.cssVariableTrustedSelectors": string[],
+  "color-highlight.designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
   "color-highlight.useARGB": boolean,
   "color-highlight.matchRgbWithNoFunction": boolean,
   "color-highlight.rgbWithNoFunctionLanguages": string[],
@@ -84,6 +86,7 @@ export interface ConfigShorthandMap {
   resolveCssVariablesAcrossFiles: "color-highlight.resolveCssVariablesAcrossFiles",
   cssVariablePaths: "color-highlight.cssVariablePaths",
   cssVariableTrustedSelectors: "color-highlight.cssVariableTrustedSelectors",
+  designTokenJsonMode: "color-highlight.designTokenJsonMode",
   useARGB: "color-highlight.useARGB",
   matchRgbWithNoFunction: "color-highlight.matchRgbWithNoFunction",
   rgbWithNoFunctionLanguages: "color-highlight.rgbWithNoFunctionLanguages",
@@ -104,6 +107,7 @@ export interface ConfigShorthandTypeMap {
   resolveCssVariablesAcrossFiles: boolean,
   cssVariablePaths: string[],
   cssVariableTrustedSelectors: string[],
+  designTokenJsonMode: ("token-values" | "strings" | "all" | "off"),
   useARGB: boolean,
   matchRgbWithNoFunction: boolean,
   rgbWithNoFunctionLanguages: string[],
@@ -215,6 +219,16 @@ export const configs = {
     default: [":root","html","body",":host"],
   } as ConfigItem<"color-highlight.cssVariableTrustedSelectors">,
   /**
+   * Controls JSON and JSONC design token color matching. 'token-values' matches value and $value string fields, 'strings' matches any color string value, 'all' enables both modes, and 'off' disables JSON token matching.
+   * @key `color-highlight.designTokenJsonMode`
+   * @default `"token-values"`
+   * @type `string`
+   */
+  designTokenJsonMode: {
+    key: "color-highlight.designTokenJsonMode",
+    default: "token-values",
+  } as ConfigItem<"color-highlight.designTokenJsonMode">,
+  /**
    * Interpret 8-digit hex colors as ARGB instead of RGBA.
    * @key `color-highlight.useARGB`
    * @default `false`
@@ -306,6 +320,7 @@ export interface ScopedConfigKeyTypeMap {
   "resolveCssVariablesAcrossFiles": boolean,
   "cssVariablePaths": string[],
   "cssVariableTrustedSelectors": string[],
+  "designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
   "useARGB": boolean,
   "matchRgbWithNoFunction": boolean,
   "rgbWithNoFunctionLanguages": string[],
@@ -328,6 +343,7 @@ export const scopedConfigs = {
     "resolveCssVariablesAcrossFiles": false,
     "cssVariablePaths": [],
     "cssVariableTrustedSelectors": [":root","html","body",":host"],
+    "designTokenJsonMode": "token-values",
     "useARGB": false,
     "matchRgbWithNoFunction": false,
     "rgbWithNoFunctionLanguages": ["*"],
@@ -350,6 +366,7 @@ export interface NestedConfigs {
     "resolveCssVariablesAcrossFiles": boolean,
     "cssVariablePaths": string[],
     "cssVariableTrustedSelectors": string[],
+    "designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
     "useARGB": boolean,
     "matchRgbWithNoFunction": boolean,
     "rgbWithNoFunctionLanguages": string[],
@@ -371,6 +388,7 @@ export interface NestedScopedConfigs {
   "resolveCssVariablesAcrossFiles": boolean,
   "cssVariablePaths": string[],
   "cssVariableTrustedSelectors": string[],
+  "designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
   "useARGB": boolean,
   "matchRgbWithNoFunction": boolean,
   "rgbWithNoFunctionLanguages": string[],

@@ -1,0 +1,17 @@
+{
+  "$description": "JSONC design token playground fixture",
+  "color": {
+    "brand": {
+      "$type": "color",
+      "value": "#0ea5e9",
+    },
+    "accent": {
+      "$value": "oklch(0.7 0.2 200)",
+    },
+    "commented": {
+      // "value": "#111111"
+      "value": "rgb(15 23 42 / 0.8)",
+    },
+  },
+  "plainStringColor": "#f97316",
+}

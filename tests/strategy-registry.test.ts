@@ -6,8 +6,11 @@ import {
 import type { NestedScopedConfigs } from '../src/meta'
 import { findColorFunctions } from '../src/strategies/color-functions'
 import { findHexRGBA, findHexARGB } from '../src/strategies/hex'
+import { findHslNoFunction } from '../src/strategies/hsl-no-fn'
 import { findHwb } from '../src/strategies/hwb'
+import { findJsonDesignTokens } from '../src/strategies/json-design-tokens'
 import { findNamedColors } from '../src/strategies/named-colors'
+import { findRgbNoFunction } from '../src/strategies/rgb-no-fn'
 
 const defaultConfig: NestedScopedConfigs = {
   enable: true,
@@ -19,6 +22,7 @@ const defaultConfig: NestedScopedConfigs = {
   resolveCssVariablesAcrossFiles: false,
   cssVariablePaths: [],
   cssVariableTrustedSelectors: [':root', 'html', 'body', ':host'],
+  designTokenJsonMode: 'token-values',
   useARGB: false,
   matchRgbWithNoFunction: false,
   rgbWithNoFunctionLanguages: ['*'],
@@ -65,6 +69,58 @@ describe(getStrategies, () => {
   it('excludes named colors for non-CSS languages when matchWords is false', () => {
     const strategies = getStrategies('typescript', defaultConfig)
     expect(strategies).not.toContain(findNamedColors)
+  })
+
+  it('uses JSON design token strategy for json documents', () => {
+    const strategies = getStrategies('json', defaultConfig)
+
+    expect(strategies).toContain(findJsonDesignTokens)
+    expect(strategies).not.toContain(findHexRGBA)
+    expect(strategies).not.toContain(findColorFunctions)
+    expect(strategies).not.toContain(findHwb)
+  })
+
+  it('uses JSON design token strategy for jsonc documents', () => {
+    const strategies = getStrategies('jsonc', defaultConfig)
+
+    expect(strategies).toContain(findJsonDesignTokens)
+    expect(strategies).not.toContain(findHexRGBA)
+    expect(strategies).not.toContain(findColorFunctions)
+    expect(strategies).not.toContain(findHwb)
+  })
+
+  it('skips JSON design token strategy when disabled', () => {
+    const strategies = getStrategies('json', {
+      ...defaultConfig,
+      designTokenJsonMode: 'off',
+    })
+
+    expect(strategies).not.toContain(findJsonDesignTokens)
+    expect(strategies).not.toContain(findHexRGBA)
+    expect(strategies).not.toContain(findColorFunctions)
+    expect(strategies).not.toContain(findHwb)
+  })
+
+  it('excludes bare RGB and HSL strategies for json documents', () => {
+    const strategies = getStrategies('json', {
+      ...defaultConfig,
+      matchRgbWithNoFunction: true,
+      matchHslWithNoFunction: true,
+    })
+
+    expect(strategies).not.toContain(findRgbNoFunction)
+    expect(strategies).not.toContain(findHslNoFunction)
+  })
+
+  it('excludes bare RGB and HSL strategies for jsonc documents', () => {
+    const strategies = getStrategies('jsonc', {
+      ...defaultConfig,
+      matchRgbWithNoFunction: true,
+      matchHslWithNoFunction: true,
+    })
+
+    expect(strategies).not.toContain(findRgbNoFunction)
+    expect(strategies).not.toContain(findHslNoFunction)
   })
 })
 

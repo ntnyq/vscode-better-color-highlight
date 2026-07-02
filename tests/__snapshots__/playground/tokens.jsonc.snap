@@ -1,0 +1,61 @@
+{
+  "file": "tokens.jsonc",
+  "languageId": "jsonc",
+  "strategyNames": [
+    "findJsonDesignTokens",
+    "findNamedColors"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 6,
+      "column": 17,
+      "text": "#0ea5e9",
+      "range": [
+        129,
+        136
+      ],
+      "color": "rgb(14, 165, 233)",
+      "render": {
+        "backgroundColor": "rgb(14, 165, 233)",
+        "color": "#000000",
+        "border": "3px solid rgb(14, 165, 233)",
+        "overviewRulerColor": "rgb(14, 165, 233)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 9,
+      "column": 18,
+      "text": "oklch(0.7 0.2 200)",
+      "range": [
+        179,
+        197
+      ],
+      "color": "rgb(0, 192, 207)",
+      "render": {
+        "backgroundColor": "rgb(0, 192, 207)",
+        "color": "#000000",
+        "border": "3px solid rgb(0, 192, 207)",
+        "overviewRulerColor": "rgb(0, 192, 207)"
+      }
+    },
+    {
+      "index": 2,
+      "line": 13,
+      "column": 17,
+      "text": "rgb(15 23 42 / 0.8)",
+      "range": [
+        270,
+        289
+      ],
+      "color": "rgba(15, 23, 42, 0.8)",
+      "render": {
+        "backgroundColor": "rgb(15, 23, 42)",
+        "color": "#FFFFFF",
+        "border": "3px solid rgb(15, 23, 42)",
+        "overviewRulerColor": "rgb(15, 23, 42)"
+      }
+    }
+  ]
+}

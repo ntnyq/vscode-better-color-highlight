@@ -15,6 +15,7 @@ export type HighlightRunConfig = Pick<
   | 'resolveCssVariablesAcrossFiles'
   | 'cssVariablePaths'
   | 'cssVariableTrustedSelectors'
+  | 'designTokenJsonMode'
   | 'matchRgbWithNoFunction'
   | 'rgbWithNoFunctionLanguages'
   | 'matchHslWithNoFunction'
@@ -71,6 +72,16 @@ export interface StrategyRunOptions {
    * Selectors trusted for cross-file CSS custom property resolution.
    */
   readonly cssVariableTrustedSelectors: HighlightRunConfig['cssVariableTrustedSelectors']
+
+  /**
+   * How JSON and JSONC design token colors should be matched.
+   */
+  readonly designTokenJsonMode: HighlightRunConfig['designTokenJsonMode']
+
+  /**
+   * Whether 8-digit hex colors should be interpreted as ARGB.
+   */
+  readonly useARGB: HighlightRunConfig['useARGB']
 
   /**
    * Whether to emit debug log messages.
