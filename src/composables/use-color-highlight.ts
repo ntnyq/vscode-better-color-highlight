@@ -434,6 +434,8 @@ function applyDecorations(
     )
     editor.setDecorations(decorationType, ranges)
   }
+
+  cache.disposeStale(Object.keys(groups), markerType, markRuler)
 }
 
 /**

@@ -3,6 +3,22 @@ import type { MarkerType } from '../types'
 import { buildDecorationOptions } from './marker-types'
 
 /**
+ * Build the stable cache key for one decoration type.
+ *
+ * @param color - The CSS rgb() color string
+ * @param markerType - The decoration style
+ * @param markRuler - Whether to show the color in the overview ruler
+ * @returns Decoration cache key
+ */
+function createDecorationTypeKey(
+  color: string,
+  markerType: MarkerType,
+  markRuler: boolean,
+): string {
+  return `${markerType}:${color}:${markRuler}`
+}
+
+/**
  * Manages a cache of TextEditorDecorationType instances keyed by color + marker type.
  * Each unique (color, markerType, markRuler) triple gets its own decoration type.
  *
@@ -27,7 +43,7 @@ export class DecorationTypeCache {
     markerType: MarkerType,
     markRuler: boolean,
   ): TextEditorDecorationType {
-    const key = `${markerType}:${color}:${markRuler}`
+    const key = createDecorationTypeKey(color, markerType, markRuler)
     let type = this.cache.get(key)
     if (!type) {
       const options = buildDecorationOptions(markerType, color, markRuler)
@@ -35,6 +51,34 @@ export class DecorationTypeCache {
       this.cache.set(key, type)
     }
     return type
+  }
+
+  /**
+   * Dispose cached decoration types that are absent from the active set.
+   *
+   * @param colors - Colors used by the latest decoration run
+   * @param markerType - The active decoration style
+   * @param markRuler - Whether the active run marks the overview ruler
+   */
+  public disposeStale(
+    colors: readonly string[],
+    markerType: MarkerType,
+    markRuler: boolean,
+  ) {
+    const activeKeys = new Set(
+      colors.map(color =>
+        createDecorationTypeKey(color, markerType, markRuler),
+      ),
+    )
+
+    for (const [key, type] of this.cache) {
+      if (activeKeys.has(key)) {
+        continue
+      }
+
+      type.dispose()
+      this.cache.delete(key)
+    }
   }
 
   /**

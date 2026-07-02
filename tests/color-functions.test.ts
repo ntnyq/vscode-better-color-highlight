@@ -8,6 +8,30 @@ describe(findColorFunctions, () => {
     expect(result[0].color).toBe('rgb(255, 0, 0)')
   })
 
+  it('preserves low numeric rgb() channels as 0-255 values', () => {
+    const result = findColorFunctions('color: rgb(1, 1, 1);')
+
+    expect(result).toStrictEqual([
+      {
+        start: 7,
+        end: 19,
+        color: 'rgb(1, 1, 1)',
+      },
+    ])
+  })
+
+  it('scales percentage rgb() channels to 0-255 values', () => {
+    const result = findColorFunctions('color: rgb(1%, 1%, 1%);')
+
+    expect(result).toStrictEqual([
+      {
+        start: 7,
+        end: 22,
+        color: 'rgb(3, 3, 3)',
+      },
+    ])
+  })
+
   it('finds rgba() function', () => {
     const result = findColorFunctions('color: rgba(255, 0, 0, 0.5);')
     expect(result).toHaveLength(1)
@@ -72,6 +96,18 @@ describe(findColorFunctions, () => {
   it('finds CSS variable shorthand', () => {
     const result = findColorFunctions('--color-rgb: 255 0 0;')
     expect(result).toHaveLength(1)
+  })
+
+  it('preserves low numeric RGB shorthand channels as 0-255 values', () => {
+    const result = findColorFunctions('--color-rgb: 1 1 1;')
+
+    expect(result).toStrictEqual([
+      {
+        start: 0,
+        end: 19,
+        color: 'rgb(1, 1, 1)',
+      },
+    ])
   })
 
   it('finds CSS variable shorthand with signed lab channels', () => {

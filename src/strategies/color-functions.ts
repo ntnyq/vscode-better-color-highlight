@@ -74,6 +74,22 @@ function parseChannelValue(
 }
 
 /**
+ * Parse a CSS RGB channel.
+ *
+ * @param value - Raw RGB channel text
+ * @returns Channel value normalized to the 0-255 RGB range
+ */
+function parseRgbChannelValue(value: string): number {
+  const trimmed = value.trim()
+
+  if (trimmed.endsWith('%')) {
+    return (Number(trimmed.slice(0, -1)) / 100) * 255
+  }
+
+  return Number(trimmed)
+}
+
+/**
  * Parse angle value in degrees from various CSS angle units.
  *
  * @param value - The angle string (e.g. "90deg", "100grad", "1.57rad", "0.25turn")
@@ -343,15 +359,11 @@ function convertColorFunction(
 ): [number, number, number] | [null, null, null] {
   switch (fn.replace(/a$/u, '')) {
     case 'rgb': {
-      const r = parseChannelValue(parts[0], 'rgb')
-      const g = parseChannelValue(parts[1], 'rgb')
-      const b = parseChannelValue(parts[2], 'rgb')
-      // Percentage in rgb means 0-255 mapped from 0%-100%
-      return [
-        r <= 1 ? Math.round(r * 255) : Math.round(r),
-        g <= 1 ? Math.round(g * 255) : Math.round(g),
-        b <= 1 ? Math.round(b * 255) : Math.round(b),
-      ]
+      const r = parseRgbChannelValue(parts[0])
+      const g = parseRgbChannelValue(parts[1])
+      const b = parseRgbChannelValue(parts[2])
+
+      return [Math.round(r), Math.round(g), Math.round(b)]
     }
     case 'hsl': {
       const h = parseChannelValue(parts[0], 'angle')

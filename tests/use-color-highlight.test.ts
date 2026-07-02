@@ -265,6 +265,37 @@ describe('useColorHighlight', () => {
     vi.useRealTimers()
   })
 
+  it('disposes decoration types for colors absent from the latest run', async () => {
+    setupTest()
+    vi.useFakeTimers()
+    const redDecoration = { dispose: vi.fn<DisposeFn>() }
+    const blueDecoration = { dispose: vi.fn<DisposeFn>() }
+    createTextEditorDecorationType
+      .mockReturnValueOnce(redDecoration)
+      .mockReturnValueOnce(blueDecoration)
+    asyncStrategy
+      .mockResolvedValueOnce([{ start: 14, end: 21, color: 'rgb(255, 0, 0)' }])
+      .mockResolvedValueOnce([{ start: 14, end: 21, color: 'rgb(0, 0, 255)' }])
+
+    const editor = createEditor()
+    documentTextRef = createRef('.box { color: #ff0000; }')
+    visibleEditorsRef = createRef<unknown[]>([editor])
+
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+
+    useColorHighlight()
+    await flushPromises()
+
+    documentTextRef.value = '.box { color: #0000ff; }'
+    await vi.advanceTimersByTimeAsync(100)
+    await flushPromises()
+
+    expect(redDecoration.dispose).toHaveBeenCalledTimes(1)
+    expect(blueDecoration.dispose).not.toHaveBeenCalled()
+    vi.useRealTimers()
+  })
+
   it('does not serialize full document text into run signatures', async () => {
     setupTest()
     asyncStrategy.mockResolvedValue([])
