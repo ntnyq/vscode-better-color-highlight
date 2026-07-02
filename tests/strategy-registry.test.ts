@@ -11,6 +11,7 @@ import { findHwb } from '../src/strategies/hwb'
 import { findJsonDesignTokens } from '../src/strategies/json-design-tokens'
 import { findNamedColors } from '../src/strategies/named-colors'
 import { findRgbNoFunction } from '../src/strategies/rgb-no-fn'
+import { findTailwindThemeColors } from '../src/strategies/tailwind-theme-colors'
 
 const defaultConfig: NestedScopedConfigs = {
   enable: true,
@@ -39,6 +40,12 @@ describe(getStrategies, () => {
     expect(strategies).toContain(findHexRGBA)
     expect(strategies).toContain(findColorFunctions)
     expect(strategies).toContain(findHwb)
+  })
+
+  it('includes Tailwind theme colors for non-JSON languages', () => {
+    const strategies = getStrategies('typescriptreact', defaultConfig)
+
+    expect(strategies).toContain(findTailwindThemeColors)
   })
 
   it('uses ARGB mode when configured', () => {
@@ -78,6 +85,7 @@ describe(getStrategies, () => {
     expect(strategies).not.toContain(findHexRGBA)
     expect(strategies).not.toContain(findColorFunctions)
     expect(strategies).not.toContain(findHwb)
+    expect(strategies).not.toContain(findTailwindThemeColors)
   })
 
   it('uses JSON design token strategy for jsonc documents', () => {

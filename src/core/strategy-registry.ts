@@ -14,6 +14,7 @@ import {
   findLessVars,
   findScssVars,
   findStylusVars,
+  findTailwindThemeColors,
 } from '../strategies'
 import type { ColorDetector } from '../types'
 
@@ -43,10 +44,23 @@ function isLanguageMatch(
   return matched
 }
 
+/**
+ * Check whether a language ID should use JSON-specific detection.
+ *
+ * @param languageId - The document language ID to check
+ * @returns Whether the language is JSON or JSONC
+ */
 function isJsonLanguage(languageId: string): boolean {
   return languageId === 'json' || languageId === 'jsonc'
 }
 
+/**
+ * Get direct literal color strategies for a language mode.
+ *
+ * @param config - Current nested extension configuration
+ * @param isJsonLang - Whether the current document is JSON-like
+ * @returns Color detectors that scan literal colors directly
+ */
 function getDirectColorStrategies(
   config: NestedScopedConfigs,
   isJsonLang: boolean,
@@ -59,6 +73,7 @@ function getDirectColorStrategies(
     config.useARGB ? findHexARGB : findHexRGBA,
     findColorFunctions,
     findHwb,
+    findTailwindThemeColors,
   ]
 }
 

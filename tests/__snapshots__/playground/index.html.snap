@@ -5,6 +5,7 @@
     "findHexRGBA",
     "findColorFunctions",
     "findHwb",
+    "findTailwindThemeColors",
     "findNamedColors",
     "findRgbNoFunction",
     "findHslNoFunction"
@@ -858,6 +859,74 @@
         "color": "#FFFFFF",
         "border": "3px solid rgb(0, 0, 255)",
         "overviewRulerColor": "rgb(0, 0, 255)"
+      }
+    },
+    {
+      "index": 50,
+      "line": 128,
+      "column": 14,
+      "text": "bg-red-500",
+      "range": [
+        3299,
+        3309
+      ],
+      "color": "rgb(239, 68, 68)",
+      "render": {
+        "backgroundColor": "rgb(239, 68, 68)",
+        "color": "#000000",
+        "border": "3px solid rgb(239, 68, 68)",
+        "overviewRulerColor": "rgb(239, 68, 68)"
+      }
+    },
+    {
+      "index": 51,
+      "line": 128,
+      "column": 25,
+      "text": "text-sky-300",
+      "range": [
+        3310,
+        3322
+      ],
+      "color": "rgb(125, 211, 252)",
+      "render": {
+        "backgroundColor": "rgb(125, 211, 252)",
+        "color": "#000000",
+        "border": "3px solid rgb(125, 211, 252)",
+        "overviewRulerColor": "rgb(125, 211, 252)"
+      }
+    },
+    {
+      "index": 52,
+      "line": 128,
+      "column": 38,
+      "text": "hover:border-white/75",
+      "range": [
+        3323,
+        3344
+      ],
+      "color": "rgba(255, 255, 255, 0.75)",
+      "render": {
+        "backgroundColor": "rgb(255, 255, 255)",
+        "color": "#000000",
+        "border": "3px solid rgb(255, 255, 255)",
+        "overviewRulerColor": "rgb(255, 255, 255)"
+      }
+    },
+    {
+      "index": 53,
+      "line": 128,
+      "column": 60,
+      "text": "focus:ring-emerald-600/[.31]",
+      "range": [
+        3345,
+        3373
+      ],
+      "color": "rgba(5, 150, 105, 0.31)",
+      "render": {
+        "backgroundColor": "rgb(5, 150, 105)",
+        "color": "#000000",
+        "border": "3px solid rgb(5, 150, 105)",
+        "overviewRulerColor": "rgb(5, 150, 105)"
       }
     }
   ]

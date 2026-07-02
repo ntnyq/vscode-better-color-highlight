@@ -5,6 +5,7 @@
     "findHexRGBA",
     "findColorFunctions",
     "findHwb",
+    "findTailwindThemeColors",
     "findNamedColors",
     "findRgbNoFunction",
     "findHslNoFunction"
