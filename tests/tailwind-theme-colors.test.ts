@@ -30,6 +30,14 @@ describe(findTailwindThemeColors, () => {
     ])
   })
 
+  it('treats bare opacity modifiers as percentages', () => {
+    const result = findTailwindThemeColors('class="bg-red-500/1"')
+
+    expect(result).toStrictEqual([
+      { start: 7, end: 19, color: 'rgba(239, 68, 68, 0.01)' },
+    ])
+  })
+
   it('finds gradient and shadow color utilities', () => {
     const result = findTailwindThemeColors(
       '@apply from-purple-400 via-fuchsia-500 shadow-slate-950;',

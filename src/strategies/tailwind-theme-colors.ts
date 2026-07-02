@@ -1,22 +1,23 @@
 import type { ColorMatch } from '../types'
 import { hexToRgb, rgbString } from '../utils/color'
 
-type TailwindColorShade =
-  | '50'
-  | '100'
-  | '200'
-  | '300'
-  | '400'
-  | '500'
-  | '600'
-  | '700'
-  | '800'
-  | '900'
-  | '950'
+const TAILWIND_COLOR_SHADES = [
+  '50',
+  '100',
+  '200',
+  '300',
+  '400',
+  '500',
+  '600',
+  '700',
+  '800',
+  '900',
+  '950',
+] as const
+
+type TailwindColorShade = (typeof TAILWIND_COLOR_SHADES)[number]
 
 type TailwindColorScale = Record<TailwindColorShade, string>
-
-const CANDIDATE_REGEX = /[!:[\]()./%#\w-]+/gu
 
 const COLOR_UTILITY_PREFIXES = [
   'ring-offset',
@@ -45,6 +46,15 @@ const COLOR_UTILITY_PREFIXES = [
   'bg',
   'to',
 ] as const
+
+const COLOR_UTILITY_PREFIX_PATTERN = COLOR_UTILITY_PREFIXES.join('|')
+
+const CANDIDATE_REGEX = new RegExp(
+  String.raw`(?<![\w-])(?:!?(?:[\w-]+|\[[^\]\s"'<>]+\]):)*!?` +
+    String.raw`(?:${COLOR_UTILITY_PREFIX_PATTERN})-` +
+    String.raw`[a-z]+(?:-[a-z]+)*(?:-[0-9]{2,3})?(?:/(?:\[[^\]\s"'<>]+\]|[.\d]+%?))?`,
+  'gu',
+)
 
 const SOLID_COLORS = {
   black: '#000000',
@@ -456,15 +466,25 @@ function splitOpacityModifier(value: string): {
  * @returns Alpha value from 0 to 1, or undefined when invalid
  */
 function parseOpacityModifier(value: string): number | undefined {
-  const normalized =
-    value.startsWith('[') && value.endsWith(']') ? value.slice(1, -1) : value
-  const numericValue = normalized.endsWith('%')
-    ? Number(normalized.slice(0, -1)) / 100
-    : Number(normalized)
+  const isArbitraryValue = value.startsWith('[') && value.endsWith(']')
+  const normalized = isArbitraryValue ? value.slice(1, -1) : value
+
+  if (normalized.endsWith('%')) {
+    const numericValue = Number(normalized.slice(0, -1))
+    if (!Number.isFinite(numericValue)) return undefined
+
+    return clampAlpha(numericValue / 100)
+  }
+
+  const numericValue = Number(normalized)
 
   if (!Number.isFinite(numericValue)) return undefined
 
-  return clampAlpha(numericValue > 1 ? numericValue / 100 : numericValue)
+  if (isArbitraryValue || normalized.includes('.')) {
+    return clampAlpha(numericValue)
+  }
+
+  return clampAlpha(numericValue / 100)
 }
 
 /**
@@ -505,19 +525,7 @@ function isSolidColor(value: string): value is keyof typeof SOLID_COLORS {
  * @returns Whether the value is a default Tailwind shade key
  */
 function isTailwindColorShade(value: string): value is TailwindColorShade {
-  return [
-    '50',
-    '100',
-    '200',
-    '300',
-    '400',
-    '500',
-    '600',
-    '700',
-    '800',
-    '900',
-    '950',
-  ].includes(value)
+  return (TAILWIND_COLOR_SHADES as readonly string[]).includes(value)
 }
 
 /**
