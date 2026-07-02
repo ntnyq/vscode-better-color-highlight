@@ -59,10 +59,11 @@ Highlight and preview colors in multiple formats across code, comments, and stri
 - [x] Named color（`red` `rebeccapurple`）
 - [x] CSS / SCSS / Less / Stylus variables
 - [x] Extra expressions：bare RGB / HSL triplets、`--color-rgb: 255 0 0` shorthands
+- [x] Tailwind theme color utilities：`bg-red-500` `text-sky-300` `hover:border-white/75`
 - [x] Flutter/Dart：`Color(0xffRRGGBB)`、`Color.fromARGB(a, r, g, b)`
 - [x] Hyprland：`rgba(rrggbb)`、`rgba(rrggbbaa)`
 - [x] JSON / JSONC Design Tokens：`value` / `$value` color strings
-- [ ] Tailwind / YAML Design Tokens
+- [ ] YAML Design Tokens
 
 Cross-file CSS custom property resolution is conservative. It only runs when
 `color-highlight.resolveCssVariablesAcrossFiles` is enabled, reads sources from
@@ -83,6 +84,12 @@ complete value is a supported color, configure:
 Use `"all"` to allow both token fields and broad string matching, or `"off"` to
 disable JSON token matching.
 
+Tailwind theme color matching highlights static default color utilities such as
+`bg-red-500`, `text-sky-300`, `from-purple-400`, and `ring-white/75`,
+including common variant prefixes like `hover:` and `dark:`. Custom Tailwind
+`@theme` declarations are still highlighted through their underlying CSS color
+values, for example `--color-brand-500: oklch(...)`.
+
 ## Credits
 
 This extension is implemented based on [naumovs/vscode-ext-color-highlight](https://github.com/naumovs/vscode-ext-color-highlight.git).
@@ -101,6 +108,7 @@ Compared with the original Color Highlight extension, this project keeps the fam
 - Hyprland `rgba(rrggbb)` and `rgba(rrggbbaa)` syntax.
 - Transparent colors stay visible by rendering markers with an opaque display color while preserving the represented color value.
 - Named CSS color matching is more configurable through `color-highlight.namedColorMatchMode`.
+- Tailwind default theme color utilities are highlighted in markup and class strings.
 - Optional SCSS cross-file variable resolution through local `@use`, `@forward`, `@import`, directory indexes, nearest `node_modules`, and configured Sass load paths.
 - VS Code Workspace FS based dependency reads, avoiding Node `fs` APIs in extension runtime.
 - Broader test coverage, including parser regression tests and playground snapshots.

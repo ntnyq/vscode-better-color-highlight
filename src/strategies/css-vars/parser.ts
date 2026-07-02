@@ -19,6 +19,15 @@ export interface CollectCssVarDeclarationOptions {
 
 const CSS_VAR_NAME_REGEX = /^--[-\w]+$/u
 
+interface CssSelectorListScanState {
+  current: string
+  quote: '"' | "'" | undefined
+  isEscaped: boolean
+  bracketDepth: number
+  parenDepth: number
+  selectors: string[]
+}
+
 /**
  * Normalize a CSS selector for stable comparison.
  *
@@ -36,71 +45,157 @@ export function normalizeCssSelector(selector: string): string {
  * @param selector - Raw selector list text
  * @returns Normalized selector items
  */
-// oxlint-disable-next-line complexity -- selector splitting uses a tiny lexer to avoid commas inside strings/functions.
 export function splitCssSelectorList(selector: string): string[] {
-  const selectors: string[] = []
-  let current = ''
-  let quote: '"' | "'" | undefined
-  let isEscaped = false
-  let bracketDepth = 0
-  let parenDepth = 0
+  const state: CssSelectorListScanState = {
+    current: '',
+    quote: undefined,
+    isEscaped: false,
+    bracketDepth: 0,
+    parenDepth: 0,
+    selectors: [],
+  }
 
   for (let index = 0; index < selector.length; index++) {
     const char = selector[index]
-    const next = selector[index + 1]
 
-    if (quote) {
-      current += char
-      if (isEscaped) {
-        isEscaped = false
-        continue
-      }
-      if (char === '\\') {
-        isEscaped = true
-        continue
-      }
-      if (char === quote) {
-        quote = undefined
-      }
+    if (appendQuotedSelectorChar(state, char)) {
       continue
     }
 
-    if (char === '/' && next === '*') {
-      const end = selector.indexOf('*/', index + 2)
-      index = end === -1 ? selector.length : end + 1
-      current += ' '
+    const commentEnd = findCssCommentEnd(selector, index)
+    if (commentEnd !== index) {
+      index = commentEnd
+      state.current += ' '
       continue
     }
 
-    if (char === '"' || char === "'") {
-      quote = char
-      current += char
+    if (openSelectorQuote(state, char)) {
       continue
     }
 
-    if (char === '[') bracketDepth++
-    if (char === ']' && bracketDepth > 0) bracketDepth--
-    if (char === '(') parenDepth++
-    if (char === ')' && parenDepth > 0) parenDepth--
+    updateSelectorNestingDepth(state, char)
 
-    if (char === ',' && bracketDepth === 0 && parenDepth === 0) {
-      const normalized = normalizeCssSelector(current)
-      if (normalized) {
-        selectors.push(normalized)
-      }
-      current = ''
+    if (isTopLevelSelectorSeparator(state, char)) {
+      commitSelectorItem(state)
       continue
     }
 
-    current += char
+    state.current += char
   }
 
-  const normalized = normalizeCssSelector(current)
+  commitSelectorItem(state)
+
+  return state.selectors
+}
+
+/**
+ * Append a character while inside a quoted selector segment.
+ *
+ * @param state - Mutable selector-list scan state
+ * @param char - Current character to process
+ * @returns Whether the character was handled as part of a quoted segment
+ */
+function appendQuotedSelectorChar(
+  state: CssSelectorListScanState,
+  char: string,
+): boolean {
+  if (!state.quote) return false
+
+  state.current += char
+
+  if (state.isEscaped) {
+    state.isEscaped = false
+    return true
+  }
+
+  if (char === '\\') {
+    state.isEscaped = true
+    return true
+  }
+
+  if (char === state.quote) {
+    state.quote = undefined
+  }
+
+  return true
+}
+
+/**
+ * Find the end of a CSS block comment at the current offset.
+ *
+ * @param text - Selector source text
+ * @param start - Current scan offset
+ * @returns Offset of the comment end, or the original offset when no comment starts
+ */
+function findCssCommentEnd(text: string, start: number): number {
+  if (text[start] !== '/' || text[start + 1] !== '*') return start
+
+  const end = text.indexOf('*/', start + 2)
+  return end === -1 ? text.length : end + 1
+}
+
+/**
+ * Open a quoted selector segment when the current character starts one.
+ *
+ * @param state - Mutable selector-list scan state
+ * @param char - Current character to process
+ * @returns Whether the current character opened a quote
+ */
+function openSelectorQuote(
+  state: CssSelectorListScanState,
+  char: string,
+): boolean {
+  if (char !== '"' && char !== "'") return false
+
+  state.quote = char
+  state.current += char
+
+  return true
+}
+
+/**
+ * Update bracket and parenthesis nesting depth for selector parsing.
+ *
+ * @param state - Mutable selector-list scan state
+ * @param char - Current character to process
+ */
+function updateSelectorNestingDepth(
+  state: CssSelectorListScanState,
+  char: string,
+): void {
+  if (char === '[') state.bracketDepth++
+  if (char === ']' && state.bracketDepth > 0) state.bracketDepth--
+  if (char === '(') state.parenDepth++
+  if (char === ')' && state.parenDepth > 0) state.parenDepth--
+}
+
+/**
+ * Check whether a comma separates selector-list items at top level.
+ *
+ * @param state - Current selector-list scan state
+ * @param char - Current character to process
+ * @returns Whether the current comma is outside brackets and parentheses
+ */
+function isTopLevelSelectorSeparator(
+  state: CssSelectorListScanState,
+  char: string,
+): boolean {
+  return char === ',' && state.bracketDepth === 0 && state.parenDepth === 0
+}
+
+/**
+ * Commit the current selector item into the scan result.
+ *
+ * @param state - Mutable selector-list scan state
+ */
+function commitSelectorItem(state: CssSelectorListScanState): void {
+  const normalized = normalizeCssSelector(state.current)
+
   if (normalized) {
-    selectors.push(normalized)
+    state.selectors.push(normalized)
   }
 
-  return selectors
+  state.current = ''
 }
 
 /**
