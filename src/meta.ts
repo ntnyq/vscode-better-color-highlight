@@ -4,7 +4,7 @@
 // Meta info
 export const publisher = "ntnyq"
 export const name = "vscode-better-color-highlight"
-export const version = "0.2.0"
+export const version = "0.3.0"
 export const displayName = "Better Color Highlight"
 export const description = "Highlight and preview colors in multiple formats across code, comments, and strings."
 export const extensionId = `${publisher}.${name}`

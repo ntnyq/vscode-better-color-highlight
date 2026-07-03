@@ -1,7 +1,7 @@
 {
   "name": "vscode-better-color-highlight",
   "displayName": "Better Color Highlight",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Highlight and preview colors in multiple formats across code, comments, and strings.",
   "categories": [
