@@ -60,10 +60,14 @@ export async function resolveCssVarMatches(
   const matches: ColorMatch[] = []
 
   for (const usage of findCssVarUsages(text)) {
-    if (isSkippedCssCustomPropertyValueUsage(text, usage)) continue
+    if (isSkippedCssCustomPropertyValueUsage(text, usage)) {
+      continue
+    }
 
     const result = await resolveCssVarUsage(usage, options, new Set(), 0, true)
-    if (result.status !== 'resolved') continue
+    if (result.status !== 'resolved') {
+      continue
+    }
 
     matches.push({
       start: usage.start,
@@ -108,7 +112,10 @@ async function resolveCssVarUsage(
   if (candidate.status === 'missing') {
     return resolveFallback(usage, options, seen, depth)
   }
-  if (candidate.status === 'ambiguous') return { status: 'ambiguous' }
+
+  if (candidate.status === 'ambiguous') {
+    return { status: 'ambiguous' }
+  }
 
   const nextSeen = new Set(seen)
   nextSeen.add(usage.name)
@@ -121,9 +128,13 @@ async function resolveCssVarUsage(
     depth + 1,
   )
 
-  if (result.status !== 'invalid') return result
+  if (result.status !== 'invalid') {
+    return result
+  }
 
-  if (!canUseInvalidFallback) return { status: 'invalid' }
+  if (!canUseInvalidFallback) {
+    return { status: 'invalid' }
+  }
 
   return resolveInvalidFallback(usage, options, seen, depth)
 }
@@ -143,7 +154,9 @@ async function resolveFallback(
   seen: ReadonlySet<string>,
   depth: number,
 ): Promise<CssVarResolution> {
-  if (!usage.fallback) return { status: 'missing' }
+  if (!usage.fallback) {
+    return { status: 'missing' }
+  }
 
   return await resolveCssVarValue(
     usage.fallback,
@@ -169,7 +182,9 @@ async function resolveInvalidFallback(
   seen: ReadonlySet<string>,
   depth: number,
 ): Promise<CssVarResolution> {
-  if (!usage.fallback) return { status: 'invalid' }
+  if (!usage.fallback) {
+    return { status: 'invalid' }
+  }
 
   return await resolveCssVarValue(
     usage.fallback,
@@ -197,14 +212,18 @@ async function resolveCssVarValue(
   seen: ReadonlySet<string>,
   depth: number,
 ): Promise<CssVarResolution> {
-  if (depth > MAX_RESOLUTION_DEPTH) return { status: 'invalid' }
+  if (depth > MAX_RESOLUTION_DEPTH) {
+    return { status: 'invalid' }
+  }
 
   const normalized = value.replaceAll(/!important\b/gu, '').trim()
   const varUsages = findCssVarUsages(normalized)
 
   if (varUsages.length > 0) {
     const usage = getExactCssVarAlias(normalized, varUsages)
-    if (!usage) return { status: 'missing' }
+    if (!usage) {
+      return { status: 'missing' }
+    }
 
     return await resolveCssVarUsage(usage, options, seen, depth + 1, false)
   }
@@ -339,11 +358,17 @@ function getExactCssVarAlias(
   value: string,
   usages: readonly VarUsage[],
 ): VarUsage | null {
-  if (usages.length !== 1) return null
+  if (usages.length !== 1) {
+    return null
+  }
 
   const usage = usages[0]
-  if (value.slice(0, usage.start).trim()) return null
-  if (value.slice(usage.end).trim()) return null
+  if (value.slice(0, usage.start).trim()) {
+    return null
+  }
+  if (value.slice(usage.end).trim()) {
+    return null
+  }
 
   return usage
 }
@@ -366,11 +391,17 @@ function isSkippedCssCustomPropertyValueUsage(
   )
   const declarationPrefix = text.slice(declarationStart + 1, usage.start)
   const colonIndex = declarationPrefix.indexOf(':')
-  if (colonIndex === -1) return false
+  if (colonIndex === -1) {
+    return false
+  }
 
   const propertyName = declarationPrefix.slice(0, colonIndex).trim()
-  if (!/^--[-\w]+$/u.test(propertyName)) return false
-  if (usage.fallback !== undefined) return true
+  if (!/^--[-\w]+$/u.test(propertyName)) {
+    return false
+  }
+  if (usage.fallback !== undefined) {
+    return true
+  }
 
   const declarationEnd = findCssDeclarationEnd(text, usage.end)
   const valueBeforeUsage = declarationPrefix.slice(colonIndex + 1)
@@ -422,6 +453,7 @@ function findCssDeclarationEnd(text: string, start: number): number {
       if (char === quote) {
         quote = undefined
       }
+
       continue
     }
 
@@ -445,7 +477,9 @@ function findCssDeclarationEnd(text: string, start: number): number {
       continue
     }
 
-    if (parenDepth === 0 && (char === ';' || char === '}')) return index
+    if (parenDepth === 0 && (char === ';' || char === '}')) {
+      return index
+    }
   }
 
   return text.length
@@ -463,7 +497,9 @@ function findCssVarUsages(text: string): VarUsage[] {
 
   while (searchStart < text.length) {
     const varStart = findNextVarFunction(text, searchStart)
-    if (varStart === -1) break
+    if (varStart === -1) {
+      break
+    }
 
     const openParen = varStart + 'var'.length
     const closeParen = findMatchingParen(text, openParen)
@@ -515,7 +551,9 @@ function parseCssVarContent(
   const rawName =
     commaIndex === -1 ? content.trim() : content.slice(0, commaIndex).trim()
 
-  if (!/^--[-\w]+$/u.test(rawName)) return null
+  if (!/^--[-\w]+$/u.test(rawName)) {
+    return null
+  }
 
   const fallback =
     commaIndex === -1 ? undefined : content.slice(commaIndex + 1).trim()
@@ -552,6 +590,7 @@ function findTopLevelComma(text: string): number {
       if (char === quote) {
         quote = undefined
       }
+
       continue
     }
 
@@ -569,7 +608,9 @@ function findTopLevelComma(text: string): number {
       continue
     }
 
-    if (char === ',' && parenDepth === 0) return index
+    if (char === ',' && parenDepth === 0) {
+      return index
+    }
   }
 
   return -1
@@ -602,6 +643,7 @@ function findMatchingParen(text: string, openParen: number): number {
       if (char === quote) {
         quote = undefined
       }
+
       continue
     }
 
@@ -614,10 +656,14 @@ function findMatchingParen(text: string, openParen: number): number {
       depth++
       continue
     }
-    if (char !== ')') continue
+    if (char !== ')') {
+      continue
+    }
 
     depth--
-    if (depth === 0) return index
+    if (depth === 0) {
+      return index
+    }
   }
 
   return -1

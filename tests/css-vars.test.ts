@@ -416,6 +416,21 @@ describe(findCssVars, () => {
     expect(loadCssVarSourceDeclarationsMock).not.toHaveBeenCalled()
   })
 
+  it('does not read external paths when the workspace is untrusted', async () => {
+    const text = '.cls { color: var(--brand); }'
+
+    const result = await findCssVars(text, {
+      languageId: 'css',
+      filePath: '/workspace/src/app.css',
+      workspaceIsTrusted: false,
+      resolveCssVariablesAcrossFiles: true,
+      cssVariablePaths: ['/workspace/tokens.css'],
+    })
+
+    expect(result).toStrictEqual([])
+    expect(loadCssVarSourceDeclarationsMock).not.toHaveBeenCalled()
+  })
+
   it('resolves CSS variables from configured external declarations when enabled', async () => {
     const text = '.cls { color: var(--brand); }'
     loadCssVarSourceDeclarationsMock.mockResolvedValue(

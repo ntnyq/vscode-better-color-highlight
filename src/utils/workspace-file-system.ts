@@ -87,6 +87,7 @@ function normalizeWorkspacePath(path: string): string {
     if (!segment || segment === '.') {
       continue
     }
+
     if (segment === '..') {
       segments.pop()
       continue

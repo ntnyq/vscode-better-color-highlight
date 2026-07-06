@@ -26,22 +26,30 @@ export function findHwb(text: string): ColorMatch[] {
 
   for (const m of text.matchAll(HWB_REGEX)) {
     const fullMatch = m.groups?.hwbFunc
-    if (!fullMatch) continue
+    if (!fullMatch) {
+      continue
+    }
 
     const start = m.index ?? 0
     const end = start + fullMatch.length
     const color = parseHwb(fullMatch)
-    if (color) matches.push({ start, end, color })
+    if (color) {
+      matches.push({ start, end, color })
+    }
   }
 
   for (const m of text.matchAll(HWB_SPACE_REGEX)) {
     const fullMatch = m.groups?.hwbFunc
-    if (!fullMatch) continue
+    if (!fullMatch) {
+      continue
+    }
 
     const start = m.index ?? 0
     const end = start + fullMatch.length
     const color = parseHwb(fullMatch)
-    if (color) matches.push({ start, end, color })
+    if (color) {
+      matches.push({ start, end, color })
+    }
   }
 
   return matches
@@ -55,9 +63,15 @@ export function findHwb(text: string): ColorMatch[] {
  */
 function parseAngle(value: string): number {
   const num = Number(value.replace(/(?:deg|grad|rad|turn)$/u, ''))
-  if (value.endsWith('grad')) return (num * 360) / 400
-  if (value.endsWith('rad')) return (num * 180) / Math.PI
-  if (value.endsWith('turn')) return num * 360
+  if (value.endsWith('grad')) {
+    return (num * 360) / 400
+  }
+  if (value.endsWith('rad')) {
+    return (num * 180) / Math.PI
+  }
+  if (value.endsWith('turn')) {
+    return num * 360
+  }
   return num
 }
 
@@ -71,7 +85,9 @@ function parseHwb(func: string): string | null {
   const innerMatch = func.match(
     /^hwb\(\s*(?<hue>\d+(?:\.\d+)?(?:deg|grad|rad|turn)?)\s*[, ]\s*(?<whiteness>100(?:\.0+)?|\d{1,2}(?:\.\d+)?)%\s*[, ]\s*(?<blackness>100(?:\.0+)?|\d{1,2}(?:\.\d+)?)%(?:\s*[,/]\s*(?<alpha>[\d.]+%?))?\s*\)$/iu,
   )
-  if (!innerMatch) return null
+  if (!innerMatch) {
+    return null
+  }
 
   const {
     alpha: alphaString,
@@ -79,13 +95,17 @@ function parseHwb(func: string): string | null {
     hue,
     whiteness,
   } = innerMatch.groups ?? {}
-  if (!hue || !whiteness || !blackness) return null
+  if (!hue || !whiteness || !blackness) {
+    return null
+  }
 
   const h = parseAngle(hue)
   const w = Number(whiteness) / 100
   const b = Number(blackness) / 100
 
-  if (w < 0 || w > 1 || b < 0 || b > 1) return null
+  if (w < 0 || w > 1 || b < 0 || b > 1) {
+    return null
+  }
 
   let alpha: number | undefined
   if (alphaString) {

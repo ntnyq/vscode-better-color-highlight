@@ -14,6 +14,7 @@ export function groupByColor(matches: readonly ColorMatch[]): ColorMatchGroup {
     if (!groups[color]) {
       groups[color] = []
     }
+
     groups[color].push(match)
   }
 

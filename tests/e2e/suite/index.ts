@@ -15,6 +15,7 @@ async function waitForConfigValue<T>(key: string, expected: T) {
     if (value === expected) {
       return
     }
+
     await delay(CONFIG_WAIT_INTERVAL_MS)
   }
 

@@ -102,7 +102,9 @@ export async function findLessVars(text: string): Promise<ColorMatch[]> {
   for (const m of text.matchAll(LESS_VAR_DEF_REGEX)) {
     const name = m.groups?.name
     const value = m.groups?.value?.trim()
-    if (!name || !value) continue
+    if (!name || !value) {
+      continue
+    }
 
     varDefs.set(name, value)
   }
@@ -117,12 +119,16 @@ export async function findLessVars(text: string): Promise<ColorMatch[]> {
     }),
   )
 
-  if (varColors.size === 0) return []
+  if (varColors.size === 0) {
+    return []
+  }
 
   // Phase 2: Find @var usages
   const matchableNames = [...varColors.keys()]
   const usageRegex = buildLessVarUsageRegex(matchableNames)
-  if (!usageRegex) return []
+  if (!usageRegex) {
+    return []
+  }
 
   const matches: ColorMatch[] = []
 
@@ -130,13 +136,17 @@ export async function findLessVars(text: string): Promise<ColorMatch[]> {
     const prefix = m.groups?.prefix ?? ''
     const fullMatch = m.groups?.full
     const name = m.groups?.name
-    if (!fullMatch || !name) continue
+    if (!fullMatch || !name) {
+      continue
+    }
 
     const start = (m.index ?? 0) + prefix.length
     const end = start + fullMatch.length
 
     const color = varColors.get(name)
-    if (!color) continue
+    if (!color) {
+      continue
+    }
 
     matches.push({ start, end, color })
   }
@@ -152,7 +162,9 @@ export async function findLessVars(text: string): Promise<ColorMatch[]> {
  * @returns A RegExp matching @name usages, or null if no names provided
  */
 function buildLessVarUsageRegex(varNames: string[]): RegExp | null {
-  if (varNames.length === 0) return null
+  if (varNames.length === 0) {
+    return null
+  }
   const names = varNames
     .sort((a, b) => b.length - a.length)
     .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`))

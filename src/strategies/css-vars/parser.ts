@@ -99,7 +99,9 @@ function appendQuotedSelectorChar(
   state: CssSelectorListScanState,
   char: string,
 ): boolean {
-  if (!state.quote) return false
+  if (!state.quote) {
+    return false
+  }
 
   state.current += char
 
@@ -128,7 +130,9 @@ function appendQuotedSelectorChar(
  * @returns Offset of the comment end, or the original offset when no comment starts
  */
 function findCssCommentEnd(text: string, start: number): number {
-  if (text[start] !== '/' || text[start + 1] !== '*') return start
+  if (text[start] !== '/' || text[start + 1] !== '*') {
+    return start
+  }
 
   const end = text.indexOf('*/', start + 2)
   return end === -1 ? text.length : end + 1
@@ -145,7 +149,9 @@ function openSelectorQuote(
   state: CssSelectorListScanState,
   char: string,
 ): boolean {
-  if (char !== '"' && char !== "'") return false
+  if (char !== '"' && char !== "'") {
+    return false
+  }
 
   state.quote = char
   state.current += char
@@ -163,10 +169,18 @@ function updateSelectorNestingDepth(
   state: CssSelectorListScanState,
   char: string,
 ): void {
-  if (char === '[') state.bracketDepth++
-  if (char === ']' && state.bracketDepth > 0) state.bracketDepth--
-  if (char === '(') state.parenDepth++
-  if (char === ')' && state.parenDepth > 0) state.parenDepth--
+  if (char === '[') {
+    state.bracketDepth++
+  }
+  if (char === ']' && state.bracketDepth > 0) {
+    state.bracketDepth--
+  }
+  if (char === '(') {
+    state.parenDepth++
+  }
+  if (char === ')' && state.parenDepth > 0) {
+    state.parenDepth--
+  }
 }
 
 /**
@@ -250,7 +264,9 @@ export function compareCssSpecificity(
 ): number {
   for (let index = 0; index < 3; index++) {
     const diff = left[index] - right[index]
-    if (diff !== 0) return diff
+    if (diff !== 0) {
+      return diff
+    }
   }
   return 0
 }
@@ -292,7 +308,9 @@ export function collectCssVarDeclarations(
   }
 
   function collectTopLevelDeclarations(segment: string): void {
-    if (!options.includeTopLevelDeclarations || !topLevelSelector) return
+    if (!options.includeTopLevelDeclarations || !topLevelSelector) {
+      return
+    }
 
     for (const declaration of scanCssVarDeclarations(segment)) {
       pushDeclaration(declaration, topLevelSelector)
@@ -406,6 +424,7 @@ function scanCssVarDeclarations(
       if (char === quote) {
         quote = undefined
       }
+
       continue
     }
 
@@ -498,6 +517,7 @@ function getCssPrelude(text: string): string {
       if (char === quote) {
         quote = undefined
       }
+
       continue
     }
 
@@ -512,10 +532,18 @@ function getCssPrelude(text: string): string {
       continue
     }
 
-    if (char === '(') parenDepth++
-    if (char === ')' && parenDepth > 0) parenDepth--
-    if (char === '[') bracketDepth++
-    if (char === ']' && bracketDepth > 0) bracketDepth--
+    if (char === '(') {
+      parenDepth++
+    }
+    if (char === ')' && parenDepth > 0) {
+      parenDepth--
+    }
+    if (char === '[') {
+      bracketDepth++
+    }
+    if (char === ']' && bracketDepth > 0) {
+      bracketDepth--
+    }
 
     if (char === ';' && parenDepth === 0 && bracketDepth === 0) {
       preludeStart = index + 1
@@ -555,13 +583,17 @@ function findMatchingCloseBrace(
 
   while (index < end) {
     const nextBrace = scanCssStructuralChar(text, index, end, '{', '}')
-    if (nextBrace === -1) return -1
+    if (nextBrace === -1) {
+      return -1
+    }
 
     if (text[nextBrace] === '{') {
       depth++
     } else {
       depth--
-      if (depth === 0) return nextBrace
+      if (depth === 0) {
+        return nextBrace
+      }
     }
 
     index = nextBrace + 1
@@ -604,6 +636,7 @@ function scanCssStructuralChar(
       if (char === quote) {
         quote = undefined
       }
+
       continue
     }
 

@@ -75,6 +75,9 @@ vi.mock(
         activeTextEditor,
         showInformationMessage,
       },
+      workspace: {
+        isTrusted: true,
+      },
     }) as unknown as Partial<typeof Vscode>,
 )
 

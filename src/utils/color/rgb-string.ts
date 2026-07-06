@@ -12,9 +12,13 @@ export function parseRgbString(color: string): {
   const match = color.match(
     /rgba?\(\s*(?<red>\d+)\s*,\s*(?<green>\d+)\s*,\s*(?<blue>\d+)/u,
   )
-  if (!match) return { r: 0, g: 0, b: 0 }
+  if (!match) {
+    return { r: 0, g: 0, b: 0 }
+  }
   const { blue, green, red } = match.groups ?? {}
-  if (!red || !green || !blue) return { r: 0, g: 0, b: 0 }
+  if (!red || !green || !blue) {
+    return { r: 0, g: 0, b: 0 }
+  }
 
   return {
     r: Number.parseInt(red),

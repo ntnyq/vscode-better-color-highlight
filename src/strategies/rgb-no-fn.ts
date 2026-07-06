@@ -24,16 +24,22 @@ export function findRgbNoFunction(text: string): ColorMatch[] {
 
   for (const m of text.matchAll(RGB_NO_FN_REGEX)) {
     const { blue, green, red } = m.groups ?? {}
-    if (!red || !green || !blue) continue
+    if (!red || !green || !blue) {
+      continue
+    }
 
     const r = Number(red)
     const g = Number(green)
     const b = Number(blue)
 
     // Validate RGB range
-    if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) continue
+    if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+      continue
+    }
     // Skip likely non-color numbers (e.g. version numbers, dates)
-    if (r === 0 && g === 0 && b === 0) continue
+    if (r === 0 && g === 0 && b === 0) {
+      continue
+    }
 
     const start = m.index ?? 0
     const end = start + m[0].length

@@ -22,7 +22,9 @@ export async function findCssVars(
     trustedSelectors: DEFAULT_TRUSTED_CSS_VAR_SELECTORS,
   })
   const externalDeclarations =
-    context?.resolveCssVariablesAcrossFiles === true && context.filePath
+    context?.resolveCssVariablesAcrossFiles === true &&
+    context.workspaceIsTrusted !== false &&
+    context.filePath
       ? await loadCssVarSourceDeclarations({
           filePath: context.filePath,
           paths: context.cssVariablePaths ?? [],

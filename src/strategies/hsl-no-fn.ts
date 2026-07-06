@@ -26,17 +26,23 @@ export function findHslNoFunction(text: string): ColorMatch[] {
 
   for (const m of text.matchAll(HSL_NO_FN_REGEX)) {
     const { hue, lightness, saturation } = m.groups ?? {}
-    if (!hue || !saturation || !lightness) continue
+    if (!hue || !saturation || !lightness) {
+      continue
+    }
 
     const h = parseAngle(hue)
     const s = Number(saturation) / 100
     const l = Number(lightness) / 100
 
     // Validate HSL ranges
-    if (s < 0 || s > 1 || l < 0 || l > 1) continue
+    if (s < 0 || s > 1 || l < 0 || l > 1) {
+      continue
+    }
 
     const [r, g, b] = hslToRgb(h, s, l)
-    if (r === 0 && g === 0 && b === 0) continue
+    if (r === 0 && g === 0 && b === 0) {
+      continue
+    }
 
     const start = m.index ?? 0
     const fullMatch = m[0].replace(/[; ]$/u, '')
@@ -60,8 +66,14 @@ export function findHslNoFunction(text: string): ColorMatch[] {
  */
 function parseAngle(value: string): number {
   const num = Number(value.replace(/(?:deg|grad|rad|turn)$/u, ''))
-  if (value.endsWith('grad')) return (num * 360) / 400
-  if (value.endsWith('rad')) return (num * 180) / Math.PI
-  if (value.endsWith('turn')) return num * 360
+  if (value.endsWith('grad')) {
+    return (num * 360) / 400
+  }
+  if (value.endsWith('rad')) {
+    return (num * 180) / Math.PI
+  }
+  if (value.endsWith('turn')) {
+    return num * 360
+  }
   return num
 }

@@ -56,7 +56,7 @@
     "unicorn/import-style": "off",
     "unicorn/no-immediate-mutation": "off",
     "unicorn/no-array-callback-reference": "off",
-    "curly": ["warn", "multi-line", "consistent"],
+    "curly": ["warn", "all"],
     "id-length": [
       "warn",
       {

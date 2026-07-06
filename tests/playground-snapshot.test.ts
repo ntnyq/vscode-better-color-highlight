@@ -113,6 +113,7 @@ function dedupeAndSortMatches(matches: ColorMatch[]) {
       if (seen.has(key)) {
         return false
       }
+
       seen.add(key)
       return true
     })

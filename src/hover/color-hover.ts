@@ -16,6 +16,10 @@ const COPY_COMMANDS = {
   rgb: 'color-highlight.copyColorAsRgb',
 } as const
 
+interface CancellationLike {
+  readonly isCancellationRequested: boolean
+}
+
 /**
  * Hover data for a detected color under the cursor.
  */
@@ -46,6 +50,11 @@ export interface ColorHover {
  */
 export interface ColorHoverOptions {
   /**
+   * Optional cancellation token from VS Code hover requests.
+   */
+  readonly cancellationToken?: CancellationLike
+
+  /**
    * Current extension configuration snapshot.
    */
   readonly config: NestedScopedConfigs
@@ -71,9 +80,19 @@ export interface ColorHoverOptions {
   readonly offset: number
 
   /**
+   * Optional detector failure reporter.
+   */
+  readonly onDetectorError?: (message: string) => void
+
+  /**
    * Full document text to scan.
    */
   readonly text: string
+
+  /**
+   * Whether the current workspace is trusted for cross-file reads.
+   */
+  readonly workspaceIsTrusted?: boolean
 }
 
 /**
@@ -85,11 +104,33 @@ export interface ColorHoverOptions {
 export async function getColorHover(
   options: ColorHoverOptions,
 ): Promise<ColorHover | null> {
-  const { config, detectors, filePath, languageId, offset, text } = options
+  const {
+    cancellationToken,
+    config,
+    detectors,
+    filePath,
+    languageId,
+    onDetectorError,
+    offset,
+    text,
+    workspaceIsTrusted,
+  } = options
 
-  if (!config.enable || !config.enableHover) return null
-  if (!shouldProcessLanguage(languageId, config.languages)) return null
-  if (config.maxFileSize > 0 && text.length > config.maxFileSize) return null
+  if (cancellationToken?.isCancellationRequested) {
+    return null
+  }
+
+  if (!config.enable || !config.enableHover) {
+    return null
+  }
+
+  if (!shouldProcessLanguage(languageId, config.languages)) {
+    return null
+  }
+
+  if (config.maxFileSize > 0 && text.length > config.maxFileSize) {
+    return null
+  }
 
   const context: StrategyContext = {
     languageId,
@@ -102,16 +143,36 @@ export async function getColorHover(
     cssVariableTrustedSelectors: config.cssVariableTrustedSelectors,
     designTokenJsonMode: config.designTokenJsonMode,
     useARGB: config.useARGB,
+    workspaceIsTrusted,
   }
 
   const results = await Promise.all(
-    detectors.map(detector => detector(text, context)),
+    detectors.map(async detector => {
+      const detectorName = detector.name || 'anonymous'
+
+      try {
+        return await detector(text, context)
+      } catch (error) {
+        onDetectorError?.(
+          `Color hover detector "${detectorName}" failed: ${error}`,
+        )
+        return []
+      }
+    }),
   )
+  if (cancellationToken?.isCancellationRequested) {
+    return null
+  }
+
   const match = findMatchAtOffset(results.flat(), offset)
-  if (!match) return null
+  if (!match) {
+    return null
+  }
 
   const presentations = getColorPresentations(match.color)
-  if (!presentations) return null
+  if (!presentations) {
+    return null
+  }
 
   return {
     presentations,

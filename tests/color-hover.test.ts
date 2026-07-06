@@ -48,6 +48,25 @@ describe(getColorHover, () => {
     expect(detector).not.toHaveBeenCalled()
   })
 
+  it('does not run detectors when the hover request is cancelled', async () => {
+    const detector = vi.fn<ColorDetector>(() => [
+      { start: 14, end: 21, color: 'rgb(255, 0, 0)' },
+    ])
+
+    const result = await getColorHover({
+      cancellationToken: { isCancellationRequested: true },
+      config: { ...defaultConfig, enableHover: true },
+      detectors: [detector],
+      filePath: 'file:///tmp/example.css',
+      languageId: 'css',
+      offset: 15,
+      text: '.box { color: #ff0000; }',
+    })
+
+    expect(result).toBeNull()
+    expect(detector).not.toHaveBeenCalled()
+  })
+
   it('returns color presentations for the match under the offset', async () => {
     const detector = vi.fn<ColorDetector>(() => [
       { start: 14, end: 21, color: 'rgb(255, 0, 0)' },
@@ -69,6 +88,32 @@ describe(getColorHover, () => {
         hex: '#ff0000',
         hsl: 'hsl(0 100% 50%)',
         oklch: 'oklch(62.8% 0.258 29.2)',
+        rgb: 'rgb(255, 0, 0)',
+      },
+    })
+  })
+
+  it('returns hover data from successful detectors when another detector fails', async () => {
+    const failingDetector = vi.fn<ColorDetector>(() => {
+      throw new Error('detector failed')
+    })
+    const successfulDetector = vi.fn<ColorDetector>(() => [
+      { start: 14, end: 21, color: 'rgb(255, 0, 0)' },
+    ])
+
+    const result = await getColorHover({
+      config: { ...defaultConfig, enableHover: true },
+      detectors: [failingDetector, successfulDetector],
+      filePath: 'file:///tmp/example.css',
+      languageId: 'css',
+      offset: 16,
+      text: '.box { color: #ff0000; }',
+    })
+
+    expect(result).toMatchObject({
+      range: { end: 21, start: 14 },
+      presentations: {
+        hex: '#ff0000',
         rgb: 'rgb(255, 0, 0)',
       },
     })

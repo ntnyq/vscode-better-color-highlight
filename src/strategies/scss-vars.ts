@@ -228,7 +228,9 @@ function collectScssVarDefs(text: string): Map<string, string> {
   for (const m of text.matchAll(SCSS_VAR_DEF_REGEX)) {
     const name = m.groups?.name
     const value = m.groups?.value?.trim()
-    if (!name || !value) continue
+    if (!name || !value) {
+      continue
+    }
 
     varDefs.set(name, value)
   }
@@ -304,6 +306,7 @@ function getNearestNodeModulesPaths(fromFilePath: string): string[] {
     if (parentDir === currentDir) {
       break
     }
+
     currentDir = parentDir
   }
 
@@ -325,6 +328,19 @@ function normalizeScssLoadPaths(
     isAbsoluteWorkspacePath(loadPath)
       ? loadPath
       : resolveWorkspacePath(fromFilePath, loadPath),
+  )
+}
+
+/**
+ * Check whether this strategy may read SCSS dependencies for the current file.
+ *
+ * @param context - Optional strategy context
+ * @returns Whether cross-file SCSS resolution is enabled and trusted
+ */
+function canResolveScssAcrossFiles(context?: StrategyContext): boolean {
+  return (
+    context?.resolveScssVariablesAcrossFiles === true &&
+    context.workspaceIsTrusted !== false
   )
 }
 
@@ -497,6 +513,7 @@ async function loadScssModule(
         varDefs.set(name, value)
       }
     }
+
     for (const [name, value] of forwardedVarDefs) {
       if (!varDefs.has(name)) {
         varDefs.set(name, value)
@@ -532,7 +549,9 @@ async function collectForwardedScssVarDefs(
 
   for (const m of text.matchAll(SCSS_FORWARD_REGEX)) {
     const specifier = m.groups?.path
-    if (!specifier) continue
+    if (!specifier) {
+      continue
+    }
 
     const module = await loadScssModule(
       filePath,
@@ -541,7 +560,9 @@ async function collectForwardedScssVarDefs(
       state,
       depth,
     )
-    if (!module) continue
+    if (!module) {
+      continue
+    }
 
     for (const [name, value] of module.varDefs) {
       varDefs.set(name, value)
@@ -579,7 +600,9 @@ async function collectImportedScssVarDefs(
 
   for (const m of text.matchAll(SCSS_IMPORT_REGEX)) {
     const specifier = m.groups?.path
-    if (!specifier) continue
+    if (!specifier) {
+      continue
+    }
 
     const module = await loadScssModule(
       context.filePath,
@@ -588,7 +611,9 @@ async function collectImportedScssVarDefs(
       resolveState,
       depth,
     )
-    if (!module) continue
+    if (!module) {
+      continue
+    }
 
     for (const [name, value] of module.varDefs) {
       varDefs.set(name, value)
@@ -623,7 +648,9 @@ async function collectUsedStarScssVarDefs(
   for (const m of text.matchAll(SCSS_USE_REGEX)) {
     const specifier = m.groups?.path
     const namespace = m.groups?.namespace
-    if (!specifier || namespace !== '*') continue
+    if (!specifier || namespace !== '*') {
+      continue
+    }
 
     const module = await loadScssModule(
       context.filePath,
@@ -631,7 +658,9 @@ async function collectUsedStarScssVarDefs(
       getScssNamespace(specifier),
       state,
     )
-    if (!module) continue
+    if (!module) {
+      continue
+    }
 
     for (const [name, value] of module.varDefs) {
       varDefs.set(name, value)
@@ -666,7 +695,9 @@ async function collectUsedScssModules(
   for (const m of text.matchAll(SCSS_USE_REGEX)) {
     const specifier = m.groups?.path
     const namespace = m.groups?.namespace ?? getScssNamespace(specifier ?? '')
-    if (!specifier || namespace === '*') continue
+    if (!specifier || namespace === '*') {
+      continue
+    }
 
     const module = await loadScssModule(
       context.filePath,
@@ -694,7 +725,7 @@ async function collectEntryScssVarDefs(
   context?: StrategyContext,
 ): Promise<Map<string, string>> {
   const varDefs = collectScssVarDefs(text)
-  if (context?.resolveScssVariablesAcrossFiles !== true) {
+  if (!canResolveScssAcrossFiles(context)) {
     return varDefs
   }
 
@@ -729,9 +760,7 @@ export async function findScssVars(
   // Phase 1: Find variable definitions
   const varDefs = await collectEntryScssVarDefs(text, context)
   const varColors = new Map<string, string>() // name (without $) -> resolved color
-  const shouldResolveAcrossFiles =
-    context?.resolveScssVariablesAcrossFiles === true
-  const modules = shouldResolveAcrossFiles
+  const modules = canResolveScssAcrossFiles(context)
     ? await collectUsedScssModules(text, context)
     : []
 
@@ -747,7 +776,9 @@ export async function findScssVars(
 
   const moduleColors = await resolveScssModuleColors(modules)
 
-  if (varColors.size === 0 && moduleColors.size === 0) return []
+  if (varColors.size === 0 && moduleColors.size === 0) {
+    return []
+  }
 
   // Phase 2: Find $var usages
   const matches: ColorMatch[] = []
@@ -759,13 +790,17 @@ export async function findScssVars(
       const prefix = m.groups?.prefix ?? ''
       const fullMatch = m.groups?.full
       const name = m.groups?.name
-      if (!fullMatch || !name) continue
+      if (!fullMatch || !name) {
+        continue
+      }
 
       const start = (m.index ?? 0) + prefix.length
       const end = start + fullMatch.length
 
       const color = varColors.get(name)
-      if (!color) continue
+      if (!color) {
+        continue
+      }
 
       matches.push({ start, end, color })
     }
@@ -826,16 +861,22 @@ function findNamespacedScssVarUsages(
     const usageRegex = buildNamespacedScssVarUsageRegex(namespace, [
       ...colors.keys(),
     ])
-    if (!usageRegex) continue
+    if (!usageRegex) {
+      continue
+    }
 
     for (const m of text.matchAll(usageRegex)) {
       const prefix = m.groups?.prefix ?? ''
       const fullMatch = m.groups?.full
       const name = m.groups?.name
-      if (!fullMatch || !name) continue
+      if (!fullMatch || !name) {
+        continue
+      }
 
       const color = colors.get(name)
-      if (!color) continue
+      if (!color) {
+        continue
+      }
 
       const start = (m.index ?? 0) + prefix.length
       const end = start + fullMatch.length
@@ -856,7 +897,9 @@ function findNamespacedScssVarUsages(
  * @returns A RegExp matching $name usages, or null if no names provided
  */
 function buildScssVarUsageRegex(varNames: string[]): RegExp | null {
-  if (varNames.length === 0) return null
+  if (varNames.length === 0) {
+    return null
+  }
   const names = varNames
     .sort((a, b) => b.length - a.length)
     .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`))
@@ -878,7 +921,9 @@ function buildNamespacedScssVarUsageRegex(
   namespace: string,
   varNames: string[],
 ): RegExp | null {
-  if (varNames.length === 0) return null
+  if (varNames.length === 0) {
+    return null
+  }
 
   const escapedNamespace = namespace.replaceAll(
     /[.*+?^${}()|[\]\\]/gu,

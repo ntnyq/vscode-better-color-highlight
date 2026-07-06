@@ -21,6 +21,7 @@ const readFileMock = vi.fn<(filePath: unknown) => Promise<string>>(filePath => {
   if (text === undefined) {
     throw new Error(`Missing file: ${normalizedFilePath}`)
   }
+
   return Promise.resolve(text)
 })
 const statMock = vi.fn<

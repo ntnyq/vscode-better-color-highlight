@@ -16,7 +16,9 @@ export function findJsonDesignTokens(
   context?: StrategyContext,
 ): ColorMatch[] {
   const mode = context?.designTokenJsonMode ?? 'token-values'
-  if (mode === 'off') return []
+  if (mode === 'off') {
+    return []
+  }
 
   const matches: ColorMatch[] = []
   let pendingKey: string | undefined
@@ -42,10 +44,14 @@ export function findJsonDesignTokens(
       pendingKeyHasDelimiter = true
     }
 
-    if (text[index] !== '"') continue
+    if (text[index] !== '"') {
+      continue
+    }
 
     const token = readString(text, index)
-    if (!token) continue
+    if (!token) {
+      continue
+    }
 
     const nextIndex = skipWhitespace(text, token.end + 1)
     const isKey = text[nextIndex] === ':'
@@ -145,8 +151,12 @@ function findLineEnd(text: string, start: number): number {
   const newline = text.indexOf('\n', start)
   const carriageReturn = text.indexOf('\r', start)
 
-  if (newline === -1) return carriageReturn
-  if (carriageReturn === -1) return newline
+  if (newline === -1) {
+    return carriageReturn
+  }
+  if (carriageReturn === -1) {
+    return newline
+  }
 
   return Math.min(newline, carriageReturn)
 }
@@ -160,7 +170,9 @@ function findLineEnd(text: string, start: number): number {
  */
 function skipWhitespace(text: string, start: number): number {
   let index = start
-  while (/\s/u.test(text[index] ?? '')) index++
+  while (/\s/u.test(text[index] ?? '')) {
+    index++
+  }
   return index
 }
 
@@ -196,7 +208,9 @@ function shouldMatchValue(
   mode: 'token-values' | 'strings' | 'all',
   key: string | undefined,
 ): boolean {
-  if (mode === 'strings' || mode === 'all') return true
+  if (mode === 'strings' || mode === 'all') {
+    return true
+  }
 
   return isTokenValueKey(key)
 }
@@ -272,7 +286,9 @@ function dedupeMatches(matches: ColorMatch[]): ColorMatch[] {
 
   for (const match of matches) {
     const key = `${match.start}:${match.end}:${match.color}`
-    if (seen.has(key)) continue
+    if (seen.has(key)) {
+      continue
+    }
 
     seen.add(key)
     deduped.push(match)

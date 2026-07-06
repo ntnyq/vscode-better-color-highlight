@@ -2,7 +2,7 @@ import type * as ReactiveVscode from 'reactive-vscode'
 import { describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
 import type * as StrategyRegistry from '../src/core/strategy-registry'
-import type { ColorMatch } from '../src/types'
+import type { ColorDetector, ColorMatch } from '../src/types'
 import { shouldTrackDocument } from '../src/utils/editor-filter'
 import type * as LoggerModule from '../src/utils/logger'
 
@@ -17,6 +17,7 @@ type LoggerFn = (message?: unknown) => void
 let documentTextRef: TestRef<string>
 let visibleEditorsRef: TestRef<unknown[]>
 let configSnapshot: Record<string, unknown>
+let strategyList: ColorDetector[]
 
 const getterWatchers = new Set<() => void>()
 
@@ -43,6 +44,7 @@ function createRef<T>(initialValue: T): TestRef<T> {
       for (const watcher of watchers) {
         watcher(nextValue)
       }
+
       triggerGetterWatchers()
     },
     watchers,
@@ -70,6 +72,7 @@ function watchRef<T>(
     if (options?.immediate) {
       watcher()
     }
+
     return () => {
       getterWatchers.delete(watcher)
     }
@@ -79,6 +82,7 @@ function watchRef<T>(
   if (options?.immediate) {
     listener(source.value)
   }
+
   return () => {
     source.watchers.delete(listener)
   }
@@ -100,6 +104,9 @@ vi.mock(
       },
       window: {
         createTextEditorDecorationType,
+      },
+      workspace: {
+        isTrusted: true,
       },
     }) as unknown as Partial<typeof Vscode>,
 )
@@ -124,7 +131,7 @@ vi.mock(import('../src/core/strategy-registry'), async importOriginal => {
 
   return {
     ...original,
-    getStrategies: vi.fn<() => [typeof asyncStrategy]>(() => [asyncStrategy]),
+    getStrategies: vi.fn<() => ColorDetector[]>(() => strategyList),
   }
 })
 
@@ -186,6 +193,7 @@ function setupTest() {
     markRuler: true,
     debug: false,
   }
+  strategyList = [asyncStrategy]
 }
 
 async function flushPromises() {
@@ -208,6 +216,31 @@ describe(shouldTrackDocument, () => {
 })
 
 describe('useColorHighlight', () => {
+  it('does not apply async results after the editor is no longer visible', async () => {
+    setupTest()
+    const { promise, resolve } = Promise.withResolvers<ColorMatch[]>()
+    asyncStrategy.mockReturnValue(promise)
+
+    const editor = createEditor()
+    documentTextRef = createRef('.box { color: #ff0000; }')
+    visibleEditorsRef = createRef<unknown[]>([editor])
+
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+
+    useColorHighlight()
+    expect(asyncStrategy).toHaveBeenCalledTimes(1)
+
+    visibleEditorsRef.value = []
+    resolve([{ start: 14, end: 21, color: 'rgb(255, 0, 0)' }])
+    await flushPromises()
+    await flushPromises()
+    await flushPromises()
+
+    expect(createTextEditorDecorationType).not.toHaveBeenCalled()
+    expect(setDecorations).not.toHaveBeenCalled()
+  })
+
   it('discards async results from stale runs after text is cleared', async () => {
     setupTest()
     vi.useFakeTimers()
@@ -236,6 +269,39 @@ describe('useColorHighlight', () => {
     expect(createTextEditorDecorationType).not.toHaveBeenCalled()
     expect(setDecorations).not.toHaveBeenCalled()
     vi.useRealTimers()
+  })
+
+  it('applies successful strategy results when another strategy fails', async () => {
+    setupTest()
+    const failingStrategy = vi.fn<ColorDetector>(() => {
+      throw new Error('detector failed')
+    })
+    const successfulStrategy = vi.fn<ColorDetector>(() => [
+      { start: 14, end: 21, color: 'rgb(255, 0, 0)' },
+    ])
+    strategyList = [failingStrategy, successfulStrategy]
+
+    documentTextRef = createRef('.box { color: #ff0000; }')
+    visibleEditorsRef = createRef<unknown[]>([createEditor()])
+
+    const { logger } = await import('../src/utils/logger')
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+
+    useColorHighlight()
+    await flushPromises()
+    await flushPromises()
+    await flushPromises()
+
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('Color detector "'),
+    )
+    expect(logger.error).toHaveBeenCalledWith(
+      expect.stringContaining('failed: Error: detector failed'),
+    )
+    expect(setDecorations).toHaveBeenLastCalledWith(expect.anything(), [
+      expect.anything(),
+    ])
   })
 
   it('clears decorations when highlighting is disabled without editing text', async () => {

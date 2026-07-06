@@ -269,6 +269,29 @@ describe(findScssVars, () => {
     expect(result).toStrictEqual([])
   })
 
+  it('does not resolve variables across files when the workspace is untrusted', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'better-color-scss-'))
+    const tokensPath = join(dir, '_tokens.scss')
+    const entryPath = join(dir, 'entry.scss')
+
+    await writeFile(tokensPath, '$brand: #336699;\n', 'utf8')
+
+    const text = `
+      @use "tokens";
+      .button { color: tokens.$brand; }
+    `
+    await writeFile(entryPath, text, 'utf8')
+
+    const result = await findScssVars(text, {
+      languageId: 'scss',
+      filePath: entryPath,
+      workspaceIsTrusted: false,
+      resolveScssVariablesAcrossFiles: true,
+    })
+
+    expect(result).toStrictEqual([])
+  })
+
   it('resolves variables from @use as star', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'better-color-scss-'))
     const tokensPath = join(dir, '_tokens.scss')

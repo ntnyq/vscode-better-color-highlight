@@ -297,7 +297,13 @@
   "packageManager": "pnpm@11.9.0",
   "capabilities": {
     "untrustedWorkspaces": {
-      "supported": true
+      "supported": true,
+      "restrictedConfigurations": [
+        "color-highlight.resolveScssVariablesAcrossFiles",
+        "color-highlight.scssLoadPaths",
+        "color-highlight.resolveCssVariablesAcrossFiles",
+        "color-highlight.cssVariablePaths"
+      ]
     },
     "virtualWorkspaces": {
       "supported": true

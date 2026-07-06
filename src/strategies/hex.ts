@@ -32,7 +32,9 @@ function isDartColorConstructorHex(
   start: number,
   context?: StrategyContext,
 ): boolean {
-  if (context?.languageId !== 'dart') return false
+  if (context?.languageId !== 'dart') {
+    return false
+  }
   return /Color\(\s*$/u.test(text.slice(Math.max(0, start - 16), start))
 }
 
@@ -52,19 +54,29 @@ export function findHexRGBA(
 
   for (const m of text.matchAll(HEX_REGEX)) {
     const fullMatch = m.groups?.hex
-    if (!fullMatch) continue
+    if (!fullMatch) {
+      continue
+    }
 
     const preceding = m.groups?.prefix ?? ''
 
     // Skip if preceded by a word character (e.g. font-size:0x...)
-    if (/\w/u.test(preceding)) continue
-    if (isShortNumericHex(fullMatch)) continue
+    if (/\w/u.test(preceding)) {
+      continue
+    }
+    if (isShortNumericHex(fullMatch)) {
+      continue
+    }
 
     const result = hexToRgb(fullMatch)
-    if (!result) continue
+    if (!result) {
+      continue
+    }
 
     const start = (m.index ?? 0) + preceding.length
-    if (isDartColorConstructorHex(text, start, context)) continue
+    if (isDartColorConstructorHex(text, start, context)) {
+      continue
+    }
 
     const end = start + fullMatch.length
     const color = rgbString(result.r, result.g, result.b, result.a)
@@ -91,18 +103,28 @@ export function findHexARGB(
 
   for (const m of text.matchAll(HEX_REGEX)) {
     const fullMatch = m.groups?.hex
-    if (!fullMatch) continue
+    if (!fullMatch) {
+      continue
+    }
 
     const preceding = m.groups?.prefix ?? ''
 
-    if (/\w/u.test(preceding)) continue
-    if (isShortNumericHex(fullMatch)) continue
+    if (/\w/u.test(preceding)) {
+      continue
+    }
+    if (isShortNumericHex(fullMatch)) {
+      continue
+    }
 
     const result = hexARGBToRgb(fullMatch)
-    if (!result) continue
+    if (!result) {
+      continue
+    }
 
     const start = (m.index ?? 0) + preceding.length
-    if (isDartColorConstructorHex(text, start, context)) continue
+    if (isDartColorConstructorHex(text, start, context)) {
+      continue
+    }
 
     const end = start + fullMatch.length
     const color = rgbString(result.r, result.g, result.b, result.a)

@@ -97,9 +97,15 @@ function parseRgbChannelValue(value: string): number {
  */
 function parseAngle(value: string): number {
   const num = Number(value.replace(/(?:deg|grad|rad|turn)$/u, ''))
-  if (value.endsWith('grad')) return (num * 360) / 400
-  if (value.endsWith('rad')) return (num * 180) / Math.PI
-  if (value.endsWith('turn')) return num * 360
+  if (value.endsWith('grad')) {
+    return (num * 360) / 400
+  }
+  if (value.endsWith('rad')) {
+    return (num * 180) / Math.PI
+  }
+  if (value.endsWith('turn')) {
+    return num * 360
+  }
   return num // default: degrees
 }
 
@@ -115,15 +121,21 @@ export function findColorFunctions(text: string): ColorMatch[] {
 
   for (const m of text.matchAll(COLOR_FUNC_REGEX)) {
     const fullMatch = m.groups?.colorFunc
-    if (!fullMatch) continue
+    if (!fullMatch) {
+      continue
+    }
 
     const start = m.index ?? 0
-    if (start > 0 && /[-\w]/u.test(text[start - 1])) continue
+    if (start > 0 && /[-\w]/u.test(text[start - 1])) {
+      continue
+    }
 
     const end = start + fullMatch.length
 
     const color = parseColorFunction(fullMatch)
-    if (!color) continue
+    if (!color) {
+      continue
+    }
 
     matches.push({ start, end, color })
   }
@@ -131,13 +143,17 @@ export function findColorFunctions(text: string): ColorMatch[] {
   // CSS Color 4 color() function syntax
   for (const m of text.matchAll(COLOR_SPACE_FUNC_REGEX)) {
     const fullMatch = m.groups?.colorSpaceFunc
-    if (!fullMatch) continue
+    if (!fullMatch) {
+      continue
+    }
 
     const start = m.index ?? 0
     const end = start + fullMatch.length
 
     const color = parseColorFunction(fullMatch)
-    if (!color) continue
+    if (!color) {
+      continue
+    }
 
     matches.push({ start, end, color })
   }
@@ -148,7 +164,9 @@ export function findColorFunctions(text: string): ColorMatch[] {
   for (const m of text.matchAll(CSS_VAR_SHORTHAND_REGEX)) {
     const propName = m.groups?.propName
     const value = m.groups?.value
-    if (!propName || !value) continue
+    if (!propName || !value) {
+      continue
+    }
 
     const fullMatch = m[0]
 
@@ -165,7 +183,9 @@ export function findColorFunctions(text: string): ColorMatch[] {
       | 'oklab'
 
     const color = parseShorthandValue(value, space)
-    if (!color) continue
+    if (!color) {
+      continue
+    }
 
     matches.push({ start, end, color })
   }
@@ -185,13 +205,19 @@ function findHyprlandRgbaHexColors(text: string): ColorMatch[] {
   for (const m of text.matchAll(HYPRLAND_RGBA_HEX_REGEX)) {
     const fullMatch = m.groups?.hyprlandRgba
     const hex = m.groups?.hex
-    if (!fullMatch || !hex) continue
+    if (!fullMatch || !hex) {
+      continue
+    }
 
     const start = m.index ?? 0
-    if (start > 0 && /[-\w]/u.test(text[start - 1])) continue
+    if (start > 0 && /[-\w]/u.test(text[start - 1])) {
+      continue
+    }
 
     const result = hexToRgb(`#${hex}`)
-    if (!result) continue
+    if (!result) {
+      continue
+    }
 
     const end = start + fullMatch.length
     const color = rgbString(result.r, result.g, result.b, result.a)
@@ -216,11 +242,15 @@ function parseColorFunction(func: string): string | null {
   const fnMatch = func.match(
     /^(?<name>rgba?|hsla?|lcha?|oklcha?|laba?|oklaba?)\((?<args>.*)\)$/iu,
   )
-  if (!fnMatch) return null
+  if (!fnMatch) {
+    return null
+  }
 
   const fn = fnMatch.groups?.name?.toLowerCase()
   const args = fnMatch.groups?.args
-  if (!fn || args === undefined) return null
+  if (!fn || args === undefined) {
+    return null
+  }
 
   // Split args respecting the separator style
   const hasComma = args.includes(',')
@@ -244,6 +274,7 @@ function parseColorFunction(func: string): string | null {
       if (alphaPart) {
         alpha = parseChannelValue(alphaPart, 'percent')
       }
+
       parts.splice(slashIndex)
     }
   }
@@ -254,11 +285,16 @@ function parseColorFunction(func: string): string | null {
   }
 
   const [r, g, b] = convertColorFunction(fn, parts)
-  if (r === null) return null
+  if (r === null) {
+    return null
+  }
   if (!Number.isFinite(r) || !Number.isFinite(g) || !Number.isFinite(b)) {
     return null
   }
-  if (alpha !== undefined && !Number.isFinite(alpha)) return null
+
+  if (alpha !== undefined && !Number.isFinite(alpha)) {
+    return null
+  }
 
   return rgbString(r, g, b, alpha)
 }
@@ -271,11 +307,15 @@ function parseColorFunction(func: string): string | null {
  */
 function parseColorSpaceFunction(func: string): string | null {
   const fnMatch = func.match(/^color\(\s*(?<space>[\w-]+)\s+(?<args>.+)\)$/iu)
-  if (!fnMatch) return null
+  if (!fnMatch) {
+    return null
+  }
 
   const space = fnMatch.groups?.space?.toLowerCase()
   let args = fnMatch.groups?.args?.trim()
-  if (!space || !args) return null
+  if (!space || !args) {
+    return null
+  }
 
   let alpha: number | undefined
   if (args.includes('/')) {
@@ -285,14 +325,18 @@ function parseColorSpaceFunction(func: string): string | null {
   }
 
   const parts = args.split(/\s+/u).filter(Boolean)
-  if (parts.length < 3) return null
+  if (parts.length < 3) {
+    return null
+  }
 
   const c1 = parsePercent(parts[0])
   const c2 = parsePercent(parts[1])
   const c3 = parsePercent(parts[2])
 
   const [r, g, b] = colorSpaceToRgb(space, c1, c2, c3)
-  if (r === null) return null
+  if (r === null) {
+    return null
+  }
 
   return rgbString(r, g, b, alpha)
 }
@@ -304,7 +348,9 @@ function parseColorSpaceFunction(func: string): string | null {
  * @returns The inferred shorthand color space, or null when unknown
  */
 function inferShorthandSpace(name?: string): ShorthandSpace | null {
-  if (!name) return null
+  if (!name) {
+    return null
+  }
 
   const lower = name.toLowerCase()
   const match = lower.match(/(?:^|[-_])(?<space>oklch|oklab|rgb|hsl|lch|lab)$/u)
@@ -421,25 +467,36 @@ export function parseShorthandValue(
     const lastPart = parts[parts.length - 1]
     if (lastPart.includes('/')) {
       const [channel, a, extra] = lastPart.split('/')
-      if (extra !== undefined || !channel || !a) return null
+      if (extra !== undefined || !channel || !a) {
+        return null
+      }
       parts[parts.length - 1] = channel
       alpha = parseChannelValue(a.trim(), 'percent')
     }
   } else {
     const alphaPart = parts[slashIndex + 1]
-    if (!alphaPart || parts.length !== slashIndex + 2) return null
+    if (!alphaPart || parts.length !== slashIndex + 2) {
+      return null
+    }
     alpha = parseChannelValue(alphaPart, 'percent')
     parts.splice(slashIndex)
   }
 
-  if (parts.length !== 3) return null
+  if (parts.length !== 3) {
+    return null
+  }
 
   const [r, g, b] = convertColorFunction(space, parts)
-  if (r === null) return null
+  if (r === null) {
+    return null
+  }
   if (!Number.isFinite(r) || !Number.isFinite(g) || !Number.isFinite(b)) {
     return null
   }
-  if (alpha !== undefined && !Number.isFinite(alpha)) return null
+
+  if (alpha !== undefined && !Number.isFinite(alpha)) {
+    return null
+  }
 
   return rgbString(r, g, b, alpha)
 }

@@ -1,5 +1,5 @@
 import { useCommand } from 'reactive-vscode'
-import { env, window } from 'vscode'
+import { env, window, workspace } from 'vscode'
 import { config } from './config'
 import { getStrategies } from './core/strategy-registry'
 import { getColorHover } from './hover/color-hover'
@@ -41,7 +41,9 @@ async function copyColorValue(format: CopyColorFormat, value: unknown) {
       ? value
       : await getActiveEditorColorValue(format)
 
-  if (!resolvedValue) return
+  if (!resolvedValue) {
+    return
+  }
 
   await env.clipboard.writeText(resolvedValue)
   await window.showInformationMessage(`Copied ${resolvedValue}`)
@@ -57,7 +59,9 @@ async function getActiveEditorColorValue(
   format: CopyColorFormat,
 ): Promise<string | undefined> {
   const editor = window.activeTextEditor
-  if (!editor) return undefined
+  if (!editor) {
+    return undefined
+  }
 
   const document = editor.document
   const hover = await getColorHover({
@@ -67,9 +71,12 @@ async function getActiveEditorColorValue(
     languageId: document.languageId,
     offset: document.offsetAt(editor.selection.active),
     text: document.getText(),
+    workspaceIsTrusted: workspace.isTrusted,
   })
 
-  if (!hover) return undefined
+  if (!hover) {
+    return undefined
+  }
 
   return getPresentationValue(hover.presentations, format)
 }

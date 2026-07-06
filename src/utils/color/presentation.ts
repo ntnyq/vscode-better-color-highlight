@@ -63,7 +63,9 @@ export function getColorPresentations(
   color: string,
 ): ColorPresentations | null {
   const rgba = parseResolvedColor(color)
-  if (!rgba) return null
+  if (!rgba) {
+    return null
+  }
 
   return {
     alpha: formatAlpha(rgba.a),
@@ -84,7 +86,9 @@ export function parseResolvedColor(color: string): RgbaColor | null {
   const match = color.match(
     /^rgba?\(\s*(?<red>\d+)\s*,\s*(?<green>\d+)\s*,\s*(?<blue>\d+)(?:\s*,\s*(?<alpha>[\d.]+))?\s*\)$/u,
   )
-  if (!match?.groups) return null
+  if (!match?.groups) {
+    return null
+  }
 
   return {
     r: clamp(Number.parseInt(match.groups.red), 0, 255),
@@ -144,7 +148,9 @@ function toHexByte(value: number): string {
  * @returns CSS rgb() or rgba() string.
  */
 function formatRgb({ a, b, g, r }: RgbaColor): string {
-  if (a < 1) return `rgba(${r}, ${g}, ${b}, ${formatNumber(a, 3)})`
+  if (a < 1) {
+    return `rgba(${r}, ${g}, ${b}, ${formatNumber(a, 3)})`
+  }
   return `rgb(${r}, ${g}, ${b})`
 }
 

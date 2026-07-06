@@ -144,15 +144,19 @@ export function getStrategies(
   if (languageId === 'css' || languageId === 'scss') {
     strategies.push(findCssVars)
   }
+
   if (languageId === 'less') {
     strategies.push(findCssVars, findLessVars)
   }
+
   if (languageId === 'scss') {
     strategies.push(findScssVars)
   }
+
   if (languageId === 'stylus' || languageId === 'styl') {
     strategies.push(findStylusVars)
   }
+
   if (languageId === 'dart') {
     strategies.push(findDartColors)
   }

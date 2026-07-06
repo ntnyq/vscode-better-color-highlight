@@ -7,7 +7,7 @@ import {
   type Ref,
 } from 'reactive-vscode'
 import type { TextEditor, Range } from 'vscode'
-import { Range as VscodeRange } from 'vscode'
+import { Range as VscodeRange, workspace } from 'vscode'
 import { config } from '../config'
 import { getStrategies, shouldProcessLanguage } from '../core/strategy-registry'
 import { DecorationTypeCache } from '../decorations/decoration-type'
@@ -81,9 +81,11 @@ function useDebouncedRef<T>(source: Ref<T>, ms: number): Disposable<Ref<T>> {
       if (disposed) {
         return
       }
+
       if (timer) {
         clearTimeout(timer)
       }
+
       timer = setTimeout(() => {
         debounced.value = value
       }, ms)
@@ -95,6 +97,7 @@ function useDebouncedRef<T>(source: Ref<T>, ms: number): Disposable<Ref<T>> {
     if (disposed) {
       return
     }
+
     disposed = true
     if (timer) {
       clearTimeout(timer)
@@ -128,6 +131,7 @@ async function runStrategies(
     cssVariableTrustedSelectors,
     designTokenJsonMode,
     useARGB,
+    workspaceIsTrusted,
     debug,
   } = options
 
@@ -146,24 +150,31 @@ async function runStrategies(
   const results = await Promise.all(
     strategies.map(async fn => {
       const strategyName = fn.name || 'anonymous'
-      const matches = await fn(text, {
-        languageId,
-        filePath,
-        namedColorMatchMode,
-        resolveScssVariablesAcrossFiles,
-        scssLoadPaths,
-        resolveCssVariablesAcrossFiles,
-        cssVariablePaths,
-        cssVariableTrustedSelectors,
-        designTokenJsonMode,
-        useARGB,
-      })
-      if (debug && matches.length > 0) {
-        logger.info(
-          `[debug] Strategy "${strategyName}" found ${matches.length} matches`,
-        )
+      try {
+        const matches = await fn(text, {
+          languageId,
+          filePath,
+          namedColorMatchMode,
+          resolveScssVariablesAcrossFiles,
+          scssLoadPaths,
+          resolveCssVariablesAcrossFiles,
+          cssVariablePaths,
+          cssVariableTrustedSelectors,
+          designTokenJsonMode,
+          useARGB,
+          workspaceIsTrusted,
+        })
+        if (debug && matches.length > 0) {
+          logger.info(
+            `[debug] Strategy "${strategyName}" found ${matches.length} matches`,
+          )
+        }
+
+        return matches
+      } catch (error) {
+        logger.error(`Color detector "${strategyName}" failed: ${error}`)
+        return []
       }
-      return matches
     }),
   )
 
@@ -271,6 +282,7 @@ function setupEditorTracking(
   // Track the current config for this editor
   let pendingVersion = 0
   let lastRunSignature: string | undefined
+  let disposed = false
 
   // Watch debounced text and apply decorations
   const stopWatch = watch(
@@ -281,12 +293,17 @@ function setupEditorTracking(
         config,
       ),
     async runSignature => {
+      if (disposed) {
+        return
+      }
+
       if (runSignature === lastRunSignature) {
         if (config.debug) {
           logger.info(
             `[debug] Skipping unchanged run for ${doc.uri.fsPath} (language: ${doc.languageId})`,
           )
         }
+
         return
       }
       lastRunSignature = runSignature
@@ -308,6 +325,7 @@ function setupEditorTracking(
             `[debug] Skipping ${doc.uri.fsPath} — text length ${text.length} exceeds configured maxFileSize ${config.maxFileSize}`,
           )
         }
+
         clearDecorations(editor, cache)
         return
       }
@@ -319,6 +337,7 @@ function setupEditorTracking(
             `[debug] Skipping ${doc.uri.fsPath} — language "${doc.languageId}" not in configured languages: ${JSON.stringify(config.languages)}`,
           )
         }
+
         clearDecorations(editor, cache)
         return
       }
@@ -329,6 +348,7 @@ function setupEditorTracking(
             `[debug] Skipping ${doc.uri.fsPath} — highlighting is disabled`,
           )
         }
+
         clearDecorations(editor, cache)
         return
       }
@@ -353,16 +373,18 @@ function setupEditorTracking(
           cssVariableTrustedSelectors: config.cssVariableTrustedSelectors,
           designTokenJsonMode: config.designTokenJsonMode,
           useARGB: config.useARGB,
+          workspaceIsTrusted: workspace.isTrusted,
           debug: config.debug,
         })
 
         // Guard: discard stale results if document changed while strategies ran
-        if (thisVersion !== pendingVersion) {
+        if (disposed || thisVersion !== pendingVersion) {
           if (config.debug) {
             logger.info(
               `[debug] Discarding stale results for ${doc.uri.fsPath} (version ${thisVersion} != ${pendingVersion})`,
             )
           }
+
           return
         }
 
@@ -398,7 +420,15 @@ function setupEditorTracking(
     { immediate: true },
   )
 
-  disposables.push(debouncedText.dispose, stopRevisionWatch, stopWatch)
+  disposables.push(
+    () => {
+      disposed = true
+      pendingVersion++
+    },
+    debouncedText.dispose,
+    stopRevisionWatch,
+    stopWatch,
+  )
 }
 
 /**

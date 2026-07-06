@@ -400,13 +400,17 @@ export function findTailwindThemeColors(text: string): ColorMatch[] {
     const utilityStart = match.index ?? 0
     const start = findCandidateStart(text, utilityStart)
 
-    if (start === null) continue
+    if (start === null) {
+      continue
+    }
 
     const end = utilityStart + match[0].length
     const candidate = text.slice(start, end)
     const color = resolveCandidateColor(candidate)
 
-    if (!color) continue
+    if (!color) {
+      continue
+    }
 
     matches.push({
       start,
@@ -428,16 +432,22 @@ export function findTailwindThemeColors(text: string): ColorMatch[] {
 function findCandidateStart(text: string, utilityStart: number): number | null {
   let start = utilityStart
 
-  if (text[start - 1] === '!') start--
+  if (text[start - 1] === '!') {
+    start--
+  }
 
   while (text[start - 1] === ':') {
     const segmentStart = findVariantSegmentStart(text, start - 1)
 
-    if (segmentStart === null) break
+    if (segmentStart === null) {
+      break
+    }
 
     start = segmentStart
 
-    if (text[start - 1] === '!') start--
+    if (text[start - 1] === '!') {
+      start--
+    }
   }
 
   if (start > 0 && WORD_OR_HYPHEN_REGEX.test(text[start - 1])) {
@@ -458,11 +468,15 @@ function findVariantSegmentStart(
   text: string,
   separator: number,
 ): number | null {
-  if (separator <= 0) return null
+  if (separator <= 0) {
+    return null
+  }
 
   if (text[separator - 1] === ']') {
     const start = text.lastIndexOf('[', separator - 1)
-    if (start === -1) return null
+    if (start === -1) {
+      return null
+    }
 
     const value = text.slice(start + 1, separator - 1)
     if (!value || INVALID_ARBITRARY_VARIANT_CHAR_REGEX.test(value)) {
@@ -493,7 +507,9 @@ function resolveCandidateColor(candidate: string): string | null {
 
   for (const prefix of COLOR_UTILITY_PREFIXES) {
     const colorValue = resolveUtilityColor(utility, prefix)
-    if (colorValue) return colorValue
+    if (colorValue) {
+      return colorValue
+    }
   }
 
   return null
@@ -512,9 +528,13 @@ function findUtilityStart(candidate: string): number {
   for (let index = 0; index < candidate.length; index++) {
     const char = candidate[index]
 
-    if (char === '[') bracketDepth++
-    else if (char === ']') bracketDepth = Math.max(bracketDepth - 1, 0)
-    else if (char === ':' && bracketDepth === 0) lastSeparator = index
+    if (char === '[') {
+      bracketDepth++
+    } else if (char === ']') {
+      bracketDepth = Math.max(bracketDepth - 1, 0)
+    } else if (char === ':' && bracketDepth === 0) {
+      lastSeparator = index
+    }
   }
 
   return lastSeparator + 1
@@ -532,13 +552,17 @@ function resolveUtilityColor(
   prefix: (typeof COLOR_UTILITY_PREFIXES)[number],
 ): string | null {
   const marker = `${prefix}-`
-  if (!utility.startsWith(marker)) return null
+  if (!utility.startsWith(marker)) {
+    return null
+  }
 
   const colorReference = utility.slice(marker.length)
   const { alpha, value } = splitOpacityModifier(colorReference)
   const hex = resolveThemeColor(value)
 
-  if (!hex) return null
+  if (!hex) {
+    return null
+  }
 
   return hexToRgbString(hex, alpha)
 }
@@ -554,7 +578,9 @@ function splitOpacityModifier(value: string): {
   alpha?: number
 } {
   const slashIndex = value.indexOf('/')
-  if (slashIndex === -1) return { value }
+  if (slashIndex === -1) {
+    return { value }
+  }
 
   const alpha = parseOpacityModifier(value.slice(slashIndex + 1))
 
@@ -576,14 +602,18 @@ function parseOpacityModifier(value: string): number | undefined {
 
   if (normalized.endsWith('%')) {
     const numericValue = Number(normalized.slice(0, -1))
-    if (!Number.isFinite(numericValue)) return undefined
+    if (!Number.isFinite(numericValue)) {
+      return undefined
+    }
 
     return clampAlpha(numericValue / 100)
   }
 
   const numericValue = Number(normalized)
 
-  if (!Number.isFinite(numericValue)) return undefined
+  if (!Number.isFinite(numericValue)) {
+    return undefined
+  }
 
   if (isArbitraryValue || normalized.includes('.')) {
     return clampAlpha(numericValue)
@@ -599,16 +629,22 @@ function parseOpacityModifier(value: string): number | undefined {
  * @returns Hex color string, or null when the reference is not in the default theme
  */
 function resolveThemeColor(value: string): string | null {
-  if (isSolidColor(value)) return SOLID_COLORS[value]
+  if (isSolidColor(value)) {
+    return SOLID_COLORS[value]
+  }
 
   const shadeSeparator = value.lastIndexOf('-')
-  if (shadeSeparator === -1) return null
+  if (shadeSeparator === -1) {
+    return null
+  }
 
   const colorName = value.slice(0, shadeSeparator)
   const shade = value.slice(shadeSeparator + 1)
   const scale = TAILWIND_THEME_COLORS[colorName]
 
-  if (!scale || !isTailwindColorShade(shade)) return null
+  if (!scale || !isTailwindColorShade(shade)) {
+    return null
+  }
 
   return scale[shade]
 }
@@ -642,7 +678,9 @@ function isTailwindColorShade(value: string): value is TailwindColorShade {
  */
 function hexToRgbString(hex: string, alpha?: number): string | null {
   const result = hexToRgb(hex)
-  if (!result) return null
+  if (!result) {
+    return null
+  }
 
   return rgbString(result.r, result.g, result.b, alpha)
 }

@@ -48,7 +48,9 @@ export async function loadCssVarSourceDeclarations(
 
   for (const filePath of filePaths) {
     const text = await readCachedCssVarSourceFile(filePath, options.debug)
-    if (text === null) continue
+    if (text === null) {
+      continue
+    }
 
     const fileDeclarations = collectCssVarDeclarations(text, {
       filePath,
@@ -75,7 +77,9 @@ async function collectCssVarSourceFilePaths(
   const seen = new Set<string>()
 
   for (const sourcePath of options.paths) {
-    if (filePaths.length >= MAX_CSS_VAR_SOURCE_FILES) break
+    if (filePaths.length >= MAX_CSS_VAR_SOURCE_FILES) {
+      break
+    }
 
     const candidates = await expandCssVarSourcePath(
       options.filePath,

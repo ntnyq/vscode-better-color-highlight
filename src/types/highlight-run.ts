@@ -85,6 +85,11 @@ export interface StrategyRunOptions {
   readonly useARGB: HighlightRunConfig['useARGB']
 
   /**
+   * Whether the current workspace is trusted for cross-file reads.
+   */
+  readonly workspaceIsTrusted: boolean
+
+  /**
    * Whether to emit debug log messages.
    */
   readonly debug: boolean

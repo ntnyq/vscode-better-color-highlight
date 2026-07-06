@@ -88,6 +88,7 @@ export class DecorationTypeCache {
     for (const type of this.cache.values()) {
       type.dispose()
     }
+
     this.cache.clear()
   }
 

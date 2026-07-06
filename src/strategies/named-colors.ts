@@ -59,11 +59,15 @@ export function findNamedColors(
     const name = m[2]
 
     const rgb = NAMED_COLORS.get(name.toLowerCase())
-    if (!rgb) continue
+    if (!rgb) {
+      continue
+    }
 
     const start = (m.index ?? 0) + prefix.length
     const end = start + name.length
-    if (!isNamedColorAllowed(text, start, end, context)) continue
+    if (!isNamedColorAllowed(text, start, end, context)) {
+      continue
+    }
 
     const color = rgbString(rgb[0], rgb[1], rgb[2])
 

@@ -34,10 +34,14 @@ export function findDartColors(text: string): ColorMatch[] {
   for (const m of text.matchAll(DART_COLOR_HEX_REGEX)) {
     const fullMatch = m.groups?.full
     const hex = m.groups?.hex
-    if (!fullMatch || !hex) continue
+    if (!fullMatch || !hex) {
+      continue
+    }
 
     const result = hexARGBToRgb(hex)
-    if (!result) continue
+    if (!result) {
+      continue
+    }
 
     matches.push({
       start: m.index ?? 0,
@@ -52,8 +56,12 @@ export function findDartColors(text: string): ColorMatch[] {
     const red = Number(m.groups?.red)
     const green = Number(m.groups?.green)
     const blue = Number(m.groups?.blue)
-    if (!fullMatch) continue
-    if (![alpha, red, green, blue].every(isByte)) continue
+    if (!fullMatch) {
+      continue
+    }
+    if (![alpha, red, green, blue].every(isByte)) {
+      continue
+    }
 
     matches.push({
       start: m.index ?? 0,

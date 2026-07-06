@@ -85,6 +85,11 @@ export interface StrategyContext {
    * Whether 8-digit hex colors should be interpreted as ARGB.
    */
   useARGB?: boolean
+
+  /**
+   * Whether the current workspace is trusted for cross-file reads.
+   */
+  workspaceIsTrusted?: boolean
 }
 
 /**
