@@ -33,6 +33,7 @@ Highlight and preview colors in multiple formats across code, comments, and stri
 | `color-highlight.resolveCssVariablesAcrossFiles`  | Resolve CSS custom properties from configured CSS variable source paths. Disabled by default to avoid extra file-system work and ambiguous cascade guesses.                                                             | `boolean` | `false`                           |
 | `color-highlight.cssVariablePaths`                | File, directory, or glob paths used as external CSS custom property sources when CSS variable resolution is enabled.                                                                                                    | `array`   | `[]`                              |
 | `color-highlight.cssVariableTrustedSelectors`     | Selectors whose custom property declarations are trusted for cross-file CSS variable color resolution.                                                                                                                  | `array`   | `[":root","html","body",":host"]` |
+| `color-highlight.maxFileSize`                     | Maximum document text length, in characters, to scan for color highlighting. Set to 0 to disable this size limit.                                                                                                       | `number`  | `1000000`                         |
 | `color-highlight.designTokenJsonMode`             | Controls JSON and JSONC design token color matching. 'token-values' matches value and $value string fields, 'strings' matches any color string value, 'all' enables both modes, and 'off' disables JSON token matching. | `string`  | `"token-values"`                  |
 | `color-highlight.useARGB`                         | Interpret 8-digit hex colors as ARGB instead of RGBA.                                                                                                                                                                   | `boolean` | `false`                           |
 | `color-highlight.matchRgbWithNoFunction`          | Highlight RGB values not wrapped in rgb() function.                                                                                                                                                                     | `boolean` | `false`                           |
@@ -109,6 +110,7 @@ Compared with the original Color Highlight extension, this project keeps the fam
 - Transparent colors stay visible by rendering markers with an opaque display color while preserving the represented color value.
 - Named CSS color matching is more configurable through `color-highlight.namedColorMatchMode`.
 - Tailwind default theme color utilities are highlighted in markup and class strings.
+- Large files are skipped by default through `color-highlight.maxFileSize` to avoid expensive full-document scans.
 - Optional SCSS cross-file variable resolution through local `@use`, `@forward`, `@import`, directory indexes, nearest `node_modules`, and configured Sass load paths.
 - VS Code Workspace FS based dependency reads, avoiding Node `fs` APIs in extension runtime.
 - Broader test coverage, including parser regression tests and playground snapshots.
@@ -155,6 +157,7 @@ Suggested migration example:
     "body",
     ":host",
   ],
+  "color-highlight.maxFileSize": 1000000,
 }
 ```
 

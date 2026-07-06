@@ -171,6 +171,12 @@
           },
           "description": "Selectors whose custom property declarations are trusted for cross-file CSS variable color resolution."
         },
+        "color-highlight.maxFileSize": {
+          "type": "number",
+          "default": 1000000,
+          "minimum": 0,
+          "description": "Maximum document text length, in characters, to scan for color highlighting. Set to 0 to disable this size limit."
+        },
         "color-highlight.designTokenJsonMode": {
           "type": "string",
           "default": "token-values",

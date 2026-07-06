@@ -51,6 +51,7 @@ function createHighlightRunSignature(
       highlightConfig.resolveCssVariablesAcrossFiles,
     cssVariablePaths: highlightConfig.cssVariablePaths,
     cssVariableTrustedSelectors: highlightConfig.cssVariableTrustedSelectors,
+    maxFileSize: highlightConfig.maxFileSize,
     designTokenJsonMode: highlightConfig.designTokenJsonMode,
     matchRgbWithNoFunction: highlightConfig.matchRgbWithNoFunction,
     rgbWithNoFunctionLanguages: highlightConfig.rgbWithNoFunctionLanguages,
@@ -297,6 +298,16 @@ function setupEditorTracking(
       const text = debouncedText.value
 
       if (!text) {
+        clearDecorations(editor, cache)
+        return
+      }
+
+      if (config.maxFileSize > 0 && text.length > config.maxFileSize) {
+        if (config.debug) {
+          logger.info(
+            `[debug] Skipping ${doc.uri.fsPath} — text length ${text.length} exceeds configured maxFileSize ${config.maxFileSize}`,
+          )
+        }
         clearDecorations(editor, cache)
         return
       }

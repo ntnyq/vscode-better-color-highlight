@@ -15,6 +15,7 @@ export type HighlightRunConfig = Pick<
   | 'resolveCssVariablesAcrossFiles'
   | 'cssVariablePaths'
   | 'cssVariableTrustedSelectors'
+  | 'maxFileSize'
   | 'designTokenJsonMode'
   | 'matchRgbWithNoFunction'
   | 'rgbWithNoFunctionLanguages'

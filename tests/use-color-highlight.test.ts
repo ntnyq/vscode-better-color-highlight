@@ -174,6 +174,7 @@ function setupTest() {
     namedColorMatchMode: 'context',
     resolveScssVariablesAcrossFiles: false,
     scssLoadPaths: [],
+    maxFileSize: 1_000_000,
     useARGB: false,
     designTokenJsonMode: 'token-values',
     matchRgbWithNoFunction: false,
@@ -396,6 +397,28 @@ describe('useColorHighlight', () => {
       expect.objectContaining({
         designTokenJsonMode: 'all',
       }),
+    )
+  })
+
+  it('skips strategy runs when document text exceeds the configured max file size', async () => {
+    setupTest()
+    configSnapshot.maxFileSize = 10
+    configSnapshot.debug = true
+    asyncStrategy.mockResolvedValue([])
+    documentTextRef = createRef('.box { color: #ff0000; }')
+    visibleEditorsRef = createRef<unknown[]>([createEditor()])
+
+    const { logger } = await import('../src/utils/logger')
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+
+    useColorHighlight()
+    await flushPromises()
+
+    expect(asyncStrategy).not.toHaveBeenCalled()
+    expect(setDecorations).not.toHaveBeenCalled()
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining('exceeds configured maxFileSize'),
     )
   })
 })
