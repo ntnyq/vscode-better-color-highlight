@@ -26,6 +26,7 @@
   "rules": {
     "radix": "off",
     "default-case": "off",
+    "id-length": "off",
     "capitalized-comments": "off",
     "sort-imports": "off",
     "sort-keys": "off",
@@ -37,7 +38,7 @@
     "no-negated-condition": "off",
     "no-inline-comments": "off",
     "no-param-reassign": "off",
-    "no-use-before-define": "off",
+    "no-magic-numbers": "off",
     "prefer-destructuring": "off",
     "init-declarations": "off",
     "jsdoc/require-param": "off",
@@ -57,34 +58,6 @@
     "unicorn/no-immediate-mutation": "off",
     "unicorn/no-array-callback-reference": "off",
     "curly": ["warn", "all"],
-    "id-length": [
-      "warn",
-      {
-        "min": 2,
-        "exceptions": [
-          "a",
-          "b",
-          "g",
-          "h",
-          "i",
-          "j",
-          "k",
-          "m",
-          "n",
-          "p",
-          "r",
-          "s",
-          "x",
-          "v",
-          "w",
-          "y",
-          "z",
-          "_",
-          "T",
-          "$",
-        ],
-      },
-    ],
     "func-style": ["warn", "declaration", { "allowArrowFunctions": true }],
     "max-lines": [
       "warn",
@@ -92,6 +65,12 @@
         "max": 1000,
         "skipComments": true,
         "skipBlankLines": true,
+      },
+    ],
+    "no-use-before-define": [
+      "warn",
+      {
+        "functions": false,
       },
     ],
     "max-params": ["warn", { "max": 6 }],
@@ -119,28 +98,8 @@
         "includeExports": true,
       },
     ],
-    "no-magic-numbers": [
-      "warn",
-      {
-        "ignore": [0, 1, -1, 2, 4, 10, 100, 180, 255, 360, 400, 1000],
-        "ignoreArrayIndexes": true,
-        "enforceConst": true,
-        "detectObjects": false,
-      },
-    ],
   },
   "overrides": [
-    {
-      "files": [
-        "src/constants/css-named-colors.ts",
-        "src/utils/color/**/*.ts",
-        "src/strategies/**/*.ts",
-      ],
-      "rules": {
-        "id-length": "off",
-        "no-magic-numbers": "off",
-      },
-    },
     {
       "files": ["scripts/**/*.{js,ts}"],
       "rules": {
