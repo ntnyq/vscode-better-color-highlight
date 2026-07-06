@@ -11,10 +11,14 @@ Highlight and preview colors in multiple formats across code, comments, and stri
 
 <!-- commands -->
 
-| Command                   | Title                                           |
-| ------------------------- | ----------------------------------------------- |
-| `color-highlight.enable`  | Color Highlight: Enable Better Color Highlight  |
-| `color-highlight.disable` | Color Highlight: Disable Better Color Highlight |
+| Command                            | Title                                           |
+| ---------------------------------- | ----------------------------------------------- |
+| `color-highlight.enable`           | Color Highlight: Enable Better Color Highlight  |
+| `color-highlight.disable`          | Color Highlight: Disable Better Color Highlight |
+| `color-highlight.copyColorAsHex`   | Color Highlight: Copy Color as HEX              |
+| `color-highlight.copyColorAsRgb`   | Color Highlight: Copy Color as RGB              |
+| `color-highlight.copyColorAsHsl`   | Color Highlight: Copy Color as HSL              |
+| `color-highlight.copyColorAsOklch` | Color Highlight: Copy Color as OKLCH            |
 
 <!-- commands -->
 
@@ -28,6 +32,7 @@ Highlight and preview colors in multiple formats across code, comments, and stri
 | `color-highlight.languages`                       | Language IDs where colors are highlighted. Use '\*' for all languages, prefix with '!' to exclude.                                                                                                                      | `array`   | `["*"]`                           |
 | `color-highlight.matchWords`                      | Highlight named CSS colors (e.g., 'red', 'blue') in non-style languages.                                                                                                                                                | `boolean` | `false`                           |
 | `color-highlight.namedColorMatchMode`             | Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches standalone values and non-style language words, and 'never' disables named color matching.                     | `string`  | `"context"`                       |
+| `color-highlight.enableHover`                     | Show hover details and copy actions for highlighted colors.                                                                                                                                                             | `boolean` | `false`                           |
 | `color-highlight.resolveScssVariablesAcrossFiles` | Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work.                                                                                     | `boolean` | `false`                           |
 | `color-highlight.scssLoadPaths`                   | Additional Sass load paths for resolving non-relative SCSS @use, @forward, and @import modules.                                                                                                                         | `array`   | `[]`                              |
 | `color-highlight.resolveCssVariablesAcrossFiles`  | Resolve CSS custom properties from configured CSS variable source paths. Disabled by default to avoid extra file-system work and ambiguous cascade guesses.                                                             | `boolean` | `false`                           |
@@ -109,6 +114,7 @@ Compared with the original Color Highlight extension, this project keeps the fam
 - Hyprland `rgba(rrggbb)` and `rgba(rrggbbaa)` syntax.
 - Transparent colors stay visible by rendering markers with an opaque display color while preserving the represented color value.
 - Named CSS color matching is more configurable through `color-highlight.namedColorMatchMode`.
+- Optional color hovers show HEX, RGB, HSL, OKLCH, and alpha details with copy actions when `color-highlight.enableHover` is enabled.
 - Tailwind default theme color utilities are highlighted in markup and class strings.
 - Large files are skipped by default through `color-highlight.maxFileSize` to avoid expensive full-document scans.
 - Optional SCSS cross-file variable resolution through local `@use`, `@forward`, `@import`, directory indexes, nearest `node_modules`, and configured Sass load paths.
@@ -133,6 +139,7 @@ Most settings from `naumovs.color-highlight` can be kept as-is because this exte
 | `color-highlight.markRuler`                    | `color-highlight.markRuler`                                | Keep as-is.                                                                                                                                                                    |
 | `color-highlight.sass.includePaths`            | `color-highlight.scssLoadPaths`                            | Rename this setting. Load paths are used for non-relative SCSS `@use`, `@forward`, and `@import` modules when `color-highlight.resolveScssVariablesAcrossFiles` is true.       |
 | Not available                                  | `color-highlight.namedColorMatchMode`                      | New. Default `context` avoids highlighting selectors, variable names, and words like `@layer red`. Use `always` for broader non-style language matching or `never` to disable. |
+| Not available                                  | `color-highlight.enableHover`                              | New. Default `false`. Enable to show color format details and copy actions on hover.                                                                                           |
 | Not available                                  | `color-highlight.resolveScssVariablesAcrossFiles`          | New. Default `false`. Set to `true` to resolve SCSS variables across local `@use`, `@forward`, and `@import` files.                                                            |
 | Not available                                  | `color-highlight.scssLoadPaths`                            | New. Default `[]`. Add absolute paths, or paths relative to the current SCSS file, for package-style Sass module resolution.                                                   |
 | Not available                                  | `color-highlight.debug`                                    | New. Set to `true` to enable debug logging for detection and decoration.                                                                                                       |
@@ -147,6 +154,7 @@ Suggested migration example:
   "color-highlight.markerType": "background",
   "color-highlight.matchWords": false,
   "color-highlight.namedColorMatchMode": "context",
+  "color-highlight.enableHover": false,
   "color-highlight.resolveScssVariablesAcrossFiles": false,
   "color-highlight.scssLoadPaths": [],
   "color-highlight.resolveCssVariablesAcrossFiles": false,

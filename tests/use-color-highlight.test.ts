@@ -172,6 +172,7 @@ function setupTest() {
     languages: ['*'],
     matchWords: false,
     namedColorMatchMode: 'context',
+    enableHover: false,
     resolveScssVariablesAcrossFiles: false,
     scssLoadPaths: [],
     maxFileSize: 1_000_000,

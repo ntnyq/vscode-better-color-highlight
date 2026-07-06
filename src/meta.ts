@@ -15,6 +15,10 @@ export const extensionId = `${publisher}.${name}`
 export type CommandKey =
   | "color-highlight.enable"
   | "color-highlight.disable"
+  | "color-highlight.copyColorAsHex"
+  | "color-highlight.copyColorAsRgb"
+  | "color-highlight.copyColorAsHsl"
+  | "color-highlight.copyColorAsOklch"
 
 /**
  * Commands map registered by `ntnyq.vscode-better-color-highlight`
@@ -30,6 +34,26 @@ export const commands = {
    * @value `color-highlight.disable`
    */
   disable: "color-highlight.disable",
+  /**
+   * Copy Color as HEX
+   * @value `color-highlight.copyColorAsHex`
+   */
+  copyColorAsHex: "color-highlight.copyColorAsHex",
+  /**
+   * Copy Color as RGB
+   * @value `color-highlight.copyColorAsRgb`
+   */
+  copyColorAsRgb: "color-highlight.copyColorAsRgb",
+  /**
+   * Copy Color as HSL
+   * @value `color-highlight.copyColorAsHsl`
+   */
+  copyColorAsHsl: "color-highlight.copyColorAsHsl",
+  /**
+   * Copy Color as OKLCH
+   * @value `color-highlight.copyColorAsOklch`
+   */
+  copyColorAsOklch: "color-highlight.copyColorAsOklch",
 } satisfies Record<string, CommandKey>
 
 /**
@@ -40,6 +64,7 @@ export type ConfigKey =
   | "color-highlight.languages"
   | "color-highlight.matchWords"
   | "color-highlight.namedColorMatchMode"
+  | "color-highlight.enableHover"
   | "color-highlight.resolveScssVariablesAcrossFiles"
   | "color-highlight.scssLoadPaths"
   | "color-highlight.resolveCssVariablesAcrossFiles"
@@ -61,6 +86,7 @@ export interface ConfigKeyTypeMap {
   "color-highlight.languages": string[],
   "color-highlight.matchWords": boolean,
   "color-highlight.namedColorMatchMode": ("context" | "always" | "never"),
+  "color-highlight.enableHover": boolean,
   "color-highlight.resolveScssVariablesAcrossFiles": boolean,
   "color-highlight.scssLoadPaths": string[],
   "color-highlight.resolveCssVariablesAcrossFiles": boolean,
@@ -83,6 +109,7 @@ export interface ConfigShorthandMap {
   languages: "color-highlight.languages",
   matchWords: "color-highlight.matchWords",
   namedColorMatchMode: "color-highlight.namedColorMatchMode",
+  enableHover: "color-highlight.enableHover",
   resolveScssVariablesAcrossFiles: "color-highlight.resolveScssVariablesAcrossFiles",
   scssLoadPaths: "color-highlight.scssLoadPaths",
   resolveCssVariablesAcrossFiles: "color-highlight.resolveCssVariablesAcrossFiles",
@@ -105,6 +132,7 @@ export interface ConfigShorthandTypeMap {
   languages: string[],
   matchWords: boolean,
   namedColorMatchMode: ("context" | "always" | "never"),
+  enableHover: boolean,
   resolveScssVariablesAcrossFiles: boolean,
   scssLoadPaths: string[],
   resolveCssVariablesAcrossFiles: boolean,
@@ -172,6 +200,16 @@ export const configs = {
     key: "color-highlight.namedColorMatchMode",
     default: "context",
   } as ConfigItem<"color-highlight.namedColorMatchMode">,
+  /**
+   * Show hover details and copy actions for highlighted colors.
+   * @key `color-highlight.enableHover`
+   * @default `false`
+   * @type `boolean`
+   */
+  enableHover: {
+    key: "color-highlight.enableHover",
+    default: false,
+  } as ConfigItem<"color-highlight.enableHover">,
   /**
    * Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work.
    * @key `color-highlight.resolveScssVariablesAcrossFiles`
@@ -329,6 +367,7 @@ export interface ScopedConfigKeyTypeMap {
   "languages": string[],
   "matchWords": boolean,
   "namedColorMatchMode": ("context" | "always" | "never"),
+  "enableHover": boolean,
   "resolveScssVariablesAcrossFiles": boolean,
   "scssLoadPaths": string[],
   "resolveCssVariablesAcrossFiles": boolean,
@@ -353,6 +392,7 @@ export const scopedConfigs = {
     "languages": ["*"],
     "matchWords": false,
     "namedColorMatchMode": "context",
+    "enableHover": false,
     "resolveScssVariablesAcrossFiles": false,
     "scssLoadPaths": [],
     "resolveCssVariablesAcrossFiles": false,
@@ -377,6 +417,7 @@ export interface NestedConfigs {
     "languages": string[],
     "matchWords": boolean,
     "namedColorMatchMode": ("context" | "always" | "never"),
+    "enableHover": boolean,
     "resolveScssVariablesAcrossFiles": boolean,
     "scssLoadPaths": string[],
     "resolveCssVariablesAcrossFiles": boolean,
@@ -400,6 +441,7 @@ export interface NestedScopedConfigs {
   "languages": string[],
   "matchWords": boolean,
   "namedColorMatchMode": ("context" | "always" | "never"),
+  "enableHover": boolean,
   "resolveScssVariablesAcrossFiles": boolean,
   "scssLoadPaths": string[],
   "resolveCssVariablesAcrossFiles": boolean,

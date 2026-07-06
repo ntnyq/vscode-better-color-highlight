@@ -18,6 +18,7 @@ const defaultConfig: NestedScopedConfigs = {
   languages: ['*'],
   matchWords: false,
   namedColorMatchMode: 'context',
+  enableHover: false,
   resolveScssVariablesAcrossFiles: false,
   scssLoadPaths: [],
   resolveCssVariablesAcrossFiles: false,

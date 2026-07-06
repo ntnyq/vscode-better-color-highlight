@@ -132,6 +132,11 @@
           ],
           "description": "Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches standalone values and non-style language words, and 'never' disables named color matching."
         },
+        "color-highlight.enableHover": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show hover details and copy actions for highlighted colors."
+        },
         "color-highlight.resolveScssVariablesAcrossFiles": {
           "type": "boolean",
           "default": false,
@@ -258,6 +263,26 @@
         "category": "Color Highlight",
         "command": "color-highlight.disable",
         "title": "Disable Better Color Highlight"
+      },
+      {
+        "category": "Color Highlight",
+        "command": "color-highlight.copyColorAsHex",
+        "title": "Copy Color as HEX"
+      },
+      {
+        "category": "Color Highlight",
+        "command": "color-highlight.copyColorAsRgb",
+        "title": "Copy Color as RGB"
+      },
+      {
+        "category": "Color Highlight",
+        "command": "color-highlight.copyColorAsHsl",
+        "title": "Copy Color as HSL"
+      },
+      {
+        "category": "Color Highlight",
+        "command": "color-highlight.copyColorAsOklch",
+        "title": "Copy Color as OKLCH"
       }
     ]
   },

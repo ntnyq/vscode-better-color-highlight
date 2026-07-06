@@ -2,5 +2,6 @@
   "color-highlight.enable": true,
   "color-highlight.debug": true,
   "color-highlight.matchWords": true,
+  "color-highlight.enableHover": true,
   "color-highlight.resolveScssVariablesAcrossFiles": true
 }

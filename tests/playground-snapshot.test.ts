@@ -65,6 +65,7 @@ const snapshotConfig: NestedScopedConfigs = {
   languages: ['*'],
   matchWords: true,
   namedColorMatchMode: 'context',
+  enableHover: false,
   resolveScssVariablesAcrossFiles: true,
   scssLoadPaths: [],
   resolveCssVariablesAcrossFiles: false,

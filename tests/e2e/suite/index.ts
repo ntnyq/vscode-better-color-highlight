@@ -31,6 +31,10 @@ export async function run() {
   const registeredCommands = await commands.getCommands(true)
   assert.ok(registeredCommands.includes('color-highlight.enable'))
   assert.ok(registeredCommands.includes('color-highlight.disable'))
+  assert.ok(registeredCommands.includes('color-highlight.copyColorAsHex'))
+  assert.ok(registeredCommands.includes('color-highlight.copyColorAsRgb'))
+  assert.ok(registeredCommands.includes('color-highlight.copyColorAsHsl'))
+  assert.ok(registeredCommands.includes('color-highlight.copyColorAsOklch'))
 
   await commands.executeCommand('color-highlight.disable')
   await waitForConfigValue('enable', false)
