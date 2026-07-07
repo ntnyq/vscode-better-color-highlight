@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  vscode-ext-gen@1.6.0: a33e346a47a92e9b314ad712632b8dce91ff6c7db4bd1b09d704f1c4367534d3
+
 importers:
 
   .:
@@ -56,7 +59,7 @@ importers:
         version: 4.1.9(@types/node@26.1.0)(vite@8.0.14(@types/node@26.1.0)(jiti@2.7.0)(yaml@2.9.0))
       vscode-ext-gen:
         specifier: ^1.6.0
-        version: 1.6.0
+        version: 1.6.0(patch_hash=a33e346a47a92e9b314ad712632b8dce91ff6c7db4bd1b09d704f1c4367534d3)
 
   playground: {}
 
@@ -4470,7 +4473,7 @@ snapshots:
     transitivePeerDependencies:
       - msw
 
-  vscode-ext-gen@1.6.0:
+  vscode-ext-gen@1.6.0(patch_hash=a33e346a47a92e9b314ad712632b8dce91ff6c7db4bd1b09d704f1c4367534d3):
     dependencies:
       cac: 6.7.14
       tinyglobby: 0.2.16
