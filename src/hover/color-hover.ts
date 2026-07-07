@@ -16,6 +16,19 @@ const COPY_COMMANDS = {
   rgb: 'color-highlight.copyColorAsRgb',
 } as const
 
+/**
+ * Replace command identifiers keyed by presentation format.
+ */
+const REPLACE_COMMANDS = {
+  hex: 'color-highlight.replaceColorAsHex',
+  hsl: 'color-highlight.replaceColorAsHsl',
+  oklch: 'color-highlight.replaceColorAsOklch',
+  rgb: 'color-highlight.replaceColorAsRgb',
+} as const
+
+const ADJUST_ALPHA_COMMAND = 'color-highlight.adjustColorAlpha'
+const HOVER_COLUMN_PAD = '\u00A0'
+
 interface CancellationLike {
   readonly isCancellationRequested: boolean
 }
@@ -24,6 +37,16 @@ interface CancellationLike {
  * Hover data for a detected color under the cursor.
  */
 export interface ColorHover {
+  /**
+   * Resolved rgb()/rgba() color value for the detected source text.
+   */
+  readonly originalColor: string
+
+  /**
+   * Exact source text covered by the detected color range.
+   */
+  readonly originalText: string
+
   /**
    * Copy-ready color representations shown in the hover.
    */
@@ -175,6 +198,8 @@ export async function getColorHover(
   }
 
   return {
+    originalColor: match.color,
+    originalText: text.slice(match.start, match.end),
     presentations,
     range: {
       start: match.start,
@@ -189,18 +214,43 @@ export async function getColorHover(
  * @param presentations - Color strings to display and copy.
  * @returns Trusted markdown body with command links.
  */
-export function buildColorHoverMarkdown(
-  presentations: ColorPresentations,
-): string {
+export function buildColorHoverMarkdown(hover: ColorHover): string {
+  const { presentations } = hover
+  const valueWidth = getHoverValueWidth(hover)
+
   return [
     '**Color Highlight**',
     '',
-    formatPresentationLine('HEX', presentations.hex, COPY_COMMANDS.hex),
-    formatPresentationLine('RGB', presentations.rgb, COPY_COMMANDS.rgb),
-    formatPresentationLine('HSL', presentations.hsl, COPY_COMMANDS.hsl),
-    formatPresentationLine('OKLCH', presentations.oklch, COPY_COMMANDS.oklch),
-    `Alpha: \`${presentations.alpha}\``,
+    formatPresentationLine('HEX', 'hex', presentations.hex, hover, valueWidth),
+    formatPresentationLine('RGB', 'rgb', presentations.rgb, hover, valueWidth),
+    formatPresentationLine('HSL', 'hsl', presentations.hsl, hover, valueWidth),
+    formatPresentationLine(
+      'OKLCH',
+      'oklch',
+      presentations.oklch,
+      hover,
+      valueWidth,
+    ),
+    formatAlphaLine(hover, valueWidth),
   ].join('\n\n')
+}
+
+/**
+ * Get the fixed display width for the hover value column.
+ *
+ * @param hover - Current hover data.
+ * @returns Maximum visible value length in the hover.
+ */
+function getHoverValueWidth(hover: ColorHover): number {
+  const { presentations } = hover
+
+  return Math.max(
+    presentations.alpha.length,
+    presentations.hex.length,
+    presentations.hsl.length,
+    presentations.oklch.length,
+    presentations.rgb.length,
+  )
 }
 
 /**
@@ -213,10 +263,71 @@ export function buildColorHoverMarkdown(
  */
 function formatPresentationLine(
   label: string,
+  format: keyof typeof COPY_COMMANDS,
   value: string,
-  command: string,
+  hover: ColorHover,
+  valueWidth: number,
 ): string {
-  return `${label}: \`${value}\` [Copy](${buildCommandLink(command, value)})`
+  const replacePayload = {
+    originalText: hover.originalText,
+    range: hover.range,
+    value,
+  }
+
+  return [
+    `\`${formatHoverLabel(label)}\``,
+    `\`${formatHoverValue(value, valueWidth)}\``,
+    `[$(copy)](${buildCommandLink(COPY_COMMANDS[format], value)})`,
+    `[$(replace)](${buildCommandLink(REPLACE_COMMANDS[format], replacePayload)})`,
+  ].join(' ')
+}
+
+/**
+ * Pad hover labels to keep rows visually aligned in inline code.
+ *
+ * @param label - Color format label.
+ * @returns Label padded to the width of OKLCH.
+ */
+function formatHoverLabel(label: string): string {
+  return label.padEnd(5, HOVER_COLUMN_PAD)
+}
+
+/**
+ * Pad hover values to align action links while preserving command payloads.
+ *
+ * @param value - Visible color value.
+ * @param width - Target display width.
+ * @returns Value padded with non-breaking spaces.
+ */
+function formatHoverValue(value: string, width: number): string {
+  return value.padEnd(width, HOVER_COLUMN_PAD)
+}
+
+/**
+ * Format alpha controls with decrement and increment command links.
+ *
+ * @param hover - Current hover data.
+ * @returns Markdown row for alpha actions.
+ */
+function formatAlphaLine(hover: ColorHover, valueWidth: number): string {
+  const basePayload = {
+    originalColor: hover.originalColor,
+    originalText: hover.originalText,
+    range: hover.range,
+  }
+
+  return [
+    '`Alpha`',
+    `\`${formatHoverValue(hover.presentations.alpha, valueWidth)}\``,
+    `[$(remove)](${buildCommandLink(ADJUST_ALPHA_COMMAND, {
+      ...basePayload,
+      delta: -0.1,
+    })})`,
+    `[$(add)](${buildCommandLink(ADJUST_ALPHA_COMMAND, {
+      ...basePayload,
+      delta: 0.1,
+    })})`,
+  ].join(' ')
 }
 
 /**
@@ -226,8 +337,8 @@ function formatPresentationLine(
  * @param value - Color string to pass to the command.
  * @returns Encoded command URI for Markdown links.
  */
-function buildCommandLink(command: string, value: string): string {
-  const args = encodeURIComponent(JSON.stringify([value]))
+function buildCommandLink(command: string, payload: unknown): string {
+  const args = encodeURIComponent(JSON.stringify([payload]))
   return `command:${command}?${args}`
 }
 

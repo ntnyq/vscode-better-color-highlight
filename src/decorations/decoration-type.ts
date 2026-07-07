@@ -1,4 +1,5 @@
-import { window, type TextEditorDecorationType } from 'vscode'
+import { window } from 'vscode'
+import type { TextEditorDecorationType } from 'vscode'
 import type { MarkerType } from '../types'
 import { buildDecorationOptions } from './marker-types'
 

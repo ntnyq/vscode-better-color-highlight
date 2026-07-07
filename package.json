@@ -76,6 +76,7 @@
     "vscode:prepublish": "pnpm run build"
   },
   "dependencies": {
+    "@ntnyq/utils": "^0.16.0",
     "reactive-vscode": "^1.0.2"
   },
   "devDependencies": {
@@ -283,6 +284,31 @@
         "category": "Color Highlight",
         "command": "color-highlight.copyColorAsOklch",
         "title": "Copy Color as OKLCH"
+      },
+      {
+        "category": "Color Highlight",
+        "command": "color-highlight.replaceColorAsHex",
+        "title": "Replace Color as HEX"
+      },
+      {
+        "category": "Color Highlight",
+        "command": "color-highlight.replaceColorAsRgb",
+        "title": "Replace Color as RGB"
+      },
+      {
+        "category": "Color Highlight",
+        "command": "color-highlight.replaceColorAsHsl",
+        "title": "Replace Color as HSL"
+      },
+      {
+        "category": "Color Highlight",
+        "command": "color-highlight.replaceColorAsOklch",
+        "title": "Replace Color as OKLCH"
+      },
+      {
+        "category": "Color Highlight",
+        "command": "color-highlight.adjustColorAlpha",
+        "title": "Adjust Color Alpha"
       }
     ]
   },

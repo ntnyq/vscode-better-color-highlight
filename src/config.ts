@@ -1,5 +1,6 @@
 import { defineConfig } from 'reactive-vscode'
-import { scopedConfigs, type NestedScopedConfigs } from './meta'
+import { scopedConfigs } from './meta'
+import type { NestedScopedConfigs } from './meta'
 
 /**
  * Reactive VS Code configuration accessor scoped to this extension.

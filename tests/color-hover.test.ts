@@ -82,6 +82,8 @@ describe(getColorHover, () => {
     })
 
     expect(result).toStrictEqual({
+      originalColor: 'rgb(255, 0, 0)',
+      originalText: '#ff0000',
       range: { end: 21, start: 14 },
       presentations: {
         alpha: '100%',
@@ -111,6 +113,8 @@ describe(getColorHover, () => {
     })
 
     expect(result).toMatchObject({
+      originalColor: 'rgb(255, 0, 0)',
+      originalText: '#ff0000',
       range: { end: 21, start: 14 },
       presentations: {
         hex: '#ff0000',
@@ -121,19 +125,56 @@ describe(getColorHover, () => {
 })
 
 describe(buildColorHoverMarkdown, () => {
-  it('renders color formats with copy command links', () => {
+  it('renders color formats with copy and replace icon command links', () => {
     const result = buildColorHoverMarkdown({
-      alpha: '50%',
-      hex: '#ff000080',
-      hsl: 'hsl(0 100% 50% / 0.5)',
-      oklch: 'oklch(62.8% 0.258 29.2 / 0.5)',
-      rgb: 'rgba(255, 0, 0, 0.5)',
+      originalColor: 'rgba(255, 0, 0, 0.5)',
+      originalText: '#ff000080',
+      range: { end: 21, start: 12 },
+      presentations: {
+        alpha: '50%',
+        hex: '#ff000080',
+        hsl: 'hsl(0 100% 50% / 0.5)',
+        oklch: 'oklch(62.8% 0.258 29.2 / 0.5)',
+        rgb: 'rgba(255, 0, 0, 0.5)',
+      },
     })
 
     expect(result).toContain('HEX')
     expect(result).toContain('#ff000080')
     expect(result).toContain('Alpha')
     expect(result).toContain('50%')
+    expect(result).not.toContain('| Format | Value | Actions |')
+    expect(result).not.toContain('| --- | --- | --- |')
+    expect(result).not.toContain('`HEX  `')
+    expect(result).not.toContain('`RGB  `')
+    expect(result).not.toContain('`HSL  `')
+    expect(result).toContain('`HEX\u00A0\u00A0` `#ff000080')
+    expect(result).toContain('`RGB\u00A0\u00A0` `rgba(255, 0, 0, 0.5)')
+    expect(result).toContain('`HSL\u00A0\u00A0` `hsl(0 100% 50% / 0.5)')
+    expect(result).toContain('`Alpha` `50%')
+
+    const getLine = (label: string) =>
+      result.split('\n\n').find(line => line.startsWith(`\`${label}`)) ?? ''
+
+    const actionIndexes = [
+      getLine('HEX\u00A0\u00A0').indexOf('[$(copy)]'),
+      getLine('RGB\u00A0\u00A0').indexOf('[$(copy)]'),
+      getLine('HSL\u00A0\u00A0').indexOf('[$(copy)]'),
+      getLine('OKLCH').indexOf('[$(copy)]'),
+      getLine('Alpha').indexOf('[$(remove)]'),
+    ]
+
+    expect(new Set(actionIndexes).size).toBe(1)
+    expect(result).toContain('[$(copy)]')
+    expect(result).toContain('[$(replace)]')
     expect(result).toContain('command:color-highlight.copyColorAsHex')
+    expect(result).toContain('command:color-highlight.replaceColorAsHex')
+    expect(result).toContain('command:color-highlight.adjustColorAlpha')
+    expect(result).toContain('%22originalText%22%3A%22%23ff000080%22')
+    expect(result).toContain(
+      '%22originalColor%22%3A%22rgba(255%2C%200%2C%200%2C%200.5)%22',
+    )
+    expect(result).toContain('%22delta%22%3A-0.1')
+    expect(result).toContain('%22delta%22%3A0.1')
   })
 })

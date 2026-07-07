@@ -11,45 +11,147 @@ Highlight and preview colors in multiple formats across code, comments, and stri
 
 <!-- commands -->
 
-| Command                            | Title                                           |
-| ---------------------------------- | ----------------------------------------------- |
-| `color-highlight.enable`           | Color Highlight: Enable Better Color Highlight  |
-| `color-highlight.disable`          | Color Highlight: Disable Better Color Highlight |
-| `color-highlight.copyColorAsHex`   | Color Highlight: Copy Color as HEX              |
-| `color-highlight.copyColorAsRgb`   | Color Highlight: Copy Color as RGB              |
-| `color-highlight.copyColorAsHsl`   | Color Highlight: Copy Color as HSL              |
-| `color-highlight.copyColorAsOklch` | Color Highlight: Copy Color as OKLCH            |
+| Command                               | Title                                           |
+| ------------------------------------- | ----------------------------------------------- |
+| `color-highlight.enable`              | Color Highlight: Enable Better Color Highlight  |
+| `color-highlight.disable`             | Color Highlight: Disable Better Color Highlight |
+| `color-highlight.copyColorAsHex`      | Color Highlight: Copy Color as HEX              |
+| `color-highlight.copyColorAsRgb`      | Color Highlight: Copy Color as RGB              |
+| `color-highlight.copyColorAsHsl`      | Color Highlight: Copy Color as HSL              |
+| `color-highlight.copyColorAsOklch`    | Color Highlight: Copy Color as OKLCH            |
+| `color-highlight.replaceColorAsHex`   | Color Highlight: Replace Color as HEX           |
+| `color-highlight.replaceColorAsRgb`   | Color Highlight: Replace Color as RGB           |
+| `color-highlight.replaceColorAsHsl`   | Color Highlight: Replace Color as HSL           |
+| `color-highlight.replaceColorAsOklch` | Color Highlight: Replace Color as OKLCH         |
+| `color-highlight.adjustColorAlpha`    | Color Highlight: Adjust Color Alpha             |
 
 <!-- commands -->
 
 ## Configs
 
-<!-- configs -->
+<!-- configs-list -->
 
-| Key                                               | Description                                                                                                                                                                                                             | Type      | Default                           |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | --------------------------------- |
-| `color-highlight.enable`                          | Enable or disable color highlighting.                                                                                                                                                                                   | `boolean` | `true`                            |
-| `color-highlight.languages`                       | Language IDs where colors are highlighted. Use '\*' for all languages, prefix with '!' to exclude.                                                                                                                      | `array`   | `["*"]`                           |
-| `color-highlight.matchWords`                      | Highlight named CSS colors (e.g., 'red', 'blue') in non-style languages.                                                                                                                                                | `boolean` | `false`                           |
-| `color-highlight.namedColorMatchMode`             | Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches standalone values and non-style language words, and 'never' disables named color matching.                     | `string`  | `"context"`                       |
-| `color-highlight.enableHover`                     | Show hover details and copy actions for highlighted colors.                                                                                                                                                             | `boolean` | `false`                           |
-| `color-highlight.resolveScssVariablesAcrossFiles` | Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work.                                                                                     | `boolean` | `false`                           |
-| `color-highlight.scssLoadPaths`                   | Additional Sass load paths for resolving non-relative SCSS @use, @forward, and @import modules.                                                                                                                         | `array`   | `[]`                              |
-| `color-highlight.resolveCssVariablesAcrossFiles`  | Resolve CSS custom properties from configured CSS variable source paths. Disabled by default to avoid extra file-system work and ambiguous cascade guesses.                                                             | `boolean` | `false`                           |
-| `color-highlight.cssVariablePaths`                | File, directory, or glob paths used as external CSS custom property sources when CSS variable resolution is enabled.                                                                                                    | `array`   | `[]`                              |
-| `color-highlight.cssVariableTrustedSelectors`     | Selectors whose custom property declarations are trusted for cross-file CSS variable color resolution.                                                                                                                  | `array`   | `[":root","html","body",":host"]` |
-| `color-highlight.maxFileSize`                     | Maximum document text length, in characters, to scan for color highlighting. Set to 0 to disable this size limit.                                                                                                       | `number`  | `1000000`                         |
-| `color-highlight.designTokenJsonMode`             | Controls JSON and JSONC design token color matching. 'token-values' matches value and $value string fields, 'strings' matches any color string value, 'all' enables both modes, and 'off' disables JSON token matching. | `string`  | `"token-values"`                  |
-| `color-highlight.useARGB`                         | Interpret 8-digit hex colors as ARGB instead of RGBA.                                                                                                                                                                   | `boolean` | `false`                           |
-| `color-highlight.matchRgbWithNoFunction`          | Highlight RGB values not wrapped in rgb() function.                                                                                                                                                                     | `boolean` | `false`                           |
-| `color-highlight.rgbWithNoFunctionLanguages`      | Language IDs for rgb-without-function matching. Use '\*' / '!' syntax.                                                                                                                                                  | `array`   | `["*"]`                           |
-| `color-highlight.matchHslWithNoFunction`          | Highlight HSL values not wrapped in hsl() function.                                                                                                                                                                     | `boolean` | `false`                           |
-| `color-highlight.hslWithNoFunctionLanguages`      | Language IDs for hsl-without-function matching. Use '\*' / '!' syntax.                                                                                                                                                  | `array`   | `["*"]`                           |
-| `color-highlight.markerType`                      | Style of the color highlight marker.                                                                                                                                                                                    | `string`  | `"background"`                    |
-| `color-highlight.markRuler`                       | Show color indicators on the scrollbar ruler.                                                                                                                                                                           | `boolean` | `true`                            |
-| `color-highlight.debug`                           | Enable debug logging for color detection and decoration.                                                                                                                                                                | `boolean` | `false`                           |
+#### `color-highlight.enable`
 
-<!-- configs -->
+Description : Enable or disable color highlighting.  
+Type : `boolean`  
+Default : `true`
+
+#### `color-highlight.languages`
+
+Description : Language IDs where colors are highlighted. Use '_' for all languages, prefix with '!' to exclude.  
+Type : `array`  
+Default : `["_"]`
+
+#### `color-highlight.matchWords`
+
+Description : Highlight named CSS colors (e.g., 'red', 'blue') in non-style languages.  
+Type : `boolean`  
+Default : `false`
+
+#### `color-highlight.namedColorMatchMode`
+
+Description : Controls named CSS color matching. 'context' matches style-language declaration values, 'always' matches standalone values and non-style language words, and 'never' disables named color matching.  
+Type : `string`  
+Default : `"context"`
+
+#### `color-highlight.enableHover`
+
+Description : Show hover details and copy actions for highlighted colors.  
+Type : `boolean`  
+Default : `false`
+
+#### `color-highlight.resolveScssVariablesAcrossFiles`
+
+Description : Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work.  
+Type : `boolean`  
+Default : `false`
+
+#### `color-highlight.scssLoadPaths`
+
+Description : Additional Sass load paths for resolving non-relative SCSS @use, @forward, and @import modules.  
+Type : `array`  
+Default : `[]`
+
+#### `color-highlight.resolveCssVariablesAcrossFiles`
+
+Description : Resolve CSS custom properties from configured CSS variable source paths. Disabled by default to avoid extra file-system work and ambiguous cascade guesses.  
+Type : `boolean`  
+Default : `false`
+
+#### `color-highlight.cssVariablePaths`
+
+Description : File, directory, or glob paths used as external CSS custom property sources when CSS variable resolution is enabled.  
+Type : `array`  
+Default : `[]`
+
+#### `color-highlight.cssVariableTrustedSelectors`
+
+Description : Selectors whose custom property declarations are trusted for cross-file CSS variable color resolution.  
+Type : `array`  
+Default : `[":root","html","body",":host"]`
+
+#### `color-highlight.maxFileSize`
+
+Description : Maximum document text length, in characters, to scan for color highlighting. Set to 0 to disable this size limit.  
+Type : `number`  
+Default : `1000000`
+
+#### `color-highlight.designTokenJsonMode`
+
+Description : Controls JSON and JSONC design token color matching. 'token-values' matches value and $value string fields, 'strings' matches any color string value, 'all' enables both modes, and 'off' disables JSON token matching.  
+Type : `string`  
+Default : `"token-values"`
+
+#### `color-highlight.useARGB`
+
+Description : Interpret 8-digit hex colors as ARGB instead of RGBA.  
+Type : `boolean`  
+Default : `false`
+
+#### `color-highlight.matchRgbWithNoFunction`
+
+Description : Highlight RGB values not wrapped in rgb() function.  
+Type : `boolean`  
+Default : `false`
+
+#### `color-highlight.rgbWithNoFunctionLanguages`
+
+Description : Language IDs for rgb-without-function matching. Use '_' / '!' syntax.  
+Type : `array`  
+Default : `["_"]`
+
+#### `color-highlight.matchHslWithNoFunction`
+
+Description : Highlight HSL values not wrapped in hsl() function.  
+Type : `boolean`  
+Default : `false`
+
+#### `color-highlight.hslWithNoFunctionLanguages`
+
+Description : Language IDs for hsl-without-function matching. Use '_' / '!' syntax.  
+Type : `array`  
+Default : `["_"]`
+
+#### `color-highlight.markerType`
+
+Description : Style of the color highlight marker.  
+Type : `string`  
+Default : `"background"`
+
+#### `color-highlight.markRuler`
+
+Description : Show color indicators on the scrollbar ruler.  
+Type : `boolean`  
+Default : `true`
+
+#### `color-highlight.debug`
+
+Description : Enable debug logging for color detection and decoration.  
+Type : `boolean`  
+Default : `false`
+
+<!-- configs-list -->
 
 ## Supported color formats
 
@@ -89,6 +191,10 @@ complete value is a supported color, configure:
 
 Use `"all"` to allow both token fields and broad string matching, or `"off"` to
 disable JSON token matching.
+
+When `color-highlight.enableHover` is enabled, each hover row shows compact
+copy and replace icons for HEX, RGB, HSL, and OKLCH values. The alpha row can
+decrease or increase transparency in 10 percentage point steps.
 
 Tailwind theme color matching highlights static default color utilities such as
 `bg-red-500`, `text-sky-300`, `from-purple-400`, and `ring-white/75`,

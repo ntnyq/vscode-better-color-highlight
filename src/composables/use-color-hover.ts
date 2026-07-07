@@ -41,10 +41,7 @@ export function useColorHover() {
         return
       }
 
-      const markdown = new MarkdownString(
-        buildColorHoverMarkdown(hover.presentations),
-        true,
-      )
+      const markdown = new MarkdownString(buildColorHoverMarkdown(hover), true)
       markdown.isTrusted = true
 
       return new Hover(

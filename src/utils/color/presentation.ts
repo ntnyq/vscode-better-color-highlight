@@ -29,9 +29,14 @@ export interface ColorPresentations {
 }
 
 /**
+ * Color presentation formats available for copy and replacement commands.
+ */
+export type ColorPresentationFormat = 'hex' | 'hsl' | 'oklch' | 'rgb'
+
+/**
  * Numeric RGBA channels normalized for formatting.
  */
-interface RgbaColor {
+export interface RgbaColor {
   /**
    * Red channel in the 0-255 range.
    */
@@ -67,13 +72,53 @@ export function getColorPresentations(
     return null
   }
 
+  return getColorPresentationsFromRgba(rgba)
+}
+
+/**
+ * Build common color presentations from numeric RGBA channel values.
+ *
+ * @param color - Numeric RGBA channel values.
+ * @returns Formatted color presentations.
+ */
+export function getColorPresentationsFromRgba(
+  color: RgbaColor,
+): ColorPresentations {
   return {
-    alpha: formatAlpha(rgba.a),
-    hex: formatHex(rgba),
-    hsl: formatHsl(rgba),
-    oklch: formatOklch(rgba),
-    rgb: formatRgb(rgba),
+    alpha: formatAlpha(color.a),
+    hex: formatHex(color),
+    hsl: formatHsl(color),
+    oklch: formatOklch(color),
+    rgb: formatRgb(color),
   }
+}
+
+/**
+ * Return a copy of a color with alpha clamped to the valid 0-1 range.
+ *
+ * @param color - Original RGBA color.
+ * @param alpha - Next alpha channel.
+ * @returns RGBA color with the new alpha.
+ */
+export function withAlpha(color: RgbaColor, alpha: number): RgbaColor {
+  return {
+    ...color,
+    a: clamp(alpha, 0, 1),
+  }
+}
+
+/**
+ * Select one formatted value from a color presentation set.
+ *
+ * @param presentations - Available color presentation strings.
+ * @param format - Requested presentation format.
+ * @returns The formatted color value for the requested format.
+ */
+export function formatColorPresentation(
+  presentations: ColorPresentations,
+  format: ColorPresentationFormat,
+): string {
+  return presentations[format]
 }
 
 /**

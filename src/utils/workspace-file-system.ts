@@ -1,3 +1,4 @@
+import { isString } from '@ntnyq/utils'
 import type { WorkspaceFileStat, WorkspacePathParts } from '../types'
 
 export interface WorkspaceFindFilesPattern {
@@ -269,10 +270,9 @@ export async function findWorkspaceFiles(
   maxResults?: number,
 ): Promise<string[]> {
   const { RelativePattern, workspace } = await import('vscode')
-  const globPattern =
-    typeof pattern === 'string'
-      ? pattern
-      : new RelativePattern(await toUri(pattern.basePath), pattern.pattern)
+  const globPattern = isString(pattern)
+    ? pattern
+    : new RelativePattern(await toUri(pattern.basePath), pattern.pattern)
   const uris = await workspace.findFiles(globPattern, undefined, maxResults)
 
   return uris.map(uri => (uri.scheme === 'file' ? uri.fsPath : uri.toString()))

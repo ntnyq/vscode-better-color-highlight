@@ -19,6 +19,11 @@ export type CommandKey =
   | "color-highlight.copyColorAsRgb"
   | "color-highlight.copyColorAsHsl"
   | "color-highlight.copyColorAsOklch"
+  | "color-highlight.replaceColorAsHex"
+  | "color-highlight.replaceColorAsRgb"
+  | "color-highlight.replaceColorAsHsl"
+  | "color-highlight.replaceColorAsOklch"
+  | "color-highlight.adjustColorAlpha"
 
 /**
  * Commands map registered by `ntnyq.vscode-better-color-highlight`
@@ -54,6 +59,31 @@ export const commands = {
    * @value `color-highlight.copyColorAsOklch`
    */
   copyColorAsOklch: "color-highlight.copyColorAsOklch",
+  /**
+   * Replace Color as HEX
+   * @value `color-highlight.replaceColorAsHex`
+   */
+  replaceColorAsHex: "color-highlight.replaceColorAsHex",
+  /**
+   * Replace Color as RGB
+   * @value `color-highlight.replaceColorAsRgb`
+   */
+  replaceColorAsRgb: "color-highlight.replaceColorAsRgb",
+  /**
+   * Replace Color as HSL
+   * @value `color-highlight.replaceColorAsHsl`
+   */
+  replaceColorAsHsl: "color-highlight.replaceColorAsHsl",
+  /**
+   * Replace Color as OKLCH
+   * @value `color-highlight.replaceColorAsOklch`
+   */
+  replaceColorAsOklch: "color-highlight.replaceColorAsOklch",
+  /**
+   * Adjust Color Alpha
+   * @value `color-highlight.adjustColorAlpha`
+   */
+  adjustColorAlpha: "color-highlight.adjustColorAlpha",
 } satisfies Record<string, CommandKey>
 
 /**

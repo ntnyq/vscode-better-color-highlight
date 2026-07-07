@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@ntnyq/utils':
+        specifier: ^0.16.0
+        version: 0.16.0
       reactive-vscode:
         specifier: ^1.0.2
         version: 1.0.2(@types/vscode@1.125.0)
@@ -186,6 +189,10 @@ packages:
   '@nodelib/fs.walk@1.2.8':
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
+
+  '@ntnyq/utils@0.16.0':
+    resolution: {integrity: sha512-MjCM4ZWFYuFYIvIEByjO9jw+STNjTe2rglcLsNHfGHl4TvcUT/ZMXobb5Asgnqj1xEpcP5IPN0/EAE+ekXKvHg==}
+    engines: {node: ^22.13.0 || >=24}
 
   '@oxc-project/types@0.132.0':
     resolution: {integrity: sha512-FESMOxil5Se014ui/Eq8fT5uHJo6nIRwH0PfJrZJXs6Gek3ZVFOrpUv3YIZT20m+extU98Hg1Ym72U58rlsxUQ==}
@@ -2548,6 +2555,8 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
+
+  '@ntnyq/utils@0.16.0': {}
 
   '@oxc-project/types@0.132.0': {}
 

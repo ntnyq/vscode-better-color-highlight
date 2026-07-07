@@ -1,5 +1,5 @@
 export * from './color'
+export * from './logger'
 export * from './color-match'
 export * from './editor-filter'
-export { logger } from './logger'
 export * from './workspace-file-system'

@@ -4,8 +4,8 @@ import {
   onDeactivate,
   watch,
   ref,
-  type Ref,
 } from 'reactive-vscode'
+import type { Ref } from 'reactive-vscode'
 import type { TextEditor, Range } from 'vscode'
 import { Range as VscodeRange, workspace } from 'vscode'
 import { config } from '../config'
