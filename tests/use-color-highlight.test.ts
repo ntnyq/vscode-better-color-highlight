@@ -1,3 +1,4 @@
+import { isFunction, isPlainObject } from '@ntnyq/utils'
 import type * as ReactiveVscode from 'reactive-vscode'
 import { describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
@@ -52,7 +53,7 @@ function createRef<T>(initialValue: T): TestRef<T> {
 }
 
 function isTestRef<T>(source: TestRef<T> | (() => T)): source is TestRef<T> {
-  return typeof source !== 'function'
+  return !isFunction(source)
 }
 
 function triggerGetterWatchers() {
@@ -304,6 +305,36 @@ describe('useColorHighlight', () => {
     ])
   })
 
+  it('records the latest highlight statistics for the document', async () => {
+    setupTest()
+    asyncStrategy.mockResolvedValue([
+      { start: 14, end: 21, color: 'rgb(255, 0, 0)' },
+      { start: 31, end: 38, color: 'rgb(0, 0, 255)' },
+      { start: 45, end: 52, color: 'rgb(255, 0, 0)' },
+    ])
+
+    documentTextRef = createRef(
+      '.red { color: #ff0000; }\n.blue { color: #0000ff; }',
+    )
+    visibleEditorsRef = createRef<unknown[]>([createEditor()])
+
+    const { getHighlightState } = await import('../src/core/highlight-state')
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+
+    useColorHighlight()
+    await flushPromises()
+    await flushPromises()
+
+    expect(getHighlightState('file:///tmp/example.css')).toStrictEqual({
+      colorCount: 2,
+      colors: ['rgb(255, 0, 0)', 'rgb(0, 0, 255)'],
+      languageId: 'css',
+      matchCount: 3,
+      uri: 'file:///tmp/example.css',
+    })
+  })
+
   it('clears decorations when highlighting is disabled without editing text', async () => {
     setupTest()
     vi.useFakeTimers()
@@ -380,8 +411,7 @@ describe('useColorHighlight', () => {
     expect(
       stringifySpy.mock.calls.some(
         ([value]) =>
-          typeof value === 'object' &&
-          value !== null &&
+          isPlainObject(value) &&
           'text' in value &&
           value.text === '.box { color: #ff0000; }',
       ),

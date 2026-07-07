@@ -25,7 +25,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -42,7 +42,7 @@
       "render": {
         "backgroundColor": "rgb(0, 255, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(0, 255, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(0, 255, 0)"
       }
     },
@@ -59,7 +59,7 @@
       "render": {
         "backgroundColor": "rgb(0, 0, 255)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(0, 0, 255)",
+        "border": null,
         "overviewRulerColor": "rgb(0, 0, 255)"
       }
     },
@@ -76,7 +76,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -93,7 +93,7 @@
       "render": {
         "backgroundColor": "rgb(0, 255, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(0, 255, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(0, 255, 0)"
       }
     },
@@ -110,7 +110,7 @@
       "render": {
         "backgroundColor": "rgb(0, 0, 255)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(0, 0, 255)",
+        "border": null,
         "overviewRulerColor": "rgb(0, 0, 255)"
       }
     },
@@ -127,7 +127,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -144,7 +144,7 @@
       "render": {
         "backgroundColor": "rgb(0, 255, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(0, 255, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(0, 255, 0)"
       }
     },
@@ -161,7 +161,7 @@
       "render": {
         "backgroundColor": "rgb(0, 0, 255)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(0, 0, 255)",
+        "border": null,
         "overviewRulerColor": "rgb(0, 0, 255)"
       }
     },
@@ -178,7 +178,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -195,7 +195,7 @@
       "render": {
         "backgroundColor": "rgb(0, 255, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(0, 255, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(0, 255, 0)"
       }
     },
@@ -212,7 +212,7 @@
       "render": {
         "backgroundColor": "rgb(0, 0, 255)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(0, 0, 255)",
+        "border": null,
         "overviewRulerColor": "rgb(0, 0, 255)"
       }
     },
@@ -229,7 +229,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -246,7 +246,7 @@
       "render": {
         "backgroundColor": "rgb(0, 128, 255)",
         "color": "#000000",
-        "border": "3px solid rgb(0, 128, 255)",
+        "border": null,
         "overviewRulerColor": "rgb(0, 128, 255)"
       }
     },
@@ -263,7 +263,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -280,7 +280,7 @@
       "render": {
         "backgroundColor": "rgb(0, 128, 255)",
         "color": "#000000",
-        "border": "3px solid rgb(0, 128, 255)",
+        "border": null,
         "overviewRulerColor": "rgb(0, 128, 255)"
       }
     },
@@ -297,7 +297,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -314,7 +314,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -331,7 +331,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -348,7 +348,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -365,7 +365,7 @@
       "render": {
         "backgroundColor": "rgb(64, 127, 191)",
         "color": "#000000",
-        "border": "3px solid rgb(64, 127, 191)",
+        "border": null,
         "overviewRulerColor": "rgb(64, 127, 191)"
       }
     },
@@ -382,7 +382,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -399,7 +399,7 @@
       "render": {
         "backgroundColor": "rgb(64, 127, 191)",
         "color": "#000000",
-        "border": "3px solid rgb(64, 127, 191)",
+        "border": null,
         "overviewRulerColor": "rgb(64, 127, 191)"
       }
     },
@@ -416,7 +416,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -433,7 +433,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -450,7 +450,7 @@
       "render": {
         "backgroundColor": "rgb(51, 115, 179)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(51, 115, 179)",
+        "border": null,
         "overviewRulerColor": "rgb(51, 115, 179)"
       }
     },
@@ -467,7 +467,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -484,7 +484,7 @@
       "render": {
         "backgroundColor": "rgb(253, 178, 200)",
         "color": "#000000",
-        "border": "3px solid rgb(253, 178, 200)",
+        "border": null,
         "overviewRulerColor": "rgb(253, 178, 200)"
       }
     },
@@ -501,7 +501,7 @@
       "render": {
         "backgroundColor": "rgb(163, 52, 96)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(163, 52, 96)",
+        "border": null,
         "overviewRulerColor": "rgb(163, 52, 96)"
       }
     },
@@ -518,7 +518,7 @@
       "render": {
         "backgroundColor": "rgb(199, 199, 199)",
         "color": "#000000",
-        "border": "3px solid rgb(199, 199, 199)",
+        "border": null,
         "overviewRulerColor": "rgb(199, 199, 199)"
       }
     },
@@ -535,7 +535,7 @@
       "render": {
         "backgroundColor": "rgb(99, 99, 99)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(99, 99, 99)",
+        "border": null,
         "overviewRulerColor": "rgb(99, 99, 99)"
       }
     },
@@ -552,7 +552,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -569,7 +569,7 @@
       "render": {
         "backgroundColor": "rgb(0, 0, 255)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(0, 0, 255)",
+        "border": null,
         "overviewRulerColor": "rgb(0, 0, 255)"
       }
     },
@@ -586,7 +586,7 @@
       "render": {
         "backgroundColor": "rgb(102, 51, 153)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(102, 51, 153)",
+        "border": null,
         "overviewRulerColor": "rgb(102, 51, 153)"
       }
     },
@@ -603,7 +603,7 @@
       "render": {
         "backgroundColor": "rgb(255, 127, 80)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 127, 80)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 127, 80)"
       }
     },
@@ -620,7 +620,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -637,7 +637,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -654,7 +654,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -671,7 +671,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -688,7 +688,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -705,7 +705,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -722,7 +722,7 @@
       "render": {
         "backgroundColor": "rgb(163, 52, 96)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(163, 52, 96)",
+        "border": null,
         "overviewRulerColor": "rgb(163, 52, 96)"
       }
     },
@@ -739,7 +739,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -756,7 +756,7 @@
       "render": {
         "backgroundColor": "rgb(255, 51, 26)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 51, 26)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 51, 26)"
       }
     },
@@ -773,7 +773,7 @@
       "render": {
         "backgroundColor": "rgb(231, 124, 89)",
         "color": "#000000",
-        "border": "3px solid rgb(231, 124, 89)",
+        "border": null,
         "overviewRulerColor": "rgb(231, 124, 89)"
       }
     },
@@ -790,7 +790,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -807,7 +807,7 @@
       "render": {
         "backgroundColor": "rgb(3, 1, 0)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(3, 1, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(3, 1, 0)"
       }
     },
@@ -824,7 +824,7 @@
       "render": {
         "backgroundColor": "rgb(178, 48, 234)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(178, 48, 234)",
+        "border": null,
         "overviewRulerColor": "rgb(178, 48, 234)"
       }
     },
@@ -841,7 +841,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 22)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 22)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 22)"
       }
     },
@@ -858,7 +858,7 @@
       "render": {
         "backgroundColor": "rgb(252, 39, 58)",
         "color": "#000000",
-        "border": "3px solid rgb(252, 39, 58)",
+        "border": null,
         "overviewRulerColor": "rgb(252, 39, 58)"
       }
     },
@@ -875,7 +875,7 @@
       "render": {
         "backgroundColor": "rgb(223, 119, 115)",
         "color": "#000000",
-        "border": "3px solid rgb(223, 119, 115)",
+        "border": null,
         "overviewRulerColor": "rgb(223, 119, 115)"
       }
     },
@@ -892,7 +892,7 @@
       "render": {
         "backgroundColor": "rgb(214, 121, 135)",
         "color": "#000000",
-        "border": "3px solid rgb(214, 121, 135)",
+        "border": null,
         "overviewRulerColor": "rgb(214, 121, 135)"
       }
     },
@@ -909,7 +909,7 @@
       "render": {
         "backgroundColor": "rgb(50, 0, 0)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(50, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(50, 0, 0)"
       }
     },
@@ -926,7 +926,7 @@
       "render": {
         "backgroundColor": "rgb(223, 119, 115)",
         "color": "#000000",
-        "border": "3px solid rgb(223, 119, 115)",
+        "border": null,
         "overviewRulerColor": "rgb(223, 119, 115)"
       }
     },
@@ -943,7 +943,7 @@
       "render": {
         "backgroundColor": "rgb(65, 0, 0)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(65, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(65, 0, 0)"
       }
     },
@@ -960,7 +960,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -977,7 +977,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -994,7 +994,7 @@
       "render": {
         "backgroundColor": "rgb(51, 127, 204)",
         "color": "#000000",
-        "border": "3px solid rgb(51, 127, 204)",
+        "border": null,
         "overviewRulerColor": "rgb(51, 127, 204)"
       }
     },
@@ -1011,7 +1011,7 @@
       "render": {
         "backgroundColor": "rgb(51, 127, 204)",
         "color": "#000000",
-        "border": "3px solid rgb(51, 127, 204)",
+        "border": null,
         "overviewRulerColor": "rgb(51, 127, 204)"
       }
     },
@@ -1028,7 +1028,7 @@
       "render": {
         "backgroundColor": "rgb(210, 233, 156)",
         "color": "#000000",
-        "border": "3px solid rgb(210, 233, 156)",
+        "border": null,
         "overviewRulerColor": "rgb(210, 233, 156)"
       }
     },
@@ -1045,7 +1045,7 @@
       "render": {
         "backgroundColor": "rgb(70, 40, 120)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(70, 40, 120)",
+        "border": null,
         "overviewRulerColor": "rgb(70, 40, 120)"
       }
     },
@@ -1062,7 +1062,7 @@
       "render": {
         "backgroundColor": "rgb(0, 192, 207)",
         "color": "#000000",
-        "border": "3px solid rgb(0, 192, 207)",
+        "border": null,
         "overviewRulerColor": "rgb(0, 192, 207)"
       }
     },
@@ -1079,7 +1079,7 @@
       "render": {
         "backgroundColor": "rgb(1, 0, 200)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(1, 0, 200)",
+        "border": null,
         "overviewRulerColor": "rgb(1, 0, 200)"
       }
     },
@@ -1096,7 +1096,7 @@
       "render": {
         "backgroundColor": "rgb(234, 213, 255)",
         "color": "#000000",
-        "border": "3px solid rgb(234, 213, 255)",
+        "border": null,
         "overviewRulerColor": "rgb(234, 213, 255)"
       }
     },
@@ -1113,7 +1113,7 @@
       "render": {
         "backgroundColor": "rgb(200, 131, 188)",
         "color": "#000000",
-        "border": "3px solid rgb(200, 131, 188)",
+        "border": null,
         "overviewRulerColor": "rgb(200, 131, 188)"
       }
     },
@@ -1130,7 +1130,7 @@
       "render": {
         "backgroundColor": "rgb(255, 51, 26)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 51, 26)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 51, 26)"
       }
     },
@@ -1147,7 +1147,7 @@
       "render": {
         "backgroundColor": "rgb(231, 124, 89)",
         "color": "#000000",
-        "border": "3px solid rgb(231, 124, 89)",
+        "border": null,
         "overviewRulerColor": "rgb(231, 124, 89)"
       }
     },
@@ -1164,7 +1164,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -1181,7 +1181,7 @@
       "render": {
         "backgroundColor": "rgb(178, 48, 234)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(178, 48, 234)",
+        "border": null,
         "overviewRulerColor": "rgb(178, 48, 234)"
       }
     },
@@ -1198,7 +1198,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 22)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 22)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 22)"
       }
     },
@@ -1215,7 +1215,7 @@
       "render": {
         "backgroundColor": "rgb(252, 39, 58)",
         "color": "#000000",
-        "border": "3px solid rgb(252, 39, 58)",
+        "border": null,
         "overviewRulerColor": "rgb(252, 39, 58)"
       }
     },
@@ -1232,7 +1232,7 @@
       "render": {
         "backgroundColor": "rgb(223, 119, 115)",
         "color": "#000000",
-        "border": "3px solid rgb(223, 119, 115)",
+        "border": null,
         "overviewRulerColor": "rgb(223, 119, 115)"
       }
     },
@@ -1249,7 +1249,7 @@
       "render": {
         "backgroundColor": "rgb(214, 121, 135)",
         "color": "#000000",
-        "border": "3px solid rgb(214, 121, 135)",
+        "border": null,
         "overviewRulerColor": "rgb(214, 121, 135)"
       }
     },
@@ -1266,7 +1266,7 @@
       "render": {
         "backgroundColor": "rgb(223, 119, 115)",
         "color": "#000000",
-        "border": "3px solid rgb(223, 119, 115)",
+        "border": null,
         "overviewRulerColor": "rgb(223, 119, 115)"
       }
     },
@@ -1283,7 +1283,7 @@
       "render": {
         "backgroundColor": "rgb(255, 0, 0)",
         "color": "#000000",
-        "border": "3px solid rgb(255, 0, 0)",
+        "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
     },
@@ -1300,7 +1300,7 @@
       "render": {
         "backgroundColor": "rgb(51, 127, 204)",
         "color": "#000000",
-        "border": "3px solid rgb(51, 127, 204)",
+        "border": null,
         "overviewRulerColor": "rgb(51, 127, 204)"
       }
     },
@@ -1317,7 +1317,7 @@
       "render": {
         "backgroundColor": "rgb(210, 233, 156)",
         "color": "#000000",
-        "border": "3px solid rgb(210, 233, 156)",
+        "border": null,
         "overviewRulerColor": "rgb(210, 233, 156)"
       }
     },
@@ -1334,7 +1334,7 @@
       "render": {
         "backgroundColor": "rgb(0, 192, 207)",
         "color": "#000000",
-        "border": "3px solid rgb(0, 192, 207)",
+        "border": null,
         "overviewRulerColor": "rgb(0, 192, 207)"
       }
     },
@@ -1351,7 +1351,7 @@
       "render": {
         "backgroundColor": "rgb(234, 213, 255)",
         "color": "#000000",
-        "border": "3px solid rgb(234, 213, 255)",
+        "border": null,
         "overviewRulerColor": "rgb(234, 213, 255)"
       }
     },
@@ -1368,7 +1368,7 @@
       "render": {
         "backgroundColor": "rgb(200, 131, 188)",
         "color": "#000000",
-        "border": "3px solid rgb(200, 131, 188)",
+        "border": null,
         "overviewRulerColor": "rgb(200, 131, 188)"
       }
     },
@@ -1385,7 +1385,7 @@
       "render": {
         "backgroundColor": "rgb(234, 213, 255)",
         "color": "#000000",
-        "border": "3px solid rgb(234, 213, 255)",
+        "border": null,
         "overviewRulerColor": "rgb(234, 213, 255)"
       }
     },
@@ -1402,7 +1402,7 @@
       "render": {
         "backgroundColor": "rgb(200, 131, 188)",
         "color": "#000000",
-        "border": "3px solid rgb(200, 131, 188)",
+        "border": null,
         "overviewRulerColor": "rgb(200, 131, 188)"
       }
     },
@@ -1419,7 +1419,7 @@
       "render": {
         "backgroundColor": "rgb(234, 213, 255)",
         "color": "#000000",
-        "border": "3px solid rgb(234, 213, 255)",
+        "border": null,
         "overviewRulerColor": "rgb(234, 213, 255)"
       }
     },
@@ -1436,7 +1436,7 @@
       "render": {
         "backgroundColor": "rgb(200, 131, 188)",
         "color": "#000000",
-        "border": "3px solid rgb(200, 131, 188)",
+        "border": null,
         "overviewRulerColor": "rgb(200, 131, 188)"
       }
     }

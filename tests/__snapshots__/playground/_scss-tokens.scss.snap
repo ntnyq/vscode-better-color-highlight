@@ -26,7 +26,7 @@
       "render": {
         "backgroundColor": "rgb(37, 99, 235)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(37, 99, 235)",
+        "border": null,
         "overviewRulerColor": "rgb(37, 99, 235)"
       }
     },
@@ -43,7 +43,7 @@
       "render": {
         "backgroundColor": "rgb(102, 51, 153)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(102, 51, 153)",
+        "border": null,
         "overviewRulerColor": "rgb(102, 51, 153)"
       }
     }

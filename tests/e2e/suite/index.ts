@@ -2,12 +2,22 @@ import assert from 'node:assert/strict'
 import { resolve } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
 import { Uri, commands, extensions, window, workspace } from 'vscode'
+import { INTERNAL_COMMANDS } from '../../../src/constants/commands'
 
 const EXTENSION_ID = 'ntnyq.vscode-better-color-highlight'
 const CONFIG_SECTION = 'color-highlight'
 const CONFIG_WAIT_ATTEMPTS = 20
 const CONFIG_WAIT_INTERVAL_MS = 50
-const DECORATION_PIPELINE_WAIT_MS = 300
+const HIGHLIGHT_STATE_WAIT_ATTEMPTS = 40
+const HIGHLIGHT_STATE_WAIT_INTERVAL_MS = 100
+
+interface HighlightState {
+  readonly colorCount: number
+  readonly colors: string[]
+  readonly languageId: string
+  readonly matchCount: number
+  readonly uri: string
+}
 
 async function waitForConfigValue<T>(key: string, expected: T) {
   for (let attempt = 0; attempt < CONFIG_WAIT_ATTEMPTS; attempt++) {
@@ -20,6 +30,31 @@ async function waitForConfigValue<T>(key: string, expected: T) {
   }
 
   assert.equal(workspace.getConfiguration(CONFIG_SECTION).get(key), expected)
+}
+
+async function waitForHighlightState(
+  uri: string,
+  expectedMatchCount: number,
+): Promise<HighlightState> {
+  for (let attempt = 0; attempt < HIGHLIGHT_STATE_WAIT_ATTEMPTS; attempt++) {
+    const state = await commands.executeCommand<HighlightState | undefined>(
+      INTERNAL_COMMANDS.getHighlightState,
+      uri,
+    )
+    if (state?.matchCount === expectedMatchCount) {
+      return state
+    }
+
+    await delay(HIGHLIGHT_STATE_WAIT_INTERVAL_MS)
+  }
+
+  const state = await commands.executeCommand<HighlightState | undefined>(
+    INTERNAL_COMMANDS.getHighlightState,
+    uri,
+  )
+  assert.equal(state?.matchCount, expectedMatchCount)
+
+  return state
 }
 
 export async function run() {
@@ -48,10 +83,12 @@ export async function run() {
   )
   await window.showTextDocument(document)
 
+  const state = await waitForHighlightState(document.uri.toString(), 30)
+  assert.equal(state.colorCount, 16)
+  assert.equal(state.languageId, 'css')
+
   await workspace
     .getConfiguration(CONFIG_SECTION)
     .update('markerType', 'outline', true)
   await waitForConfigValue('markerType', 'outline')
-
-  await delay(DECORATION_PIPELINE_WAIT_MS)
 }

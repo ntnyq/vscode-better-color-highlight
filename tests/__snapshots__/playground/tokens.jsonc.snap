@@ -19,7 +19,7 @@
       "render": {
         "backgroundColor": "rgb(14, 165, 233)",
         "color": "#000000",
-        "border": "3px solid rgb(14, 165, 233)",
+        "border": null,
         "overviewRulerColor": "rgb(14, 165, 233)"
       }
     },
@@ -36,7 +36,7 @@
       "render": {
         "backgroundColor": "rgb(0, 192, 207)",
         "color": "#000000",
-        "border": "3px solid rgb(0, 192, 207)",
+        "border": null,
         "overviewRulerColor": "rgb(0, 192, 207)"
       }
     },
@@ -53,7 +53,7 @@
       "render": {
         "backgroundColor": "rgb(15, 23, 42)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(15, 23, 42)",
+        "border": null,
         "overviewRulerColor": "rgb(15, 23, 42)"
       }
     }

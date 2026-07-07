@@ -2,6 +2,7 @@
  * All 148 CSS named colors mapped to [r, g, b].
  * @see https://www.w3.org/TR/css-color-4/#named-colors
  */
+
 export const NAMED_COLORS: ReadonlyMap<
   string,
   readonly [number, number, number]

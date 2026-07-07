@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { buildDecorationOptions } from '../src/decorations/marker-types'
 
 describe(buildDecorationOptions, () => {
-  it('renders transparent background markers with an opaque display color', () => {
+  it('renders background markers without a wrapping border', () => {
     const result = buildDecorationOptions(
       'background',
       'rgba(255, 0, 0, 0)',
@@ -10,7 +10,8 @@ describe(buildDecorationOptions, () => {
     )
 
     expect(result.backgroundColor).toBe('rgb(255, 0, 0)')
-    expect(result.border).toBe('3px solid rgb(255, 0, 0)')
+    expect(result.border).toBeUndefined()
+    expect(result.borderRadius).toBe('3px')
     expect(result.overviewRulerColor).toBe('rgb(255, 0, 0)')
   })
 

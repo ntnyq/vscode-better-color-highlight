@@ -25,7 +25,7 @@
       "render": {
         "backgroundColor": "rgb(177, 16, 22)",
         "color": "#FFFFFF",
-        "border": "3px solid rgb(177, 16, 22)",
+        "border": null,
         "overviewRulerColor": "rgb(177, 16, 22)"
       }
     },
@@ -42,7 +42,7 @@
       "render": {
         "backgroundColor": "rgb(57, 197, 187)",
         "color": "#000000",
-        "border": "3px solid rgb(57, 197, 187)",
+        "border": null,
         "overviewRulerColor": "rgb(57, 197, 187)"
       }
     },
@@ -59,7 +59,7 @@
       "render": {
         "backgroundColor": "rgb(57, 197, 187)",
         "color": "#000000",
-        "border": "3px solid rgb(57, 197, 187)",
+        "border": null,
         "overviewRulerColor": "rgb(57, 197, 187)"
       }
     },
@@ -76,7 +76,7 @@
       "render": {
         "backgroundColor": "rgb(226, 226, 226)",
         "color": "#000000",
-        "border": "3px solid rgb(226, 226, 226)",
+        "border": null,
         "overviewRulerColor": "rgb(226, 226, 226)"
       }
     },
@@ -93,7 +93,7 @@
       "render": {
         "backgroundColor": "rgb(57, 197, 187)",
         "color": "#000000",
-        "border": "3px solid rgb(57, 197, 187)",
+        "border": null,
         "overviewRulerColor": "rgb(57, 197, 187)"
       }
     },
@@ -110,7 +110,7 @@
       "render": {
         "backgroundColor": "rgb(239, 202, 25)",
         "color": "#000000",
-        "border": "3px solid rgb(239, 202, 25)",
+        "border": null,
         "overviewRulerColor": "rgb(239, 202, 25)"
       }
     },
@@ -127,7 +127,7 @@
       "render": {
         "backgroundColor": "rgb(57, 197, 187)",
         "color": "#000000",
-        "border": "3px solid rgb(57, 197, 187)",
+        "border": null,
         "overviewRulerColor": "rgb(57, 197, 187)"
       }
     },
@@ -144,7 +144,7 @@
       "render": {
         "backgroundColor": "rgb(57, 197, 187)",
         "color": "#000000",
-        "border": "3px solid rgb(57, 197, 187)",
+        "border": null,
         "overviewRulerColor": "rgb(57, 197, 187)"
       }
     }

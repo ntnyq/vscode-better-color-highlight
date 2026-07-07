@@ -3,5 +3,6 @@
   "color-highlight.debug": true,
   "color-highlight.matchWords": true,
   "color-highlight.enableHover": true,
+  "color-highlight.markerType": "background",
   "color-highlight.resolveScssVariablesAcrossFiles": true
 }

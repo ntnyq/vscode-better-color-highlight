@@ -1,4 +1,5 @@
 import { join } from 'node:path'
+import { isString } from '@ntnyq/utils'
 import { describe, expect, it, vi } from 'vitest'
 import type * as CssVarSourcesModule from '../src/strategies/css-vars/sources'
 import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
@@ -372,7 +373,7 @@ function setFile(filePath: string, text: string, mtimeMs = 1) {
 }
 
 function createGlobMatchKey(pattern: WorkspaceFindFilesMockPattern): string {
-  if (typeof pattern === 'string') {
+  if (isString(pattern)) {
     return pattern
   }
 

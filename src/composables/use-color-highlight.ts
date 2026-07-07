@@ -9,6 +9,7 @@ import type { Ref } from 'reactive-vscode'
 import type { TextEditor, Range } from 'vscode'
 import { Range as VscodeRange, workspace } from 'vscode'
 import { config } from '../config'
+import { clearHighlightState, setHighlightState } from '../core/highlight-state'
 import { getStrategies, shouldProcessLanguage } from '../core/strategy-registry'
 import { DecorationTypeCache } from '../decorations/decoration-type'
 import type {
@@ -199,6 +200,7 @@ export function useColorHighlight() {
     string,
     {
       cache: DecorationTypeCache
+      uri: string
       dispose: () => void
     }
   >()
@@ -216,6 +218,13 @@ export function useColorHighlight() {
           state.cache.dispose()
           state.dispose()
           editorStates.delete(key)
+          if (
+            !trackedEditors.some(
+              editor => editor.document.uri.toString() === state.uri,
+            )
+          ) {
+            clearHighlightState(state.uri)
+          }
         }
       }
 
@@ -233,6 +242,7 @@ export function useColorHighlight() {
 
         editorStates.set(key, {
           cache,
+          uri: editor.document.uri.toString(),
           dispose: () => {
             for (const fn of disposables) {
               fn()
@@ -389,9 +399,10 @@ function setupEditorTracking(
         }
 
         const groups = groupByColor(matches)
+        const colors = Object.keys(groups)
 
         if (config.debug) {
-          const colorCount = Object.keys(groups).length
+          const colorCount = colors.length
           const matchCount = matches.length
           logger.info(
             `[debug] Found ${matchCount} matches with ${colorCount} unique colors in ${doc.uri.fsPath}`,
@@ -403,6 +414,13 @@ function setupEditorTracking(
           }
         }
 
+        setHighlightState({
+          colorCount: colors.length,
+          colors,
+          languageId: doc.languageId,
+          matchCount: matches.length,
+          uri: doc.uri.toString(),
+        })
         applyDecorations(
           editor,
           cache,
@@ -486,6 +504,8 @@ function applyDecorations(
  * @param cache - The decoration type cache to clear
  */
 function clearDecorations(editor: TextEditor, cache: DecorationTypeCache) {
+  clearHighlightState(editor.document.uri.toString())
+
   // Clear all currently tracked decoration types from the editor.
   for (const decorationType of cache.getAll()) {
     editor.setDecorations(decorationType, [])

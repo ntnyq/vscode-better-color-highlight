@@ -32,7 +32,7 @@ export function buildDecorationOptions(
     case 'background': {
       options.backgroundColor = displayColor
       options.color = getContrastColor(r, g, b)
-      options.border = `3px solid ${displayColor}`
+      // options.border = `3px solid ${displayColor}`
       options.borderRadius = '3px'
       break
     }

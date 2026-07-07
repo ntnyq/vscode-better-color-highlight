@@ -1,6 +1,9 @@
+import { isNumber, isRecord, isString } from '@ntnyq/utils'
 import { useCommand } from 'reactive-vscode'
 import { env, Range as VscodeRange, window, workspace } from 'vscode'
 import { config } from './config'
+import { INTERNAL_COMMANDS } from './constants/commands'
+import { getHighlightState } from './core/highlight-state'
 import { getStrategies } from './core/strategy-registry'
 import { getColorHover } from './hover/color-hover'
 import { commands } from './meta'
@@ -38,15 +41,6 @@ interface AdjustColorAlphaPayload {
   readonly range: OffsetRange
 }
 
-const REPLACE_COMMANDS = {
-  hex: 'color-highlight.replaceColorAsHex',
-  hsl: 'color-highlight.replaceColorAsHsl',
-  oklch: 'color-highlight.replaceColorAsOklch',
-  rgb: 'color-highlight.replaceColorAsRgb',
-} as const
-
-const ADJUST_ALPHA_COMMAND = 'color-highlight.adjustColorAlpha'
-
 /**
  * Register the enable and disable commands for color highlighting.
  */
@@ -64,11 +58,38 @@ export function useCommands() {
   useCommand(commands.copyColorAsHsl, value => copyColorValue('hsl', value))
   useCommand(commands.copyColorAsOklch, value => copyColorValue('oklch', value))
 
-  useCommand(REPLACE_COMMANDS.hex, value => replaceColorValue('hex', value))
-  useCommand(REPLACE_COMMANDS.rgb, value => replaceColorValue('rgb', value))
-  useCommand(REPLACE_COMMANDS.hsl, value => replaceColorValue('hsl', value))
-  useCommand(REPLACE_COMMANDS.oklch, value => replaceColorValue('oklch', value))
-  useCommand(ADJUST_ALPHA_COMMAND, value => adjustColorAlpha(value))
+  useCommand(commands.replaceColorAsHex, value =>
+    replaceColorValue('hex', value),
+  )
+  useCommand(commands.replaceColorAsRgb, value =>
+    replaceColorValue('rgb', value),
+  )
+  useCommand(commands.replaceColorAsHsl, value =>
+    replaceColorValue('hsl', value),
+  )
+  useCommand(commands.replaceColorAsOklch, value =>
+    replaceColorValue('oklch', value),
+  )
+  useCommand(commands.adjustColorAlpha, value => adjustColorAlpha(value))
+
+  useCommand(INTERNAL_COMMANDS.getHighlightState, value =>
+    getDocumentHighlightState(value),
+  )
+}
+
+/**
+ * Read the latest highlight state for a supplied URI or the active editor.
+ *
+ * @param value - Optional document URI string.
+ * @returns Latest highlight state for the document, if available.
+ */
+function getDocumentHighlightState(value: unknown) {
+  if (isString(value)) {
+    return getHighlightState(value)
+  }
+
+  const uri = window.activeTextEditor?.document.uri.toString()
+  return uri ? getHighlightState(uri) : undefined
 }
 
 /**
@@ -79,7 +100,7 @@ export function useCommands() {
  */
 async function copyColorValue(format: CopyColorFormat, value: unknown) {
   const resolvedValue =
-    typeof value === 'string' && value.length > 0
+    isString(value) && value.length > 0
       ? value
       : await getActiveEditorColorValue(format)
 
@@ -272,12 +293,12 @@ function shouldUseUppercaseHex(text: string): boolean {
 function getReplaceColorPayload(
   value: unknown,
 ): ReplaceColorPayload | undefined {
-  if (!isRecord(value) || typeof value.value !== 'string') {
+  if (!isRecord(value) || !isString(value.value)) {
     return undefined
   }
 
   const range = getOffsetRange(value.range)
-  if (!range || typeof value.originalText !== 'string') {
+  if (!range || !isString(value.originalText)) {
     return undefined
   }
 
@@ -299,9 +320,9 @@ function getAdjustColorAlphaPayload(
 ): AdjustColorAlphaPayload | undefined {
   if (
     !isRecord(value) ||
-    typeof value.delta !== 'number' ||
-    typeof value.originalColor !== 'string' ||
-    typeof value.originalText !== 'string'
+    !isNumber(value.delta) ||
+    !isString(value.originalColor) ||
+    !isString(value.originalText)
   ) {
     return undefined
   }
@@ -331,7 +352,7 @@ function getOffsetRange(value: unknown): OffsetRange | undefined {
   }
 
   const { end, start } = value
-  if (typeof start !== 'number' || typeof end !== 'number') {
+  if (!isNumber(start) || !isNumber(end)) {
     return undefined
   }
 
@@ -352,14 +373,4 @@ function isValidOffsetRange(range: OffsetRange): boolean {
     range.start >= 0 &&
     range.end >= range.start
   )
-}
-
-/**
- * Check whether a value is a plain object-like record.
- *
- * @param value - Unknown value.
- * @returns Whether the value can be indexed as a record.
- */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null
 }
