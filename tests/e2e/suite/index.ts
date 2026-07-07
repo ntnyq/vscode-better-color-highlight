@@ -1,11 +1,18 @@
 import assert from 'node:assert/strict'
 import { resolve } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
-import { Uri, commands, extensions, window, workspace } from 'vscode'
-import { INTERNAL_COMMANDS } from '../../../src/constants/commands'
+import {
+  ConfigurationTarget,
+  Uri,
+  commands,
+  extensions,
+  window,
+  workspace,
+} from 'vscode'
 
 const EXTENSION_ID = 'ntnyq.vscode-better-color-highlight'
 const CONFIG_SECTION = 'color-highlight'
+const GET_HIGHLIGHT_STATE_COMMAND = 'color-highlight.internal.getHighlightState'
 const CONFIG_WAIT_ATTEMPTS = 20
 const CONFIG_WAIT_INTERVAL_MS = 50
 const HIGHLIGHT_STATE_WAIT_ATTEMPTS = 40
@@ -38,7 +45,7 @@ async function waitForHighlightState(
 ): Promise<HighlightState> {
   for (let attempt = 0; attempt < HIGHLIGHT_STATE_WAIT_ATTEMPTS; attempt++) {
     const state = await commands.executeCommand<HighlightState | undefined>(
-      INTERNAL_COMMANDS.getHighlightState,
+      GET_HIGHLIGHT_STATE_COMMAND,
       uri,
     )
     if (state?.matchCount === expectedMatchCount) {
@@ -49,7 +56,7 @@ async function waitForHighlightState(
   }
 
   const state = await commands.executeCommand<HighlightState | undefined>(
-    INTERNAL_COMMANDS.getHighlightState,
+    GET_HIGHLIGHT_STATE_COMMAND,
     uri,
   )
   assert.equal(state?.matchCount, expectedMatchCount)
@@ -87,8 +94,20 @@ export async function run() {
   assert.equal(state.colorCount, 16)
   assert.equal(state.languageId, 'css')
 
-  await workspace
-    .getConfiguration(CONFIG_SECTION)
-    .update('markerType', 'outline', true)
-  await waitForConfigValue('markerType', 'outline')
+  const config = workspace.getConfiguration(CONFIG_SECTION)
+  const previousWorkspaceMarkerType =
+    config.inspect<string>('markerType')?.workspaceValue
+
+  try {
+    await config.update('markerType', 'outline', ConfigurationTarget.Workspace)
+    await waitForConfigValue('markerType', 'outline')
+  } finally {
+    await workspace
+      .getConfiguration(CONFIG_SECTION)
+      .update(
+        'markerType',
+        previousWorkspaceMarkerType,
+        ConfigurationTarget.Workspace,
+      )
+  }
 }
