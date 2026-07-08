@@ -6,13 +6,22 @@ const isDev = (): boolean => process.env.NODE_ENV === 'development'
 
 export default defineConfig({
   clean: true,
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(
+      isDev() ? 'development' : 'production',
+    ),
+  },
   deps: {
     alwaysBundle: Object.keys(pkg.dependencies),
     neverBundle: ['vscode'],
     onlyBundle: false,
   },
   dts: false,
-  entry: ['src/index.ts'],
+  entry: {
+    index: 'src/index.ts',
+    'web-test': 'tests/e2e/web.ts',
+  },
+  format: ['esm', 'cjs'],
   minify: !isDev(),
   platform: 'neutral',
   shims: true,

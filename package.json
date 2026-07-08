@@ -54,7 +54,7 @@
   ],
   "type": "module",
   "main": "./dist/index.js",
-  "browser": "./dist/index.js",
+  "browser": "./dist/index.cjs",
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
@@ -66,11 +66,13 @@
     "prepare": "husky",
     "release": "run-s release:check release:version release:publish",
     "release:build": "run-s generate:meta build",
-    "release:check": "run-s format:check lint typecheck test",
+    "release:check": "run-s format:check lint typecheck test:unit",
     "release:publish": "vsce publish --no-dependencies",
     "release:version": "bumpp --all --execute='pnpm release:build'",
     "test": "run-p test:unit test:e2e",
-    "test:e2e": "pnpm build && node tests/e2e/run.ts",
+    "test:e2e": "pnpm build && run-s test:e2e:electron test:e2e:web",
+    "test:e2e:electron": "node tests/e2e/run.ts",
+    "test:e2e:web": "vscode-test-web --browser=chromium --quality=stable --extensionDevelopmentPath=. --extensionTestsPath=dist/web-test.cjs",
     "test:unit": "vitest",
     "typecheck": "tsgo --noEmit",
     "vscode:prepublish": "pnpm run build"
@@ -80,19 +82,20 @@
     "reactive-vscode": "^1.0.2"
   },
   "devDependencies": {
-    "@types/node": "^26.1.0",
+    "@types/node": "^26.1.1",
     "@types/vscode": "^1.125.0",
-    "@typescript/native-preview": "^7.0.0-dev.20260702.3",
+    "@typescript/native-preview": "^7.0.0-dev.20260707.2",
     "@vscode/test-electron": "^3.0.0",
+    "@vscode/test-web": "^0.0.81",
     "@vscode/vsce": "^3.9.2",
     "bumpp": "^11.1.0",
     "husky": "^9.1.7",
     "nano-staged": "^1.0.2",
     "npm-run-all2": "^9.0.2",
-    "oxfmt": "^0.57.0",
-    "oxlint": "^1.72.0",
+    "oxfmt": "^0.58.0",
+    "oxlint": "^1.73.0",
     "tsdown": "^0.22.3",
-    "vitest": "^4.1.9",
+    "vitest": "^4.1.10",
     "vscode-ext-gen": "^1.6.0"
   },
   "nano-staged": {
@@ -320,7 +323,7 @@
   "engines": {
     "vscode": "^1.125.0"
   },
-  "packageManager": "pnpm@11.9.0",
+  "packageManager": "pnpm@11.10.0",
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": true,
