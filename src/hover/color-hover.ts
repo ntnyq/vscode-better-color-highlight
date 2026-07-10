@@ -1,3 +1,4 @@
+import { runColorDetectors } from '../core/color-detection'
 import { shouldProcessLanguage } from '../core/strategy-registry'
 import type { NestedScopedConfigs } from '../meta'
 import type { ColorDetector, ColorMatch, StrategyContext } from '../types'
@@ -191,24 +192,13 @@ export async function getColorHover(
     workspaceIsTrusted,
   }
 
-  const loadMatches = async (): Promise<ColorMatch[]> => {
-    const results = await Promise.all(
-      detectors.map(async detector => {
-        const detectorName = detector.name || 'anonymous'
-
-        try {
-          return await detector(text, context)
-        } catch (error) {
-          onDetectorError?.(
-            `Color hover detector "${detectorName}" failed: ${error}`,
-          )
-          return []
-        }
-      }),
-    )
-
-    return results.flat()
-  }
+  const loadMatches = async (): Promise<ColorMatch[]> =>
+    await runColorDetectors({
+      context,
+      detectors,
+      onDetectorError,
+      text,
+    })
   let matchesPromise: Promise<ColorMatch[]>
 
   if (matchCache && matchCacheKey) {

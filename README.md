@@ -61,6 +61,12 @@ Description: Show hover details and copy actions for highlighted colors.
 Type: `boolean`  
 Default: `false`
 
+#### `color-highlight.enableColorPicker`
+
+Description: Use VS Code's native color picker and replacement presentations for detected colors.<br>
+Type: `boolean`<br>
+Default: `false`
+
 #### `color-highlight.resolveScssVariablesAcrossFiles`
 
 Description: Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work.  
@@ -196,6 +202,11 @@ When `color-highlight.enableHover` is enabled, each hover row shows compact
 copy and replace icons for HEX, RGB, HSL, and OKLCH values. The alpha row can
 decrease or increase transparency in 10 percentage point steps.
 
+When `color-highlight.enableColorPicker` is enabled, detected colors are also
+provided to VS Code's native color picker with HEX, RGB, HSL, and OKLCH
+replacement presentations. It is disabled by default so the native swatch does
+not appear alongside the extension's custom marker unless explicitly requested.
+
 Tailwind theme color matching highlights static default color utilities such as
 `bg-red-500`, `text-sky-300`, `from-purple-400`, and `ring-white/75`,
 including common variant prefixes like `hover:` and `dark:`. Custom Tailwind
@@ -246,6 +257,7 @@ Most settings from `naumovs.color-highlight` can be kept as-is because this exte
 | `color-highlight.sass.includePaths`            | `color-highlight.scssLoadPaths`                            | Rename this setting. Load paths are used for non-relative SCSS `@use`, `@forward`, and `@import` modules when `color-highlight.resolveScssVariablesAcrossFiles` is true.       |
 | Not available                                  | `color-highlight.namedColorMatchMode`                      | New. Default `context` avoids highlighting selectors, variable names, and words like `@layer red`. Use `always` for broader non-style language matching or `never` to disable. |
 | Not available                                  | `color-highlight.enableHover`                              | New. Default `false`. Enable to show color format details and copy actions on hover.                                                                                           |
+| Not available                                  | `color-highlight.enableColorPicker`                        | New. Default `false`. Enable VS Code's native color swatch, picker, and replacement presentations.                                                                             |
 | Not available                                  | `color-highlight.resolveScssVariablesAcrossFiles`          | New. Default `false`. Set to `true` to resolve SCSS variables across local `@use`, `@forward`, and `@import` files.                                                            |
 | Not available                                  | `color-highlight.scssLoadPaths`                            | New. Default `[]`. Add absolute paths, or paths relative to the current SCSS file, for package-style Sass module resolution.                                                   |
 | Not available                                  | `color-highlight.debug`                                    | New. Set to `true` to enable debug logging for detection and decoration.                                                                                                       |
@@ -261,6 +273,7 @@ Suggested migration example:
   "color-highlight.matchWords": false,
   "color-highlight.namedColorMatchMode": "context",
   "color-highlight.enableHover": false,
+  "color-highlight.enableColorPicker": false,
   "color-highlight.resolveScssVariablesAcrossFiles": false,
   "color-highlight.scssLoadPaths": [],
   "color-highlight.resolveCssVariablesAcrossFiles": false,

@@ -9,6 +9,7 @@ import type { Ref } from 'reactive-vscode'
 import type { TextEditor, Range } from 'vscode'
 import { Range as VscodeRange, workspace } from 'vscode'
 import { config } from '../config'
+import { runColorDetectors } from '../core/color-detection'
 import { clearHighlightState, setHighlightState } from '../core/highlight-state'
 import { getStrategies, shouldProcessLanguage } from '../core/strategy-registry'
 import { DecorationTypeCache } from '../decorations/decoration-type'
@@ -150,38 +151,31 @@ async function runStrategies(
     )
   }
 
-  const results = await Promise.all(
-    strategies.map(async fn => {
-      const strategyName = fn.name || 'anonymous'
-      try {
-        const matches = await fn(text, {
-          languageId,
-          filePath,
-          namedColorMatchMode,
-          resolveScssVariablesAcrossFiles,
-          scssLoadPaths,
-          resolveCssVariablesAcrossFiles,
-          cssVariablePaths,
-          cssVariableTrustedSelectors,
-          designTokenJsonMode,
-          useARGB,
-          workspaceIsTrusted,
-        })
-        if (debug && matches.length > 0) {
-          logger.info(
-            `[debug] Strategy "${strategyName}" found ${matches.length} matches`,
-          )
-        }
-
-        return matches
-      } catch (error) {
-        logger.error(`Color detector "${strategyName}" failed: ${error}`)
-        return []
+  return await runColorDetectors({
+    context: {
+      languageId,
+      filePath,
+      namedColorMatchMode,
+      resolveScssVariablesAcrossFiles,
+      scssLoadPaths,
+      resolveCssVariablesAcrossFiles,
+      cssVariablePaths,
+      cssVariableTrustedSelectors,
+      designTokenJsonMode,
+      useARGB,
+      workspaceIsTrusted,
+    },
+    detectors: strategies,
+    onDetectorError: message => logger.error(message),
+    onDetectorResult: (strategyName, matches) => {
+      if (debug && matches.length > 0) {
+        logger.info(
+          `[debug] Strategy "${strategyName}" found ${matches.length} matches`,
+        )
       }
-    }),
-  )
-
-  return results.flat()
+    },
+    text,
+  })
 }
 
 /**

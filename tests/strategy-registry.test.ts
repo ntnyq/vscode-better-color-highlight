@@ -15,6 +15,7 @@ import { findTailwindThemeColors } from '../src/strategies/tailwind-theme-colors
 
 const defaultConfig: NestedScopedConfigs = {
   enable: true,
+  enableColorPicker: false,
   languages: ['*'],
   matchWords: false,
   namedColorMatchMode: 'context',

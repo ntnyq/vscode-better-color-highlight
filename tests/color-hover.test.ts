@@ -8,6 +8,7 @@ import type { ColorDetector } from '../src/types'
 
 const defaultConfig: NestedScopedConfigs = {
   enable: true,
+  enableColorPicker: false,
   enableHover: false,
   languages: ['*'],
   matchWords: false,

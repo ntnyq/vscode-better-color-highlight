@@ -95,6 +95,7 @@ export type ConfigKey =
   | "color-highlight.matchWords"
   | "color-highlight.namedColorMatchMode"
   | "color-highlight.enableHover"
+  | "color-highlight.enableColorPicker"
   | "color-highlight.resolveScssVariablesAcrossFiles"
   | "color-highlight.scssLoadPaths"
   | "color-highlight.resolveCssVariablesAcrossFiles"
@@ -117,6 +118,7 @@ export interface ConfigKeyTypeMap {
   "color-highlight.matchWords": boolean,
   "color-highlight.namedColorMatchMode": ("context" | "always" | "never"),
   "color-highlight.enableHover": boolean,
+  "color-highlight.enableColorPicker": boolean,
   "color-highlight.resolveScssVariablesAcrossFiles": boolean,
   "color-highlight.scssLoadPaths": string[],
   "color-highlight.resolveCssVariablesAcrossFiles": boolean,
@@ -140,6 +142,7 @@ export interface ConfigShorthandMap {
   matchWords: "color-highlight.matchWords",
   namedColorMatchMode: "color-highlight.namedColorMatchMode",
   enableHover: "color-highlight.enableHover",
+  enableColorPicker: "color-highlight.enableColorPicker",
   resolveScssVariablesAcrossFiles: "color-highlight.resolveScssVariablesAcrossFiles",
   scssLoadPaths: "color-highlight.scssLoadPaths",
   resolveCssVariablesAcrossFiles: "color-highlight.resolveCssVariablesAcrossFiles",
@@ -163,6 +166,7 @@ export interface ConfigShorthandTypeMap {
   matchWords: boolean,
   namedColorMatchMode: ("context" | "always" | "never"),
   enableHover: boolean,
+  enableColorPicker: boolean,
   resolveScssVariablesAcrossFiles: boolean,
   scssLoadPaths: string[],
   resolveCssVariablesAcrossFiles: boolean,
@@ -240,6 +244,16 @@ export const configs = {
     key: "color-highlight.enableHover",
     default: false,
   } as ConfigItem<"color-highlight.enableHover">,
+  /**
+   * Use VS Code's native color picker and replacement presentations for detected colors.
+   * @key `color-highlight.enableColorPicker`
+   * @default `false`
+   * @type `boolean`
+   */
+  enableColorPicker: {
+    key: "color-highlight.enableColorPicker",
+    default: false,
+  } as ConfigItem<"color-highlight.enableColorPicker">,
   /**
    * Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work.
    * @key `color-highlight.resolveScssVariablesAcrossFiles`
@@ -398,6 +412,7 @@ export interface ScopedConfigKeyTypeMap {
   "matchWords": boolean,
   "namedColorMatchMode": ("context" | "always" | "never"),
   "enableHover": boolean,
+  "enableColorPicker": boolean,
   "resolveScssVariablesAcrossFiles": boolean,
   "scssLoadPaths": string[],
   "resolveCssVariablesAcrossFiles": boolean,
@@ -423,6 +438,7 @@ export const scopedConfigs = {
     "matchWords": false,
     "namedColorMatchMode": "context",
     "enableHover": false,
+    "enableColorPicker": false,
     "resolveScssVariablesAcrossFiles": false,
     "scssLoadPaths": [],
     "resolveCssVariablesAcrossFiles": false,
@@ -448,6 +464,7 @@ export interface NestedConfigs {
     "matchWords": boolean,
     "namedColorMatchMode": ("context" | "always" | "never"),
     "enableHover": boolean,
+    "enableColorPicker": boolean,
     "resolveScssVariablesAcrossFiles": boolean,
     "scssLoadPaths": string[],
     "resolveCssVariablesAcrossFiles": boolean,
@@ -472,6 +489,7 @@ export interface NestedScopedConfigs {
   "matchWords": boolean,
   "namedColorMatchMode": ("context" | "always" | "never"),
   "enableHover": boolean,
+  "enableColorPicker": boolean,
   "resolveScssVariablesAcrossFiles": boolean,
   "scssLoadPaths": string[],
   "resolveCssVariablesAcrossFiles": boolean,

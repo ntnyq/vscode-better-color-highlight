@@ -5,6 +5,7 @@ import type { ColorMatch } from '../src/types'
 
 const defaultConfig: NestedScopedConfigs = {
   enable: true,
+  enableColorPicker: false,
   languages: ['*'],
   matchWords: false,
   namedColorMatchMode: 'context',

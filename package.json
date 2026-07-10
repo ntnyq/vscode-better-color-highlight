@@ -143,6 +143,11 @@
           "default": false,
           "description": "Show hover details and copy actions for highlighted colors."
         },
+        "color-highlight.enableColorPicker": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use VS Code's native color picker and replacement presentations for detected colors."
+        },
         "color-highlight.resolveScssVariablesAcrossFiles": {
           "type": "boolean",
           "default": false,

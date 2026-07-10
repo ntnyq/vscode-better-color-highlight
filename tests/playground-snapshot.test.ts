@@ -62,6 +62,7 @@ const EXTENSION_LANGUAGE_MAP = new Map<string, string>([
 
 const snapshotConfig: NestedScopedConfigs = {
   enable: true,
+  enableColorPicker: false,
   languages: ['*'],
   matchWords: true,
   namedColorMatchMode: 'context',
