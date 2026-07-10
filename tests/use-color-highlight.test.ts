@@ -187,6 +187,8 @@ function setupTest() {
     useARGB: false,
     designTokenJsonMode: 'token-values',
     resolveDesignTokensAcrossFiles: false,
+    tailwindColorMode: 'auto',
+    tailwindStylesheetPaths: [],
     matchRgbWithNoFunction: false,
     rgbWithNoFunctionLanguages: ['*'],
     matchHslWithNoFunction: false,
@@ -475,6 +477,37 @@ describe('useColorHighlight', () => {
         cssVariableTrustedSelectors: [':root', '[data-theme=light]'],
       }),
     )
+  })
+
+  it('passes Tailwind theme settings to strategies and includes them in reruns', async () => {
+    setupTest()
+    asyncStrategy.mockResolvedValue([])
+    documentTextRef = createRef('<div class="bg-brand"></div>')
+    configSnapshot.tailwindColorMode = 'v4'
+    configSnapshot.tailwindStylesheetPaths = ['src/theme.css']
+    visibleEditorsRef = createRef<unknown[]>([createEditor()])
+
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+    useColorHighlight()
+    await flushPromises()
+
+    expect(asyncStrategy).toHaveBeenLastCalledWith(
+      '<div class="bg-brand"></div>',
+      expect.objectContaining({
+        tailwindColorMode: 'v4',
+        tailwindStylesheetPaths: ['src/theme.css'],
+      }),
+    )
+
+    configSnapshot.tailwindColorMode = 'v3'
+    triggerGetterWatchers()
+    await flushPromises()
+    configSnapshot.tailwindStylesheetPaths = ['src/other.css']
+    triggerGetterWatchers()
+    await flushPromises()
+
+    expect(asyncStrategy).toHaveBeenCalledTimes(3)
   })
 
   it('reruns unchanged documents when stylesheet dependencies change', async () => {

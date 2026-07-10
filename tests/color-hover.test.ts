@@ -22,6 +22,8 @@ const defaultConfig: NestedScopedConfigs = {
   maxFileSize: 1_000_000,
   designTokenJsonMode: 'token-values',
   resolveDesignTokensAcrossFiles: false,
+  tailwindColorMode: 'auto',
+  tailwindStylesheetPaths: [],
   useARGB: false,
   matchRgbWithNoFunction: false,
   rgbWithNoFunctionLanguages: ['*'],
@@ -33,6 +35,32 @@ const defaultConfig: NestedScopedConfigs = {
 }
 
 describe(getColorHover, () => {
+  it('passes Tailwind theme settings to detectors', async () => {
+    const detector = vi.fn<ColorDetector>(() => [])
+
+    await getColorHover({
+      config: {
+        ...defaultConfig,
+        enableHover: true,
+        tailwindColorMode: 'v4',
+        tailwindStylesheetPaths: ['theme.css'],
+      },
+      detectors: [detector],
+      filePath: 'file:///tmp/example.html',
+      languageId: 'html',
+      offset: 1,
+      text: '<div class="bg-brand">',
+    })
+
+    expect(detector).toHaveBeenCalledWith(
+      '<div class="bg-brand">',
+      expect.objectContaining({
+        tailwindColorMode: 'v4',
+        tailwindStylesheetPaths: ['theme.css'],
+      }),
+    )
+  })
+
   it('reuses detector matches for the same document revision', async () => {
     const detector = vi.fn<ColorDetector>(() => [
       { start: 14, end: 21, color: 'rgb(255, 0, 0)' },

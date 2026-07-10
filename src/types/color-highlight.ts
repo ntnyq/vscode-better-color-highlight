@@ -41,6 +41,12 @@ export interface StrategyContext {
    */
   languageId: string
 
+  /** Tailwind palette compatibility mode. */
+  tailwindColorMode?: 'auto' | 'v3' | 'v4'
+
+  /** File, directory, or glob paths used as Tailwind CSS theme sources. */
+  tailwindStylesheetPaths?: readonly string[]
+
   /**
    * The document URI string or local file path for variable resolution strategies.
    */

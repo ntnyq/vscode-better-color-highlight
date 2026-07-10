@@ -95,4 +95,68 @@ describe('readme generated config documentation', () => {
     expect(readme).toContain('all 14 DTCG color spaces')
     expect(readme).toContain('512 KiB')
   })
+
+  it('documents Tailwind v3/v4 settings and bounded theme loading', async () => {
+    const packageJson = JSON.parse(await readFile('package.json', 'utf8')) as {
+      contributes: {
+        configuration: {
+          properties: Record<
+            string,
+            {
+              default: unknown
+              enum?: string[]
+              items?: { type: string }
+              type: string
+            }
+          >
+        }
+      }
+    }
+    const properties = packageJson.contributes.configuration.properties
+    const readme = await readFile('README.md', 'utf8')
+
+    expect(properties['color-highlight.tailwindColorMode']).toStrictEqual(
+      expect.objectContaining({
+        default: 'auto',
+        enum: ['auto', 'v3', 'v4'],
+        type: 'string',
+      }),
+    )
+    expect(properties['color-highlight.tailwindStylesheetPaths']).toStrictEqual(
+      expect.objectContaining({
+        default: [],
+        items: { type: 'string' },
+        type: 'array',
+      }),
+    )
+    expect(scopedConfigs.defaults.tailwindColorMode).toBe('auto')
+    expect(scopedConfigs.defaults.tailwindStylesheetPaths).toStrictEqual([])
+
+    expect(readme).toContain('## Tailwind CSS theme colors')
+    expect(readme).toContain('official `tailwindcss/colors` export')
+    expect(readme).toContain('OKLCH')
+    expect(readme).toMatch(
+      /`auto`[\s\S]{0,300}v4 signals[\s\S]{0,300}v3 palette/u,
+    )
+    expect(readme).toMatch(/`v3`[\s\S]{0,200}legacy v3 palette/u)
+    expect(readme).toMatch(/`v4`[\s\S]{0,200}official v4 palette/u)
+    expect(readme).toContain('`@theme`, `@theme inline`, and `@theme static`')
+    expect(readme).toContain('`--color-*: initial`')
+    expect(readme).toContain('`--*: initial`')
+    expect(readme).toContain('`--color-name: initial`')
+    expect(readme).toMatch(/files,\s+directories, or glob patterns/u)
+    expect(readme).toContain('workspace trust')
+    expect(readme).toMatch(/relative CSS `@import` and `@reference`/u)
+    expect(readme).toContain('at most 32 theme files per request')
+    expect(readme).toMatch(/maximum\s+dependency depth of 5/u)
+    expect(readme).toContain('512 KiB per file')
+    expect(readme).toContain('`bg-[#50d71e]`')
+    expect(readme).toContain('`text-[oklch(...)]`')
+    expect(readme).toContain('`bg-(--color-brand)`')
+    expect(readme).toContain('`bg-red-500!`')
+    expect(readme).toContain('`tw:hover:bg-red-600`')
+    expect(readme).toContain('Go to Definition')
+    expect(readme).toContain('Tailwind compiler')
+    expect(readme).toContain('JavaScript configuration')
+  })
 })

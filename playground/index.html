@@ -9,6 +9,10 @@
     <meta charset="UTF-8" />
     <title>Color Highlight Playground</title>
     <style>
+      @theme {
+        --color-brand-muted: #50d71e;
+      }
+
       /* #RGB — 3-digit hex */
       .hex-3 {
         color: #f00;
@@ -128,6 +132,11 @@
       class="bg-red-500 text-sky-300 hover:border-white/75 focus:ring-emerald-600/[.31]"
     >
       Tailwind theme colors
+    </div>
+    <div
+      class="tw:hover:bg-mauve-500! text-[oklch(70%_0.2_40)] fill-(--color-brand-muted) border-[#50d71e]/50"
+    >
+      Tailwind v4 theme colors
     </div>
   </body>
 </html>

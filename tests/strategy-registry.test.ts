@@ -21,6 +21,8 @@ const defaultConfig: NestedScopedConfigs = {
   languages: ['*'],
   matchWords: false,
   namedColorMatchMode: 'context',
+  tailwindColorMode: 'auto',
+  tailwindStylesheetPaths: [],
   enableHover: false,
   resolveScssVariablesAcrossFiles: false,
   scssLoadPaths: [],

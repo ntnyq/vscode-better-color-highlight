@@ -46,6 +46,8 @@ const configSnapshot: NestedScopedConfigs = {
   matchWords: false,
   maxFileSize: 1_000_000,
   namedColorMatchMode: 'context',
+  tailwindColorMode: 'auto',
+  tailwindStylesheetPaths: [],
   resolveScssVariablesAcrossFiles: false,
   scssLoadPaths: [],
   resolveCssVariablesAcrossFiles: false,
@@ -93,10 +95,11 @@ vi.mock(
 function createDocument(
   uri = 'file:///workspace/source.css',
   text = '0123456789',
+  languageId = 'css',
 ) {
   return {
     getText: () => text,
-    languageId: 'css',
+    languageId,
     offsetAt: ({ offset }: { offset: number }) => offset,
     positionAt: (offset: number) => ({ offset }),
     uri: new TestUri(uri),
@@ -113,6 +116,8 @@ describe('provideColorDefinition', () => {
     configSnapshot.enableColorNavigation = true
     configSnapshot.languages = ['*']
     configSnapshot.maxFileSize = 1_000_000
+    configSnapshot.tailwindColorMode = 'auto'
+    configSnapshot.tailwindStylesheetPaths = []
     workspaceMock.isTrusted = true
     resolveColorDefinition.mockReset()
     openTextDocument.mockReset()
@@ -154,6 +159,8 @@ describe('provideColorDefinition', () => {
 
   it('passes workspace trust and the complete strategy context', async () => {
     workspaceMock.isTrusted = false
+    configSnapshot.tailwindColorMode = 'v4'
+    configSnapshot.tailwindStylesheetPaths = ['theme.css']
     resolveColorDefinition.mockResolvedValue(null)
     const { provideColorDefinition } =
       await import('../src/color-navigation/definition-provider')
@@ -170,9 +177,62 @@ describe('provideColorDefinition', () => {
       expect.objectContaining({
         filePath: 'file:///workspace/source.css',
         languageId: 'css',
+        tailwindColorMode: 'v4',
+        tailwindStylesheetPaths: ['theme.css'],
         workspaceIsTrusted: false,
       }),
     )
+  })
+
+  it.each([
+    'sass',
+    'styl',
+    'html',
+    'javascriptreact',
+    'typescriptreact',
+    'vue',
+    'svelte',
+    'astro',
+    'templating-language',
+  ])('allows enabled %s documents to reach navigation', async languageId => {
+    resolveColorDefinition.mockResolvedValue(null)
+    const { provideColorDefinition } =
+      await import('../src/color-navigation/definition-provider')
+
+    await provideColorDefinition(
+      createDocument(
+        `file:///workspace/source.${languageId}`,
+        'class="bg-brand"',
+        languageId,
+      ),
+      { offset: 10 } as never,
+      activeToken,
+    )
+
+    expect(resolveColorDefinition).toHaveBeenCalledWith(
+      'class="bg-brand"',
+      10,
+      expect.objectContaining({ languageId }),
+    )
+  })
+
+  it('rejects a runtime-disabled arbitrary language', async () => {
+    configSnapshot.languages = ['*', '!templating-language']
+    const { provideColorDefinition } =
+      await import('../src/color-navigation/definition-provider')
+
+    await expect(
+      provideColorDefinition(
+        createDocument(
+          'file:///workspace/source.custom',
+          'class="bg-brand"',
+          'templating-language',
+        ),
+        { offset: 10 } as never,
+        activeToken,
+      ),
+    ).resolves.toBeUndefined()
+    expect(resolveColorDefinition).not.toHaveBeenCalled()
   })
 
   it('creates precise same-file links without reopening the document', async () => {
@@ -236,6 +296,34 @@ describe('provideColorDefinition', () => {
         } as Vscode.CancellationToken,
       ),
     ).resolves.toBeUndefined()
+  })
+
+  it('honors cancellation after asynchronous Tailwind resolution', async () => {
+    let cancelled = false
+    resolveColorDefinition.mockImplementationOnce(() => {
+      cancelled = true
+      return Promise.resolve({
+        originRange: { start: 2, end: 5 },
+        targetFilePath: 'file:///workspace/theme.css',
+        targetRange: { start: 1, end: 7 },
+        targetSelectionRange: { start: 1, end: 4 },
+      })
+    })
+    const { provideColorDefinition } =
+      await import('../src/color-navigation/definition-provider')
+
+    await expect(
+      provideColorDefinition(
+        createDocument('file:///workspace/page.html', 'class="bg-brand"'),
+        { offset: 10 } as never,
+        {
+          get isCancellationRequested() {
+            return cancelled
+          },
+        } as Vscode.CancellationToken,
+      ),
+    ).resolves.toBeUndefined()
+    expect(openTextDocument).not.toHaveBeenCalled()
   })
 
   it('isolates resolver and target-open failures with logging', async () => {

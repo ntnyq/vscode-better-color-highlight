@@ -82,6 +82,7 @@
     "@ntnyq/utils": "^0.16.0",
     "jsonc-parser": "^3.3.1",
     "reactive-vscode": "^1.0.2",
+    "tailwindcss": "^4.3.1",
     "yaml": "^2.9.0"
   },
   "devDependencies": {
@@ -154,6 +155,24 @@
           "type": "boolean",
           "default": true,
           "description": "Enable Go to Definition and Peek Definition for supported color variables and design-token aliases."
+        },
+        "color-highlight.tailwindColorMode": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "v3",
+            "v4"
+          ],
+          "description": "Select the Tailwind color palette: auto detects CSS-first v4 signals, while v3 and v4 force that palette version."
+        },
+        "color-highlight.tailwindStylesheetPaths": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "description": "File, directory, or glob paths used as Tailwind CSS theme sources in trusted workspaces."
         },
         "color-highlight.resolveScssVariablesAcrossFiles": {
           "type": "boolean",
@@ -350,7 +369,8 @@
         "color-highlight.resolveScssVariablesAcrossFiles",
         "color-highlight.scssLoadPaths",
         "color-highlight.resolveCssVariablesAcrossFiles",
-        "color-highlight.cssVariablePaths"
+        "color-highlight.cssVariablePaths",
+        "color-highlight.tailwindStylesheetPaths"
       ]
     },
     "virtualWorkspaces": {

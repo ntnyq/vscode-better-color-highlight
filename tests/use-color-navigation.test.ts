@@ -33,16 +33,14 @@ vi.mock(import('../src/color-navigation/definition-provider'), () => ({
 }))
 
 describe('useColorNavigation', () => {
-  it('registers all supported selectors and disposes the provider', async () => {
+  it('registers every language for runtime filtering and disposes the provider', async () => {
     const { useColorNavigation } =
       await import('../src/composables/use-color-navigation')
 
     useColorNavigation()
 
     expect(registerDefinitionProvider).toHaveBeenCalledWith(
-      ['css', 'scss', 'less', 'stylus', 'json', 'jsonc', 'yaml', 'yml'].map(
-        language => ({ language }),
-      ),
+      [{ language: '*' }],
       { provideDefinition: provideColorDefinition },
     )
     deactivateHandler()

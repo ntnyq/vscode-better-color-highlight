@@ -8,6 +8,7 @@ const configSnapshot = {
   resolveCssVariablesAcrossFiles: true,
   resolveScssVariablesAcrossFiles: false,
   resolveDesignTokensAcrossFiles: true,
+  tailwindStylesheetPaths: [] as string[],
 }
 const deactivateHandlers: DisposeFn[] = []
 let documentChangeHandler: (event: unknown) => void = () => {}
@@ -81,5 +82,22 @@ describe('useColorDependencyRevision', () => {
 
     expect(revision.value).toBe(2)
     expect(deactivateHandlers).toHaveLength(1)
+  })
+
+  it('watches CSS dependencies when Tailwind stylesheet paths are configured', async () => {
+    deactivateHandlers.length = 0
+    configSnapshot.resolveCssVariablesAcrossFiles = false
+    configSnapshot.resolveDesignTokensAcrossFiles = false
+    configSnapshot.tailwindStylesheetPaths = ['theme.css']
+    vi.resetModules()
+
+    const { useColorDependencyRevision } =
+      await import('../src/composables/use-color-dependency-revision')
+    const revision = useColorDependencyRevision()
+
+    fileChangeHandler({ path: '/theme.css' })
+    fileChangeHandler({ path: '/tokens.json' })
+
+    expect(revision.value).toBe(1)
   })
 })

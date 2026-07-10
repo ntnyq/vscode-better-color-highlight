@@ -7,6 +7,7 @@ import { parseYamlDesignTokenDocument } from '../strategies/design-tokens/yaml-d
 import { resolveLessVarDefinition } from '../strategies/less-vars'
 import { resolveScssVarDefinition } from '../strategies/scss-vars'
 import { resolveStylusVarDefinition } from '../strategies/stylus-vars'
+import { resolveTailwindColorDefinition } from '../strategies/tailwind-theme/definition'
 import type { ColorDefinitionTarget, StrategyContext } from '../types'
 import { logger } from '../utils/logger'
 
@@ -19,6 +20,17 @@ export async function resolveColorDefinition(
   context: StrategyContext,
 ): Promise<ColorDefinitionTarget | null> {
   try {
+    if (!isStructuredTokenLanguage(context.languageId)) {
+      const tailwindTarget = await resolveTailwindColorDefinition(
+        text,
+        offset,
+        context,
+      )
+      if (tailwindTarget) {
+        return tailwindTarget
+      }
+    }
+
     switch (context.languageId) {
       case 'css': {
         return await resolveCssDefinition(text, offset, context)
@@ -62,6 +74,10 @@ export async function resolveColorDefinition(
     logger.error(`Color definition resolution failed: ${error}`)
     return null
   }
+}
+
+function isStructuredTokenLanguage(languageId: string): boolean {
+  return ['json', 'jsonc', 'yaml', 'yml'].includes(languageId)
 }
 
 async function resolveCssDefinition(

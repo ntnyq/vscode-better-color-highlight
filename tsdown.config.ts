@@ -19,7 +19,7 @@ export default defineConfig({
     ),
   },
   deps: {
-    alwaysBundle: Object.keys(pkg.dependencies),
+    alwaysBundle: [...Object.keys(pkg.dependencies), 'tailwindcss/colors'],
     neverBundle: ['vscode'],
     onlyBundle: false,
   },

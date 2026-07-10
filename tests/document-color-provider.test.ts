@@ -2,7 +2,7 @@ import type * as ReactiveVscode from 'reactive-vscode'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
 import type { NestedScopedConfigs } from '../src/meta'
-import type { ColorMatch } from '../src/types'
+import type { ColorDetector, ColorMatch } from '../src/types'
 import type * as LoggerModule from '../src/utils/logger'
 
 class TestColor {
@@ -74,6 +74,8 @@ const configSnapshot: NestedScopedConfigs = {
   maxFileSize: 1_000_000,
   designTokenJsonMode: 'token-values',
   resolveDesignTokensAcrossFiles: false,
+  tailwindColorMode: 'auto',
+  tailwindStylesheetPaths: [],
   useARGB: false,
   matchRgbWithNoFunction: false,
   rgbWithNoFunctionLanguages: ['*'],
@@ -133,6 +135,8 @@ describe('document color provider', () => {
     configSnapshot.enableColorPicker = false
     configSnapshot.languages = ['*']
     configSnapshot.maxFileSize = 1_000_000
+    configSnapshot.tailwindColorMode = 'auto'
+    configSnapshot.tailwindStylesheetPaths = []
     replace.mockClear()
     loggerError.mockClear()
   })
@@ -192,6 +196,30 @@ describe('document color provider', () => {
       new TestRange({ offset: 0 }, { offset: 9 }),
     )
     expect(result[0].color).toStrictEqual(new TestColor(1, 0, 0, 0.502))
+  })
+
+  it('passes Tailwind theme settings to native color detectors', async () => {
+    configSnapshot.enableColorPicker = true
+    configSnapshot.tailwindColorMode = 'v4'
+    configSnapshot.tailwindStylesheetPaths = ['theme.css']
+    const { provideDocumentColors } =
+      await import('../src/color-provider/document-color-provider')
+    const detector = vi.fn<ColorDetector>(() => [])
+    const registry = await import('../src/core/strategy-registry')
+    const strategies = vi
+      .spyOn(registry, 'getStrategies')
+      .mockReturnValue([detector])
+
+    await provideDocumentColors(document, activeToken)
+
+    expect(detector).toHaveBeenCalledWith(
+      '#ff000080',
+      expect.objectContaining({
+        tailwindColorMode: 'v4',
+        tailwindStylesheetPaths: ['theme.css'],
+      }),
+    )
+    strategies.mockRestore()
   })
 
   it('deduplicates matches and skips unsupported resolved colors', async () => {

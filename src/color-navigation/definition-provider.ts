@@ -71,6 +71,8 @@ function createStrategyContext(document: TextDocument): StrategyContext {
     languageId: document.languageId,
     filePath: document.uri.toString(),
     namedColorMatchMode: config.namedColorMatchMode,
+    tailwindColorMode: config.tailwindColorMode,
+    tailwindStylesheetPaths: config.tailwindStylesheetPaths,
     resolveScssVariablesAcrossFiles: config.resolveScssVariablesAcrossFiles,
     scssLoadPaths: config.scssLoadPaths,
     resolveCssVariablesAcrossFiles: config.resolveCssVariablesAcrossFiles,

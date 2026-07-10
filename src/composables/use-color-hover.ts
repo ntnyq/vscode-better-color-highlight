@@ -93,7 +93,7 @@ export function useColorHover(
  * @param workspaceIsTrusted - Whether cross-file reads are currently allowed
  * @returns Serialized hover cache key
  */
-function createHoverMatchCacheKey(
+export function createHoverMatchCacheKey(
   uri: string,
   documentVersion: number,
   languageId: string,
@@ -108,6 +108,8 @@ function createHoverMatchCacheKey(
     workspaceIsTrusted,
     matchWords: config.matchWords,
     namedColorMatchMode: config.namedColorMatchMode,
+    tailwindColorMode: config.tailwindColorMode,
+    tailwindStylesheetPaths: config.tailwindStylesheetPaths,
     resolveScssVariablesAcrossFiles: config.resolveScssVariablesAcrossFiles,
     scssLoadPaths: config.scssLoadPaths,
     resolveCssVariablesAcrossFiles: config.resolveCssVariablesAcrossFiles,

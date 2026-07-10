@@ -63,15 +63,27 @@ Default: `false`
 
 #### `color-highlight.enableColorPicker`
 
-Description: Use VS Code's native color picker and replacement presentations for detected colors.<br>
-Type: `boolean`<br>
+Description: Use VS Code's native color picker and replacement presentations for detected colors.  
+Type: `boolean`  
 Default: `false`
 
 #### `color-highlight.enableColorNavigation`
 
-Description: Enable Go to Definition and Peek Definition for supported color variables and design-token aliases.<br>
-Type: `boolean`<br>
+Description: Enable Go to Definition and Peek Definition for supported color variables and design-token aliases.  
+Type: `boolean`  
 Default: `true`
+
+#### `color-highlight.tailwindColorMode`
+
+Description: Select the Tailwind color palette: auto detects CSS-first v4 signals, while v3 and v4 force that palette version.  
+Type: `string`  
+Default: `"auto"`
+
+#### `color-highlight.tailwindStylesheetPaths`
+
+Description: File, directory, or glob paths used as Tailwind CSS theme sources in trusted workspaces.  
+Type: `array`  
+Default: `[]`
 
 #### `color-highlight.resolveScssVariablesAcrossFiles`
 
@@ -111,14 +123,14 @@ Default: `1000000`
 
 #### `color-highlight.designTokenJsonMode`
 
-Description: Controls design token color matching. For JSON and JSONC, 'token-values' matches value and $value fields, 'strings' matches any color string value, and 'all' enables both modes. 'off' disables JSON, JSONC, and YAML token matching.<br>
+Description: Controls design token color matching. For JSON and JSONC, 'token-values' matches value and $value fields, 'strings' matches any color string value, and 'all' enables both modes. 'off' disables JSON, JSONC, and YAML token matching.  
 Type: `string`  
 Default: `"token-values"`
 
 #### `color-highlight.resolveDesignTokensAcrossFiles`
 
-Description: Resolve relative JSON, JSONC, and YAML design-token $ref references across files in trusted workspaces.<br>
-Type: `boolean`<br>
+Description: Resolve relative JSON, JSONC, and YAML design-token $ref references across files in trusted workspaces.  
+Type: `boolean`  
 Default: `false`
 
 #### `color-highlight.useARGB`
@@ -190,6 +202,81 @@ Default: `false`
 - [x] Hyprland：`rgba(rrggbb)`、`rgba(rrggbbaa)`
 - [x] JSON / JSONC Design Tokens：legacy color strings and DTCG structured colors
 - [x] YAML Design Tokens：DTCG structured colors
+
+## Tailwind CSS theme colors
+
+Tailwind color utilities use one of two bundled palettes. The legacy palette
+keeps existing Tailwind CSS v3 projects compatible, while the v4 palette comes
+from Tailwind's official `tailwindcss/colors` export and includes its published
+OKLCH values and color families.
+
+`color-highlight.tailwindColorMode` controls palette selection:
+
+- `auto` (the default) uses the v4 palette when the current document or a
+  loaded theme source contains CSS-first v4 signals: a top-level `@theme`, an
+  `@reference`, or `@import "tailwindcss"`. Without v4 signals it keeps the v3
+  palette.
+- `v3` always uses the legacy v3 palette, then applies custom theme
+  declarations.
+- `v4` always uses the official v4 palette, then applies custom theme
+  declarations.
+
+The extension reads top-level `@theme`, `@theme inline`, and `@theme static`
+blocks in source order. Direct `--color-*` values and exact
+`var(--color-other)` aliases create or replace utility colors. Both
+`--color-*: initial` and `--*: initial` reset the color namespace, while
+`--color-name: initial` removes one color. An inline theme alias may also
+resolve through a regular custom property when that property has one
+unambiguous selector/at-rule context. Nested or malformed theme blocks,
+cycles, missing aliases, ambiguous properties, unsupported colors, and
+composite values are skipped instead of guessed.
+
+For markup and script documents, configure trusted theme sources with files,
+directories, or glob patterns:
+
+```jsonc
+{
+  "color-highlight.tailwindColorMode": "auto",
+  "color-highlight.tailwindStylesheetPaths": [
+    "./src/theme.css",
+    "./src/styles",
+    "./packages/*/theme.css",
+  ],
+}
+```
+
+The default empty `tailwindStylesheetPaths` array disables cross-file Tailwind
+theme loading. Loading also requires workspace trust. Each highlight or
+navigation load follows only relative CSS `@import` and `@reference`
+dependencies and reads at most 32 theme files per request, to a maximum
+dependency depth of 5, with a limit of 512 KiB per file. Package, HTTP, data,
+absolute, non-CSS, unreadable, and over-limit dependencies are not followed.
+An import of `tailwindcss` selects v4 in `auto` mode but does not read package
+internals.
+
+Supported utility syntax includes custom theme names, variants, gradients,
+SVG colors, borders, rings, shadows, slash opacity, leading v3-compatible and
+trailing v4 important modifiers, arbitrary colors such as `bg-[#50d71e]` and
+`text-[oklch(...)]`, and custom-property shorthand such as
+`bg-(--color-brand)`. Prefix variants such as `tw:hover:bg-red-600` and
+trailing important utilities such as `bg-red-500!` are also recognized.
+Incomplete dynamic template fragments, arbitrary expressions that are not a
+complete supported color, malformed utilities, and negative color utilities
+are ignored.
+
+Go to Definition and Peek Definition for a Tailwind utility point to the final
+custom `--color-*` declaration or uniquely resolved inline custom property.
+This works in enabled markup, component, script, and style languages. Bundled
+palette colors and arbitrary literal colors have no workspace definition, so
+they do not produce a link. Navigation uses the same mode, source order,
+resets, aliases, trust gate, configured paths, and loading bounds as color
+highlighting.
+
+The Tailwind compiler is not bundled or run. The extension does not execute
+JavaScript configuration, plugins, or arbitrary project code, and it does not
+search the workspace beyond configured theme paths and their bounded relative
+dependencies. Workspace file access uses VS Code APIs so the same behavior is
+available in desktop, Web, and virtual workspaces when the files are readable.
 
 Cross-file CSS custom property resolution is conservative. It only runs when
 `color-highlight.resolveCssVariablesAcrossFiles` is enabled, reads sources from
@@ -290,12 +377,6 @@ When `color-highlight.enableColorPicker` is enabled, detected colors are also
 provided to VS Code's native color picker with HEX, RGB, HSL, and OKLCH
 replacement presentations. It is disabled by default so the native swatch does
 not appear alongside the extension's custom marker unless explicitly requested.
-
-Tailwind theme color matching highlights static default color utilities such as
-`bg-red-500`, `text-sky-300`, `from-purple-400`, and `ring-white/75`,
-including common variant prefixes like `hover:` and `dark:`. Custom Tailwind
-`@theme` declarations are still highlighted through their underlying CSS color
-values, for example `--color-brand-500: oklch(...)`.
 
 ## Credits
 

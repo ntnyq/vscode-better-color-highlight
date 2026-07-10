@@ -182,6 +182,8 @@ export async function getColorHover(
     languageId,
     filePath,
     namedColorMatchMode: config.namedColorMatchMode,
+    tailwindColorMode: config.tailwindColorMode,
+    tailwindStylesheetPaths: config.tailwindStylesheetPaths,
     resolveScssVariablesAcrossFiles: config.resolveScssVariablesAcrossFiles,
     scssLoadPaths: config.scssLoadPaths,
     resolveCssVariablesAcrossFiles: config.resolveCssVariablesAcrossFiles,

@@ -69,6 +69,8 @@ const snapshotConfig: NestedScopedConfigs = {
   languages: ['*'],
   matchWords: true,
   namedColorMatchMode: 'context',
+  tailwindColorMode: 'auto',
+  tailwindStylesheetPaths: [],
   enableHover: false,
   resolveScssVariablesAcrossFiles: true,
   scssLoadPaths: [],
@@ -135,6 +137,9 @@ async function collectFileSnapshot(fileName: string) {
       strategy(text, {
         languageId,
         filePath,
+        tailwindColorMode: snapshotConfig.tailwindColorMode,
+        tailwindStylesheetPaths: snapshotConfig.tailwindStylesheetPaths,
+        workspaceIsTrusted: true,
         namedColorMatchMode: snapshotConfig.namedColorMatchMode,
         resolveScssVariablesAcrossFiles:
           snapshotConfig.resolveScssVariablesAcrossFiles,

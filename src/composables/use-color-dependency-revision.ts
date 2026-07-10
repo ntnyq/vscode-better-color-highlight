@@ -12,7 +12,8 @@ function isCrossFileResolutionEnabled(): boolean {
   return (
     config.resolveCssVariablesAcrossFiles ||
     config.resolveScssVariablesAcrossFiles ||
-    config.resolveDesignTokensAcrossFiles
+    config.resolveDesignTokensAcrossFiles ||
+    config.tailwindStylesheetPaths.length > 0
   )
 }
 
@@ -21,6 +22,7 @@ function isRelevantDependency(path: string): boolean {
     ((config.resolveCssVariablesAcrossFiles ||
       config.resolveScssVariablesAcrossFiles) &&
       STYLESHEET_PATH_REGEX.test(path)) ||
+    (config.tailwindStylesheetPaths.length > 0 && /\.css$/iu.test(path)) ||
     (config.resolveDesignTokensAcrossFiles && TOKEN_PATH_REGEX.test(path))
   )
 }

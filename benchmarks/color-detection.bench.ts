@@ -13,8 +13,11 @@ const literalCss = Array.from(
 
 const tailwindMarkup = Array.from(
   { length: 500 },
-  () => '<div class="bg-red-500 text-sky-300 hover:border-white/75"></div>',
+  () =>
+    '<div class="tw:hover:bg-mauve-500! text-[oklch(70%_0.2_40)] fill-(--color-brand) border-[#50d71e]/50"></div>',
 ).join('\n')
+
+const adversarialTailwind = `${'variant:'.repeat(10_000)}${'['.repeat(10_000)}x`
 
 const variableCss = Array.from(
   { length: 100 },
@@ -39,6 +42,10 @@ describe('color detection', () => {
 
   bench('Tailwind utilities', () => {
     findTailwindThemeColors(tailwindMarkup)
+  })
+
+  bench('bounded Tailwind candidate scanning', () => {
+    findTailwindThemeColors(adversarialTailwind)
   })
 
   bench('CSS custom property resolution', async () => {

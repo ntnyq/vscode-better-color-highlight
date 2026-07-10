@@ -10,6 +10,8 @@ export type HighlightRunConfig = Pick<
   | 'useARGB'
   | 'matchWords'
   | 'namedColorMatchMode'
+  | 'tailwindColorMode'
+  | 'tailwindStylesheetPaths'
   | 'resolveScssVariablesAcrossFiles'
   | 'scssLoadPaths'
   | 'resolveCssVariablesAcrossFiles'
@@ -49,6 +51,12 @@ export interface StrategyRunOptions {
    * The named-color matching mode to pass to strategies.
    */
   readonly namedColorMatchMode: HighlightRunConfig['namedColorMatchMode']
+
+  /** Tailwind palette compatibility mode. */
+  readonly tailwindColorMode: HighlightRunConfig['tailwindColorMode']
+
+  /** Configured Tailwind CSS theme source paths. */
+  readonly tailwindStylesheetPaths: HighlightRunConfig['tailwindStylesheetPaths']
 
   /**
    * Whether SCSS strategies may read dependencies from disk.

@@ -97,6 +97,8 @@ export type ConfigKey =
   | "color-highlight.enableHover"
   | "color-highlight.enableColorPicker"
   | "color-highlight.enableColorNavigation"
+  | "color-highlight.tailwindColorMode"
+  | "color-highlight.tailwindStylesheetPaths"
   | "color-highlight.resolveScssVariablesAcrossFiles"
   | "color-highlight.scssLoadPaths"
   | "color-highlight.resolveCssVariablesAcrossFiles"
@@ -122,6 +124,8 @@ export interface ConfigKeyTypeMap {
   "color-highlight.enableHover": boolean,
   "color-highlight.enableColorPicker": boolean,
   "color-highlight.enableColorNavigation": boolean,
+  "color-highlight.tailwindColorMode": ("auto" | "v3" | "v4"),
+  "color-highlight.tailwindStylesheetPaths": string[],
   "color-highlight.resolveScssVariablesAcrossFiles": boolean,
   "color-highlight.scssLoadPaths": string[],
   "color-highlight.resolveCssVariablesAcrossFiles": boolean,
@@ -148,6 +152,8 @@ export interface ConfigShorthandMap {
   enableHover: "color-highlight.enableHover",
   enableColorPicker: "color-highlight.enableColorPicker",
   enableColorNavigation: "color-highlight.enableColorNavigation",
+  tailwindColorMode: "color-highlight.tailwindColorMode",
+  tailwindStylesheetPaths: "color-highlight.tailwindStylesheetPaths",
   resolveScssVariablesAcrossFiles: "color-highlight.resolveScssVariablesAcrossFiles",
   scssLoadPaths: "color-highlight.scssLoadPaths",
   resolveCssVariablesAcrossFiles: "color-highlight.resolveCssVariablesAcrossFiles",
@@ -174,6 +180,8 @@ export interface ConfigShorthandTypeMap {
   enableHover: boolean,
   enableColorPicker: boolean,
   enableColorNavigation: boolean,
+  tailwindColorMode: ("auto" | "v3" | "v4"),
+  tailwindStylesheetPaths: string[],
   resolveScssVariablesAcrossFiles: boolean,
   scssLoadPaths: string[],
   resolveCssVariablesAcrossFiles: boolean,
@@ -272,6 +280,26 @@ export const configs = {
     key: "color-highlight.enableColorNavigation",
     default: true,
   } as ConfigItem<"color-highlight.enableColorNavigation">,
+  /**
+   * Select the Tailwind color palette: auto detects CSS-first v4 signals, while v3 and v4 force that palette version.
+   * @key `color-highlight.tailwindColorMode`
+   * @default `"auto"`
+   * @type `string`
+   */
+  tailwindColorMode: {
+    key: "color-highlight.tailwindColorMode",
+    default: "auto",
+  } as ConfigItem<"color-highlight.tailwindColorMode">,
+  /**
+   * File, directory, or glob paths used as Tailwind CSS theme sources in trusted workspaces.
+   * @key `color-highlight.tailwindStylesheetPaths`
+   * @default `[]`
+   * @type `array`
+   */
+  tailwindStylesheetPaths: {
+    key: "color-highlight.tailwindStylesheetPaths",
+    default: [],
+  } as ConfigItem<"color-highlight.tailwindStylesheetPaths">,
   /**
    * Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work.
    * @key `color-highlight.resolveScssVariablesAcrossFiles`
@@ -442,6 +470,8 @@ export interface ScopedConfigKeyTypeMap {
   "enableHover": boolean,
   "enableColorPicker": boolean,
   "enableColorNavigation": boolean,
+  "tailwindColorMode": ("auto" | "v3" | "v4"),
+  "tailwindStylesheetPaths": string[],
   "resolveScssVariablesAcrossFiles": boolean,
   "scssLoadPaths": string[],
   "resolveCssVariablesAcrossFiles": boolean,
@@ -470,6 +500,8 @@ export const scopedConfigs = {
     "enableHover": false,
     "enableColorPicker": false,
     "enableColorNavigation": true,
+    "tailwindColorMode": "auto",
+    "tailwindStylesheetPaths": [],
     "resolveScssVariablesAcrossFiles": false,
     "scssLoadPaths": [],
     "resolveCssVariablesAcrossFiles": false,
@@ -498,6 +530,8 @@ export interface NestedConfigs {
     "enableHover": boolean,
     "enableColorPicker": boolean,
     "enableColorNavigation": boolean,
+    "tailwindColorMode": ("auto" | "v3" | "v4"),
+    "tailwindStylesheetPaths": string[],
     "resolveScssVariablesAcrossFiles": boolean,
     "scssLoadPaths": string[],
     "resolveCssVariablesAcrossFiles": boolean,
@@ -525,6 +559,8 @@ export interface NestedScopedConfigs {
   "enableHover": boolean,
   "enableColorPicker": boolean,
   "enableColorNavigation": boolean,
+  "tailwindColorMode": ("auto" | "v3" | "v4"),
+  "tailwindStylesheetPaths": string[],
   "resolveScssVariablesAcrossFiles": boolean,
   "scssLoadPaths": string[],
   "resolveCssVariablesAcrossFiles": boolean,
