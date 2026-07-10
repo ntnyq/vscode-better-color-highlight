@@ -4,28 +4,39 @@ import type { Disposable, FileSystemWatcher, Uri } from 'vscode'
 import { workspace } from 'vscode'
 import { config } from '../config'
 
-const STYLESHEET_GLOB = '**/*.{css,less,sass,scss}'
+const COLOR_DEPENDENCY_GLOB = '**/*.{css,json,jsonc,less,sass,scss,yaml,yml}'
 const STYLESHEET_PATH_REGEX = /\.(?:css|less|sass|scss)$/iu
+const TOKEN_PATH_REGEX = /\.(?:json|jsonc|yaml|yml)$/iu
 
 function isCrossFileResolutionEnabled(): boolean {
   return (
     config.resolveCssVariablesAcrossFiles ||
-    config.resolveScssVariablesAcrossFiles
+    config.resolveScssVariablesAcrossFiles ||
+    config.resolveDesignTokensAcrossFiles
+  )
+}
+
+function isRelevantDependency(path: string): boolean {
+  return (
+    ((config.resolveCssVariablesAcrossFiles ||
+      config.resolveScssVariablesAcrossFiles) &&
+      STYLESHEET_PATH_REGEX.test(path)) ||
+    (config.resolveDesignTokensAcrossFiles && TOKEN_PATH_REGEX.test(path))
   )
 }
 
 /**
- * Track stylesheet changes that can invalidate cross-file color resolution.
+ * Track source changes that can invalidate cross-file color resolution.
  *
  * @returns Reactive dependency revision shared by highlighting and hover caches.
  */
-export function useStylesheetDependencyRevision(): Readonly<Ref<number>> {
+export function useColorDependencyRevision(): Readonly<Ref<number>> {
   const revision = ref(0)
   let watcher: FileSystemWatcher | undefined
   let watcherDisposables: Disposable[] = []
 
   const invalidate = (uri: Pick<Uri, 'path'>) => {
-    if (STYLESHEET_PATH_REGEX.test(uri.path)) {
+    if (isRelevantDependency(uri.path)) {
       revision.value++
     }
   }
@@ -47,7 +58,7 @@ export function useStylesheetDependencyRevision(): Readonly<Ref<number>> {
         return
       }
 
-      watcher = workspace.createFileSystemWatcher(STYLESHEET_GLOB)
+      watcher = workspace.createFileSystemWatcher(COLOR_DEPENDENCY_GLOB)
       watcherDisposables = [
         watcher.onDidChange(invalidate),
         watcher.onDidCreate(invalidate),

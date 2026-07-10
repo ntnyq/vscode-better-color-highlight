@@ -114,6 +114,7 @@ function createHoverMatchCacheKey(
     cssVariablePaths: config.cssVariablePaths,
     cssVariableTrustedSelectors: config.cssVariableTrustedSelectors,
     designTokenJsonMode: config.designTokenJsonMode,
+    resolveDesignTokensAcrossFiles: config.resolveDesignTokensAcrossFiles,
     useARGB: config.useARGB,
     matchRgbWithNoFunction: config.matchRgbWithNoFunction,
     rgbWithNoFunctionLanguages: config.rgbWithNoFunctionLanguages,

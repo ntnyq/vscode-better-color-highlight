@@ -1,5 +1,8 @@
 import type { ColorMatch, StrategyContext } from '../types'
 import { findColorFunctions } from './color-functions'
+import { resolveDesignTokenColors } from './design-tokens/external-loader'
+import { parseJsonDesignTokenDocument } from './design-tokens/json-document'
+import { resolveLocalDesignTokenColors } from './design-tokens/resolver'
 import { findHexARGB, findHexRGBA } from './hex'
 import { findHwb } from './hwb'
 import { findNamedColors } from './named-colors'
@@ -13,8 +16,22 @@ import { findNamedColors } from './named-colors'
  */
 export function findJsonDesignTokens(
   text: string,
+  context?: StrategyContext & {
+    readonly resolveDesignTokensAcrossFiles?: false
+  },
+): ColorMatch[]
+export function findJsonDesignTokens(
+  text: string,
+  context: StrategyContext & { readonly resolveDesignTokensAcrossFiles: true },
+): ColorMatch[] | Promise<ColorMatch[]>
+export function findJsonDesignTokens(
+  text: string,
   context?: StrategyContext,
-): ColorMatch[] {
+): ColorMatch[] | Promise<ColorMatch[]>
+export function findJsonDesignTokens(
+  text: string,
+  context?: StrategyContext,
+): ColorMatch[] | Promise<ColorMatch[]> {
   const mode = context?.designTokenJsonMode ?? 'token-values'
   if (mode === 'off') {
     return []
@@ -74,7 +91,31 @@ export function findJsonDesignTokens(
     index = token.end
   }
 
+  if (mode === 'token-values' || mode === 'all') {
+    const document = parseJsonDesignTokenDocument(text)
+    if (document) {
+      const externalFilePath = getExternalFilePath(context)
+      if (externalFilePath) {
+        return resolveDesignTokenColors(document, {
+          filePath: externalFilePath,
+        }).then(structuredMatches =>
+          dedupeMatches([...matches, ...structuredMatches]),
+        )
+      }
+      matches.push(...resolveLocalDesignTokenColors(document))
+    }
+  }
+
   return dedupeMatches(matches)
+}
+
+/** Return the root path only when trusted cross-file resolution is enabled. */
+function getExternalFilePath(context?: StrategyContext): string | null {
+  return context?.resolveDesignTokensAcrossFiles &&
+    context.workspaceIsTrusted &&
+    context.filePath
+    ? context.filePath
+    : null
 }
 
 interface JsonStringToken {

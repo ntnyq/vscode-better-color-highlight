@@ -186,6 +186,7 @@ function setupTest() {
     maxFileSize: 1_000_000,
     useARGB: false,
     designTokenJsonMode: 'token-values',
+    resolveDesignTokensAcrossFiles: false,
     matchRgbWithNoFunction: false,
     rgbWithNoFunctionLanguages: ['*'],
     matchHslWithNoFunction: false,
@@ -499,11 +500,12 @@ describe('useColorHighlight', () => {
     expect(asyncStrategy).toHaveBeenCalledTimes(2)
   })
 
-  it('passes JSON design token mode to strategies', async () => {
+  it('passes design token settings to strategies', async () => {
     setupTest()
     asyncStrategy.mockResolvedValue([])
     documentTextRef = createRef('{ "brand": { "value": "#0ea5e9" } }')
     configSnapshot.designTokenJsonMode = 'all'
+    configSnapshot.resolveDesignTokensAcrossFiles = true
     visibleEditorsRef = createRef<unknown[]>([createEditor()])
 
     const { useColorHighlight } =
@@ -516,6 +518,7 @@ describe('useColorHighlight', () => {
       '{ "brand": { "value": "#0ea5e9" } }',
       expect.objectContaining({
         designTokenJsonMode: 'all',
+        resolveDesignTokensAcrossFiles: true,
       }),
     )
   })

@@ -2,6 +2,107 @@ import { describe, expect, it } from 'vitest'
 import { findJsonDesignTokens } from '../src/strategies/json-design-tokens'
 
 describe(findJsonDesignTokens, () => {
+  it('finds DTCG group root tokens', () => {
+    const text = JSON.stringify({
+      brand: {
+        $type: 'color',
+        $root: {
+          $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+        },
+      },
+    })
+
+    expect(findJsonDesignTokens(text)).toMatchObject([
+      { color: 'rgb(255, 0, 0)' },
+    ])
+  })
+  it('highlights structured DTCG colors at the components range', () => {
+    const text = `{
+      "brand": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [1, 0, 0],
+          "alpha": 0.5
+        }
+      }
+    }`
+    const source = '[1, 0, 0]'
+
+    expect(findJsonDesignTokens(text)).toStrictEqual([
+      {
+        start: text.indexOf(source),
+        end: text.indexOf(source) + source.length,
+        color: 'rgba(255, 0, 0, 0.5)',
+      },
+    ])
+  })
+
+  it('inherits group color types and resolves curly and pointer aliases', () => {
+    const text = `{
+      "colors": {
+        "$type": "color",
+        "red": {
+          "$value": {
+            "colorSpace": "srgb",
+            "components": [1, 0, 0]
+          }
+        }
+      },
+      "brand": { "$value": "{colors.red}" },
+      "link": {
+        "$type": "color",
+        "$ref": "#/colors/red/$value"
+      }
+    }`
+    const components = '[1, 0, 0]'
+    const curlyAlias = '{colors.red}'
+    const pointer = '#/colors/red/$value'
+
+    expect(findJsonDesignTokens(text)).toStrictEqual([
+      {
+        start: text.indexOf(components),
+        end: text.indexOf(components) + components.length,
+        color: 'rgb(255, 0, 0)',
+      },
+      {
+        start: text.indexOf(curlyAlias),
+        end: text.indexOf(curlyAlias) + curlyAlias.length,
+        color: 'rgb(255, 0, 0)',
+      },
+      {
+        start: text.indexOf(pointer),
+        end: text.indexOf(pointer) + pointer.length,
+        color: 'rgb(255, 0, 0)',
+      },
+    ])
+  })
+
+  it('only includes structured tokens in token-values and all modes', () => {
+    const text = `{
+      "brand": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [1, 0, 0]
+        }
+      }
+    }`
+
+    expect(
+      findJsonDesignTokens(text, {
+        languageId: 'json',
+        designTokenJsonMode: 'strings',
+      }),
+    ).toStrictEqual([])
+    expect(
+      findJsonDesignTokens(text, {
+        languageId: 'json',
+        designTokenJsonMode: 'all',
+      }),
+    ).toHaveLength(1)
+  })
+
   it('highlights a value hex color in token-values mode', () => {
     const text = '{ "value": "#0ea5e9" }'
     const result = findJsonDesignTokens(text)

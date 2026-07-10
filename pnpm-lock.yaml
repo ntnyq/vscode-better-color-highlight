@@ -14,9 +14,15 @@ importers:
       '@ntnyq/utils':
         specifier: ^0.16.0
         version: 0.16.0
+      jsonc-parser:
+        specifier: ^3.3.1
+        version: 3.3.1
       reactive-vscode:
         specifier: ^1.0.2
         version: 1.0.2(@types/vscode@1.125.0)
+      yaml:
+        specifier: ^2.9.0
+        version: 2.9.0
     devDependencies:
       '@types/node':
         specifier: ^26.1.1

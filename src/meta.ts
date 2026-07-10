@@ -103,6 +103,7 @@ export type ConfigKey =
   | "color-highlight.cssVariableTrustedSelectors"
   | "color-highlight.maxFileSize"
   | "color-highlight.designTokenJsonMode"
+  | "color-highlight.resolveDesignTokensAcrossFiles"
   | "color-highlight.useARGB"
   | "color-highlight.matchRgbWithNoFunction"
   | "color-highlight.rgbWithNoFunctionLanguages"
@@ -126,6 +127,7 @@ export interface ConfigKeyTypeMap {
   "color-highlight.cssVariableTrustedSelectors": string[],
   "color-highlight.maxFileSize": number,
   "color-highlight.designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
+  "color-highlight.resolveDesignTokensAcrossFiles": boolean,
   "color-highlight.useARGB": boolean,
   "color-highlight.matchRgbWithNoFunction": boolean,
   "color-highlight.rgbWithNoFunctionLanguages": string[],
@@ -150,6 +152,7 @@ export interface ConfigShorthandMap {
   cssVariableTrustedSelectors: "color-highlight.cssVariableTrustedSelectors",
   maxFileSize: "color-highlight.maxFileSize",
   designTokenJsonMode: "color-highlight.designTokenJsonMode",
+  resolveDesignTokensAcrossFiles: "color-highlight.resolveDesignTokensAcrossFiles",
   useARGB: "color-highlight.useARGB",
   matchRgbWithNoFunction: "color-highlight.matchRgbWithNoFunction",
   rgbWithNoFunctionLanguages: "color-highlight.rgbWithNoFunctionLanguages",
@@ -174,6 +177,7 @@ export interface ConfigShorthandTypeMap {
   cssVariableTrustedSelectors: string[],
   maxFileSize: number,
   designTokenJsonMode: ("token-values" | "strings" | "all" | "off"),
+  resolveDesignTokensAcrossFiles: boolean,
   useARGB: boolean,
   matchRgbWithNoFunction: boolean,
   rgbWithNoFunctionLanguages: string[],
@@ -325,6 +329,16 @@ export const configs = {
     default: "token-values",
   } as ConfigItem<"color-highlight.designTokenJsonMode">,
   /**
+   * Resolve relative JSON, JSONC, and YAML design-token $ref references across files in trusted workspaces.
+   * @key `color-highlight.resolveDesignTokensAcrossFiles`
+   * @default `false`
+   * @type `boolean`
+   */
+  resolveDesignTokensAcrossFiles: {
+    key: "color-highlight.resolveDesignTokensAcrossFiles",
+    default: false,
+  } as ConfigItem<"color-highlight.resolveDesignTokensAcrossFiles">,
+  /**
    * Interpret 8-digit hex colors as ARGB instead of RGBA.
    * @key `color-highlight.useARGB`
    * @default `false`
@@ -420,6 +434,7 @@ export interface ScopedConfigKeyTypeMap {
   "cssVariableTrustedSelectors": string[],
   "maxFileSize": number,
   "designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
+  "resolveDesignTokensAcrossFiles": boolean,
   "useARGB": boolean,
   "matchRgbWithNoFunction": boolean,
   "rgbWithNoFunctionLanguages": string[],
@@ -446,6 +461,7 @@ export const scopedConfigs = {
     "cssVariableTrustedSelectors": [":root","html","body",":host"],
     "maxFileSize": 1000000,
     "designTokenJsonMode": "token-values",
+    "resolveDesignTokensAcrossFiles": false,
     "useARGB": false,
     "matchRgbWithNoFunction": false,
     "rgbWithNoFunctionLanguages": ["*"],
@@ -472,6 +488,7 @@ export interface NestedConfigs {
     "cssVariableTrustedSelectors": string[],
     "maxFileSize": number,
     "designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
+    "resolveDesignTokensAcrossFiles": boolean,
     "useARGB": boolean,
     "matchRgbWithNoFunction": boolean,
     "rgbWithNoFunctionLanguages": string[],
@@ -497,6 +514,7 @@ export interface NestedScopedConfigs {
   "cssVariableTrustedSelectors": string[],
   "maxFileSize": number,
   "designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
+  "resolveDesignTokensAcrossFiles": boolean,
   "useARGB": boolean,
   "matchRgbWithNoFunction": boolean,
   "rgbWithNoFunctionLanguages": string[],

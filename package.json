@@ -80,7 +80,9 @@
   },
   "dependencies": {
     "@ntnyq/utils": "^0.16.0",
-    "reactive-vscode": "^1.0.2"
+    "jsonc-parser": "^3.3.1",
+    "reactive-vscode": "^1.0.2",
+    "yaml": "^2.9.0"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
@@ -202,7 +204,12 @@
             "all",
             "off"
           ],
-          "description": "Controls JSON and JSONC design token color matching. 'token-values' matches value and $value string fields, 'strings' matches any color string value, 'all' enables both modes, and 'off' disables JSON token matching."
+          "description": "Controls design token color matching. For JSON and JSONC, 'token-values' matches value and $value fields, 'strings' matches any color string value, and 'all' enables both modes. 'off' disables JSON, JSONC, and YAML token matching."
+        },
+        "color-highlight.resolveDesignTokensAcrossFiles": {
+          "type": "boolean",
+          "default": false,
+          "description": "Resolve relative JSON, JSONC, and YAML design-token $ref references across files in trusted workspaces."
         },
         "color-highlight.useARGB": {
           "type": "boolean",

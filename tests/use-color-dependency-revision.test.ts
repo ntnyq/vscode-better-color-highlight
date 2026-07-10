@@ -7,6 +7,7 @@ type DisposeFn = () => void
 const configSnapshot = {
   resolveCssVariablesAcrossFiles: true,
   resolveScssVariablesAcrossFiles: false,
+  resolveDesignTokensAcrossFiles: true,
 }
 const deactivateHandlers: DisposeFn[] = []
 let documentChangeHandler: (event: unknown) => void = () => {}
@@ -63,23 +64,20 @@ vi.mock(
     }) as unknown as Partial<typeof Vscode>,
 )
 
-describe('useStylesheetDependencyRevision', () => {
-  it('increments for open-document and filesystem stylesheet changes', async () => {
+describe('useColorDependencyRevision', () => {
+  it('increments for enabled stylesheet and token dependency changes', async () => {
     deactivateHandlers.length = 0
     documentChangeHandler = () => {}
     fileChangeHandler = () => {}
     vi.resetModules()
 
-    const { useStylesheetDependencyRevision } =
-      await import('../src/composables/use-stylesheet-dependency-revision')
-    const revision = useStylesheetDependencyRevision()
+    const { useColorDependencyRevision } =
+      await import('../src/composables/use-color-dependency-revision')
+    const revision = useColorDependencyRevision()
 
-    documentChangeHandler({
-      document: {
-        uri: { path: '/workspace/tokens.css' },
-      },
-    })
-    fileChangeHandler({ path: '/workspace/tokens.scss' })
+    documentChangeHandler({ document: { uri: { path: '/tokens.css' } } })
+    fileChangeHandler({ path: '/tokens.yaml' })
+    fileChangeHandler({ path: '/notes.txt' })
 
     expect(revision.value).toBe(2)
     expect(deactivateHandlers).toHaveLength(1)

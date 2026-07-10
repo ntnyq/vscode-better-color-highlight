@@ -1,0 +1,60 @@
+{
+  "file": "tokens.yaml",
+  "languageId": "yaml",
+  "strategyNames": [
+    "findYamlDesignTokens"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 6,
+      "column": 19,
+      "text": "[0.18, 0.42, 0.86]",
+      "range": [
+        88,
+        106
+      ],
+      "color": "rgb(46, 107, 219)",
+      "render": {
+        "backgroundColor": "rgb(46, 107, 219)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(46, 107, 219)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 11,
+      "column": 9,
+      "text": "- 0.9\n        - 0.2\n        - 0.4",
+      "range": [
+        189,
+        222
+      ],
+      "color": "rgba(250, 5, 100, 0.65)",
+      "render": {
+        "backgroundColor": "rgb(250, 5, 100)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(250, 5, 100)"
+      }
+    },
+    {
+      "index": 2,
+      "line": 16,
+      "column": 14,
+      "text": "{palette.primary}",
+      "range": [
+        263,
+        280
+      ],
+      "color": "rgb(46, 107, 219)",
+      "render": {
+        "backgroundColor": "rgb(46, 107, 219)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(46, 107, 219)"
+      }
+    }
+  ]
+}

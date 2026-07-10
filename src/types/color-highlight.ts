@@ -82,6 +82,11 @@ export interface StrategyContext {
   designTokenJsonMode?: DesignTokenJsonMode
 
   /**
+   * Whether relative design-token references may be resolved across files.
+   */
+  resolveDesignTokensAcrossFiles?: boolean
+
+  /**
    * Whether 8-digit hex colors should be interpreted as ARGB.
    */
   useARGB?: boolean

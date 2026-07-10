@@ -105,9 +105,15 @@ Default: `1000000`
 
 #### `color-highlight.designTokenJsonMode`
 
-Description: Controls JSON and JSONC design token color matching. 'token-values' matches value and $value string fields, 'strings' matches any color string value, 'all' enables both modes, and 'off' disables JSON token matching.  
+Description: Controls design token color matching. For JSON and JSONC, 'token-values' matches value and $value fields, 'strings' matches any color string value, and 'all' enables both modes. 'off' disables JSON, JSONC, and YAML token matching.<br>
 Type: `string`  
 Default: `"token-values"`
+
+#### `color-highlight.resolveDesignTokensAcrossFiles`
+
+Description: Resolve relative JSON, JSONC, and YAML design-token $ref references across files in trusted workspaces.<br>
+Type: `boolean`<br>
+Default: `false`
 
 #### `color-highlight.useARGB`
 
@@ -176,8 +182,8 @@ Default: `false`
 - [x] Tailwind theme color utilities：`bg-red-500` `text-sky-300` `hover:border-white/75`
 - [x] Flutter/Dart：`Color(0xffRRGGBB)`、`Color.fromARGB(a, r, g, b)`
 - [x] Hyprland：`rgba(rrggbb)`、`rgba(rrggbbaa)`
-- [x] JSON / JSONC Design Tokens：`value` / `$value` color strings
-- [ ] YAML Design Tokens
+- [x] JSON / JSONC Design Tokens：legacy color strings and DTCG structured colors
+- [x] YAML Design Tokens：DTCG structured colors
 
 Cross-file CSS custom property resolution is conservative. It only runs when
 `color-highlight.resolveCssVariablesAcrossFiles` is enabled, reads sources from
@@ -195,8 +201,41 @@ complete value is a supported color, configure:
 }
 ```
 
-Use `"all"` to allow both token fields and broad string matching, or `"off"` to
-disable JSON token matching.
+Use `"all"` to allow both token fields and broad string matching. `"off"`
+disables JSON, JSONC, and YAML design token matching.
+
+DTCG color tokens are supported in JSON, JSONC, and YAML. The structured
+`$value` format accepts all 14 DTCG color spaces, inherited `$type: "color"`,
+curly aliases such as `{palette.brand}`, local JSON Pointer `$ref` values, and
+group `$root` tokens. For example:
+
+```yaml
+palette:
+  $type: color
+  brand:
+    $value:
+      colorSpace: display-p3
+      components: [0.2, 0.45, 0.9]
+      alpha: 0.9
+  accent:
+    $value: '{palette.brand}'
+```
+
+Relative cross-file references are opt-in. In a trusted workspace, enable the
+setting and reference a JSON, JSONC, or YAML token value:
+
+```jsonc
+{
+  "color-highlight.resolveDesignTokensAcrossFiles": true,
+  "brand": {
+    "$type": "color",
+    "$ref": "./tokens/palette.yaml#/palette/brand/$value",
+  },
+}
+```
+
+Only relative references are loaded, supported dependency files are limited to
+512 KiB, and external reads remain disabled in untrusted workspaces.
 
 When `color-highlight.enableHover` is enabled, each hover row shows compact
 copy and replace icons for HEX, RGB, HSL, and OKLCH values. The alpha row can
@@ -236,6 +275,7 @@ Compared with the original Color Highlight extension, this project keeps the fam
 - Large files are skipped by default through `color-highlight.maxFileSize` to avoid expensive full-document scans.
 - Optional SCSS cross-file variable resolution through local `@use`, `@forward`, `@import`, directory indexes, nearest `node_modules`, and configured Sass load paths.
 - VS Code Workspace FS based dependency reads, avoiding Node `fs` APIs in extension runtime.
+- DTCG structured color tokens, local aliases, and opt-in trusted JSON/JSONC/YAML cross-file references.
 - Broader test coverage, including parser regression tests and playground snapshots.
 
 ## Migration from Color Highlight
@@ -277,6 +317,7 @@ Suggested migration example:
   "color-highlight.resolveScssVariablesAcrossFiles": false,
   "color-highlight.scssLoadPaths": [],
   "color-highlight.resolveCssVariablesAcrossFiles": false,
+  "color-highlight.resolveDesignTokensAcrossFiles": false,
   "color-highlight.cssVariablePaths": [],
   "color-highlight.cssVariableTrustedSelectors": [
     ":root",

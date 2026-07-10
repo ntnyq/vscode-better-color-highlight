@@ -188,6 +188,7 @@ export async function getColorHover(
     cssVariablePaths: config.cssVariablePaths,
     cssVariableTrustedSelectors: config.cssVariableTrustedSelectors,
     designTokenJsonMode: config.designTokenJsonMode,
+    resolveDesignTokensAcrossFiles: config.resolveDesignTokensAcrossFiles,
     useARGB: config.useARGB,
     workspaceIsTrusted,
   }

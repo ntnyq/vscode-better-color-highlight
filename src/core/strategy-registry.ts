@@ -15,6 +15,7 @@ import {
   findScssVars,
   findStylusVars,
   findTailwindThemeColors,
+  findYamlDesignTokens,
 } from '../strategies'
 import type { ColorDetector } from '../types'
 
@@ -52,6 +53,11 @@ function isLanguageMatch(
  */
 function isJsonLanguage(languageId: string): boolean {
   return languageId === 'json' || languageId === 'jsonc'
+}
+
+/** Check whether a language ID is YAML-like. */
+function isYamlLanguage(languageId: string): boolean {
+  return languageId === 'yaml' || languageId === 'yml'
 }
 
 /**
@@ -111,6 +117,9 @@ export function getStrategies(
   config: NestedScopedConfigs,
 ): ColorDetector[] {
   const isJsonLang = isJsonLanguage(languageId)
+  if (isYamlLanguage(languageId)) {
+    return config.designTokenJsonMode === 'off' ? [] : [findYamlDesignTokens]
+  }
   const strategies = getDirectColorStrategies(config, isJsonLang)
 
   // Named colors: for style languages or when explicitly enabled

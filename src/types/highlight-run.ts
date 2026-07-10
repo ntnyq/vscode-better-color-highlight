@@ -17,6 +17,7 @@ export type HighlightRunConfig = Pick<
   | 'cssVariableTrustedSelectors'
   | 'maxFileSize'
   | 'designTokenJsonMode'
+  | 'resolveDesignTokensAcrossFiles'
   | 'matchRgbWithNoFunction'
   | 'rgbWithNoFunctionLanguages'
   | 'matchHslWithNoFunction'
@@ -78,6 +79,9 @@ export interface StrategyRunOptions {
    * How JSON and JSONC design token colors should be matched.
    */
   readonly designTokenJsonMode: HighlightRunConfig['designTokenJsonMode']
+
+  /** Whether relative design-token references may be resolved across files. */
+  readonly resolveDesignTokensAcrossFiles: HighlightRunConfig['resolveDesignTokensAcrossFiles']
 
   /**
    * Whether 8-digit hex colors should be interpreted as ARGB.

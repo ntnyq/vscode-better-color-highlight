@@ -31,4 +31,29 @@ describe('readme generated config documentation', () => {
     )
     expect(readme).toContain('#### `color-highlight.enableColorPicker`')
   })
+
+  it('documents DTCG, YAML, and opt-in cross-file token resolution', async () => {
+    const packageJson = JSON.parse(await readFile('package.json', 'utf8')) as {
+      contributes: {
+        configuration: {
+          properties: Record<string, { default: unknown; type: string }>
+        }
+      }
+    }
+    const readme = await readFile('README.md', 'utf8')
+
+    expect(
+      packageJson.contributes.configuration.properties[
+        'color-highlight.resolveDesignTokensAcrossFiles'
+      ],
+    ).toStrictEqual(
+      expect.objectContaining({
+        default: false,
+        type: 'boolean',
+      }),
+    )
+    expect(readme).toContain('- [x] YAML Design Tokens')
+    expect(readme).toContain('all 14 DTCG color spaces')
+    expect(readme).toContain('512 KiB')
+  })
 })

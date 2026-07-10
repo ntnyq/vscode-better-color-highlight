@@ -12,6 +12,7 @@ import { findJsonDesignTokens } from '../src/strategies/json-design-tokens'
 import { findNamedColors } from '../src/strategies/named-colors'
 import { findRgbNoFunction } from '../src/strategies/rgb-no-fn'
 import { findTailwindThemeColors } from '../src/strategies/tailwind-theme-colors'
+import { findYamlDesignTokens } from '../src/strategies/yaml-design-tokens'
 
 const defaultConfig: NestedScopedConfigs = {
   enable: true,
@@ -27,6 +28,7 @@ const defaultConfig: NestedScopedConfigs = {
   cssVariableTrustedSelectors: [':root', 'html', 'body', ':host'],
   maxFileSize: 1_000_000,
   designTokenJsonMode: 'token-values',
+  resolveDesignTokensAcrossFiles: false,
   useARGB: false,
   matchRgbWithNoFunction: false,
   rgbWithNoFunctionLanguages: ['*'],
@@ -98,6 +100,23 @@ describe(getStrategies, () => {
     expect(strategies).not.toContain(findHexRGBA)
     expect(strategies).not.toContain(findColorFunctions)
     expect(strategies).not.toContain(findHwb)
+  })
+
+  it('uses only the design token strategy for yaml documents', () => {
+    for (const languageId of ['yaml', 'yml']) {
+      const strategies = getStrategies(languageId, defaultConfig)
+
+      expect(strategies).toStrictEqual([findYamlDesignTokens])
+    }
+  })
+
+  it('skips YAML design tokens when design token detection is disabled', () => {
+    const strategies = getStrategies('yaml', {
+      ...defaultConfig,
+      designTokenJsonMode: 'off',
+    })
+
+    expect(strategies).toStrictEqual([])
   })
 
   it('skips JSON design token strategy when disabled', () => {

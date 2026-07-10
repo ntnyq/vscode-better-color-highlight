@@ -1,0 +1,21 @@
+palette:
+  $type: color
+  primary:
+    $value:
+      colorSpace: srgb
+      components: [0.18, 0.42, 0.86]
+  translucent:
+    $value:
+      colorSpace: display-p3
+      components:
+        - 0.9
+        - 0.2
+        - 0.4
+      alpha: 0.65
+  alias:
+    $value: '{palette.primary}'
+
+# Arbitrary YAML strings are intentionally not scanned.
+metadata:
+  label: red
+  example: '#ff0000'

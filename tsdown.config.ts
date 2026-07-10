@@ -1,10 +1,17 @@
 import process from 'node:process'
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'tsdown'
 import pkg from './package.json' with { type: 'json' }
 
 const isDev = (): boolean => process.env.NODE_ENV === 'development'
 
 export default defineConfig({
+  alias: {
+    'jsonc-parser': 'jsonc-parser/lib/esm/main.js',
+    yaml: fileURLToPath(
+      new URL('node_modules/yaml/browser/index.js', import.meta.url),
+    ),
+  },
   clean: true,
   define: {
     'process.env.NODE_ENV': JSON.stringify(

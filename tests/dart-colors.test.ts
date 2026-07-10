@@ -17,6 +17,7 @@ const defaultConfig: NestedScopedConfigs = {
   cssVariableTrustedSelectors: [':root', 'html', 'body', ':host'],
   maxFileSize: 1_000_000,
   designTokenJsonMode: 'token-values',
+  resolveDesignTokensAcrossFiles: false,
   useARGB: false,
   matchRgbWithNoFunction: false,
   rgbWithNoFunctionLanguages: ['*'],
