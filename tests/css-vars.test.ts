@@ -5,7 +5,10 @@ import {
   splitCssSelectorList,
 } from '../src/strategies/css-vars/parser'
 import type { CssVarDeclaration } from '../src/strategies/css-vars/parser'
-import { resolveCssVarMatches } from '../src/strategies/css-vars/resolver'
+import {
+  findCssVarUsages,
+  resolveCssVarMatches,
+} from '../src/strategies/css-vars/resolver'
 import type { LoadCssVarSourceDeclarationsOptions } from '../src/strategies/css-vars/sources'
 import { FIXTURE_VARS_CSS } from './fixtures'
 
@@ -144,6 +147,13 @@ describe(findCssVars, () => {
         sourceOrder: 2,
       },
     ])
+    expect(
+      declarations.map(({ selectorContext }) => selectorContext),
+    ).toStrictEqual([
+      [':root', 'html', '[data-theme="brand,primary"]'],
+      [':root', 'html', '[data-theme="brand,primary"]'],
+      [':root', 'html', '[data-theme="brand,primary"]'],
+    ])
   })
 
   it('ignores commented declarations and preserves semicolons in values', () => {
@@ -173,6 +183,107 @@ describe(findCssVars, () => {
         value: '"semi;colon"',
       },
     ])
+  })
+
+  it('records absolute declaration name and value ranges', () => {
+    const text = `
+      @media screen {
+        .card {
+          /* shifted */ --brand  :  rgb(1, 2, 3)  ;
+        }
+      }
+    `
+    const [declaration] = collectCssVarDeclarations(text, {
+      filePath: '/workspace/app.css',
+      trustedSelectors: [],
+    })
+
+    expect(declaration).toMatchObject({
+      nameRange: {
+        start: text.indexOf('--brand'),
+        end: text.indexOf('--brand') + '--brand'.length,
+      },
+      valueRange: {
+        start: text.indexOf('rgb(1, 2, 3)'),
+        end: text.indexOf('rgb(1, 2, 3)') + 'rgb(1, 2, 3)'.length,
+      },
+      normalizedSelector: '.card',
+      atRuleContext: ['@media screen'],
+    })
+  })
+
+  it('records CSS variable usage ranges and enclosing source context', () => {
+    const text = `
+      @media screen {
+        .card:hover {
+          color: var(  --brand , #fff);
+        }
+      }
+    `
+
+    expect(findCssVarUsages(text)).toStrictEqual([
+      {
+        name: '--brand',
+        fallback: '#fff',
+        nameRange: {
+          start: text.indexOf('--brand'),
+          end: text.indexOf('--brand') + '--brand'.length,
+        },
+        originRange: {
+          start: text.indexOf('var('),
+          end: text.indexOf('var(') + 'var(  --brand , #fff)'.length,
+        },
+        selector: '.card:hover',
+        normalizedSelector: '.card:hover',
+        selectorContext: ['.card:hover'],
+        atRuleContext: ['@media screen'],
+      },
+    ])
+  })
+
+  it('collects nested usages while ignoring comments and strings', () => {
+    const text = `
+      .card {
+        /* color: var(--commented); */
+        content: "var(--string)";
+        color: var(--brand, var(--fallback));
+      }
+    `
+
+    expect(
+      findCssVarUsages(text).map(usage => ({
+        name: usage.name,
+        origin: text.slice(usage.originRange.start, usage.originRange.end),
+      })),
+    ).toStrictEqual([
+      {
+        name: '--brand',
+        origin: 'var(--brand, var(--fallback))',
+      },
+      {
+        name: '--fallback',
+        origin: 'var(--fallback)',
+      },
+    ])
+  })
+
+  it('collects many contextual usages with one structural source scan', () => {
+    let sliceCalls = 0
+    class InstrumentedCssText extends String {
+      public override slice(start?: number, end?: number): string {
+        sliceCalls++
+        return super.slice(start, end)
+      }
+    }
+    const source = Array.from(
+      { length: 40 },
+      (_, index) => `.rule-${index} { color: var(--color-${index}); }`,
+    ).join('\n')
+
+    expect(
+      findCssVarUsages(new InstrumentedCssText(source) as unknown as string),
+    ).toHaveLength(40)
+    expect(sliceCalls).toBeLessThan(200)
   })
 
   it('finds CSS variable usages with hex values', async () => {
@@ -217,6 +328,18 @@ describe(findCssVars, () => {
     expect(result[0].color).toBe('rgb(0, 0, 255)')
   })
 
+  it('resolves variables declared and used in one selector-list rule', async () => {
+    const text = '.a, .b { --brand: red; color: var(--brand); }'
+
+    await expect(findCssVars(text)).resolves.toStrictEqual([
+      {
+        start: text.indexOf('var(--brand)'),
+        end: text.indexOf('var(--brand)') + 'var(--brand)'.length,
+        color: 'rgb(255, 0, 0)',
+      },
+    ])
+  })
+
   it('skips current-file variables declared in different selector contexts', async () => {
     const text = `
       .light { --brand: #ffffff; }
@@ -237,6 +360,26 @@ describe(findCssVars, () => {
     `
 
     await expect(findCssVars(text)).resolves.toStrictEqual([])
+  })
+
+  it('retains usage context while resolving a nested fallback alias', async () => {
+    const text = `
+      .other { --fallback: blue; }
+      .card {
+        --fallback: red;
+        color: var(--missing, var(--fallback));
+      }
+    `
+
+    await expect(findCssVars(text)).resolves.toStrictEqual([
+      {
+        start: text.indexOf('var(--missing'),
+        end:
+          text.indexOf('var(--missing') +
+          'var(--missing, var(--fallback))'.length,
+        color: 'rgb(255, 0, 0)',
+      },
+    ])
   })
 
   it('finds CSS variable usages with named-color values', async () => {

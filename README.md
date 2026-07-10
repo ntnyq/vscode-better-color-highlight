@@ -67,6 +67,12 @@ Description: Use VS Code's native color picker and replacement presentations for
 Type: `boolean`<br>
 Default: `false`
 
+#### `color-highlight.enableColorNavigation`
+
+Description: Enable Go to Definition and Peek Definition for supported color variables and design-token aliases.<br>
+Type: `boolean`<br>
+Default: `true`
+
 #### `color-highlight.resolveScssVariablesAcrossFiles`
 
 Description: Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work.  
@@ -236,6 +242,45 @@ setting and reference a JSON, JSONC, or YAML token value:
 
 Only relative references are loaded, supported dependency files are limited to
 512 KiB, and external reads remain disabled in untrusted workspaces.
+
+## Color navigation
+
+Go to Definition and Peek Definition are enabled by default for color-valued
+references in CSS custom properties, SCSS variables, Less variables, Stylus
+variables, and DTCG aliases or `$ref` values in JSON, JSONC, YAML, and YML.
+References that are missing, cyclic, malformed, or do not ultimately resolve to
+a supported color do not produce a definition.
+
+CSS custom property navigation uses the reference's selector and at-rule
+context. It prefers the latest declaration in the same context, and uses a
+declaration from another context only when there is one conservative choice.
+When multiple selector or at-rule contexts could win at runtime, navigation is
+omitted instead of guessing.
+
+Cross-file navigation follows the same opt-in and workspace-trust gates as
+cross-file highlighting:
+
+- CSS sources require `color-highlight.resolveCssVariablesAcrossFiles`, are
+  read from `color-highlight.cssVariablePaths`, and must use a selector in
+  `color-highlight.cssVariableTrustedSelectors`. Navigation reads at most 64
+  source files of up to 512 KiB each.
+- SCSS modules require `color-highlight.resolveScssVariablesAcrossFiles`;
+  `color-highlight.scssLoadPaths` applies to non-relative modules. Resolution
+  follows dependencies to a maximum depth of 5, reads at most 32 files, and
+  limits each dependency to 512 KiB.
+- DTCG `$ref` navigation requires
+  `color-highlight.resolveDesignTokensAcrossFiles`, accepts only relative JSON,
+  JSONC, YAML, or YML dependencies, resolves at most 32 reference steps, and
+  limits each external dependency to 512 KiB.
+
+All cross-file reads are disabled in untrusted workspaces. To turn off Go to
+Definition and Peek Definition while keeping color highlighting enabled, use:
+
+```jsonc
+{
+  "color-highlight.enableColorNavigation": false,
+}
+```
 
 When `color-highlight.enableHover` is enabled, each hover row shows compact
 copy and replace icons for HEX, RGB, HSL, and OKLCH values. The alpha row can

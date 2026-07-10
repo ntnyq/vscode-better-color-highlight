@@ -1,12 +1,24 @@
+import type { ColorSourceRange } from '../../types'
+
 export interface CssVarDeclaration {
   readonly atRuleContext: readonly string[]
   readonly name: string
   readonly value: string
   readonly selector: string
   readonly normalizedSelector: string
+  readonly selectorContext: readonly string[]
   readonly sourceOrder: number
   readonly filePath?: string
   readonly isTrusted: boolean
+  readonly nameRange: ColorSourceRange
+  readonly valueRange: ColorSourceRange
+}
+
+export interface CssSourceContext {
+  readonly atRuleContext: readonly string[]
+  readonly selector: string
+  readonly normalizedSelector: string
+  readonly selectorContext: readonly string[]
 }
 
 export interface CollectCssVarDeclarationOptions {
@@ -233,8 +245,12 @@ export function collectCssVarDeclarations(
   )
 
   function pushDeclaration(
-    declaration: Pick<CssVarDeclaration, 'name' | 'value'>,
+    declaration: Pick<
+      CssVarDeclaration,
+      'name' | 'nameRange' | 'value' | 'valueRange'
+    >,
     normalizedSelector: string,
+    selectorContext: readonly string[],
     atRuleContext: readonly string[],
   ): void {
     declarations.push({
@@ -242,6 +258,7 @@ export function collectCssVarDeclarations(
       atRuleContext: [...atRuleContext],
       selector: normalizedSelector,
       normalizedSelector,
+      selectorContext: [...selectorContext],
       sourceOrder,
       filePath: options.filePath,
       isTrusted: trustedSelectors.has(normalizedSelector),
@@ -251,28 +268,40 @@ export function collectCssVarDeclarations(
 
   function collectTopLevelDeclarations(
     segment: string,
+    segmentStart: number,
     atRuleContext: readonly string[],
   ): void {
     if (!options.includeTopLevelDeclarations || !topLevelSelector) {
       return
     }
 
-    for (const declaration of scanCssVarDeclarations(segment)) {
-      pushDeclaration(declaration, topLevelSelector, atRuleContext)
+    for (const declaration of scanCssVarDeclarations(segment, segmentStart)) {
+      pushDeclaration(
+        declaration,
+        topLevelSelector,
+        [topLevelSelector],
+        atRuleContext,
+      )
     }
   }
 
   function collectRuleDeclarations(
     body: string,
+    bodyStart: number,
     prelude: string,
     atRuleContext: readonly string[],
   ): void {
-    const declarationsInRule = scanCssVarDeclarations(body)
+    const declarationsInRule = scanCssVarDeclarations(body, bodyStart)
     const selectorItems = splitCssSelectorList(prelude)
 
     for (const declaration of declarationsInRule) {
       for (const normalizedSelector of selectorItems) {
-        pushDeclaration(declaration, normalizedSelector, atRuleContext)
+        pushDeclaration(
+          declaration,
+          normalizedSelector,
+          selectorItems,
+          atRuleContext,
+        )
       }
     }
   }
@@ -287,18 +316,27 @@ export function collectCssVarDeclarations(
     while (blockStart < end) {
       const openBrace = findNextOpenBrace(text, blockStart, end)
       if (openBrace === -1) {
-        collectTopLevelDeclarations(text.slice(blockStart, end), atRuleContext)
+        collectTopLevelDeclarations(
+          text.slice(blockStart, end),
+          blockStart,
+          atRuleContext,
+        )
         return
       }
 
       const closeBrace = findMatchingCloseBrace(text, openBrace, end)
       if (closeBrace === -1) {
-        collectTopLevelDeclarations(text.slice(blockStart, end), atRuleContext)
+        collectTopLevelDeclarations(
+          text.slice(blockStart, end),
+          blockStart,
+          atRuleContext,
+        )
         return
       }
 
       collectTopLevelDeclarations(
         text.slice(blockStart, openBrace),
+        blockStart,
         atRuleContext,
       )
 
@@ -312,7 +350,7 @@ export function collectCssVarDeclarations(
         if (prelude.startsWith('@')) {
           walkRange(bodyStart, closeBrace, [...atRuleContext, prelude])
         } else {
-          collectRuleDeclarations(body, prelude, atRuleContext)
+          collectRuleDeclarations(body, bodyStart, prelude, atRuleContext)
         }
       }
 
@@ -326,6 +364,108 @@ export function collectCssVarDeclarations(
 }
 
 /**
+ * Walk executable CSS characters once while maintaining source context.
+ * Strings and comments are skipped, and selector/at-rule stacks are shared by
+ * consumers that need contextual source metadata.
+ *
+ * @param text - Stylesheet source text
+ * @param visit - Callback for each code character and its enclosing context
+ */
+export function walkCssCode(
+  text: string,
+  visit: (index: number, context: CssSourceContext) => void,
+): void {
+  const stack: CssSourceContext[] = []
+  let context = createCssSourceContext('', [], [])
+  let statementStart = 0
+  let quote: '"' | "'" | undefined
+  let isEscaped = false
+  let parenDepth = 0
+
+  for (let index = 0; index < text.length; index++) {
+    const char = text[index]
+    const next = text[index + 1]
+
+    if (quote) {
+      if (isEscaped) {
+        isEscaped = false
+      } else if (char === '\\') {
+        isEscaped = true
+      } else if (char === quote) {
+        quote = undefined
+      }
+      continue
+    }
+
+    if (char === '/' && next === '*') {
+      const close = text.indexOf('*/', index + 2)
+      index = close === -1 ? text.length : close + 1
+      continue
+    }
+
+    if (char === '"' || char === "'") {
+      quote = char
+      continue
+    }
+
+    visit(index, context)
+
+    if (char === '(') {
+      parenDepth++
+      continue
+    }
+    if (char === ')' && parenDepth > 0) {
+      parenDepth--
+      continue
+    }
+    if (parenDepth > 0) {
+      continue
+    }
+
+    if (char === '{') {
+      const prelude = normalizeCssSelector(text.slice(statementStart, index))
+      stack.push(context)
+      context = prelude.startsWith('@')
+        ? createCssSourceContext(
+            context.normalizedSelector,
+            context.selectorContext,
+            [...context.atRuleContext, prelude],
+          )
+        : createCssSourceContext(
+            prelude,
+            splitCssSelectorList(prelude),
+            context.atRuleContext,
+          )
+      statementStart = index + 1
+      continue
+    }
+
+    if (char === '}') {
+      context = stack.pop() ?? createCssSourceContext('', [], [])
+      statementStart = index + 1
+      continue
+    }
+
+    if (char === ';') {
+      statementStart = index + 1
+    }
+  }
+}
+
+function createCssSourceContext(
+  normalizedSelector: string,
+  selectorContext: readonly string[],
+  atRuleContext: readonly string[],
+): CssSourceContext {
+  return {
+    selector: normalizedSelector,
+    normalizedSelector,
+    selectorContext: [...selectorContext],
+    atRuleContext: [...atRuleContext],
+  }
+}
+
+/**
  * Scan a rule body or declaration segment for custom property declarations.
  *
  * @param body - CSS declaration text
@@ -333,9 +473,14 @@ export function collectCssVarDeclarations(
  */
 function scanCssVarDeclarations(
   body: string,
-): Pick<CssVarDeclaration, 'name' | 'value'>[] {
-  const declarations: Pick<CssVarDeclaration, 'name' | 'value'>[] = []
+  bodyStart: number,
+): Pick<CssVarDeclaration, 'name' | 'nameRange' | 'value' | 'valueRange'>[] {
+  const declarations: Pick<
+    CssVarDeclaration,
+    'name' | 'nameRange' | 'value' | 'valueRange'
+  >[] = []
   let current = ''
+  let currentStart = 0
   let quote: '"' | "'" | undefined
   let isEscaped = false
   let parenDepth = 0
@@ -353,11 +498,26 @@ function scanCssVarDeclarations(
       return
     }
 
-    const name = current.slice(0, colonIndex).trim()
-    const value = current.slice(colonIndex + 1).trim()
+    const rawName = current.slice(0, colonIndex)
+    const rawValue = current.slice(colonIndex + 1)
+    const name = rawName.trim()
+    const value = rawValue.trim()
 
     if (CSS_VAR_NAME_REGEX.test(name) && value) {
-      declarations.push({ name, value })
+      const nameStart = currentStart + rawName.indexOf(name)
+      const valueStart = currentStart + colonIndex + 1 + rawValue.indexOf(value)
+      declarations.push({
+        name,
+        value,
+        nameRange: {
+          start: bodyStart + nameStart,
+          end: bodyStart + nameStart + name.length,
+        },
+        valueRange: {
+          start: bodyStart + valueStart,
+          end: bodyStart + valueStart + value.length,
+        },
+      })
     }
 
     current = ''
@@ -386,8 +546,9 @@ function scanCssVarDeclarations(
 
     if (char === '/' && next === '*') {
       const end = body.indexOf('*/', index + 2)
-      index = end === -1 ? body.length : end + 1
-      current += ' '
+      const commentEnd = end === -1 ? body.length : end + 2
+      current += ' '.repeat(commentEnd - index)
+      index = commentEnd - 1
       continue
     }
 
@@ -400,6 +561,7 @@ function scanCssVarDeclarations(
     if (char === '{') {
       blockDepth++
       current = ''
+      currentStart = index + 1
       continue
     }
 
@@ -407,6 +569,7 @@ function scanCssVarDeclarations(
       if (blockDepth > 0) {
         blockDepth--
         current = ''
+        currentStart = index + 1
       }
       continue
     }
@@ -423,6 +586,7 @@ function scanCssVarDeclarations(
 
     if (char === ';' && parenDepth === 0) {
       commit()
+      currentStart = index + 1
       continue
     }
 

@@ -6,6 +6,7 @@ export interface DesignTokenRange {
 
 /** One parsed design token with semantic and source metadata. */
 export interface DesignTokenEntry {
+  readonly definitionRange?: DesignTokenRange
   readonly path: readonly string[]
   readonly range: DesignTokenRange
   readonly reference?: string

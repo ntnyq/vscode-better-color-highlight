@@ -1,4 +1,9 @@
-import type { ColorMatch, ColorDetector, StrategyContext } from '../types'
+import type {
+  ColorDefinitionTarget,
+  ColorMatch,
+  ColorDetector,
+  StrategyContext,
+} from '../types'
 import {
   basenameWorkspacePath,
   dirnameWorkspacePath,
@@ -14,6 +19,15 @@ import { findColorFunctions } from './color-functions'
 import { findHexRGBA } from './hex'
 import { findHwb } from './hwb'
 import { findNamedColors } from './named-colors'
+import {
+  getCapturedVariableValue,
+  resolveRangedVariableDefinition,
+  toColorDefinitionTarget,
+} from './shared/variable-definition'
+import type {
+  RangedVariableDefinition,
+  VariableUsage,
+} from './shared/variable-definition'
 
 /**
  * Regex for SCSS variable definitions anywhere in a stylesheet:
@@ -183,7 +197,7 @@ interface ScssModule {
   /**
    * Variable definitions exported by the module.
    */
-  readonly varDefs: Map<string, string>
+  readonly varDefs: Map<string, RangedVariableDefinition>
 }
 
 /**
@@ -204,6 +218,14 @@ interface ScssResolveState {
    * Number of files read during the current resolution run.
    */
   filesRead: number
+}
+
+function createScssResolveState(context?: StrategyContext): ScssResolveState {
+  return {
+    resolvingFiles: new Set(context?.filePath ? [context.filePath] : []),
+    loadPaths: context?.scssLoadPaths ?? [],
+    filesRead: 0,
+  }
 }
 
 /**
@@ -227,17 +249,32 @@ function getScssNamespace(specifier: string): string {
  * @param text - The SCSS source text to scan
  * @returns Map of variable names to raw values
  */
-function collectScssVarDefs(text: string): Map<string, string> {
-  const varDefs = new Map<string, string>()
+function collectScssVarDefs(
+  text: string,
+  filePath: string,
+): Map<string, RangedVariableDefinition> {
+  const varDefs = new Map<string, RangedVariableDefinition>()
 
   for (const m of text.matchAll(SCSS_VAR_DEF_REGEX)) {
     const name = m.groups?.name
-    const value = m.groups?.value?.trim()
-    if (!name || !value) {
+    const rawValue = m.groups?.value
+    const value = rawValue?.trim()
+    if (!name || !rawValue || !value) {
       continue
     }
 
-    varDefs.set(name, value)
+    const matchStart = m.index ?? 0
+    const relativeNameStart = m[0].indexOf(`$${name}`)
+    const nameStart = matchStart + relativeNameStart
+    const delimiter = m[0].indexOf(':', relativeNameStart + name.length + 1)
+    const capturedValue = getCapturedVariableValue(m, rawValue, delimiter + 1)
+    varDefs.set(name, {
+      name,
+      value: capturedValue.value,
+      filePath,
+      nameRange: { start: nameStart, end: nameStart + name.length + 1 },
+      valueRange: capturedValue.valueRange,
+    })
   }
 
   return varDefs
@@ -250,8 +287,8 @@ function collectScssVarDefs(text: string): Map<string, string> {
  * @param source - The source variable definition map
  */
 function mergeMissingScssVarDefs(
-  target: Map<string, string>,
-  source: Map<string, string>,
+  target: Map<string, RangedVariableDefinition>,
+  source: Map<string, RangedVariableDefinition>,
 ) {
   for (const [name, value] of source) {
     if (!target.has(name)) {
@@ -501,7 +538,7 @@ async function loadScssModule(
       return null
     }
 
-    const varDefs = collectScssVarDefs(text)
+    const varDefs = collectScssVarDefs(text, filePath)
     const importedVarDefs = await collectImportedScssVarDefs(
       text,
       { languageId: 'scss', filePath },
@@ -551,8 +588,9 @@ async function collectForwardedScssVarDefs(
   text: string,
   state: ScssResolveState,
   depth: number,
-): Promise<Map<string, string>> {
-  const varDefs = new Map<string, string>()
+): Promise<Map<string, RangedVariableDefinition>> {
+  const varDefs = new Map<string, RangedVariableDefinition>()
+  const ambiguousNames = new Set<string>()
 
   for (const m of text.matchAll(SCSS_FORWARD_REGEX)) {
     const specifier = m.groups?.path
@@ -572,11 +610,36 @@ async function collectForwardedScssVarDefs(
     }
 
     for (const [name, value] of module.varDefs) {
+      if (ambiguousNames.has(name)) {
+        continue
+      }
+      const existing = varDefs.get(name)
+      if (existing && isSameScssVarDefinition(existing, value)) {
+        continue
+      }
+      if (existing) {
+        varDefs.delete(name)
+        ambiguousNames.add(name)
+        continue
+      }
       varDefs.set(name, value)
     }
   }
 
   return varDefs
+}
+
+function isSameScssVarDefinition(
+  left: RangedVariableDefinition,
+  right: RangedVariableDefinition,
+): boolean {
+  return (
+    left.filePath === right.filePath &&
+    left.nameRange.start === right.nameRange.start &&
+    left.nameRange.end === right.nameRange.end &&
+    left.valueRange.start === right.valueRange.start &&
+    left.valueRange.end === right.valueRange.end
+  )
 }
 
 /**
@@ -591,18 +654,12 @@ async function collectForwardedScssVarDefs(
 async function collectImportedScssVarDefs(
   text: string,
   context: StrategyContext | undefined,
-  state?: ScssResolveState,
+  state: ScssResolveState,
   depth = 0,
-): Promise<Map<string, string>> {
-  const varDefs = new Map<string, string>()
+): Promise<Map<string, RangedVariableDefinition>> {
+  const varDefs = new Map<string, RangedVariableDefinition>()
   if (!context?.filePath) {
     return varDefs
-  }
-
-  const resolveState = state ?? {
-    resolvingFiles: new Set([context.filePath]),
-    loadPaths: context.scssLoadPaths ?? [],
-    filesRead: 0,
   }
 
   for (const m of text.matchAll(SCSS_IMPORT_REGEX)) {
@@ -615,7 +672,7 @@ async function collectImportedScssVarDefs(
       context.filePath,
       specifier,
       getScssNamespace(specifier),
-      resolveState,
+      state,
       depth,
     )
     if (!module) {
@@ -640,16 +697,12 @@ async function collectImportedScssVarDefs(
 async function collectUsedStarScssVarDefs(
   text: string,
   context: StrategyContext | undefined,
-): Promise<Map<string, string>> {
-  const varDefs = new Map<string, string>()
+  state: ScssResolveState,
+): Promise<Map<string, RangedVariableDefinition>> {
+  const varDefs = new Map<string, RangedVariableDefinition>()
+  const ambiguousNames = new Set<string>()
   if (!context?.filePath) {
     return varDefs
-  }
-
-  const state: ScssResolveState = {
-    resolvingFiles: new Set([context.filePath]),
-    loadPaths: context.scssLoadPaths ?? [],
-    filesRead: 0,
   }
 
   for (const m of text.matchAll(SCSS_USE_REGEX)) {
@@ -670,6 +723,14 @@ async function collectUsedStarScssVarDefs(
     }
 
     for (const [name, value] of module.varDefs) {
+      if (ambiguousNames.has(name)) {
+        continue
+      }
+      if (varDefs.has(name)) {
+        varDefs.delete(name)
+        ambiguousNames.add(name)
+        continue
+      }
       varDefs.set(name, value)
     }
   }
@@ -686,17 +747,13 @@ async function collectUsedStarScssVarDefs(
  */
 async function collectUsedScssModules(
   text: string,
-  context?: StrategyContext,
+  context: StrategyContext | undefined,
+  state: ScssResolveState,
 ): Promise<ScssModule[]> {
   if (!context?.filePath) {
     return []
   }
 
-  const state: ScssResolveState = {
-    resolvingFiles: new Set([context.filePath]),
-    loadPaths: context.scssLoadPaths ?? [],
-    filesRead: 0,
-  }
   const modules: ScssModule[] = []
 
   for (const m of text.matchAll(SCSS_USE_REGEX)) {
@@ -717,7 +774,15 @@ async function collectUsedScssModules(
     }
   }
 
-  return modules
+  const namespaceCounts = new Map<string, number>()
+  for (const module of modules) {
+    namespaceCounts.set(
+      module.namespace,
+      (namespaceCounts.get(module.namespace) ?? 0) + 1,
+    )
+  }
+
+  return modules.filter(module => namespaceCounts.get(module.namespace) === 1)
 }
 
 /**
@@ -730,22 +795,108 @@ async function collectUsedScssModules(
 async function collectEntryScssVarDefs(
   text: string,
   context?: StrategyContext,
-): Promise<Map<string, string>> {
-  const varDefs = collectScssVarDefs(text)
+  state = createScssResolveState(context),
+): Promise<Map<string, RangedVariableDefinition>> {
+  const varDefs = collectScssVarDefs(text, context?.filePath ?? '')
   if (!canResolveScssAcrossFiles(context)) {
     return varDefs
   }
 
   mergeMissingScssVarDefs(
     varDefs,
-    await collectImportedScssVarDefs(text, context),
+    await collectImportedScssVarDefs(text, context, state),
   )
   mergeMissingScssVarDefs(
     varDefs,
-    await collectUsedStarScssVarDefs(text, context),
+    await collectUsedStarScssVarDefs(text, context, state),
   )
 
   return varDefs
+}
+
+function toRawScssVarDefs(
+  definitions: ReadonlyMap<string, RangedVariableDefinition>,
+): Map<string, string> {
+  return new Map(
+    [...definitions].map(([name, definition]) => [name, definition.value]),
+  )
+}
+
+interface ScssVarToken extends VariableUsage {
+  readonly namespace?: string
+}
+
+function findScssVarTokenAtOffset(
+  text: string,
+  offset: number,
+): ScssVarToken | null {
+  const regex = /(?:(?<namespace>[-\w]+)\.)?\$(?<name>[-\w]+)/gu
+  for (const match of text.matchAll(regex)) {
+    const name = match.groups?.name
+    if (!name) {
+      continue
+    }
+    const start = match.index ?? 0
+    const end = start + match[0].length
+    if (offset < start || offset >= end) {
+      continue
+    }
+    if (/[-\w$.]/u.test(text[start - 1] ?? '')) {
+      continue
+    }
+    if (/^\s*:/u.test(text.slice(end))) {
+      continue
+    }
+    return {
+      name,
+      namespace: match.groups?.namespace,
+      originRange: { start, end },
+    }
+  }
+  return null
+}
+
+/** Resolve the SCSS variable reference at an offset to its final color declaration. */
+export async function resolveScssVarDefinition(
+  text: string,
+  offset: number,
+  context?: StrategyContext,
+): Promise<ColorDefinitionTarget | null> {
+  const usage = findScssVarTokenAtOffset(text, offset)
+  if (!usage) {
+    return null
+  }
+
+  const state = createScssResolveState(context)
+  if (!usage.namespace) {
+    const entryDefinitions = await collectEntryScssVarDefs(text, context, state)
+    const definition = await resolveRangedVariableDefinition(
+      usage.name,
+      entryDefinitions,
+      getExactScssVarAlias,
+      async value => (await resolveDirectColor(value)) !== null,
+    )
+    return definition ? toColorDefinitionTarget(usage, definition) : null
+  }
+
+  if (!canResolveScssAcrossFiles(context)) {
+    return null
+  }
+  await collectEntryScssVarDefs(text, context, state)
+  const modules = await collectUsedScssModules(text, context, state)
+  const targetModule = modules.find(
+    module => module.namespace === usage.namespace,
+  )
+  if (!targetModule) {
+    return null
+  }
+  const definition = await resolveRangedVariableDefinition(
+    usage.name,
+    targetModule.varDefs,
+    getExactScssVarAlias,
+    async value => (await resolveDirectColor(value)) !== null,
+  )
+  return definition ? toColorDefinitionTarget(usage, definition) : null
 }
 
 /**
@@ -764,11 +915,17 @@ export async function findScssVars(
   text: string,
   context?: StrategyContext,
 ): Promise<ColorMatch[]> {
+  const resolveState = createScssResolveState(context)
   // Phase 1: Find variable definitions
-  const varDefs = await collectEntryScssVarDefs(text, context)
+  const rangedVarDefs = await collectEntryScssVarDefs(
+    text,
+    context,
+    resolveState,
+  )
+  const varDefs = toRawScssVarDefs(rangedVarDefs)
   const varColors = new Map<string, string>() // name (without $) -> resolved color
   const modules = canResolveScssAcrossFiles(context)
-    ? await collectUsedScssModules(text, context)
+    ? await collectUsedScssModules(text, context, resolveState)
     : []
 
   // Resolve variable values to colors
@@ -833,9 +990,10 @@ async function resolveScssModuleColors(
     modules.map(async module => {
       const colors = new Map<string, string>()
 
+      const rawVarDefs = toRawScssVarDefs(module.varDefs)
       await Promise.all(
-        [...module.varDefs.entries()].map(async ([name, value]) => {
-          const color = await resolveVarValue(value, module.varDefs)
+        [...rawVarDefs.entries()].map(async ([name, value]) => {
+          const color = await resolveVarValue(value, rawVarDefs)
           if (color) {
             colors.set(name, color)
           }

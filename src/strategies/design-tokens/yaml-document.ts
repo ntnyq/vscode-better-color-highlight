@@ -25,7 +25,7 @@ export function parseYamlDesignTokenDocument(
     }
 
     const tokens: DesignTokenEntry[] = []
-    walkMap(document.contents, [], undefined, tokens, text)
+    walkMap(document.contents, [], undefined, undefined, tokens, text)
 
     return {
       root: document.toJS({ maxAliasCount: 100 }),
@@ -41,6 +41,7 @@ function walkMap(
   node: YAMLMap,
   path: readonly string[],
   inheritedType: string | undefined,
+  definitionRange: DesignTokenRange | undefined,
   tokens: DesignTokenEntry[],
   text: string,
 ): void {
@@ -51,6 +52,7 @@ function walkMap(
 
   if (valueNode || referenceNode) {
     tokens.push({
+      definitionRange,
       path,
       range: getTokenRange(valueNode, referenceNode, text),
       reference:
@@ -78,6 +80,7 @@ function walkMap(
       pair.value,
       key === '$root' ? path : [...path, key],
       effectiveType,
+      getNodeContentRange(pair.key as Node, text),
       tokens,
       text,
     )

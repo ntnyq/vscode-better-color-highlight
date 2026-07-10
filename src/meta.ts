@@ -96,6 +96,7 @@ export type ConfigKey =
   | "color-highlight.namedColorMatchMode"
   | "color-highlight.enableHover"
   | "color-highlight.enableColorPicker"
+  | "color-highlight.enableColorNavigation"
   | "color-highlight.resolveScssVariablesAcrossFiles"
   | "color-highlight.scssLoadPaths"
   | "color-highlight.resolveCssVariablesAcrossFiles"
@@ -120,6 +121,7 @@ export interface ConfigKeyTypeMap {
   "color-highlight.namedColorMatchMode": ("context" | "always" | "never"),
   "color-highlight.enableHover": boolean,
   "color-highlight.enableColorPicker": boolean,
+  "color-highlight.enableColorNavigation": boolean,
   "color-highlight.resolveScssVariablesAcrossFiles": boolean,
   "color-highlight.scssLoadPaths": string[],
   "color-highlight.resolveCssVariablesAcrossFiles": boolean,
@@ -145,6 +147,7 @@ export interface ConfigShorthandMap {
   namedColorMatchMode: "color-highlight.namedColorMatchMode",
   enableHover: "color-highlight.enableHover",
   enableColorPicker: "color-highlight.enableColorPicker",
+  enableColorNavigation: "color-highlight.enableColorNavigation",
   resolveScssVariablesAcrossFiles: "color-highlight.resolveScssVariablesAcrossFiles",
   scssLoadPaths: "color-highlight.scssLoadPaths",
   resolveCssVariablesAcrossFiles: "color-highlight.resolveCssVariablesAcrossFiles",
@@ -170,6 +173,7 @@ export interface ConfigShorthandTypeMap {
   namedColorMatchMode: ("context" | "always" | "never"),
   enableHover: boolean,
   enableColorPicker: boolean,
+  enableColorNavigation: boolean,
   resolveScssVariablesAcrossFiles: boolean,
   scssLoadPaths: string[],
   resolveCssVariablesAcrossFiles: boolean,
@@ -259,6 +263,16 @@ export const configs = {
     default: false,
   } as ConfigItem<"color-highlight.enableColorPicker">,
   /**
+   * Enable Go to Definition and Peek Definition for supported color variables and design-token aliases.
+   * @key `color-highlight.enableColorNavigation`
+   * @default `true`
+   * @type `boolean`
+   */
+  enableColorNavigation: {
+    key: "color-highlight.enableColorNavigation",
+    default: true,
+  } as ConfigItem<"color-highlight.enableColorNavigation">,
+  /**
    * Resolve SCSS variables through local @use, @forward, and @import dependencies. Disabled by default to avoid extra file-system work.
    * @key `color-highlight.resolveScssVariablesAcrossFiles`
    * @default `false`
@@ -319,7 +333,7 @@ export const configs = {
     default: 1000000,
   } as ConfigItem<"color-highlight.maxFileSize">,
   /**
-   * Controls JSON and JSONC design token color matching. 'token-values' matches value and $value string fields, 'strings' matches any color string value, 'all' enables both modes, and 'off' disables JSON token matching.
+   * Controls design token color matching. For JSON and JSONC, 'token-values' matches value and $value fields, 'strings' matches any color string value, and 'all' enables both modes. 'off' disables JSON, JSONC, and YAML token matching.
    * @key `color-highlight.designTokenJsonMode`
    * @default `"token-values"`
    * @type `string`
@@ -427,6 +441,7 @@ export interface ScopedConfigKeyTypeMap {
   "namedColorMatchMode": ("context" | "always" | "never"),
   "enableHover": boolean,
   "enableColorPicker": boolean,
+  "enableColorNavigation": boolean,
   "resolveScssVariablesAcrossFiles": boolean,
   "scssLoadPaths": string[],
   "resolveCssVariablesAcrossFiles": boolean,
@@ -454,6 +469,7 @@ export const scopedConfigs = {
     "namedColorMatchMode": "context",
     "enableHover": false,
     "enableColorPicker": false,
+    "enableColorNavigation": true,
     "resolveScssVariablesAcrossFiles": false,
     "scssLoadPaths": [],
     "resolveCssVariablesAcrossFiles": false,
@@ -481,6 +497,7 @@ export interface NestedConfigs {
     "namedColorMatchMode": ("context" | "always" | "never"),
     "enableHover": boolean,
     "enableColorPicker": boolean,
+    "enableColorNavigation": boolean,
     "resolveScssVariablesAcrossFiles": boolean,
     "scssLoadPaths": string[],
     "resolveCssVariablesAcrossFiles": boolean,
@@ -507,6 +524,7 @@ export interface NestedScopedConfigs {
   "namedColorMatchMode": ("context" | "always" | "never"),
   "enableHover": boolean,
   "enableColorPicker": boolean,
+  "enableColorNavigation": boolean,
   "resolveScssVariablesAcrossFiles": boolean,
   "scssLoadPaths": string[],
   "resolveCssVariablesAcrossFiles": boolean,

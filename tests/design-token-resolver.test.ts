@@ -14,6 +14,7 @@ function entry(
 ): DesignTokenEntry {
   return {
     ...options,
+    definitionRange: { start: rangeStart, end: rangeStart + 1 },
     path,
     range: { start: rangeStart, end: rangeStart + 3 },
   }

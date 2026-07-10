@@ -34,6 +34,19 @@ describe(findLessVars, () => {
     expect(result.some(match => match.color === 'rgb(255, 0, 0)')).toBe(true)
   })
 
+  it('keeps detector output on usages when the last definition wins', async () => {
+    const text = '@brand: #111111;\n@brand: #222222;\na { color: @brand; }'
+    const result = await findLessVars(text)
+
+    expect(result).toStrictEqual([
+      {
+        start: text.lastIndexOf('@brand'),
+        end: text.lastIndexOf('@brand') + 6,
+        color: 'rgb(34, 34, 34)',
+      },
+    ])
+  })
+
   it('does not partially highlight a variable name inside a longer Less definition', async () => {
     const text = `
       @red: #ff0000;

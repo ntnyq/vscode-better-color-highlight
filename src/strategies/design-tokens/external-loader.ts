@@ -8,22 +8,24 @@ import {
 } from '../../utils/workspace-file-system'
 import { resolveDtcgColor } from './color'
 import { parseJsonDesignTokenDocument } from './json-document'
+import {
+  createDesignTokenCycleKey,
+  createDesignTokenSource,
+  findDesignToken,
+  getDesignTokenCurlyReferencePath,
+  getDesignTokenPointerPath,
+  MAX_DESIGN_TOKEN_REFERENCE_DEPTH,
+  mergeDesignTokenType,
+  parseDesignTokenPointer,
+  resolveDesignTokenPointerValue,
+} from './resolver'
+import type { DesignTokenSource, ResolvedDesignToken } from './resolver'
 import type { DesignTokenEntry, ParsedDesignTokenDocument } from './types'
 import { parseYamlDesignTokenDocument } from './yaml-document'
 
 interface CachedDocument {
-  readonly document: ParsedDesignTokenDocument
+  readonly source: DesignTokenSource
   readonly signature: string
-}
-
-interface DocumentSource {
-  readonly document: ParsedDesignTokenDocument
-  readonly filePath: string
-}
-
-interface ResolvedDesignToken {
-  readonly type?: string
-  readonly value: unknown
 }
 
 interface ReferenceTarget {
@@ -35,26 +37,23 @@ export interface ResolveDesignTokenColorsOptions {
   readonly filePath: string
 }
 
-const CURLY_REFERENCE_REGEX = /^\{(?<path>[^{}]+)\}$/u
 const MAX_EXTERNAL_FILE_SIZE = 512 * 1024
-const MAX_REFERENCE_DEPTH = 32
 const documentCache = new Map<string, CachedDocument>()
 
-/**
- * Resolve local and trusted relative external references for one document.
- *
- * @param document - Parsed root token document
- * @param options - Root source location
- * @returns Matches whose ranges belong to the root document
- */
+/** Resolve local and trusted relative external references for one document. */
 export async function resolveDesignTokenColors(
   document: ParsedDesignTokenDocument,
   options: ResolveDesignTokenColorsOptions,
 ): Promise<ColorMatch[]> {
-  const source = { document, filePath: options.filePath }
+  const source = createDesignTokenSource(document, options.filePath)
   const matches = await Promise.all(
     document.tokens.map(async token => {
-      const resolved = await resolveToken(token, source, new Set(), 0)
+      const resolved = await resolveExternalDesignToken(
+        token,
+        source,
+        new Set(),
+        0,
+      )
       if (resolved?.type !== 'color') {
         return null
       }
@@ -69,15 +68,15 @@ export async function resolveDesignTokenColors(
   return matches.filter(match => match !== null)
 }
 
-/** Resolve one token through local and external references. */
-async function resolveToken(
+/** Resolve a token through local and relative external references. */
+export async function resolveExternalDesignToken(
   token: DesignTokenEntry,
-  source: DocumentSource,
+  source: DesignTokenSource,
   resolving: ReadonlySet<string>,
   depth: number,
 ): Promise<ResolvedDesignToken | null> {
-  const tokenKey = `${source.filePath}\0${JSON.stringify(token.path)}`
-  if (depth > MAX_REFERENCE_DEPTH || resolving.has(tokenKey)) {
+  const tokenKey = createDesignTokenCycleKey(source.filePath, token.path)
+  if (depth > MAX_DESIGN_TOKEN_REFERENCE_DEPTH || resolving.has(tokenKey)) {
     return null
   }
 
@@ -92,59 +91,50 @@ async function resolveToken(
     const targetSource =
       target.filePath === source.filePath
         ? source
-        : await loadDocument(target.filePath)
+        : await loadDesignTokenDocument(target.filePath)
     if (!targetSource) {
       return null
     }
 
-    const resolved = await resolvePointer(
-      targetSource,
-      target.pointer,
-      nextResolving,
-      depth + 1,
+    return mergeDesignTokenType(
+      token.type,
+      await resolveExternalPointer(
+        targetSource,
+        target.pointer,
+        nextResolving,
+        depth + 1,
+      ),
     )
-    return mergeResolvedType(token.type, resolved)
   }
 
-  const curlyPath = getCurlyReferencePath(token.value)
+  const curlyPath = getDesignTokenCurlyReferencePath(token.value)
   if (curlyPath) {
-    const target = findToken(source.document, curlyPath)
-    if (!target) {
-      return null
-    }
-    const resolved = await resolveToken(
-      target,
-      source,
-      nextResolving,
-      depth + 1,
-    )
-    return mergeResolvedType(token.type, resolved)
+    const target = findDesignToken(source, curlyPath)
+    return target.status === 'found'
+      ? mergeDesignTokenType(
+          token.type,
+          await resolveExternalDesignToken(
+            target.token,
+            source,
+            nextResolving,
+            depth + 1,
+          ),
+        )
+      : null
   }
 
-  return { type: token.type, value: token.value }
-}
-
-/** Resolve a pointer within a loaded document. */
-async function resolvePointer(
-  source: DocumentSource,
-  pointer: readonly string[],
-  resolving: ReadonlySet<string>,
-  depth: number,
-): Promise<ResolvedDesignToken | null> {
-  if (pointer.at(-1) === '$value' || pointer.at(-1) === '$ref') {
-    const target = findToken(source.document, pointer.slice(0, -1))
-    if (target) {
-      return await resolveToken(target, source, resolving, depth)
-    }
+  return {
+    kind: 'token',
+    source,
+    token,
+    type: token.type,
+    value: token.value,
   }
-
-  const value = resolvePointerValue(source.document.root, pointer)
-  return value.found ? { value: value.value } : null
 }
 
 /** Parse and locate a local or relative external reference. */
 function getReferenceTarget(
-  source: DocumentSource,
+  source: DesignTokenSource,
   reference: string,
 ): ReferenceTarget | null {
   const hashIndex = reference.indexOf('#')
@@ -153,11 +143,10 @@ function getReferenceTarget(
   }
 
   const fileReference = reference.slice(0, hashIndex)
-  const pointer = parseJsonPointer(reference.slice(hashIndex))
+  const pointer = parseDesignTokenPointer(reference.slice(hashIndex))
   if (!pointer) {
     return null
   }
-
   if (!fileReference) {
     return { filePath: source.filePath, pointer }
   }
@@ -171,8 +160,10 @@ function getReferenceTarget(
   }
 }
 
-/** Load and cache one supported external token document. */
-async function loadDocument(filePath: string): Promise<DocumentSource | null> {
+/** Load and cache one bounded supported external token document. */
+export async function loadDesignTokenDocument(
+  filePath: string,
+): Promise<DesignTokenSource | null> {
   const extension = extnameWorkspacePath(filePath).toLowerCase()
   if (!['.json', '.jsonc', '.yaml', '.yml'].includes(extension)) {
     return null
@@ -191,7 +182,7 @@ async function loadDocument(filePath: string): Promise<DocumentSource | null> {
     ])
     const cached = documentCache.get(filePath)
     if (cached?.signature === signature) {
-      return { document: cached.document, filePath }
+      return cached.source
     }
 
     const text = await readWorkspaceFile(filePath)
@@ -203,86 +194,36 @@ async function loadDocument(filePath: string): Promise<DocumentSource | null> {
       return null
     }
 
-    documentCache.set(filePath, { document, signature })
-    return { document, filePath }
+    const source = createDesignTokenSource(document, filePath)
+    documentCache.set(filePath, { source, signature })
+    return source
   } catch {
     return null
   }
 }
 
-/** Apply an explicit source type while rejecting known mismatches. */
-function mergeResolvedType(
-  explicitType: string | undefined,
-  resolved: ResolvedDesignToken | null,
-): ResolvedDesignToken | null {
-  if (!resolved) {
-    return null
-  }
-  if (explicitType && resolved.type && explicitType !== resolved.type) {
-    return null
-  }
-  return { type: explicitType ?? resolved.type, value: resolved.value }
-}
-
-/** Find a parsed token by its semantic path. */
-function findToken(
-  document: ParsedDesignTokenDocument,
-  path: readonly string[],
-): DesignTokenEntry | undefined {
-  const key = JSON.stringify(path)
-  return document.tokens.find(token => JSON.stringify(token.path) === key)
-}
-
-/** Parse an exact complete-token curly reference. */
-function getCurlyReferencePath(value: unknown): string[] | null {
-  if (typeof value !== 'string') {
-    return null
-  }
-  const path = value.match(CURLY_REFERENCE_REGEX)?.groups?.path
-  return path ? path.split('.') : null
-}
-
-/** Parse an RFC 6901 pointer encoded as a URI fragment. */
-function parseJsonPointer(reference: string): string[] | null {
-  if (reference === '#') {
-    return []
-  }
-  if (!reference.startsWith('#/')) {
-    return null
-  }
-
-  try {
-    return decodeURIComponent(reference.slice(2))
-      .split('/')
-      .map(segment => segment.replaceAll('~1', '/').replaceAll('~0', '~'))
-  } catch {
-    return null
-  }
-}
-
-/** Navigate a plain document value with decoded pointer segments. */
-function resolvePointerValue(
-  root: unknown,
-  segments: readonly string[],
-): { readonly found: boolean; readonly value?: unknown } {
-  let current = root
-  for (const segment of segments) {
-    if (Array.isArray(current)) {
-      if (!/^\d+$/u.test(segment) || Number(segment) >= current.length) {
-        return { found: false }
-      }
-      current = current[Number(segment)]
-      continue
+async function resolveExternalPointer(
+  source: DesignTokenSource,
+  pointer: readonly string[],
+  resolving: ReadonlySet<string>,
+  depth: number,
+): Promise<ResolvedDesignToken | null> {
+  const tokenPath = getDesignTokenPointerPath(pointer)
+  if (tokenPath) {
+    const target = findDesignToken(source, tokenPath)
+    if (target.status === 'ambiguous') {
+      return null
     }
-    if (!isRecord(current) || !Object.hasOwn(current, segment)) {
-      return { found: false }
+    if (target.status === 'found') {
+      return await resolveExternalDesignToken(
+        target.token,
+        source,
+        resolving,
+        depth,
+      )
     }
-    current = current[segment]
   }
-  return { found: true, value: current }
-}
 
-/** Check for an object-like record. */
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
+  const value = resolveDesignTokenPointerValue(source.document.root, pointer)
+  return value.found ? { kind: 'value', value: value.value } : null
 }

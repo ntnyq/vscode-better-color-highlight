@@ -65,7 +65,8 @@ describe('scss variable dependency cache', () => {
     statMock.mockClear()
     vi.resetModules()
 
-    const { findScssVars } = await import('../src/strategies/scss-vars')
+    const { findScssVars, resolveScssVarDefinition } =
+      await import('../src/strategies/scss-vars')
 
     const dir = '/tmp/better-color-scss-cache'
     const tokensPath = join(dir, '_tokens.scss')
@@ -95,6 +96,14 @@ describe('scss variable dependency cache', () => {
       },
     ])
     expect(second).toStrictEqual(first)
+    expect(readFileMock).toHaveBeenCalledTimes(1)
+
+    const definition = await resolveScssVarDefinition(
+      text,
+      text.indexOf('tokens.$brand'),
+      context,
+    )
+    expect(definition?.targetFilePath).toBe(tokensPath)
     expect(readFileMock).toHaveBeenCalledTimes(1)
 
     fileTexts.set(tokensPath, '$brand: #663399;\n')

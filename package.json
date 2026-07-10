@@ -150,6 +150,11 @@
           "default": false,
           "description": "Use VS Code's native color picker and replacement presentations for detected colors."
         },
+        "color-highlight.enableColorNavigation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Go to Definition and Peek Definition for supported color variables and design-token aliases."
+        },
         "color-highlight.resolveScssVariablesAcrossFiles": {
           "type": "boolean",
           "default": false,

@@ -61,6 +61,7 @@ const loggerError = vi.fn<(message: unknown) => void>()
 const configSnapshot: NestedScopedConfigs = {
   enable: true,
   enableColorPicker: false,
+  enableColorNavigation: true,
   enableHover: false,
   languages: ['*'],
   matchWords: false,

@@ -17,6 +17,7 @@ import { findYamlDesignTokens } from '../src/strategies/yaml-design-tokens'
 const defaultConfig: NestedScopedConfigs = {
   enable: true,
   enableColorPicker: false,
+  enableColorNavigation: true,
   languages: ['*'],
   matchWords: false,
   namedColorMatchMode: 'context',

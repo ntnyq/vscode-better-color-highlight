@@ -1,8 +1,22 @@
-import type { ColorMatch, ColorDetector } from '../types'
+import type {
+  ColorDefinitionTarget,
+  ColorMatch,
+  ColorDetector,
+  StrategyContext,
+} from '../types'
 import { findColorFunctions, resolveShorthandColor } from './color-functions'
 import { findHexRGBA } from './hex'
 import { findHwb } from './hwb'
 import { findNamedColors } from './named-colors'
+import {
+  getCapturedVariableValue,
+  resolveRangedVariableDefinition,
+  toColorDefinitionTarget,
+} from './shared/variable-definition'
+import type {
+  RangedVariableDefinition,
+  VariableUsage,
+} from './shared/variable-definition'
 
 /**
  * Regex for Stylus variable definitions.
@@ -33,6 +47,42 @@ interface StylusVarDefinition {
    * Raw variable value.
    */
   value: string
+}
+
+function collectRangedStylusVarDefs(
+  text: string,
+  filePath: string,
+): Map<string, RangedVariableDefinition> {
+  const definitions = new Map<string, RangedVariableDefinition>()
+  for (const match of text.matchAll(STYLUS_VAR_DEF_REGEX)) {
+    const definition = getStylusVarDefinition(match)
+    const rawValue = match.groups?.colonValue ?? match.groups?.equalsValue
+    if (!definition || !rawValue) {
+      continue
+    }
+
+    const matchStart = match.index ?? 0
+    let token = definition.name
+    if (match.groups?.colonName || match[0].includes(`$${definition.name}`)) {
+      token = `$${definition.name}`
+    }
+    const relativeNameStart = match[0].indexOf(token)
+    const nameStart = matchStart + relativeNameStart
+    const delimiter = match[0].search(/[:=]/u)
+    const { value, valueRange } = getCapturedVariableValue(
+      match,
+      rawValue,
+      delimiter + 1,
+    )
+    definitions.set(definition.name, {
+      name: definition.name,
+      value,
+      filePath,
+      nameRange: { start: nameStart, end: nameStart + token.length },
+      valueRange,
+    })
+  }
+  return definitions
 }
 
 /**
@@ -136,6 +186,60 @@ function getExactStylusVarAlias(value: string): string | null {
   return match?.groups?.name ?? null
 }
 
+function findStylusVarUsageAtOffset(
+  text: string,
+  offset: number,
+  definitions: ReadonlyMap<string, RangedVariableDefinition>,
+): VariableUsage | null {
+  const names = [...definitions.keys()]
+    .sort((a, b) => b.length - a.length)
+    .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`))
+    .join('|')
+  if (!names) {
+    return null
+  }
+
+  const regex = new RegExp(`(?<![-\\w$])\\$?(?<name>${names})(?![-\\w])`, 'gu')
+  for (const match of text.matchAll(regex)) {
+    const name = match.groups?.name
+    if (!name) {
+      continue
+    }
+    const start = match.index ?? 0
+    const end = start + match[0].length
+    if (offset < start || offset >= end) {
+      continue
+    }
+    if (/^\s*[:=]/u.test(text.slice(end))) {
+      continue
+    }
+    return { name, originRange: { start, end } }
+  }
+  return null
+}
+
+export async function resolveStylusVarDefinition(
+  text: string,
+  offset: number,
+  context?: Pick<StrategyContext, 'filePath'>,
+): Promise<ColorDefinitionTarget | null> {
+  const definitions = collectRangedStylusVarDefs(text, context?.filePath ?? '')
+  const usage = findStylusVarUsageAtOffset(text, offset, definitions)
+  if (!usage) {
+    return null
+  }
+
+  const definition = await resolveRangedVariableDefinition(
+    usage.name,
+    definitions,
+    getExactStylusVarAlias,
+    async (value, name) =>
+      (await resolveDirectColor(value)) !== null ||
+      resolveShorthandColor(value, name) !== null,
+  )
+  return definition ? toColorDefinitionTarget(usage, definition) : null
+}
+
 /**
  * Detect Stylus variable colors.
  * Resolves variables from the current document only.
@@ -148,17 +252,11 @@ function getExactStylusVarAlias(value: string): string | null {
  */
 export async function findStylusVars(text: string): Promise<ColorMatch[]> {
   // Phase 1: Find variable definitions
-  const varDefs = new Map<string, string>() // name -> raw value
+  const rangedVarDefs = collectRangedStylusVarDefs(text, '')
+  const varDefs = new Map(
+    [...rangedVarDefs].map(([name, definition]) => [name, definition.value]),
+  )
   const varColors = new Map<string, string>() // name -> resolved color
-
-  for (const m of text.matchAll(STYLUS_VAR_DEF_REGEX)) {
-    const definition = getStylusVarDefinition(m)
-    if (!definition) {
-      continue
-    }
-
-    varDefs.set(definition.name, definition.value)
-  }
 
   // Resolve variable values to colors
   await Promise.all(

@@ -127,6 +127,44 @@ describe('external design token references', () => {
     expect(cyclic).toStrictEqual([])
   })
 
+  it('resolves pointers to external $root tokens', async () => {
+    resetFiles()
+    setFile(
+      '/workspace/palette.yaml',
+      `palette:
+  $root:
+    $type: color
+    $value: { colorSpace: srgb, components: [1, 0, 0] }
+`,
+    )
+    const { findJsonDesignTokens } = await importJsonStrategy()
+
+    const matches = await findJsonDesignTokens(
+      createJsonReference('./palette.yaml#/palette/$root/$value'),
+      trustedContext('json', '/workspace/root.json'),
+    )
+
+    expect(matches).toMatchObject([{ color: 'rgb(255, 0, 0)' }])
+  })
+
+  it('still highlights references to unnamed external root tokens', async () => {
+    resetFiles()
+    setFile(
+      '/workspace/palette.yaml',
+      `$type: color
+$value: { colorSpace: srgb, components: [1, 0, 0] }
+`,
+    )
+    const { findJsonDesignTokens } = await importJsonStrategy()
+
+    const matches = await findJsonDesignTokens(
+      createJsonReference('./palette.yaml#/$value'),
+      trustedContext('json', '/workspace/root.json'),
+    )
+
+    expect(matches).toMatchObject([{ color: 'rgb(255, 0, 0)' }])
+  })
+
   it('rejects oversized dependencies before reading them', async () => {
     resetFiles()
     setFile('/workspace/palette.json', '{}', 524_289)

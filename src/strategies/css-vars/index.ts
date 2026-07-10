@@ -1,7 +1,27 @@
+/* oxlint-disable unicorn/prefer-export-from -- Resolver APIs are both consumed and re-exported here. */
 import type { ColorMatch, StrategyContext } from '../../types'
 import { collectCssVarDeclarations } from './parser'
-import { resolveCssVarMatches } from './resolver'
+import {
+  findCssVarUsages,
+  resolveCssVarDefinition,
+  resolveCssVarMatches,
+  selectCssVarDeclaration,
+} from './resolver'
+import type {
+  CssVarCandidateResolution,
+  CssVarSourceContext,
+  CssVarUsage,
+  ResolveCssVarMatchOptions,
+} from './resolver'
 import { loadCssVarSourceDeclarations } from './sources'
+
+export { findCssVarUsages, resolveCssVarDefinition, selectCssVarDeclaration }
+export type {
+  CssVarCandidateResolution,
+  CssVarSourceContext,
+  CssVarUsage,
+  ResolveCssVarMatchOptions,
+}
 
 const DEFAULT_TRUSTED_CSS_VAR_SELECTORS = [':root', 'html', 'body', ':host']
 

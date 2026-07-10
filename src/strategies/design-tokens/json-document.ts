@@ -25,7 +25,7 @@ export function parseJsonDesignTokenDocument(
   }
 
   const tokens: DesignTokenEntry[] = []
-  walkObject(rootNode, [], undefined, tokens)
+  walkObject(rootNode, [], undefined, undefined, tokens)
 
   return {
     root: getNodeValue(rootNode),
@@ -38,6 +38,7 @@ function walkObject(
   node: Node,
   path: readonly string[],
   inheritedType: string | undefined,
+  definitionRange: DesignTokenRange | undefined,
   tokens: DesignTokenEntry[],
 ): void {
   const explicitType = getStringProperty(node, '$type')
@@ -47,6 +48,7 @@ function walkObject(
 
   if (valueNode || referenceNode) {
     tokens.push({
+      definitionRange,
       path,
       range: getTokenRange(valueNode, referenceNode),
       reference:
@@ -75,6 +77,7 @@ function walkObject(
       childNode,
       key === '$root' ? path : [...path, key],
       effectiveType,
+      getNodeContentRange(keyNode),
       tokens,
     )
   }

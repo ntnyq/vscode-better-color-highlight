@@ -1,8 +1,22 @@
-import type { ColorMatch, ColorDetector } from '../types'
+import type {
+  ColorDefinitionTarget,
+  ColorMatch,
+  ColorDetector,
+  StrategyContext,
+} from '../types'
 import { findColorFunctions } from './color-functions'
 import { findHexRGBA } from './hex'
 import { findHwb } from './hwb'
 import { findNamedColors } from './named-colors'
+import {
+  getCapturedVariableValue,
+  resolveRangedVariableDefinition,
+  toColorDefinitionTarget,
+} from './shared/variable-definition'
+import type {
+  RangedVariableDefinition,
+  VariableUsage,
+} from './shared/variable-definition'
 
 /**
  * Less variable definitions anywhere in a stylesheet: @my-color: #ff0000;
@@ -86,6 +100,85 @@ function getExactLessVarAlias(value: string): string | null {
   return match?.groups?.name ?? null
 }
 
+function collectLessVarDefs(
+  text: string,
+  filePath: string,
+): Map<string, RangedVariableDefinition> {
+  const definitions = new Map<string, RangedVariableDefinition>()
+  for (const match of text.matchAll(LESS_VAR_DEF_REGEX)) {
+    const name = match.groups?.name
+    const rawValue = match.groups?.value
+    if (!name || !rawValue) {
+      continue
+    }
+
+    const matchStart = match.index ?? 0
+    const relativeNameStart = match[0].indexOf(`@${name}`)
+    const nameStart = matchStart + relativeNameStart
+    const delimiter = match[0].indexOf(':', relativeNameStart + name.length + 1)
+    const { value, valueRange } = getCapturedVariableValue(
+      match,
+      rawValue,
+      delimiter + 1,
+    )
+    definitions.set(name, {
+      name,
+      value,
+      filePath,
+      nameRange: { start: nameStart, end: nameStart + name.length + 1 },
+      valueRange,
+    })
+  }
+  return definitions
+}
+
+function findLessVarUsageAtOffset(
+  text: string,
+  offset: number,
+  definitions: ReadonlyMap<string, RangedVariableDefinition>,
+): VariableUsage | null {
+  const regex = /@(?<name>[-\w]+)/gu
+  for (const match of text.matchAll(regex)) {
+    const name = match.groups?.name
+    if (!name || !definitions.has(name)) {
+      continue
+    }
+    const start = match.index ?? 0
+    const end = start + match[0].length
+    if (offset < start || offset >= end) {
+      continue
+    }
+    if (/[-\w@]/u.test(text[start - 1] ?? '')) {
+      continue
+    }
+    if (/^\s*:/u.test(text.slice(end))) {
+      continue
+    }
+    return { name, originRange: { start, end } }
+  }
+  return null
+}
+
+export async function resolveLessVarDefinition(
+  text: string,
+  offset: number,
+  context?: Pick<StrategyContext, 'filePath'>,
+): Promise<ColorDefinitionTarget | null> {
+  const definitions = collectLessVarDefs(text, context?.filePath ?? '')
+  const usage = findLessVarUsageAtOffset(text, offset, definitions)
+  if (!usage) {
+    return null
+  }
+
+  const definition = await resolveRangedVariableDefinition(
+    usage.name,
+    definitions,
+    getExactLessVarAlias,
+    async value => (await resolveDirectColor(value)) !== null,
+  )
+  return definition ? toColorDefinitionTarget(usage, definition) : null
+}
+
 /**
  * Detect Less variable colors.
  * Phase 1: Find all @var definitions and resolve their values.
@@ -96,18 +189,11 @@ function getExactLessVarAlias(value: string): string | null {
  */
 export async function findLessVars(text: string): Promise<ColorMatch[]> {
   // Phase 1: Find variable definitions
-  const varDefs = new Map<string, string>() // name (without @) -> raw value
+  const rangedVarDefs = collectLessVarDefs(text, '')
+  const varDefs = new Map(
+    [...rangedVarDefs].map(([name, definition]) => [name, definition.value]),
+  )
   const varColors = new Map<string, string>() // name (without @) -> resolved color
-
-  for (const m of text.matchAll(LESS_VAR_DEF_REGEX)) {
-    const name = m.groups?.name
-    const value = m.groups?.value?.trim()
-    if (!name || !value) {
-      continue
-    }
-
-    varDefs.set(name, value)
-  }
 
   // Resolve variable values to colors
   await Promise.all(
