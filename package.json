@@ -56,6 +56,7 @@
   "main": "./dist/index.js",
   "browser": "./dist/index.cjs",
   "scripts": {
+    "bench": "vitest bench --run",
     "build": "tsdown",
     "dev": "tsdown --watch",
     "format": "oxfmt",
