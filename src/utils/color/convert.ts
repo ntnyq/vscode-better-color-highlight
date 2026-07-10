@@ -360,29 +360,9 @@ function xyzD65ToRgb(
 }
 
 /**
- * D65 reference white X channel.
+ * D50 reference white used by CSS Lab and LCH.
  */
-const D65_XN = 0.950489
-
-/**
- * D65 reference white Y channel.
- */
-const D65_YN = 1
-
-/**
- * D65 reference white Z channel.
- */
-const D65_ZN = 1.08884
-
-/**
- * Lab forward transform function.
- * @param t - Input value
- * @returns Transformed value
- */
-function labF(t: number): number {
-  const delta = 6 / 29
-  return t > delta ** 3 ? t ** (1 / 3) : t / (3 * delta * delta) + 4 / 29
-}
+const D50_REFERENCE_WHITE = [0.964295676, 1, 0.825104603] as const
 
 /**
  * Lab inverse transform function.
@@ -408,15 +388,15 @@ export function labToRgb(
 ): [number, number, number] {
   L = clamp(L, 0, 100)
 
-  const fx = labF((L + 16) / 116) + a / 500
-  const fy = labF((L + 16) / 116)
-  const fz = labF((L + 16) / 116) - b / 200
+  const fy = (L + 16) / 116
+  const fx = fy + a / 500
+  const fz = fy - b / 200
+  const [x, y, z] = D50_REFERENCE_WHITE.map((white, index) => {
+    const coordinate = [fx, fy, fz][index]
+    return white * labFInv(coordinate)
+  }) as [number, number, number]
 
-  const x = D65_XN * labFInv(fx)
-  const y = D65_YN * labFInv(fy)
-  const z = D65_ZN * labFInv(fz)
-
-  return xyzD65ToRgb(x, y, z)
+  return xyzD65ToRgb(...adaptD50ToD65(x, y, z))
 }
 
 /**

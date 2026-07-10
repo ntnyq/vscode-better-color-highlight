@@ -11,13 +11,9 @@ import { replaceColorValue } from './replace-color'
  * Register extension commands for color highlighting.
  */
 export function useCommands() {
-  useCommand(commands.enable, () => {
-    config.update('enable', true)
-  })
+  useCommand(commands.enable, () => config.update('enable', true))
 
-  useCommand(commands.disable, () => {
-    config.update('enable', false)
-  })
+  useCommand(commands.disable, () => config.update('enable', false))
 
   useCommand(commands.copyColorAsHex, value => copyColorValue('hex', value))
   useCommand(commands.copyColorAsRgb, value => copyColorValue('rgb', value))

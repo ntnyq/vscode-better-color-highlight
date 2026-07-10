@@ -114,6 +114,20 @@ vi.mock(
 )
 
 describe('useCommands', () => {
+  it('returns configuration update promises from enable commands', async () => {
+    vi.resetModules()
+    registeredCommands.clear()
+    const updatePromise = Promise.resolve()
+    updateConfig.mockReturnValue(updatePromise)
+
+    const { useCommands } = await import('../src/commands')
+
+    useCommands()
+    const result = registeredCommands.get('color-highlight.enable')?.()
+
+    expect(result).toBe(updatePromise)
+  })
+
   it('copies hover-provided color values to the clipboard', async () => {
     vi.resetModules()
     registeredCommands.clear()
@@ -156,10 +170,31 @@ describe('useCommands', () => {
     await registeredCommands.get('color-highlight.replaceColorAsRgb')?.({
       originalText: '#ff0000',
       range: { start: 14, end: 21 },
+      uri: 'file:///tmp/example.css',
       value: 'rgb(255, 0, 0)',
     })
 
     expect(replace).toHaveBeenCalledWith(expect.any(Object), 'rgb(255, 0, 0)')
+  })
+
+  it('does not replace a range from a different document', async () => {
+    vi.resetModules()
+    registeredCommands.clear()
+    edit.mockClear()
+    replace.mockClear()
+    sourceText = '.box { color: #ff0000; }'
+
+    const { useCommands } = await import('../src/commands')
+
+    useCommands()
+    await registeredCommands.get('color-highlight.replaceColorAsRgb')?.({
+      originalText: '#ff0000',
+      range: { start: 14, end: 21 },
+      uri: 'file:///tmp/other.css',
+      value: 'rgb(255, 0, 0)',
+    })
+
+    expect(replace).not.toHaveBeenCalled()
   })
 
   it('does not replace a stale active editor range', async () => {
@@ -175,6 +210,7 @@ describe('useCommands', () => {
     await registeredCommands.get('color-highlight.replaceColorAsRgb')?.({
       originalText: '#ff0000',
       range: { start: 14, end: 21 },
+      uri: 'file:///tmp/example.css',
       value: 'rgb(255, 0, 0)',
     })
 
@@ -194,6 +230,7 @@ describe('useCommands', () => {
     await registeredCommands.get('color-highlight.replaceColorAsHex')?.({
       originalText: '#FF0000',
       range: { start: 14, end: 21 },
+      uri: 'file:///tmp/example.css',
       value: '#ff0000',
     })
 
@@ -215,6 +252,7 @@ describe('useCommands', () => {
       originalColor: 'rgb(255, 0, 0)',
       originalText: '#ff0000',
       range: { start: 14, end: 21 },
+      uri: 'file:///tmp/example.css',
     })
 
     expect(replace).toHaveBeenCalledWith(expect.any(Object), '#ff0000e6')
@@ -235,6 +273,7 @@ describe('useCommands', () => {
       originalColor: 'rgba(255, 0, 0, 0.95)',
       originalText: 'rgba(255, 0, 0, 0.95)',
       range: { start: 14, end: 35 },
+      uri: 'file:///tmp/example.css',
     })
 
     expect(replace).toHaveBeenCalledWith(expect.any(Object), 'rgb(255, 0, 0)')
@@ -255,6 +294,7 @@ describe('useCommands', () => {
       originalColor: 'rgb(255, 0, 0)',
       originalText: 'hsl(0 100% 50%)',
       range: { start: 14, end: 29 },
+      uri: 'file:///tmp/example.css',
     })
 
     expect(replace).toHaveBeenCalledWith(

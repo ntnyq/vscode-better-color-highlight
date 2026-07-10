@@ -34,6 +34,11 @@ interface CancellationLike {
 }
 
 /**
+ * Pending or completed detector results keyed by document/config revision.
+ */
+export type ColorHoverMatchCache = Map<string, Promise<ColorMatch[]>>
+
+/**
  * Hover data for a detected color under the cursor.
  */
 export interface ColorHover {
@@ -66,6 +71,11 @@ export interface ColorHover {
      */
     readonly end: number
   }
+
+  /**
+   * URI of the document that produced the hover.
+   */
+  readonly uri: string
 }
 
 /**
@@ -90,12 +100,22 @@ export interface ColorHoverOptions {
   /**
    * Current document URI string or file path.
    */
-  readonly filePath?: string
+  readonly filePath: string
 
   /**
    * VS Code language identifier for the document.
    */
   readonly languageId: string
+
+  /**
+   * Optional detector-result cache owned by the hover provider.
+   */
+  readonly matchCache?: ColorHoverMatchCache
+
+  /**
+   * Stable cache key for the document, dependency, and configuration revision.
+   */
+  readonly matchCacheKey?: string
 
   /**
    * Document offset where the hover was requested.
@@ -133,6 +153,8 @@ export async function getColorHover(
     detectors,
     filePath,
     languageId,
+    matchCache,
+    matchCacheKey,
     onDetectorError,
     offset,
     text,
@@ -169,25 +191,42 @@ export async function getColorHover(
     workspaceIsTrusted,
   }
 
-  const results = await Promise.all(
-    detectors.map(async detector => {
-      const detectorName = detector.name || 'anonymous'
+  const loadMatches = async (): Promise<ColorMatch[]> => {
+    const results = await Promise.all(
+      detectors.map(async detector => {
+        const detectorName = detector.name || 'anonymous'
 
-      try {
-        return await detector(text, context)
-      } catch (error) {
-        onDetectorError?.(
-          `Color hover detector "${detectorName}" failed: ${error}`,
-        )
-        return []
-      }
-    }),
-  )
+        try {
+          return await detector(text, context)
+        } catch (error) {
+          onDetectorError?.(
+            `Color hover detector "${detectorName}" failed: ${error}`,
+          )
+          return []
+        }
+      }),
+    )
+
+    return results.flat()
+  }
+  let matchesPromise: Promise<ColorMatch[]>
+
+  if (matchCache && matchCacheKey) {
+    const cached = matchCache.get(matchCacheKey)
+    matchesPromise = cached ?? loadMatches()
+    if (!cached) {
+      matchCache.set(matchCacheKey, matchesPromise)
+    }
+  } else {
+    matchesPromise = loadMatches()
+  }
+
+  const matches = await matchesPromise
   if (cancellationToken?.isCancellationRequested) {
     return null
   }
 
-  const match = findMatchAtOffset(results.flat(), offset)
+  const match = findMatchAtOffset(matches, offset)
   if (!match) {
     return null
   }
@@ -205,6 +244,7 @@ export async function getColorHover(
       start: match.start,
       end: match.end,
     },
+    uri: filePath,
   }
 }
 
@@ -271,6 +311,7 @@ function formatPresentationLine(
   const replacePayload = {
     originalText: hover.originalText,
     range: hover.range,
+    uri: hover.uri,
     value,
   }
 
@@ -314,6 +355,7 @@ function formatAlphaLine(hover: ColorHover, valueWidth: number): string {
     originalColor: hover.originalColor,
     originalText: hover.originalText,
     range: hover.range,
+    uri: hover.uri,
   }
 
   return [

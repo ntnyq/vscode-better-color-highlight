@@ -3,6 +3,11 @@
  */
 export interface WorkspaceFileStat {
   /**
+   * Open text-document version when unsaved editor content is available.
+   */
+  readonly documentVersion?: number
+
+  /**
    * Last known file modification timestamp.
    */
   readonly mtimeMs: number

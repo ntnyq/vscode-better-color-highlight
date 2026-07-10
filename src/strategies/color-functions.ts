@@ -59,11 +59,12 @@ type ShorthandSpace = 'rgb' | 'hsl' | 'lch' | 'oklch' | 'lab' | 'oklab'
 function parseChannelValue(
   value: string,
   type: 'rgb' | 'angle' | 'percent' | 'number',
+  percentageScale = 1,
 ): number {
   const trimmed = value.trim()
 
   if (trimmed.endsWith('%')) {
-    return Number(trimmed.slice(0, -1)) / 100
+    return (Number(trimmed.slice(0, -1)) / 100) * percentageScale
   }
 
   if (type === 'angle') {
@@ -418,27 +419,27 @@ function convertColorFunction(
       return hslToRgb(h, s, l)
     }
     case 'lch': {
-      const L = parseChannelValue(parts[0], 'number')
-      const C = parseChannelValue(parts[1], 'number')
+      const L = parseChannelValue(parts[0], 'number', 100)
+      const C = parseChannelValue(parts[1], 'number', 150)
       const H = parseChannelValue(parts[2], 'angle')
       return lchToRgb(L, C, H)
     }
     case 'oklch': {
       const L = parseChannelValue(parts[0], 'number')
-      const C = parseChannelValue(parts[1], 'number')
+      const C = parseChannelValue(parts[1], 'number', 0.4)
       const H = parseChannelValue(parts[2], 'angle')
       return oklchToRgb(L, C, H)
     }
     case 'lab': {
-      const L = parseChannelValue(parts[0], 'number')
-      const a = parseChannelValue(parts[1], 'number')
-      const b = parseChannelValue(parts[2], 'number')
+      const L = parseChannelValue(parts[0], 'number', 100)
+      const a = parseChannelValue(parts[1], 'number', 125)
+      const b = parseChannelValue(parts[2], 'number', 125)
       return labToRgb(L, a, b)
     }
     case 'oklab': {
       const L = parseChannelValue(parts[0], 'number')
-      const a = parseChannelValue(parts[1], 'number')
-      const b = parseChannelValue(parts[2], 'number')
+      const a = parseChannelValue(parts[1], 'number', 0.4)
+      const b = parseChannelValue(parts[2], 'number', 0.4)
       return oklabToRgb(L, a, b)
     }
     default: {

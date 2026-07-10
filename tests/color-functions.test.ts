@@ -78,6 +78,13 @@ describe(findColorFunctions, () => {
     expect(result).toHaveLength(1)
   })
 
+  it('uses CSS percentage reference ranges for lch() channels', () => {
+    const percentages = findColorFunctions('lch(50% 20% 30)')
+    const numbers = findColorFunctions('lch(50 30 30)')
+
+    expect(percentages[0].color).toBe(numbers[0].color)
+  })
+
   it('finds oklch() function', () => {
     const result = findColorFunctions('color: oklch(0.5 0.1 0);')
     expect(result).toHaveLength(1)
@@ -86,6 +93,13 @@ describe(findColorFunctions, () => {
   it('finds lab() function', () => {
     const result = findColorFunctions('color: lab(50 0 0);')
     expect(result).toHaveLength(1)
+  })
+
+  it('uses CSS percentage reference ranges for lab() channels', () => {
+    const percentages = findColorFunctions('lab(50% 20% -20%)')
+    const numbers = findColorFunctions('lab(50 25 -25)')
+
+    expect(percentages[0].color).toBe(numbers[0].color)
   })
 
   it('finds oklab() function', () => {
@@ -113,7 +127,7 @@ describe(findColorFunctions, () => {
   it('finds CSS variable shorthand with signed lab channels', () => {
     const result = findColorFunctions('--token-lab: 70 +20 -30;')
     expect(result).toHaveLength(1)
-    expect(result[0].color).toBe('rgb(234, 213, 255)')
+    expect(result[0].color).toBe('rgb(187, 160, 226)')
   })
 
   it('finds CSS variable shorthand with signed oklab channels', () => {

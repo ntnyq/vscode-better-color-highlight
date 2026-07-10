@@ -13,6 +13,7 @@ export interface OffsetRange {
 export interface ReplaceColorPayload {
   readonly originalText: string
   readonly range: OffsetRange
+  readonly uri: string
   readonly value: string
 }
 
@@ -21,4 +22,5 @@ export interface AdjustColorAlphaPayload {
   readonly originalColor: string
   readonly originalText: string
   readonly range: OffsetRange
+  readonly uri: string
 }

@@ -35,9 +35,6 @@ const statMock = vi.fn<
 const isDirectoryMock = vi.fn<(filePath: unknown) => Promise<boolean>>(
   filePath => Promise.resolve(directories.has(String(filePath))),
 )
-const readDirectoryMock = vi.fn<(filePath: unknown) => Promise<string[]>>(
-  filePath => Promise.resolve(directories.get(String(filePath)) ?? []),
-)
 const findFilesMock = vi.fn<
   (pattern: WorkspaceFindFilesMockPattern) => Promise<string[]>
 >(pattern =>
@@ -50,7 +47,6 @@ vi.mock(
     ({
       ...(await importActual()),
       findWorkspaceFiles: findFilesMock,
-      readWorkspaceDirectory: readDirectoryMock,
       readWorkspaceFile: readFileMock,
       statWorkspaceFile: statMock,
       workspacePathIsDirectory: isDirectoryMock,
@@ -318,7 +314,6 @@ describe('css variable source cache', () => {
       },
       64,
     )
-    expect(readDirectoryMock).not.toHaveBeenCalled()
     expect(declarations.map(declaration => declaration.name)).toStrictEqual([
       '--brand',
       '--accent',
@@ -359,7 +354,6 @@ function resetTestState() {
   readFileMock.mockClear()
   statMock.mockClear()
   isDirectoryMock.mockClear()
-  readDirectoryMock.mockClear()
   findFilesMock.mockClear()
   vi.resetModules()
 }

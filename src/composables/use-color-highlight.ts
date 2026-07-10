@@ -34,11 +34,13 @@ import { logger } from '../utils/logger'
  */
 function createHighlightRunSignature(
   textRevision: number,
+  dependencyRevision: number,
   languageId: string,
   highlightConfig: HighlightRunConfig,
 ): string {
   return JSON.stringify({
     textRevision,
+    dependencyRevision,
     languageId,
     enable: highlightConfig.enable,
     languages: highlightConfig.languages,
@@ -192,7 +194,9 @@ async function runStrategies(
  * 4. Strategies are run on the debounced text
  * 5. Results are grouped by color and applied as decorations
  */
-export function useColorHighlight() {
+export function useColorHighlight(
+  dependencyRevision: Readonly<Ref<number>> = ref(0),
+) {
   const visibleEditors = useVisibleTextEditors()
 
   // Track per-editor state
@@ -238,7 +242,7 @@ export function useColorHighlight() {
         const cache = new DecorationTypeCache()
         const disposables: (() => void)[] = []
 
-        setupEditorTracking(editor, cache, disposables)
+        setupEditorTracking(editor, cache, disposables, dependencyRevision)
 
         editorStates.set(key, {
           cache,
@@ -274,6 +278,7 @@ function setupEditorTracking(
   editor: TextEditor,
   cache: DecorationTypeCache,
   disposables: (() => void)[],
+  dependencyRevision: Readonly<Ref<number>>,
 ) {
   const doc = editor.document
   const textRef = useDocumentText(doc)
@@ -299,6 +304,7 @@ function setupEditorTracking(
     () =>
       createHighlightRunSignature(
         debouncedTextRevision.value,
+        dependencyRevision.value,
         doc.languageId,
         config,
       ),

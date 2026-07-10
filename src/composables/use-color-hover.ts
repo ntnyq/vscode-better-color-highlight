@@ -1,14 +1,22 @@
-import { onDeactivate } from 'reactive-vscode'
+import { onDeactivate, ref } from 'reactive-vscode'
+import type { Ref } from 'reactive-vscode'
 import { Hover, languages, MarkdownString, Range, workspace } from 'vscode'
 import { config } from '../config'
 import { getStrategies, shouldProcessLanguage } from '../core/strategy-registry'
-import { buildColorHoverMarkdown, getColorHover } from '../hover/color-hover'
+import {
+  buildColorHoverMarkdown,
+  getColorHover,
+  type ColorHoverMatchCache,
+} from '../hover/color-hover'
 import { logger } from '../utils/logger'
 
 /**
  * Register optional hover details for detected colors.
  */
-export function useColorHover() {
+export function useColorHover(
+  dependencyRevision: Readonly<Ref<number>> = ref(0),
+) {
+  const matchCache: ColorHoverMatchCache = new Map()
   const disposable = languages.registerHoverProvider('*', {
     async provideHover(document, position, cancellationToken) {
       if (!config.enable || !config.enableHover) {
@@ -25,12 +33,27 @@ export function useColorHover() {
 
       const text = document.getText()
       const offset = document.offsetAt(position)
+      const matchCacheKey = createHoverMatchCacheKey(
+        document.uri.toString(),
+        document.version,
+        document.languageId,
+        dependencyRevision.value,
+        workspace.isTrusted,
+      )
+      if (!matchCache.has(matchCacheKey) && matchCache.size >= 32) {
+        const oldestKey = matchCache.keys().next().value
+        if (oldestKey) {
+          matchCache.delete(oldestKey)
+        }
+      }
       const hover = await getColorHover({
         cancellationToken,
         config,
         detectors: getStrategies(document.languageId, config),
         filePath: document.uri.toString(),
         languageId: document.languageId,
+        matchCache,
+        matchCacheKey,
         onDetectorError: message => logger.error(message),
         offset,
         text,
@@ -55,6 +78,46 @@ export function useColorHover() {
   })
 
   onDeactivate(() => {
+    matchCache.clear()
     disposable.dispose()
+  })
+}
+
+/**
+ * Create a stable key for reusable hover detector results.
+ *
+ * @param uri - Document URI string
+ * @param documentVersion - VS Code text-document version
+ * @param languageId - VS Code document language identifier
+ * @param dependencyRevision - Cross-file stylesheet dependency revision
+ * @param workspaceIsTrusted - Whether cross-file reads are currently allowed
+ * @returns Serialized hover cache key
+ */
+function createHoverMatchCacheKey(
+  uri: string,
+  documentVersion: number,
+  languageId: string,
+  dependencyRevision: number,
+  workspaceIsTrusted: boolean,
+): string {
+  return JSON.stringify({
+    uri,
+    documentVersion,
+    languageId,
+    dependencyRevision,
+    workspaceIsTrusted,
+    matchWords: config.matchWords,
+    namedColorMatchMode: config.namedColorMatchMode,
+    resolveScssVariablesAcrossFiles: config.resolveScssVariablesAcrossFiles,
+    scssLoadPaths: config.scssLoadPaths,
+    resolveCssVariablesAcrossFiles: config.resolveCssVariablesAcrossFiles,
+    cssVariablePaths: config.cssVariablePaths,
+    cssVariableTrustedSelectors: config.cssVariableTrustedSelectors,
+    designTokenJsonMode: config.designTokenJsonMode,
+    useARGB: config.useARGB,
+    matchRgbWithNoFunction: config.matchRgbWithNoFunction,
+    rgbWithNoFunctionLanguages: config.rgbWithNoFunctionLanguages,
+    matchHslWithNoFunction: config.matchHslWithNoFunction,
+    hslWithNoFunctionLanguages: config.hslWithNoFunctionLanguages,
   })
 }

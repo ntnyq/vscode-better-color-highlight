@@ -64,6 +64,11 @@ const MAX_SCSS_FILE_SIZE = 512 * 1024
  */
 interface ScssFileContentCacheEntry {
   /**
+   * Open text-document version when the dependency has unsaved changes.
+   */
+  readonly documentVersion?: number
+
+  /**
    * Last known file modification timestamp.
    */
   readonly mtimeMs: number
@@ -397,6 +402,7 @@ async function readCachedScssFile(filePath: string): Promise<string | null> {
 
     if (
       cached &&
+      cached.documentVersion === stats.documentVersion &&
       cached.mtimeMs === stats.mtimeMs &&
       cached.size === stats.size
     ) {
@@ -405,6 +411,7 @@ async function readCachedScssFile(filePath: string): Promise<string | null> {
 
     const text = await readWorkspaceFile(filePath)
     scssFileContentCache.set(filePath, {
+      documentVersion: stats.documentVersion,
       mtimeMs: stats.mtimeMs,
       size: stats.size,
       text,

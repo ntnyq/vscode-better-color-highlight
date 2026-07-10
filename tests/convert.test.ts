@@ -112,12 +112,12 @@ describe(labToRgb, () => {
     expect(b).toBe(255)
   })
 
-  it('converts very dark color for L=0', () => {
-    const [r] = labToRgb(0, 0, 0)
-    // Lab(0,0,0) maps to a very dark color, not pure sRGB black
-    // due to the D65 white point and XYZ gamut boundary
-    expect(r).toBeGreaterThan(0)
-    expect(r).toBeLessThan(200)
+  it('converts black', () => {
+    expect(labToRgb(0, 0, 0)).toStrictEqual([0, 0, 0])
+  })
+
+  it('converts perceptual mid-gray', () => {
+    expect(labToRgb(50, 0, 0)).toStrictEqual([119, 119, 119])
   })
 })
 

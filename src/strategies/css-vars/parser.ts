@@ -1,9 +1,9 @@
 export interface CssVarDeclaration {
+  readonly atRuleContext: readonly string[]
   readonly name: string
   readonly value: string
   readonly selector: string
   readonly normalizedSelector: string
-  readonly specificity: readonly [number, number, number]
   readonly sourceOrder: number
   readonly filePath?: string
   readonly isTrusted: boolean
@@ -213,70 +213,11 @@ function commitSelectorItem(state: CssSelectorListScanState): void {
 }
 
 /**
- * Check whether every selector item belongs to the trusted selector set.
- *
- * @param selector - Raw selector or selector list
- * @param trustedSelectors - Trusted selector strings from configuration
- * @returns Whether the selector list is non-empty and fully trusted
- */
-export function isTrustedCssVarSelector(
-  selector: string,
-  trustedSelectors: readonly string[],
-): boolean {
-  const trusted = new Set(trustedSelectors.map(normalizeCssSelector))
-  const items = splitCssSelectorList(selector)
-  return items.length > 0 && items.every(item => trusted.has(item))
-}
-
-/**
- * Compute a conservative specificity tuple for simple selector ordering.
- *
- * @param selector - Raw selector text
- * @returns Specificity tuple in `[id, class-like, type]` order
- */
-export function getCssSelectorSpecificity(
-  selector: string,
-): readonly [number, number, number] {
-  const normalized = normalizeCssSelector(selector)
-  const idCount = (normalized.match(/#[\w-]+/gu) ?? []).length
-  const classLikeCount = (
-    normalized.match(/(?:\.[\w-]+|\[[^\]]+\]|:[\w-]+)/gu) ?? []
-  ).length
-  const withoutClassLike = normalized
-    .replaceAll(/#[\w-]+/gu, ' ')
-    .replaceAll(/(?:\.[\w-]+|\[[^\]]+\]|:[\w-]+)/gu, ' ')
-  const typeCount = (withoutClassLike.match(/\b[a-zA-Z][\w-]*\b/gu) ?? [])
-    .length
-
-  return [idCount, classLikeCount, typeCount]
-}
-
-/**
- * Compare two CSS specificity tuples.
- *
- * @param left - First specificity tuple
- * @param right - Second specificity tuple
- * @returns Positive when left is more specific, negative when right is
- */
-export function compareCssSpecificity(
-  left: readonly [number, number, number],
-  right: readonly [number, number, number],
-): number {
-  for (let index = 0; index < 3; index++) {
-    const diff = left[index] - right[index]
-    if (diff !== 0) {
-      return diff
-    }
-  }
-  return 0
-}
-
-/**
  * Collect CSS custom property declarations from stylesheet text.
  *
  * @param text - Stylesheet source text
  * @param options - Parser options controlling source metadata and trust
- * @returns Declarations with selector, specificity, and source-order metadata
+ * @returns Declarations with selector, at-rule, and source-order metadata
  */
 export function collectCssVarDeclarations(
   text: string,
@@ -294,12 +235,13 @@ export function collectCssVarDeclarations(
   function pushDeclaration(
     declaration: Pick<CssVarDeclaration, 'name' | 'value'>,
     normalizedSelector: string,
+    atRuleContext: readonly string[],
   ): void {
     declarations.push({
       ...declaration,
+      atRuleContext: [...atRuleContext],
       selector: normalizedSelector,
       normalizedSelector,
-      specificity: getCssSelectorSpecificity(normalizedSelector),
       sourceOrder,
       filePath: options.filePath,
       isTrusted: trustedSelectors.has(normalizedSelector),
@@ -307,44 +249,58 @@ export function collectCssVarDeclarations(
     sourceOrder++
   }
 
-  function collectTopLevelDeclarations(segment: string): void {
+  function collectTopLevelDeclarations(
+    segment: string,
+    atRuleContext: readonly string[],
+  ): void {
     if (!options.includeTopLevelDeclarations || !topLevelSelector) {
       return
     }
 
     for (const declaration of scanCssVarDeclarations(segment)) {
-      pushDeclaration(declaration, topLevelSelector)
+      pushDeclaration(declaration, topLevelSelector, atRuleContext)
     }
   }
 
-  function collectRuleDeclarations(body: string, prelude: string): void {
+  function collectRuleDeclarations(
+    body: string,
+    prelude: string,
+    atRuleContext: readonly string[],
+  ): void {
     const declarationsInRule = scanCssVarDeclarations(body)
     const selectorItems = splitCssSelectorList(prelude)
 
     for (const declaration of declarationsInRule) {
       for (const normalizedSelector of selectorItems) {
-        pushDeclaration(declaration, normalizedSelector)
+        pushDeclaration(declaration, normalizedSelector, atRuleContext)
       }
     }
   }
 
-  function walkRange(start: number, end: number): void {
+  function walkRange(
+    start: number,
+    end: number,
+    atRuleContext: readonly string[] = [],
+  ): void {
     let blockStart = start
 
     while (blockStart < end) {
       const openBrace = findNextOpenBrace(text, blockStart, end)
       if (openBrace === -1) {
-        collectTopLevelDeclarations(text.slice(blockStart, end))
+        collectTopLevelDeclarations(text.slice(blockStart, end), atRuleContext)
         return
       }
 
       const closeBrace = findMatchingCloseBrace(text, openBrace, end)
       if (closeBrace === -1) {
-        collectTopLevelDeclarations(text.slice(blockStart, end))
+        collectTopLevelDeclarations(text.slice(blockStart, end), atRuleContext)
         return
       }
 
-      collectTopLevelDeclarations(text.slice(blockStart, openBrace))
+      collectTopLevelDeclarations(
+        text.slice(blockStart, openBrace),
+        atRuleContext,
+      )
 
       const prelude = normalizeCssSelector(
         getCssPrelude(text.slice(blockStart, openBrace)),
@@ -354,9 +310,9 @@ export function collectCssVarDeclarations(
 
       if (prelude) {
         if (prelude.startsWith('@')) {
-          walkRange(bodyStart, closeBrace)
+          walkRange(bodyStart, closeBrace, [...atRuleContext, prelude])
         } else {
-          collectRuleDeclarations(body, prelude)
+          collectRuleDeclarations(body, prelude, atRuleContext)
         }
       }
 

@@ -30,6 +30,32 @@ const defaultConfig: NestedScopedConfigs = {
 }
 
 describe(getColorHover, () => {
+  it('reuses detector matches for the same document revision', async () => {
+    const detector = vi.fn<ColorDetector>(() => [
+      { start: 14, end: 21, color: 'rgb(255, 0, 0)' },
+    ])
+    const matchCache = new Map()
+    const options = {
+      config: { ...defaultConfig, enableHover: true },
+      detectors: [detector],
+      filePath: 'file:///tmp/example.css',
+      languageId: 'css',
+      matchCache,
+      matchCacheKey: 'file:///tmp/example.css:1:0',
+      offset: 16,
+      text: '.box { color: #ff0000; }',
+    }
+
+    await getColorHover(options)
+    await getColorHover(options)
+    await getColorHover({
+      ...options,
+      matchCacheKey: 'file:///tmp/example.css:2:0',
+    })
+
+    expect(detector).toHaveBeenCalledTimes(2)
+  })
+
   it('does not run detectors when hover is disabled', async () => {
     const detector = vi.fn<ColorDetector>(() => [
       { start: 14, end: 21, color: 'rgb(255, 0, 0)' },
@@ -92,6 +118,7 @@ describe(getColorHover, () => {
         oklch: 'oklch(62.8% 0.258 29.2)',
         rgb: 'rgb(255, 0, 0)',
       },
+      uri: 'file:///tmp/example.css',
     })
   })
 
@@ -137,6 +164,7 @@ describe(buildColorHoverMarkdown, () => {
         oklch: 'oklch(62.8% 0.258 29.2 / 0.5)',
         rgb: 'rgba(255, 0, 0, 0.5)',
       },
+      uri: 'file:///tmp/example.css',
     })
 
     expect(result).toContain('HEX')
@@ -176,5 +204,8 @@ describe(buildColorHoverMarkdown, () => {
     )
     expect(result).toContain('%22delta%22%3A-0.1')
     expect(result).toContain('%22delta%22%3A0.1')
+    expect(result).toContain(
+      '%22uri%22%3A%22file%3A%2F%2F%2Ftmp%2Fexample.css%22',
+    )
   })
 })

@@ -2,8 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { findCssVars } from '../src/strategies/css-vars'
 import {
   collectCssVarDeclarations,
-  getCssSelectorSpecificity,
-  isTrustedCssVarSelector,
   splitCssSelectorList,
 } from '../src/strategies/css-vars/parser'
 import type { CssVarDeclaration } from '../src/strategies/css-vars/parser'
@@ -55,13 +53,6 @@ describe(findCssVars, () => {
     })
   })
 
-  it('requires every comma selector item to be trusted', () => {
-    expect(isTrustedCssVarSelector(':root, html', [':root', 'html'])).toBe(true)
-    expect(
-      isTrustedCssVarSelector(':root, [data-theme=dark]', [':root', 'html']),
-    ).toBe(false)
-  })
-
   it('splits selector lists without splitting inside strings, brackets, or parentheses', () => {
     expect(
       splitCssSelectorList(
@@ -72,22 +63,6 @@ describe(findCssVars, () => {
       '[data-theme="light,dark"]',
       ':is(html, body)',
       '.icon[data-url="data:image/svg+xml,%3Csvg%3E"]',
-    ])
-  })
-
-  it('normalizes selector whitespace before trusted selector matching', () => {
-    expect(
-      isTrustedCssVarSelector('html   [data-theme=light]', [
-        'html [data-theme=light]',
-      ]),
-    ).toBe(true)
-  })
-
-  it('computes simple selector specificity for trusted candidate ordering', () => {
-    expect(getCssSelectorSpecificity(':root')).toStrictEqual([0, 1, 0])
-    expect(getCssSelectorSpecificity('html')).toStrictEqual([0, 0, 1])
-    expect(getCssSelectorSpecificity('html[data-theme=light]')).toStrictEqual([
-      0, 1, 1,
     ])
   })
 
@@ -147,30 +122,24 @@ describe(findCssVars, () => {
     )
 
     expect(
-      declarations.map(
-        ({ normalizedSelector, specificity, isTrusted, sourceOrder }) => ({
-          normalizedSelector,
-          specificity,
-          isTrusted,
-          sourceOrder,
-        }),
-      ),
+      declarations.map(({ normalizedSelector, isTrusted, sourceOrder }) => ({
+        normalizedSelector,
+        isTrusted,
+        sourceOrder,
+      })),
     ).toStrictEqual([
       {
         normalizedSelector: ':root',
-        specificity: [0, 1, 0],
         isTrusted: true,
         sourceOrder: 0,
       },
       {
         normalizedSelector: 'html',
-        specificity: [0, 0, 1],
         isTrusted: true,
         sourceOrder: 1,
       },
       {
         normalizedSelector: '[data-theme="brand,primary"]',
-        specificity: [0, 1, 0],
         isTrusted: false,
         sourceOrder: 2,
       },
@@ -238,14 +207,36 @@ describe(findCssVars, () => {
   it('resolves current-file variables using declaration document order', async () => {
     const text = `
       .a { --brand: #ff0000; }
-      --brand: #0000ff;
-      .b { color: var(--brand); }
+      .a { --brand: #0000ff; }
+      .a { color: var(--brand); }
     `
 
     const result = await findCssVars(text)
 
     expect(result).toHaveLength(1)
     expect(result[0].color).toBe('rgb(0, 0, 255)')
+  })
+
+  it('skips current-file variables declared in different selector contexts', async () => {
+    const text = `
+      .light { --brand: #ffffff; }
+      .dark { --brand: #000000; }
+      .card { color: var(--brand); }
+    `
+
+    await expect(findCssVars(text)).resolves.toStrictEqual([])
+  })
+
+  it('skips variables split between unconditional and conditional contexts', async () => {
+    const text = `
+      :root { --brand: #ffffff; }
+      @media (prefers-color-scheme: dark) {
+        :root { --brand: #000000; }
+      }
+      .card { color: var(--brand); }
+    `
+
+    await expect(findCssVars(text)).resolves.toStrictEqual([])
   })
 
   it('finds CSS variable usages with named-color values', async () => {

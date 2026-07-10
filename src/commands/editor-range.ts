@@ -11,11 +11,15 @@ import type { ReplaceColorPayload } from './types'
  * @returns Whether VS Code accepted the edit.
  */
 export async function replaceActiveEditorRange(
-  payload: Pick<ReplaceColorPayload, 'originalText' | 'range'>,
+  payload: Pick<ReplaceColorPayload, 'originalText' | 'range' | 'uri'>,
   replacement: string,
 ): Promise<boolean> {
   const editor = window.activeTextEditor
-  if (!editor || !isValidOffsetRange(payload.range)) {
+  if (
+    !editor ||
+    editor.document.uri.toString() !== payload.uri ||
+    !isValidOffsetRange(payload.range)
+  ) {
     return false
   }
 

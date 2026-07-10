@@ -11,7 +11,7 @@ import type { AdjustColorAlphaPayload, ReplaceColorPayload } from './types'
 export function getReplaceColorPayload(
   value: unknown,
 ): ReplaceColorPayload | undefined {
-  if (!isRecord(value) || !isString(value.value)) {
+  if (!isRecord(value) || !isString(value.uri) || !isString(value.value)) {
     return undefined
   }
 
@@ -23,6 +23,7 @@ export function getReplaceColorPayload(
   return {
     originalText: value.originalText,
     range,
+    uri: value.uri,
     value: value.value,
   }
 }
@@ -40,7 +41,8 @@ export function getAdjustColorAlphaPayload(
     !isRecord(value) ||
     !isNumber(value.delta) ||
     !isString(value.originalColor) ||
-    !isString(value.originalText)
+    !isString(value.originalText) ||
+    !isString(value.uri)
   ) {
     return undefined
   }
@@ -55,5 +57,6 @@ export function getAdjustColorAlphaPayload(
     originalColor: value.originalColor,
     originalText: value.originalText,
     range,
+    uri: value.uri,
   }
 }

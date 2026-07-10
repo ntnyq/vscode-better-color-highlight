@@ -288,16 +288,13 @@ function selectCssVarDeclaration(
     declaration => declaration.name === name,
   )
   if (currentCandidates.length > 0) {
-    let latest = currentCandidates[0]
-    for (const declaration of currentCandidates.slice(1)) {
-      if (declaration.sourceOrder > latest.sourceOrder) {
-        latest = declaration
-      }
+    if (hasMultipleDeclarationContexts(currentCandidates)) {
+      return { status: 'ambiguous' }
     }
 
     return {
       status: 'found',
-      declaration: latest,
+      declaration: selectLatestDeclaration(currentCandidates),
     }
   }
 
@@ -312,12 +309,7 @@ function selectCssVarDeclaration(
     return { status: 'ambiguous' }
   }
 
-  const firstSelector = externalCandidates[0].normalizedSelector
-  if (
-    externalCandidates.some(
-      declaration => declaration.normalizedSelector !== firstSelector,
-    )
-  ) {
+  if (hasMultipleDeclarationContexts(externalCandidates)) {
     return { status: 'ambiguous' }
   }
 
@@ -325,6 +317,32 @@ function selectCssVarDeclaration(
     status: 'found',
     declaration: selectLatestDeclaration(externalCandidates),
   }
+}
+
+/**
+ * Check whether declarations depend on different selector or at-rule contexts.
+ *
+ * @param declarations - Candidate declarations for one custom property
+ * @returns Whether runtime cascade conditions make the candidates ambiguous
+ */
+function hasMultipleDeclarationContexts(
+  declarations: readonly CssVarDeclaration[],
+): boolean {
+  const first = declarations[0]
+  const firstContext = JSON.stringify([
+    first.normalizedSelector,
+    first.atRuleContext,
+  ])
+
+  return declarations
+    .slice(1)
+    .some(
+      declaration =>
+        JSON.stringify([
+          declaration.normalizedSelector,
+          declaration.atRuleContext,
+        ]) !== firstContext,
+    )
 }
 
 /**

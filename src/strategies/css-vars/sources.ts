@@ -19,6 +19,7 @@ const MAX_CSS_VAR_SOURCE_FILE_SIZE = 512 * 1024
 const MAX_CSS_VAR_SOURCE_CACHE_SIZE = 256
 
 interface CssVarSourceCacheEntry {
+  readonly documentVersion?: number
   readonly mtimeMs: number
   readonly size: number
   readonly text: string
@@ -244,6 +245,7 @@ async function readCachedCssVarSourceFile(
     const cached = cssVarSourceTextCache.get(filePath)
     if (
       cached &&
+      cached.documentVersion === stats.documentVersion &&
       cached.mtimeMs === stats.mtimeMs &&
       cached.size === stats.size
     ) {
@@ -252,6 +254,7 @@ async function readCachedCssVarSourceFile(
 
     const text = await readWorkspaceFile(filePath)
     cssVarSourceTextCache.set(filePath, {
+      documentVersion: stats.documentVersion,
       mtimeMs: stats.mtimeMs,
       size: stats.size,
       text,

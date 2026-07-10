@@ -3,6 +3,7 @@ import { version } from '../package.json'
 import { useCommands } from './commands'
 import { useColorHighlight } from './composables/use-color-highlight'
 import { useColorHover } from './composables/use-color-hover'
+import { useStylesheetDependencyRevision } from './composables/use-stylesheet-dependency-revision'
 import { logger } from './utils/logger'
 
 /**
@@ -11,9 +12,10 @@ import { logger } from './utils/logger'
 const { activate, deactivate } = defineExtension(() => {
   logger.info(`✅ Activated, version: ${version} `)
 
+  const stylesheetDependencyRevision = useStylesheetDependencyRevision()
   useCommands()
-  useColorHighlight()
-  useColorHover()
+  useColorHighlight(stylesheetDependencyRevision)
+  useColorHover(stylesheetDependencyRevision)
 })
 
 export { activate, deactivate }

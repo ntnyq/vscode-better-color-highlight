@@ -476,6 +476,29 @@ describe('useColorHighlight', () => {
     )
   })
 
+  it('reruns unchanged documents when stylesheet dependencies change', async () => {
+    setupTest()
+    asyncStrategy.mockResolvedValue([])
+    configSnapshot.resolveCssVariablesAcrossFiles = true
+    documentTextRef = createRef('.box { color: var(--brand); }')
+    visibleEditorsRef = createRef<unknown[]>([createEditor()])
+    const dependencyRevision = createRef(0)
+
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+
+    const useColorHighlightWithDependencies = useColorHighlight as unknown as (
+      revision: TestRef<number>,
+    ) => void
+    useColorHighlightWithDependencies(dependencyRevision)
+    await flushPromises()
+
+    dependencyRevision.value++
+    await flushPromises()
+
+    expect(asyncStrategy).toHaveBeenCalledTimes(2)
+  })
+
   it('passes JSON design token mode to strategies', async () => {
     setupTest()
     asyncStrategy.mockResolvedValue([])

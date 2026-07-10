@@ -219,7 +219,15 @@ export async function workspacePathExists(filePath: string): Promise<boolean> {
  */
 export async function readWorkspaceFile(filePath: string): Promise<string> {
   const { workspace } = await import('vscode')
-  const bytes = await workspace.fs.readFile(await toUri(filePath))
+  const uri = await toUri(filePath)
+  const document = workspace.textDocuments.find(
+    candidate => candidate.uri.toString() === uri.toString(),
+  )
+  if (document) {
+    return document.getText()
+  }
+
+  const bytes = await workspace.fs.readFile(uri)
 
   return new TextDecoder().decode(bytes)
 }
@@ -241,21 +249,6 @@ export async function workspacePathIsDirectory(
   } catch {
     return false
   }
-}
-
-/**
- * Read a workspace directory and return child paths in the same path shape.
- *
- * @param dirPath - The path or URI string to read
- * @returns Child paths joined to the directory path
- */
-export async function readWorkspaceDirectory(
-  dirPath: string,
-): Promise<string[]> {
-  const { workspace } = await import('vscode')
-  const entries = await workspace.fs.readDirectory(await toUri(dirPath))
-
-  return entries.map(([name]) => joinWorkspacePath(dirPath, name))
 }
 
 /**
@@ -288,10 +281,19 @@ export async function statWorkspaceFile(
   filePath: string,
 ): Promise<WorkspaceFileStat> {
   const { workspace } = await import('vscode')
-  const stat = await workspace.fs.stat(await toUri(filePath))
+  const uri = await toUri(filePath)
+  const stat = await workspace.fs.stat(uri)
+  const document = workspace.textDocuments.find(
+    candidate => candidate.uri.toString() === uri.toString(),
+  )
+  const documentText = document?.getText()
 
   return {
+    documentVersion: document?.version,
     mtimeMs: stat.mtime,
-    size: stat.size,
+    size:
+      documentText === undefined
+        ? stat.size
+        : new TextEncoder().encode(documentText).byteLength,
   }
 }
