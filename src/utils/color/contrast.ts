@@ -1,3 +1,5 @@
+import type { RgbaColor } from './presentation'
+
 /**
  * WCAG 2.0 contrast calculation.
  * Determines whether white or black text provides better contrast against a given background color.
@@ -21,10 +23,37 @@ for (let i = 0; i < 256; i++) {
  */
 export function relativeLuminance(r: number, g: number, b: number): number {
   return (
-    0.2126 * srgb8ToLinear[r] +
-    0.7152 * srgb8ToLinear[g] +
-    0.0722 * srgb8ToLinear[b]
+    0.2126 * channelToLinear(r) +
+    0.7152 * channelToLinear(g) +
+    0.0722 * channelToLinear(b)
   )
+}
+
+/**
+ * Composite an RGBA foreground over an RGBA background in sRGB.
+ *
+ * @param foreground - Foreground RGBA channels.
+ * @param background - Background RGBA channels.
+ * @returns The clamped source-over composite color.
+ */
+export function compositeRgba(
+  foreground: RgbaColor,
+  background: RgbaColor,
+): RgbaColor {
+  const source = clampRgba(foreground)
+  const backdrop = clampRgba(background)
+  const a = source.a + backdrop.a * (1 - source.a)
+
+  if (a === 0) {
+    return { r: 0, g: 0, b: 0, a: 0 }
+  }
+
+  return {
+    r: compositeChannel(source.r, backdrop.r, source.a, backdrop.a, a),
+    g: compositeChannel(source.g, backdrop.g, source.a, backdrop.a, a),
+    b: compositeChannel(source.b, backdrop.b, source.a, backdrop.a, a),
+    a,
+  }
 }
 
 /**
@@ -66,4 +95,41 @@ export function getContrastColor(
   const whiteContrast = contrastRatio(WHITE_LUMINANCE, bgLuminance)
   const blackContrast = contrastRatio(bgLuminance, BLACK_LUMINANCE)
   return whiteContrast >= blackContrast ? '#FFFFFF' : '#000000'
+}
+
+function channelToLinear(channel: number): number {
+  const clamped = clamp(channel, 0, 255)
+  if (Number.isInteger(clamped)) {
+    return srgb8ToLinear[clamped]
+  }
+
+  const srgb = clamped / 255
+  return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4
+}
+
+function compositeChannel(
+  foreground: number,
+  background: number,
+  foregroundAlpha: number,
+  backgroundAlpha: number,
+  alpha: number,
+): number {
+  return (
+    (foreground * foregroundAlpha +
+      background * backgroundAlpha * (1 - foregroundAlpha)) /
+    alpha
+  )
+}
+
+function clampRgba({ a, b, g, r }: RgbaColor): RgbaColor {
+  return {
+    r: clamp(r, 0, 255),
+    g: clamp(g, 0, 255),
+    b: clamp(b, 0, 255),
+    a: clamp(a, 0, 1),
+  }
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max)
 }

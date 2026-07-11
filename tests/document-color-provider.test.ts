@@ -61,6 +61,7 @@ const loggerError = vi.fn<(message: unknown) => void>()
 const configSnapshot: NestedScopedConfigs = {
   enable: true,
   enableColorPicker: false,
+  enableContrastDiagnostics: false,
   enableColorNavigation: true,
   enableHover: false,
   languages: ['*'],
@@ -72,6 +73,9 @@ const configSnapshot: NestedScopedConfigs = {
   cssVariablePaths: [],
   cssVariableTrustedSelectors: [':root', 'html', 'body', ':host'],
   maxFileSize: 1_000_000,
+  workspacePaletteInclude: '**/*',
+  workspacePaletteExclude:
+    '{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}',
   designTokenJsonMode: 'token-values',
   resolveDesignTokensAcrossFiles: false,
   tailwindColorMode: 'auto',

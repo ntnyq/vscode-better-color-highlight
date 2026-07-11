@@ -190,4 +190,119 @@ describe('scss variable dependency cache', () => {
     expect(result).toStrictEqual([])
     expect(readFileMock).not.toHaveBeenCalled()
   })
+
+  it('isolates the third unique dependency while allowing cached repeats', async () => {
+    fileStats.clear()
+    fileTexts.clear()
+    existsMock.mockClear()
+    existsMock.mockImplementation(filePath =>
+      Promise.resolve(fileTexts.has(filePath)),
+    )
+    readFileMock.mockClear()
+    statMock.mockClear()
+    vi.resetModules()
+
+    const { findScssVars } = await import('../src/strategies/scss-vars')
+    const dir = '/tmp/better-color-scss-budget'
+    for (const [name, color] of [
+      ['one', '#111111'],
+      ['two', '#222222'],
+      ['three', '#333333'],
+    ]) {
+      const filePath = join(dir, `_${name}.scss`)
+      const fileText = `$brand: ${color};\n`
+      fileTexts.set(filePath, fileText)
+      fileStats.set(filePath, { mtimeMs: 1, size: fileText.length })
+    }
+    const text = [
+      '@use "_one.scss";',
+      '@use "_two.scss";',
+      '@use "_three.scss";',
+      '.a { color: one.$brand; }',
+      '.b { color: two.$brand; }',
+      '.c { color: three.$brand; }',
+    ].join('\n')
+    const context = {
+      languageId: 'scss',
+      filePath: join(dir, 'entry.scss'),
+      resolveScssVariablesAcrossFiles: true,
+      workspaceReadBudget: createTestBudget(2),
+    }
+
+    const first = await findScssVars(text, context)
+    const second = await findScssVars(text, context)
+
+    expect(
+      first.map(match => text.slice(match.start, match.end)),
+    ).toStrictEqual(['one.$brand', 'two.$brand'])
+    expect(second).toStrictEqual(first)
+    expect(readFileMock).toHaveBeenCalledTimes(2)
+    expect(statMock.mock.calls.flat()).not.toContain(join(dir, '_three.scss'))
+  })
+
+  it('claims Sass candidates before existence and content metadata probes', async () => {
+    fileStats.clear()
+    fileTexts.clear()
+    existsMock.mockClear()
+    existsMock.mockImplementation(filePath =>
+      Promise.resolve(fileTexts.has(filePath)),
+    )
+    readFileMock.mockClear()
+    statMock.mockClear()
+    vi.resetModules()
+
+    const { findScssVars } = await import('../src/strategies/scss-vars')
+    const dir = '/tmp/better-color-scss-probe-budget'
+    const tokensPath = join(dir, '_tokens.scss')
+    const entryPath = join(dir, 'entry.scss')
+    const text = '@use "tokens";\n.a { color: tokens.$brand; }\n'
+    const tokenText = '$brand: #336699;\n'
+    fileTexts.set(tokensPath, tokenText)
+    fileStats.set(tokensPath, { mtimeMs: 1, size: tokenText.length })
+
+    const exhaustedBudget = createTestBudget(1)
+    exhaustedBudget.tryClaim(join(dir, 'already-claimed.scss'))
+    await expect(
+      findScssVars(text, {
+        languageId: 'scss',
+        filePath: entryPath,
+        resolveScssVariablesAcrossFiles: true,
+        workspaceReadBudget: exhaustedBudget,
+      }),
+    ).resolves.toStrictEqual([])
+    expect(existsMock).not.toHaveBeenCalled()
+    expect(statMock).not.toHaveBeenCalled()
+    expect(readFileMock).not.toHaveBeenCalled()
+
+    const repeatedBudget = createTestBudget(1)
+    repeatedBudget.tryClaim(tokensPath)
+    await expect(
+      findScssVars(text, {
+        languageId: 'scss',
+        filePath: entryPath,
+        resolveScssVariablesAcrossFiles: true,
+        workspaceReadBudget: repeatedBudget,
+      }),
+    ).resolves.toMatchObject([{ color: 'rgb(51, 102, 153)' }])
+    expect(existsMock).toHaveBeenCalledTimes(1)
+    expect(existsMock).toHaveBeenCalledWith(tokensPath)
+    expect(statMock).toHaveBeenCalledWith(tokensPath)
+    expect(readFileMock).toHaveBeenCalledWith(tokensPath)
+  })
 })
+
+function createTestBudget(maximum: number) {
+  const claimed = new Set<string>()
+  return {
+    tryClaim(identity: string) {
+      if (claimed.has(identity)) {
+        return true
+      }
+      if (claimed.size >= maximum) {
+        return false
+      }
+      claimed.add(identity)
+      return true
+    },
+  }
+}

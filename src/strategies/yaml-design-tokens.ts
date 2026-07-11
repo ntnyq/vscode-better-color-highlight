@@ -44,7 +44,11 @@ export function findYamlDesignTokens(
     context.workspaceIsTrusted &&
     context.filePath
   ) {
-    return resolveDesignTokenColors(document, { filePath: context.filePath })
+    return resolveDesignTokenColors(document, {
+      filePath: context.filePath,
+      signal: context.signal,
+      workspaceReadBudget: context.workspaceReadBudget,
+    })
   }
   return resolveLocalDesignTokenColors(document)
 }

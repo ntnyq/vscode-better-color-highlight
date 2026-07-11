@@ -85,6 +85,31 @@ describe('loadTailwindThemeSources', () => {
     expect(readFile).not.toHaveBeenCalled()
   })
 
+  it('starts no theme read after cancellation during a deferred source stat', async () => {
+    const { loadTailwindThemeSources } = await importSources()
+    const deferred = Promise.withResolvers<TestStat>()
+    statFile.mockReturnValueOnce(deferred.promise)
+    let cancelled = false
+    const promise = loadTailwindThemeSources('', {
+      filePath: '/repo/page.html',
+      languageId: 'html',
+      signal: {
+        get isCancellationRequested() {
+          return cancelled
+        },
+      },
+      tailwindStylesheetPaths: ['theme.css'],
+      workspaceIsTrusted: true,
+    })
+
+    await vi.waitFor(() => expect(statFile).toHaveBeenCalledTimes(1))
+    cancelled = true
+    deferred.resolve({ mtimeMs: 1, size: 24 })
+
+    await expect(promise).resolves.toStrictEqual([])
+    expect(readFile).not.toHaveBeenCalled()
+  })
+
   it('expands CSS files, directories, and globs in configured source order', async () => {
     const { loadTailwindThemeSources } = await importSources()
     const direct = '/repo/direct.css'
@@ -426,6 +451,106 @@ describe('loadTailwindThemeSources', () => {
     expect(readFile).toHaveBeenCalledTimes(2)
     expect(result[0].themeDeclarations[0].value).toBe('tan')
   })
+
+  it('isolates the third unique source while allowing cached repeats', async () => {
+    const { loadTailwindThemeSources } = await importSources()
+    setFile('/repo/one.css', '@theme { --color-one: red; }')
+    setFile('/repo/two.css', '@theme { --color-two: blue; }')
+    setFile('/repo/three.css', '@theme { --color-three: green; }')
+    const context = {
+      filePath: '/repo/page.html',
+      languageId: 'html',
+      tailwindStylesheetPaths: [
+        'one.css',
+        'file:///repo/one.css',
+        'two.css',
+        'three.css',
+      ],
+      workspaceIsTrusted: true,
+      workspaceReadBudget: createTestBudget(2),
+    }
+
+    const first = await loadTailwindThemeSources('', context)
+    const second = await loadTailwindThemeSources('', context)
+
+    expect(first.map(source => source.filePath)).toStrictEqual([
+      '/repo/one.css',
+      '/repo/two.css',
+      '/repo/page.html',
+    ])
+    expect(second.map(source => source.filePath)).toStrictEqual([
+      '/repo/one.css',
+      '/repo/two.css',
+      '/repo/page.html',
+    ])
+    expect(readFile).toHaveBeenCalledTimes(2)
+    expect(statFile.mock.calls.flat()).not.toContain('/repo/three.css')
+  })
+
+  it('claims configured paths before directory and file metadata probes', async () => {
+    const { loadTailwindThemeSources } = await importSources()
+    setFile('/repo/theme.css', '@theme { --color-brand: red; }')
+
+    const exhaustedBudget = createTestBudget(1)
+    exhaustedBudget.tryClaim('/repo/already-claimed.css')
+    const refused = await loadTailwindThemeSources('', {
+      filePath: '/repo/page.html',
+      languageId: 'html',
+      tailwindStylesheetPaths: ['theme.css'],
+      workspaceIsTrusted: true,
+      workspaceReadBudget: exhaustedBudget,
+    })
+    expect(refused.map(source => source.filePath)).toStrictEqual([
+      '/repo/page.html',
+    ])
+    expect(isDirectory).not.toHaveBeenCalled()
+    expect(statFile).not.toHaveBeenCalled()
+    expect(readFile).not.toHaveBeenCalled()
+
+    const repeatedBudget = createTestBudget(1)
+    repeatedBudget.tryClaim('/repo/theme.css')
+    const allowed = await loadTailwindThemeSources('', {
+      filePath: '/repo/page.html',
+      languageId: 'html',
+      tailwindStylesheetPaths: ['theme.css'],
+      workspaceIsTrusted: true,
+      workspaceReadBudget: repeatedBudget,
+    })
+    expect(allowed.map(source => source.filePath)).toStrictEqual([
+      '/repo/theme.css',
+      '/repo/page.html',
+    ])
+    expect(isDirectory).toHaveBeenCalledWith('/repo/theme.css')
+    expect(statFile).toHaveBeenCalledWith('/repo/theme.css')
+    expect(readFile).toHaveBeenCalledWith('/repo/theme.css')
+  })
+
+  it('discovers configured directories and globs within the shared budget', async () => {
+    const { loadTailwindThemeSources } = await importSources()
+    directories.add('/repo/themes')
+    matches.set(key({ basePath: '/repo/themes', pattern: '**/*.css' }), [
+      '/repo/themes/brand.css',
+    ])
+    matches.set(key({ basePath: '/repo', pattern: 'shared/*.css' }), [
+      '/repo/shared/accent.css',
+    ])
+    setFile('/repo/themes/brand.css', '@theme { --color-brand: red; }')
+    setFile('/repo/shared/accent.css', '@theme { --color-accent: blue; }')
+
+    const result = await loadTailwindThemeSources('', {
+      filePath: '/repo/page.html',
+      languageId: 'html',
+      tailwindStylesheetPaths: ['themes', 'shared/*.css'],
+      workspaceIsTrusted: true,
+      workspaceReadBudget: createTestBudget(3),
+    })
+
+    expect(result.map(source => source.filePath)).toStrictEqual([
+      '/repo/themes/brand.css',
+      '/repo/shared/accent.css',
+      '/repo/page.html',
+    ])
+  })
 })
 
 function importSources(): Promise<typeof Sources> {
@@ -444,4 +569,21 @@ function setFile(
 
 function key(pattern: string | WorkspaceFindFilesPattern): string {
   return isString(pattern) ? pattern : `${pattern.basePath}\0${pattern.pattern}`
+}
+
+function createTestBudget(maximum: number) {
+  const claimed = new Set<string>()
+  return {
+    tryClaim(identity: string) {
+      const canonicalIdentity = identity.replace(/^file:\/\//u, '')
+      if (claimed.has(canonicalIdentity)) {
+        return true
+      }
+      if (claimed.size >= maximum) {
+        return false
+      }
+      claimed.add(canonicalIdentity)
+      return true
+    },
+  }
 }

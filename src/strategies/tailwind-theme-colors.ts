@@ -18,6 +18,11 @@ type TailwindDetectorContext = Partial<StrategyContext> & {
   readonly mode?: 'auto' | 'v3' | 'v4'
 }
 
+export interface ResolvedTailwindColorUtility {
+  readonly color: string
+  readonly utility: TailwindColorUtility
+}
+
 /** Detect Tailwind color utilities from the current or configured theme. */
 export function findTailwindThemeColors(text: string): ColorMatch[]
 export function findTailwindThemeColors(
@@ -28,6 +33,23 @@ export function findTailwindThemeColors(
   text: string,
   context?: TailwindDetectorContext,
 ): ColorMatch[] | Promise<ColorMatch[]> {
+  const resolved = resolveTailwindColorUtilities(text, context)
+  return resolved instanceof Promise
+    ? projectResolvedUtilities(resolved)
+    : toColorMatches(resolved)
+}
+
+export function resolveTailwindColorUtilities(
+  text: string,
+): ResolvedTailwindColorUtility[]
+export function resolveTailwindColorUtilities(
+  text: string,
+  context?: TailwindDetectorContext,
+): ResolvedTailwindColorUtility[] | Promise<ResolvedTailwindColorUtility[]>
+export function resolveTailwindColorUtilities(
+  text: string,
+  context?: TailwindDetectorContext,
+): ResolvedTailwindColorUtility[] | Promise<ResolvedTailwindColorUtility[]> {
   const normalizedContext = normalizeContext(context)
   if (shouldLoadConfiguredTheme(normalizedContext)) {
     return findWithConfiguredTheme(text, normalizedContext)
@@ -43,19 +65,28 @@ export function findTailwindThemeColors(
 async function findWithConfiguredTheme(
   text: string,
   context: StrategyContext,
-): Promise<ColorMatch[]> {
+): Promise<ResolvedTailwindColorUtility[]> {
+  if (context.signal?.isCancellationRequested) {
+    return []
+  }
   const sources = await loadTailwindThemeSources(text, context)
+  if (context.signal?.isCancellationRequested) {
+    return []
+  }
   const theme = await resolveTailwindTheme(sources, {
     mode: context.tailwindColorMode,
   })
+  if (context.signal?.isCancellationRequested) {
+    return []
+  }
   return resolveUtilities(text, theme)
 }
 
 function resolveUtilities(
   text: string,
   theme: TailwindColorTheme,
-): ColorMatch[] {
-  const matches: ColorMatch[] = []
+): ResolvedTailwindColorUtility[] {
+  const matches: ResolvedTailwindColorUtility[] = []
   const seen = new Set<string>()
 
   for (const utility of findTailwindColorUtilities(text)) {
@@ -64,6 +95,9 @@ function resolveUtilities(
       continue
     }
     const alpha = parseOpacityModifier(utility.opacity)
+    if (utility.opacity !== undefined && alpha === undefined) {
+      continue
+    }
     const color = alpha === undefined ? baseColor : applyAlpha(baseColor, alpha)
     if (!color) {
       continue
@@ -72,11 +106,27 @@ function resolveUtilities(
     const key = `${utility.start}:${utility.end}:${color}`
     if (!seen.has(key)) {
       seen.add(key)
-      matches.push({ start: utility.start, end: utility.end, color })
+      matches.push({ color, utility })
     }
   }
 
   return matches
+}
+
+function toColorMatches(
+  resolved: readonly ResolvedTailwindColorUtility[],
+): ColorMatch[] {
+  return resolved.map(({ color, utility }) => ({
+    color,
+    end: utility.end,
+    start: utility.start,
+  }))
+}
+
+async function projectResolvedUtilities(
+  resolved: Promise<readonly ResolvedTailwindColorUtility[]>,
+): Promise<ColorMatch[]> {
+  return toColorMatches(await resolved)
 }
 
 function resolveUtilityColor(

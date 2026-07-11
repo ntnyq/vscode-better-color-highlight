@@ -9,6 +9,7 @@ import type { ColorDetector } from '../src/types'
 const defaultConfig: NestedScopedConfigs = {
   enable: true,
   enableColorPicker: false,
+  enableContrastDiagnostics: false,
   enableColorNavigation: true,
   enableHover: false,
   languages: ['*'],
@@ -20,6 +21,9 @@ const defaultConfig: NestedScopedConfigs = {
   cssVariablePaths: [],
   cssVariableTrustedSelectors: [':root', 'html', 'body', ':host'],
   maxFileSize: 1_000_000,
+  workspacePaletteInclude: '**/*',
+  workspacePaletteExclude:
+    '{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}',
   designTokenJsonMode: 'token-values',
   resolveDesignTokensAcrossFiles: false,
   tailwindColorMode: 'auto',

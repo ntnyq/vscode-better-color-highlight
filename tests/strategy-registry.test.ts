@@ -17,6 +17,7 @@ import { findYamlDesignTokens } from '../src/strategies/yaml-design-tokens'
 const defaultConfig: NestedScopedConfigs = {
   enable: true,
   enableColorPicker: false,
+  enableContrastDiagnostics: false,
   enableColorNavigation: true,
   languages: ['*'],
   matchWords: false,
@@ -30,6 +31,9 @@ const defaultConfig: NestedScopedConfigs = {
   cssVariablePaths: [],
   cssVariableTrustedSelectors: [':root', 'html', 'body', ':host'],
   maxFileSize: 1_000_000,
+  workspacePaletteInclude: '**/*',
+  workspacePaletteExclude:
+    '{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}',
   designTokenJsonMode: 'token-values',
   resolveDesignTokensAcrossFiles: false,
   useARGB: false,

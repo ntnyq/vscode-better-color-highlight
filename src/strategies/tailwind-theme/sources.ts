@@ -1,9 +1,10 @@
 import { STYLE_LANGUAGES } from '../../constants'
-import type { StrategyContext } from '../../types'
+import type { CancellationSignal, StrategyContext } from '../../types'
 import {
   dirnameWorkspacePath,
   extnameWorkspacePath,
   findWorkspaceFiles,
+  getWorkspacePathIdentity,
   isAbsoluteWorkspacePath,
   readWorkspaceFile,
   resolveWorkspacePath,
@@ -11,6 +12,7 @@ import {
   workspacePathIsDirectory,
 } from '../../utils/workspace-file-system'
 import type { WorkspaceFindFilesPattern } from '../../utils/workspace-file-system'
+import type { WorkspaceReadBudget } from '../../utils/workspace-read-budget'
 import {
   isEmbeddedStyleFilePath,
   parseTailwindThemeSource,
@@ -30,6 +32,13 @@ interface SourceCacheEntry {
   readonly text: string
 }
 
+interface ThemeLoadState {
+  readonly context: StrategyContext
+  fileCount: number
+  readonly seen: Set<string>
+  readonly sources: ParsedTailwindThemeSource[]
+}
+
 const sourceTextCache = new Map<string, SourceCacheEntry>()
 
 /** Load the current document and configured, trusted Tailwind CSS sources. */
@@ -43,71 +52,25 @@ export async function loadTailwindThemeSources(
   if (!context.workspaceIsTrusted || !context.filePath || paths.length === 0) {
     return [currentSource]
   }
+  if (context.signal?.isCancellationRequested) {
+    return []
+  }
 
   const seen = new Set<string>()
   if (supportsCurrentDocumentDirectives(context)) {
-    seen.add(canonicalizeSourceIdentity(context.filePath))
+    seen.add(getWorkspacePathIdentity(context.filePath))
   }
-  let fileCount = 0
+  const state: ThemeLoadState = { context, fileCount: 0, seen, sources }
 
-  const visit = async (filePath: string, depth: number): Promise<void> => {
-    const identity = canonicalizeSourceIdentity(filePath)
-    if (
-      fileCount >= MAX_THEME_FILES ||
-      seen.has(identity) ||
-      !isCssPath(filePath)
-    ) {
-      return
-    }
-    seen.add(identity)
-    fileCount++
-
-    const sourceText = await readCachedSource(filePath)
-    if (sourceText === null) {
-      return
-    }
-    const source = parseTailwindThemeSource(sourceText, filePath)
-    if (depth < MAX_IMPORT_DEPTH) {
-      for (const directive of source.directives) {
-        if (fileCount >= MAX_THEME_FILES) {
-          break
-        }
-        const dependency = resolveRelativeCssSpecifier(
-          filePath,
-          directive.specifier,
-        )
-        if (dependency) {
-          await visit(dependency, depth + 1)
-        }
-      }
-    }
-    sources.push(source)
+  if (
+    supportsCurrentDocumentDirectives(context) &&
+    (await loadCurrentTailwindDirectives(state, currentSource))
+  ) {
+    return []
   }
 
-  if (supportsCurrentDocumentDirectives(context)) {
-    for (const directive of currentSource.directives) {
-      const dependency = resolveRelativeCssSpecifier(
-        context.filePath,
-        directive.specifier,
-      )
-      if (dependency) {
-        await visit(dependency, 1)
-      }
-    }
-  }
-
-  for (const configuredPath of paths) {
-    if (fileCount >= MAX_THEME_FILES) {
-      break
-    }
-    const candidates = await expandConfiguredPath(
-      context.filePath,
-      configuredPath,
-      MAX_THEME_FILES - fileCount,
-    )
-    for (const candidate of candidates) {
-      await visit(candidate, 0)
-    }
+  if (await loadConfiguredTailwindPaths(state, context.filePath, paths)) {
+    return []
   }
 
   sources.push(currentSource)
@@ -115,28 +78,143 @@ export async function loadTailwindThemeSources(
   return sources
 }
 
+async function loadCurrentTailwindDirectives(
+  state: ThemeLoadState,
+  source: ParsedTailwindThemeSource,
+): Promise<boolean> {
+  const { context } = state
+  for (const directive of source.directives) {
+    if (context.signal?.isCancellationRequested) {
+      return true
+    }
+    const dependency = resolveRelativeCssSpecifier(
+      context.filePath ?? '',
+      directive.specifier,
+    )
+    if (dependency) {
+      await visitTailwindThemeSource(state, dependency, 1)
+    }
+  }
+  return context.signal?.isCancellationRequested === true
+}
+
+async function loadConfiguredTailwindPaths(
+  state: ThemeLoadState,
+  baseFilePath: string,
+  paths: readonly string[],
+): Promise<boolean> {
+  const { context } = state
+  for (const configuredPath of paths) {
+    if (
+      context.signal?.isCancellationRequested ||
+      state.fileCount >= MAX_THEME_FILES
+    ) {
+      return context.signal?.isCancellationRequested === true
+    }
+    const candidates = await expandConfiguredPath(
+      baseFilePath,
+      configuredPath,
+      MAX_THEME_FILES - state.fileCount,
+      context.workspaceReadBudget,
+      context.signal,
+    )
+    for (const candidate of candidates) {
+      if (context.signal?.isCancellationRequested) {
+        return true
+      }
+      await visitTailwindThemeSource(state, candidate, 0)
+    }
+  }
+  return context.signal?.isCancellationRequested === true
+}
+
+async function visitTailwindThemeSource(
+  state: ThemeLoadState,
+  filePath: string,
+  depth: number,
+): Promise<void> {
+  const { context } = state
+  if (context.signal?.isCancellationRequested) {
+    return
+  }
+  const identity = getWorkspacePathIdentity(filePath)
+  if (
+    state.fileCount >= MAX_THEME_FILES ||
+    state.seen.has(identity) ||
+    !isCssPath(filePath)
+  ) {
+    return
+  }
+  state.seen.add(identity)
+  state.fileCount++
+
+  const sourceText = await readCachedSource(
+    filePath,
+    context.workspaceReadBudget,
+    context.signal,
+  )
+  if (context.signal?.isCancellationRequested || sourceText === null) {
+    return
+  }
+  const source = parseTailwindThemeSource(sourceText, filePath)
+  if (depth < MAX_IMPORT_DEPTH) {
+    for (const directive of source.directives) {
+      if (context.signal?.isCancellationRequested) {
+        return
+      }
+      if (state.fileCount >= MAX_THEME_FILES) {
+        break
+      }
+      const dependency = resolveRelativeCssSpecifier(
+        filePath,
+        directive.specifier,
+      )
+      if (dependency) {
+        await visitTailwindThemeSource(state, dependency, depth + 1)
+      }
+    }
+  }
+  if (!context.signal?.isCancellationRequested) {
+    state.sources.push(source)
+  }
+}
+
 async function expandConfiguredPath(
   baseFilePath: string,
   configuredPath: string,
   limit: number,
+  workspaceReadBudget?: WorkspaceReadBudget,
+  signal?: CancellationSignal,
 ): Promise<string[]> {
+  if (signal?.isCancellationRequested) {
+    return []
+  }
   try {
     if (isGlobPath(configuredPath)) {
       const normalized = configuredPath.replaceAll('\\', '/')
-      return await findWorkspaceFiles(
+      const matches = await findWorkspaceFiles(
         resolveGlob(baseFilePath, normalized),
         limit,
       )
+      return signal?.isCancellationRequested ? [] : matches
     }
 
     const resolved = isAbsoluteWorkspacePath(configuredPath)
       ? configuredPath
       : resolveWorkspacePath(baseFilePath, configuredPath)
-    if (await workspacePathIsDirectory(resolved)) {
-      return await findWorkspaceFiles(
+    if (workspaceReadBudget && !workspaceReadBudget.tryClaim(resolved)) {
+      return []
+    }
+    const isDirectory = await workspacePathIsDirectory(resolved)
+    if (signal?.isCancellationRequested) {
+      return []
+    }
+    if (isDirectory) {
+      const matches = await findWorkspaceFiles(
         { basePath: resolved, pattern: '**/*.css' },
         limit,
       )
+      return signal?.isCancellationRequested ? [] : matches
     }
     return [resolved]
   } catch {
@@ -181,10 +259,24 @@ function resolveRelativeCssSpecifier(
   return resolveWorkspacePath(filePath, specifier)
 }
 
-async function readCachedSource(filePath: string): Promise<string | null> {
+async function readCachedSource(
+  filePath: string,
+  workspaceReadBudget?: WorkspaceReadBudget,
+  signal?: CancellationSignal,
+): Promise<string | null> {
+  if (signal?.isCancellationRequested) {
+    return null
+  }
+  if (workspaceReadBudget && !workspaceReadBudget.tryClaim(filePath)) {
+    return null
+  }
+
   try {
-    const identity = canonicalizeSourceIdentity(filePath)
+    const identity = getWorkspacePathIdentity(filePath)
     const stat = await statWorkspaceFile(filePath)
+    if (signal?.isCancellationRequested) {
+      return null
+    }
     if (stat.size > MAX_THEME_FILE_SIZE) {
       return null
     }
@@ -198,7 +290,13 @@ async function readCachedSource(filePath: string): Promise<string | null> {
       return cached.text
     }
 
+    if (signal?.isCancellationRequested) {
+      return null
+    }
     const text = await readWorkspaceFile(filePath)
+    if (signal?.isCancellationRequested) {
+      return null
+    }
     sourceTextCache.set(identity, { ...stat, text })
     if (sourceTextCache.size > MAX_CACHE_SIZE) {
       const oldest = sourceTextCache.keys().next().value
@@ -210,50 +308,6 @@ async function readCachedSource(filePath: string): Promise<string | null> {
   } catch {
     return null
   }
-}
-
-/** Normalize equivalent local file URI and fsPath spellings for deduplication. */
-function canonicalizeSourceIdentity(filePath: string): string {
-  if (/^file:/iu.test(filePath)) {
-    try {
-      const url = new URL(filePath)
-      const authority = url.hostname ? `//${url.hostname}` : ''
-      let path = decodeURIComponent(url.pathname)
-      if (/^\/[a-z]:\//iu.test(path)) {
-        path = path.slice(1)
-      }
-      return normalizeLocalPath(`${authority}${path}`)
-    } catch {
-      return filePath
-    }
-  }
-  if (
-    isAbsoluteWorkspacePath(filePath) &&
-    (/^[a-z]:[/\\]/iu.test(filePath) || !/^[a-z][\d+.a-z-]*:/iu.test(filePath))
-  ) {
-    return normalizeLocalPath(filePath)
-  }
-  return filePath
-}
-
-function normalizeLocalPath(filePath: string): string {
-  const normalized = filePath.replaceAll('\\', '/')
-  const prefix = normalized.startsWith('/') ? '/' : ''
-  const segments: string[] = []
-  for (const segment of normalized.split('/')) {
-    if (!segment || segment === '.') {
-      continue
-    }
-    if (segment === '..') {
-      segments.pop()
-    } else {
-      segments.push(segment)
-    }
-  }
-  if (/^[a-z]:$/iu.test(segments[0] ?? '')) {
-    segments[0] = segments[0].toLowerCase()
-  }
-  return `${prefix}${segments.join('/')}`
 }
 
 function isCssPath(filePath: string): boolean {

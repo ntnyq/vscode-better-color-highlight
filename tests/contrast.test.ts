@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  compositeRgba,
   relativeLuminance,
   contrastRatio,
   getContrastColor,
@@ -18,6 +19,31 @@ describe(relativeLuminance, () => {
     const l = relativeLuminance(128, 128, 128)
     expect(l).toBeGreaterThan(0)
     expect(l).toBeLessThan(1)
+  })
+
+  it('supports fractional channels with the sRGB transfer function', () => {
+    expect(relativeLuminance(127.5, 127.5, 127.5)).toBeCloseTo(
+      0.21404114048223255,
+      14,
+    )
+  })
+
+  it('clamps channels to the sRGB range', () => {
+    expect(relativeLuminance(-1, 300, 255)).toBeCloseTo(
+      relativeLuminance(0, 255, 255),
+      14,
+    )
+  })
+})
+
+describe(compositeRgba, () => {
+  it('composites clamped foreground channels over an opaque background', () => {
+    expect(
+      compositeRgba(
+        { r: 300, g: -10, b: 100, a: 0.25 },
+        { r: 0, g: 100, b: 300, a: 1 },
+      ),
+    ).toStrictEqual({ r: 63.75, g: 75, b: 216.25, a: 1 })
   })
 })
 

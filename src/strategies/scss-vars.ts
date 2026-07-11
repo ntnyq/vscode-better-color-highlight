@@ -1,4 +1,5 @@
 import type {
+  CancellationSignal,
   ColorDefinitionTarget,
   ColorMatch,
   ColorDetector,
@@ -15,6 +16,7 @@ import {
   statWorkspaceFile,
   workspacePathExists,
 } from '../utils/workspace-file-system'
+import type { WorkspaceReadBudget } from '../utils/workspace-read-budget'
 import { findColorFunctions } from './color-functions'
 import { findHexRGBA } from './hex'
 import { findHwb } from './hwb'
@@ -204,6 +206,8 @@ interface ScssModule {
  * Mutable state shared while resolving a bounded SCSS dependency graph.
  */
 interface ScssResolveState {
+  /** Cancellation shared through dependency traversal. */
+  readonly signal?: CancellationSignal
   /**
    * Files currently on the recursion stack.
    */
@@ -213,6 +217,9 @@ interface ScssResolveState {
    * Additional Sass load paths for non-relative module specifiers.
    */
   readonly loadPaths: readonly string[]
+
+  /** Shared bound for unique workspace dependency reads. */
+  readonly workspaceReadBudget?: WorkspaceReadBudget
 
   /**
    * Number of files read during the current resolution run.
@@ -224,6 +231,8 @@ function createScssResolveState(context?: StrategyContext): ScssResolveState {
   return {
     resolvingFiles: new Set(context?.filePath ? [context.filePath] : []),
     loadPaths: context?.scssLoadPaths ?? [],
+    signal: context?.signal,
+    workspaceReadBudget: context?.workspaceReadBudget,
     filesRead: 0,
   }
 }
@@ -428,9 +437,23 @@ function getScssModuleCandidates(
  * @param filePath - The file path to check
  * @returns Whether the file exists and is accessible
  */
-async function readCachedScssFile(filePath: string): Promise<string | null> {
+async function readCachedScssFile(
+  filePath: string,
+  workspaceReadBudget?: WorkspaceReadBudget,
+  signal?: CancellationSignal,
+): Promise<string | null> {
+  if (signal?.isCancellationRequested) {
+    return null
+  }
+  if (workspaceReadBudget && !workspaceReadBudget.tryClaim(filePath)) {
+    return null
+  }
+
   try {
     const stats = await statWorkspaceFile(filePath)
+    if (signal?.isCancellationRequested) {
+      return null
+    }
     if (stats.size > MAX_SCSS_FILE_SIZE) {
       return null
     }
@@ -446,7 +469,13 @@ async function readCachedScssFile(filePath: string): Promise<string | null> {
       return cached.text
     }
 
+    if (signal?.isCancellationRequested) {
+      return null
+    }
     const text = await readWorkspaceFile(filePath)
+    if (signal?.isCancellationRequested) {
+      return null
+    }
     scssFileContentCache.set(filePath, {
       documentVersion: stats.documentVersion,
       mtimeMs: stats.mtimeMs,
@@ -478,7 +507,12 @@ async function resolveScssModulePath(
   fromFilePath: string,
   specifier: string,
   loadPaths: readonly string[],
+  workspaceReadBudget?: WorkspaceReadBudget,
+  signal?: CancellationSignal,
 ): Promise<string | null> {
+  if (signal?.isCancellationRequested) {
+    return null
+  }
   if (/^(?:sass:|https?:|npm:)/u.test(specifier)) {
     return null
   }
@@ -488,7 +522,17 @@ async function resolveScssModulePath(
     specifier,
     loadPaths,
   )) {
-    if (await workspacePathExists(candidate)) {
+    if (signal?.isCancellationRequested) {
+      return null
+    }
+    if (workspaceReadBudget && !workspaceReadBudget.tryClaim(candidate)) {
+      continue
+    }
+    const exists = await workspacePathExists(candidate)
+    if (signal?.isCancellationRequested) {
+      return null
+    }
+    if (exists) {
       return candidate
     }
   }
@@ -514,6 +558,7 @@ async function loadScssModule(
   depth = 0,
 ): Promise<ScssModule | null> {
   if (
+    state.signal?.isCancellationRequested ||
     depth >= MAX_SCSS_RESOLVE_DEPTH ||
     state.filesRead >= MAX_SCSS_RESOLVE_FILES
   ) {
@@ -524,7 +569,12 @@ async function loadScssModule(
     fromFilePath,
     specifier,
     state.loadPaths,
+    state.workspaceReadBudget,
+    state.signal,
   )
+  if (state.signal?.isCancellationRequested) {
+    return null
+  }
   if (!filePath || state.resolvingFiles.has(filePath)) {
     return null
   }
@@ -533,7 +583,14 @@ async function loadScssModule(
     state.resolvingFiles.add(filePath)
     state.filesRead += 1
 
-    const text = await readCachedScssFile(filePath)
+    const text = await readCachedScssFile(
+      filePath,
+      state.workspaceReadBudget,
+      state.signal,
+    )
+    if (state.signal?.isCancellationRequested) {
+      return null
+    }
     if (text === null) {
       return null
     }
@@ -593,6 +650,9 @@ async function collectForwardedScssVarDefs(
   const ambiguousNames = new Set<string>()
 
   for (const m of text.matchAll(SCSS_FORWARD_REGEX)) {
+    if (state.signal?.isCancellationRequested) {
+      break
+    }
     const specifier = m.groups?.path
     if (!specifier) {
       continue
@@ -663,6 +723,9 @@ async function collectImportedScssVarDefs(
   }
 
   for (const m of text.matchAll(SCSS_IMPORT_REGEX)) {
+    if (state.signal?.isCancellationRequested) {
+      break
+    }
     const specifier = m.groups?.path
     if (!specifier) {
       continue
@@ -706,6 +769,9 @@ async function collectUsedStarScssVarDefs(
   }
 
   for (const m of text.matchAll(SCSS_USE_REGEX)) {
+    if (state.signal?.isCancellationRequested) {
+      break
+    }
     const specifier = m.groups?.path
     const namespace = m.groups?.namespace
     if (!specifier || namespace !== '*') {
@@ -757,6 +823,9 @@ async function collectUsedScssModules(
   const modules: ScssModule[] = []
 
   for (const m of text.matchAll(SCSS_USE_REGEX)) {
+    if (state.signal?.isCancellationRequested) {
+      break
+    }
     const specifier = m.groups?.path
     const namespace = m.groups?.namespace ?? getScssNamespace(specifier ?? '')
     if (!specifier || namespace === '*') {

@@ -151,6 +151,11 @@
           "default": false,
           "description": "Use VS Code's native color picker and replacement presentations for detected colors."
         },
+        "color-highlight.enableContrastDiagnostics": {
+          "type": "boolean",
+          "default": false,
+          "description": "Report low contrast only for deterministic foreground/background pairs in open documents."
+        },
         "color-highlight.enableColorNavigation": {
           "type": "boolean",
           "default": true,
@@ -218,6 +223,16 @@
           "default": 1000000,
           "minimum": 0,
           "description": "Maximum document text length, in characters, to scan for color highlighting. Set to 0 to disable this size limit."
+        },
+        "color-highlight.workspacePaletteInclude": {
+          "type": "string",
+          "default": "**/*",
+          "description": "Glob pattern that includes files in explicit workspace palette scans."
+        },
+        "color-highlight.workspacePaletteExclude": {
+          "type": "string",
+          "default": "{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}",
+          "description": "Glob pattern that excludes files from explicit workspace palette scans."
         },
         "color-highlight.designTokenJsonMode": {
           "type": "string",
@@ -350,6 +365,16 @@
         "category": "Color Highlight",
         "command": "color-highlight.adjustColorAlpha",
         "title": "Adjust Color Alpha"
+      },
+      {
+        "category": "Color Highlight",
+        "command": "color-highlight.showWorkspacePalette",
+        "title": "Show Workspace Palette"
+      },
+      {
+        "category": "Color Highlight",
+        "command": "color-highlight.checkColorContrast",
+        "title": "Check Color Contrast"
       }
     ]
   },

@@ -11,19 +11,21 @@ Highlight and preview colors in multiple formats across code, comments, and stri
 
 <!-- commands -->
 
-| Command                               | Title                                           |
-| ------------------------------------- | ----------------------------------------------- |
-| `color-highlight.enable`              | Color Highlight: Enable Better Color Highlight  |
-| `color-highlight.disable`             | Color Highlight: Disable Better Color Highlight |
-| `color-highlight.copyColorAsHex`      | Color Highlight: Copy Color as HEX              |
-| `color-highlight.copyColorAsRgb`      | Color Highlight: Copy Color as RGB              |
-| `color-highlight.copyColorAsHsl`      | Color Highlight: Copy Color as HSL              |
-| `color-highlight.copyColorAsOklch`    | Color Highlight: Copy Color as OKLCH            |
-| `color-highlight.replaceColorAsHex`   | Color Highlight: Replace Color as HEX           |
-| `color-highlight.replaceColorAsRgb`   | Color Highlight: Replace Color as RGB           |
-| `color-highlight.replaceColorAsHsl`   | Color Highlight: Replace Color as HSL           |
-| `color-highlight.replaceColorAsOklch` | Color Highlight: Replace Color as OKLCH         |
-| `color-highlight.adjustColorAlpha`    | Color Highlight: Adjust Color Alpha             |
+| Command                                | Title                                           |
+| -------------------------------------- | ----------------------------------------------- |
+| `color-highlight.enable`               | Color Highlight: Enable Better Color Highlight  |
+| `color-highlight.disable`              | Color Highlight: Disable Better Color Highlight |
+| `color-highlight.copyColorAsHex`       | Color Highlight: Copy Color as HEX              |
+| `color-highlight.copyColorAsRgb`       | Color Highlight: Copy Color as RGB              |
+| `color-highlight.copyColorAsHsl`       | Color Highlight: Copy Color as HSL              |
+| `color-highlight.copyColorAsOklch`     | Color Highlight: Copy Color as OKLCH            |
+| `color-highlight.replaceColorAsHex`    | Color Highlight: Replace Color as HEX           |
+| `color-highlight.replaceColorAsRgb`    | Color Highlight: Replace Color as RGB           |
+| `color-highlight.replaceColorAsHsl`    | Color Highlight: Replace Color as HSL           |
+| `color-highlight.replaceColorAsOklch`  | Color Highlight: Replace Color as OKLCH         |
+| `color-highlight.adjustColorAlpha`     | Color Highlight: Adjust Color Alpha             |
+| `color-highlight.showWorkspacePalette` | Color Highlight: Show Workspace Palette         |
+| `color-highlight.checkColorContrast`   | Color Highlight: Check Color Contrast           |
 
 <!-- commands -->
 
@@ -64,6 +66,12 @@ Default: `false`
 #### `color-highlight.enableColorPicker`
 
 Description: Use VS Code's native color picker and replacement presentations for detected colors.  
+Type: `boolean`  
+Default: `false`
+
+#### `color-highlight.enableContrastDiagnostics`
+
+Description: Report low contrast only for deterministic foreground/background pairs in open documents.  
 Type: `boolean`  
 Default: `false`
 
@@ -120,6 +128,18 @@ Default: `[":root","html","body",":host"]`
 Description: Maximum document text length, in characters, to scan for color highlighting. Set to 0 to disable this size limit.  
 Type: `number`  
 Default: `1000000`
+
+#### `color-highlight.workspacePaletteInclude`
+
+Description: Glob pattern that includes files in explicit workspace palette scans.  
+Type: `string`  
+Default: `"**/*"`
+
+#### `color-highlight.workspacePaletteExclude`
+
+Description: Glob pattern that excludes files from explicit workspace palette scans.  
+Type: `string`  
+Default: `"{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}"`
 
 #### `color-highlight.designTokenJsonMode`
 
@@ -182,6 +202,73 @@ Type: `boolean`
 Default: `false`
 
 <!-- configs-list -->
+
+## Workspace palette and color contrast
+
+Run `color-highlight.showWorkspacePalette` to scan the workspace on demand and
+group every detected color by its canonical value. The scan uses
+`color-highlight.workspacePaletteInclude`, whose default is `"**/*"`, and
+`color-highlight.workspacePaletteExclude`, whose default is
+`"{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}"`.
+Empty or invalid glob patterns show an error without returning partial results.
+
+Each palette invocation is cancellable and has non-configurable safety bounds:
+at most 256 workspace files, 512 KiB of UTF-8 text per file, and 512 unique dependency-file reads
+shared by the entire scan, plus 2,000 retained occurrences per
+file, 20,000 retained occurrences per scan, and 1,024 distinct color groups. The extension also
+honors `color-highlight.maxFileSize`. Open, unsaved content overrides a matched
+file's disk content, but new or untitled documents outside the bounded query are
+not added. Binary, unreadable, over-limit, and unsupported files are skipped in
+isolation. Results are ordered deterministically by URI; when more than 256
+files match, progress and the final palette disclose file truncation. The final
+palette separately discloses occurrence truncation whenever any occurrence is
+omitted by a per-file, global, or distinct-group retention cap.
+Cancelling the scan opens no stale palette.
+
+The top-level Quick Pick can copy a color as HEX or begin a contrast check.
+Opening a color lists its occurrences and actions to copy it as HEX, RGB, HSL,
+or OKLCH. Choosing an occurrence opens the document and selects the exact source
+text; deleted or stale occurrences produce a warning instead of selecting a
+different range. Palette data belongs to that Quick Pick session, so the
+extension does not retain a workspace index after the interaction ends.
+
+Run `color-highlight.checkColorContrast` to select a background and foreground
+from one bounded palette scan. It reports WCAG 2.2 contrast using 4.5:1 for AA
+normal text, 3:1 for AA large text, 7:1 for AAA normal text, and 4.5:1 for AAA
+large text. Displayed ratios are rounded to two decimals, while pass/fail uses
+the unrounded value. A translucent foreground is composited over the selected
+opaque background in sRGB. A translucent background is indeterminate because
+its canvas color is unknown.
+
+### Contrast diagnostics
+
+`color-highlight.enableContrastDiagnostics` reports deterministic low-contrast
+pairs in open documents; the default is `false`. Diagnostics are warnings only
+below the WCAG AA normal-text threshold of 4.5:1. They support the final `color`
+and `background-color` declarations in one CSS rule, the final pair in one
+inline `style` attribute, and resolved `text-*`/`bg-*` utilities with the same
+complete Tailwind variant chain in one static `class` or `className` attribute.
+The foreground range is the diagnostic location and the background range is
+related information.
+
+Extension-owned diagnostics offer these Quick Fixes: `Check these colors`,
+`Go to foreground color`, `Go to background color`, and
+`Disable contrast diagnostics`. Actions revalidate the document and exact
+source ranges before they run, so stale actions only show a warning.
+
+Diagnostics intentionally do not infer cascade or inheritance across selectors,
+dynamic class expressions, rendered font size, runtime state, gradients,
+images, blend modes, filters, ancestor opacity, ambiguous expressions, or an
+unknown canvas. Translucent foreground colors are supported; pairs with a
+translucent background are skipped. The extension uses WCAG 2.2 relative
+luminance and does not calculate APCA.
+
+Palette scans and diagnostics do not execute project code. Direct colors remain
+available in untrusted workspaces, while trusted cross-file dependency reads
+keep their existing opt-in settings, trust gates, loader limits, and the shared
+palette budget. Runtime access uses VS Code Workspace FS and document APIs, so
+the commands and diagnostics work in desktop VS Code, vscode.dev, github.dev,
+and virtual workspaces when their files are readable by VS Code.
 
 ## Supported color formats
 

@@ -36,6 +36,32 @@ export async function runColorDetectors({
   onDetectorResult,
   text,
 }: RunColorDetectorsOptions): Promise<ColorMatch[]> {
+  if (context.signal) {
+    const matches: ColorMatch[] = []
+    for (const detector of detectors) {
+      if (context.signal.isCancellationRequested) {
+        return []
+      }
+      const detectorName = detector.name || 'anonymous'
+      try {
+        const result = await detector(text, context)
+        if (context.signal.isCancellationRequested) {
+          return []
+        }
+        onDetectorResult?.(detectorName, result)
+        matches.push(...result)
+      } catch (error) {
+        if (context.signal.isCancellationRequested) {
+          return []
+        }
+        onDetectorError?.(
+          `Color detector "${detectorName}" failed: ${String(error)}`,
+        )
+      }
+    }
+    return matches
+  }
+
   const results = await Promise.all(
     detectors.map(async detector => {
       const detectorName = detector.name || 'anonymous'

@@ -35,4 +35,30 @@ describe(runColorDetectors, () => {
       ['secondDetector', [blue]],
     ])
   })
+
+  it('does not start another detector after cancellation at an async boundary', async () => {
+    let cancelled = false
+    const deferred = Promise.withResolvers<ColorMatch[]>()
+    const first = vi.fn<ColorDetector>(() => deferred.promise)
+    const second = vi.fn<ColorDetector>(() => [blue])
+    const promise = runColorDetectors({
+      context: {
+        ...context,
+        signal: {
+          get isCancellationRequested() {
+            return cancelled
+          },
+        },
+      },
+      detectors: [first, second],
+      text: '#ff0000 #0000ff',
+    })
+
+    await vi.waitFor(() => expect(first).toHaveBeenCalledTimes(1))
+    cancelled = true
+    deferred.resolve([red])
+
+    await expect(promise).resolves.toStrictEqual([])
+    expect(second).not.toHaveBeenCalled()
+  })
 })

@@ -1,3 +1,5 @@
+import type { WorkspaceReadBudget } from '../utils/workspace-read-budget'
+
 /**
  * A detected color match in document text.
  * Pure data — no VS Code dependency.
@@ -32,10 +34,17 @@ export type ColorDetector = (
   context?: StrategyContext,
 ) => ColorMatch[] | Promise<ColorMatch[]>
 
+/** Platform-neutral cancellation state; VS Code tokens satisfy this shape. */
+export interface CancellationSignal {
+  readonly isCancellationRequested: boolean
+}
+
 /**
  * Context passed to strategies that may need additional info.
  */
 export interface StrategyContext {
+  /** Optional cancellation shared by detector and dependency-loader work. */
+  signal?: CancellationSignal
   /**
    * The document's language ID, e.g. "css" or "scss".
    */
@@ -65,7 +74,7 @@ export interface StrategyContext {
   /**
    * Additional Sass load paths for resolving non-relative SCSS modules.
    */
-  scssLoadPaths?: string[]
+  scssLoadPaths?: readonly string[]
 
   /**
    * Whether CSS custom properties may be resolved from configured files.
@@ -75,12 +84,12 @@ export interface StrategyContext {
   /**
    * File, directory, or glob paths used as CSS custom property sources.
    */
-  cssVariablePaths?: string[]
+  cssVariablePaths?: readonly string[]
 
   /**
    * Selectors trusted for cross-file CSS custom property resolution.
    */
-  cssVariableTrustedSelectors?: string[]
+  cssVariableTrustedSelectors?: readonly string[]
 
   /**
    * How JSON and JSONC design token colors should be matched.
@@ -101,6 +110,9 @@ export interface StrategyContext {
    * Whether the current workspace is trusted for cross-file reads.
    */
   workspaceIsTrusted?: boolean
+
+  /** Shared bound for unique workspace dependency reads. */
+  workspaceReadBudget?: WorkspaceReadBudget
 }
 
 /**

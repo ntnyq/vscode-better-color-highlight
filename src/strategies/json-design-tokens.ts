@@ -98,6 +98,8 @@ export function findJsonDesignTokens(
       if (externalFilePath) {
         return resolveDesignTokenColors(document, {
           filePath: externalFilePath,
+          signal: context?.signal,
+          workspaceReadBudget: context?.workspaceReadBudget,
         }).then(structuredMatches =>
           dedupeMatches([...matches, ...structuredMatches]),
         )

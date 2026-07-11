@@ -47,6 +47,7 @@ export interface TailwindColorUtility {
   readonly prefix: (typeof COLOR_UTILITY_PREFIXES)[number]
   readonly start: number
   readonly value: string
+  readonly variants: readonly string[]
 }
 
 /** Find complete Tailwind color utility tokens in one bounded forward scan. */
@@ -175,6 +176,7 @@ function parseCandidate(
         ...parsed,
         end: index === segments.length - 1 ? end : start + offset + body.length,
         start,
+        variants: segments.slice(0, index),
       }
     }
     validPrefix &&= isValidVariant(body)
@@ -186,7 +188,7 @@ function parseCandidate(
 
 function parseBody(
   input: string,
-): Omit<TailwindColorUtility, 'end' | 'start'> | null {
+): Omit<TailwindColorUtility, 'end' | 'start' | 'variants'> | null {
   let body = input
   const hasLeadingImportant = body.startsWith('!')
   const hasTrailingImportant = body.endsWith('!')

@@ -47,10 +47,12 @@ export async function findCssVars(
     context.filePath
       ? await loadCssVarSourceDeclarations({
           filePath: context.filePath,
+          signal: context.signal,
           paths: context.cssVariablePaths ?? [],
           trustedSelectors:
             context.cssVariableTrustedSelectors ??
             DEFAULT_TRUSTED_CSS_VAR_SELECTORS,
+          workspaceReadBudget: context.workspaceReadBudget,
         })
       : []
 

@@ -24,6 +24,8 @@ export type CommandKey =
   | "color-highlight.replaceColorAsHsl"
   | "color-highlight.replaceColorAsOklch"
   | "color-highlight.adjustColorAlpha"
+  | "color-highlight.showWorkspacePalette"
+  | "color-highlight.checkColorContrast"
 
 /**
  * Commands map registered by `ntnyq.vscode-better-color-highlight`
@@ -84,6 +86,16 @@ export const commands = {
    * @value `color-highlight.adjustColorAlpha`
    */
   adjustColorAlpha: "color-highlight.adjustColorAlpha",
+  /**
+   * Show Workspace Palette
+   * @value `color-highlight.showWorkspacePalette`
+   */
+  showWorkspacePalette: "color-highlight.showWorkspacePalette",
+  /**
+   * Check Color Contrast
+   * @value `color-highlight.checkColorContrast`
+   */
+  checkColorContrast: "color-highlight.checkColorContrast",
 } satisfies Record<string, CommandKey>
 
 /**
@@ -96,6 +108,7 @@ export type ConfigKey =
   | "color-highlight.namedColorMatchMode"
   | "color-highlight.enableHover"
   | "color-highlight.enableColorPicker"
+  | "color-highlight.enableContrastDiagnostics"
   | "color-highlight.enableColorNavigation"
   | "color-highlight.tailwindColorMode"
   | "color-highlight.tailwindStylesheetPaths"
@@ -105,6 +118,8 @@ export type ConfigKey =
   | "color-highlight.cssVariablePaths"
   | "color-highlight.cssVariableTrustedSelectors"
   | "color-highlight.maxFileSize"
+  | "color-highlight.workspacePaletteInclude"
+  | "color-highlight.workspacePaletteExclude"
   | "color-highlight.designTokenJsonMode"
   | "color-highlight.resolveDesignTokensAcrossFiles"
   | "color-highlight.useARGB"
@@ -123,6 +138,7 @@ export interface ConfigKeyTypeMap {
   "color-highlight.namedColorMatchMode": ("context" | "always" | "never"),
   "color-highlight.enableHover": boolean,
   "color-highlight.enableColorPicker": boolean,
+  "color-highlight.enableContrastDiagnostics": boolean,
   "color-highlight.enableColorNavigation": boolean,
   "color-highlight.tailwindColorMode": ("auto" | "v3" | "v4"),
   "color-highlight.tailwindStylesheetPaths": string[],
@@ -132,6 +148,8 @@ export interface ConfigKeyTypeMap {
   "color-highlight.cssVariablePaths": string[],
   "color-highlight.cssVariableTrustedSelectors": string[],
   "color-highlight.maxFileSize": number,
+  "color-highlight.workspacePaletteInclude": string,
+  "color-highlight.workspacePaletteExclude": string,
   "color-highlight.designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
   "color-highlight.resolveDesignTokensAcrossFiles": boolean,
   "color-highlight.useARGB": boolean,
@@ -151,6 +169,7 @@ export interface ConfigShorthandMap {
   namedColorMatchMode: "color-highlight.namedColorMatchMode",
   enableHover: "color-highlight.enableHover",
   enableColorPicker: "color-highlight.enableColorPicker",
+  enableContrastDiagnostics: "color-highlight.enableContrastDiagnostics",
   enableColorNavigation: "color-highlight.enableColorNavigation",
   tailwindColorMode: "color-highlight.tailwindColorMode",
   tailwindStylesheetPaths: "color-highlight.tailwindStylesheetPaths",
@@ -160,6 +179,8 @@ export interface ConfigShorthandMap {
   cssVariablePaths: "color-highlight.cssVariablePaths",
   cssVariableTrustedSelectors: "color-highlight.cssVariableTrustedSelectors",
   maxFileSize: "color-highlight.maxFileSize",
+  workspacePaletteInclude: "color-highlight.workspacePaletteInclude",
+  workspacePaletteExclude: "color-highlight.workspacePaletteExclude",
   designTokenJsonMode: "color-highlight.designTokenJsonMode",
   resolveDesignTokensAcrossFiles: "color-highlight.resolveDesignTokensAcrossFiles",
   useARGB: "color-highlight.useARGB",
@@ -179,6 +200,7 @@ export interface ConfigShorthandTypeMap {
   namedColorMatchMode: ("context" | "always" | "never"),
   enableHover: boolean,
   enableColorPicker: boolean,
+  enableContrastDiagnostics: boolean,
   enableColorNavigation: boolean,
   tailwindColorMode: ("auto" | "v3" | "v4"),
   tailwindStylesheetPaths: string[],
@@ -188,6 +210,8 @@ export interface ConfigShorthandTypeMap {
   cssVariablePaths: string[],
   cssVariableTrustedSelectors: string[],
   maxFileSize: number,
+  workspacePaletteInclude: string,
+  workspacePaletteExclude: string,
   designTokenJsonMode: ("token-values" | "strings" | "all" | "off"),
   resolveDesignTokensAcrossFiles: boolean,
   useARGB: boolean,
@@ -270,6 +294,16 @@ export const configs = {
     key: "color-highlight.enableColorPicker",
     default: false,
   } as ConfigItem<"color-highlight.enableColorPicker">,
+  /**
+   * Report low contrast only for deterministic foreground/background pairs in open documents.
+   * @key `color-highlight.enableContrastDiagnostics`
+   * @default `false`
+   * @type `boolean`
+   */
+  enableContrastDiagnostics: {
+    key: "color-highlight.enableContrastDiagnostics",
+    default: false,
+  } as ConfigItem<"color-highlight.enableContrastDiagnostics">,
   /**
    * Enable Go to Definition and Peek Definition for supported color variables and design-token aliases.
    * @key `color-highlight.enableColorNavigation`
@@ -360,6 +394,26 @@ export const configs = {
     key: "color-highlight.maxFileSize",
     default: 1000000,
   } as ConfigItem<"color-highlight.maxFileSize">,
+  /**
+   * Glob pattern that includes files in explicit workspace palette scans.
+   * @key `color-highlight.workspacePaletteInclude`
+   * @default `"**\/*"`
+   * @type `string`
+   */
+  workspacePaletteInclude: {
+    key: "color-highlight.workspacePaletteInclude",
+    default: "**/*",
+  } as ConfigItem<"color-highlight.workspacePaletteInclude">,
+  /**
+   * Glob pattern that excludes files from explicit workspace palette scans.
+   * @key `color-highlight.workspacePaletteExclude`
+   * @default `"{**\/.git/**,**\/node_modules/**,**\/dist/**,**\/build/**,**\/coverage/**}"`
+   * @type `string`
+   */
+  workspacePaletteExclude: {
+    key: "color-highlight.workspacePaletteExclude",
+    default: "{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}",
+  } as ConfigItem<"color-highlight.workspacePaletteExclude">,
   /**
    * Controls design token color matching. For JSON and JSONC, 'token-values' matches value and $value fields, 'strings' matches any color string value, and 'all' enables both modes. 'off' disables JSON, JSONC, and YAML token matching.
    * @key `color-highlight.designTokenJsonMode`
@@ -469,6 +523,7 @@ export interface ScopedConfigKeyTypeMap {
   "namedColorMatchMode": ("context" | "always" | "never"),
   "enableHover": boolean,
   "enableColorPicker": boolean,
+  "enableContrastDiagnostics": boolean,
   "enableColorNavigation": boolean,
   "tailwindColorMode": ("auto" | "v3" | "v4"),
   "tailwindStylesheetPaths": string[],
@@ -478,6 +533,8 @@ export interface ScopedConfigKeyTypeMap {
   "cssVariablePaths": string[],
   "cssVariableTrustedSelectors": string[],
   "maxFileSize": number,
+  "workspacePaletteInclude": string,
+  "workspacePaletteExclude": string,
   "designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
   "resolveDesignTokensAcrossFiles": boolean,
   "useARGB": boolean,
@@ -499,6 +556,7 @@ export const scopedConfigs = {
     "namedColorMatchMode": "context",
     "enableHover": false,
     "enableColorPicker": false,
+    "enableContrastDiagnostics": false,
     "enableColorNavigation": true,
     "tailwindColorMode": "auto",
     "tailwindStylesheetPaths": [],
@@ -508,6 +566,8 @@ export const scopedConfigs = {
     "cssVariablePaths": [],
     "cssVariableTrustedSelectors": [":root","html","body",":host"],
     "maxFileSize": 1000000,
+    "workspacePaletteInclude": "**/*",
+    "workspacePaletteExclude": "{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}",
     "designTokenJsonMode": "token-values",
     "resolveDesignTokensAcrossFiles": false,
     "useARGB": false,
@@ -529,6 +589,7 @@ export interface NestedConfigs {
     "namedColorMatchMode": ("context" | "always" | "never"),
     "enableHover": boolean,
     "enableColorPicker": boolean,
+    "enableContrastDiagnostics": boolean,
     "enableColorNavigation": boolean,
     "tailwindColorMode": ("auto" | "v3" | "v4"),
     "tailwindStylesheetPaths": string[],
@@ -538,6 +599,8 @@ export interface NestedConfigs {
     "cssVariablePaths": string[],
     "cssVariableTrustedSelectors": string[],
     "maxFileSize": number,
+    "workspacePaletteInclude": string,
+    "workspacePaletteExclude": string,
     "designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
     "resolveDesignTokensAcrossFiles": boolean,
     "useARGB": boolean,
@@ -558,6 +621,7 @@ export interface NestedScopedConfigs {
   "namedColorMatchMode": ("context" | "always" | "never"),
   "enableHover": boolean,
   "enableColorPicker": boolean,
+  "enableContrastDiagnostics": boolean,
   "enableColorNavigation": boolean,
   "tailwindColorMode": ("auto" | "v3" | "v4"),
   "tailwindStylesheetPaths": string[],
@@ -567,6 +631,8 @@ export interface NestedScopedConfigs {
   "cssVariablePaths": string[],
   "cssVariableTrustedSelectors": string[],
   "maxFileSize": number,
+  "workspacePaletteInclude": string,
+  "workspacePaletteExclude": string,
   "designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
   "resolveDesignTokensAcrossFiles": boolean,
   "useARGB": boolean,

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { findTailwindThemeColors } from '../src/strategies/tailwind-theme-colors'
+import {
+  findTailwindThemeColors,
+  resolveTailwindColorUtilities,
+} from '../src/strategies/tailwind-theme-colors'
 import { findTailwindColorUtilities } from '../src/strategies/tailwind-theme/utility'
 
 function ranges(text: string) {
@@ -12,6 +15,29 @@ function ranges(text: string) {
 }
 
 describe(findTailwindThemeColors, () => {
+  it('projects highlight matches from shared resolved utility metadata', () => {
+    const text = 'dark:bg-black'
+    const resolved = resolveTailwindColorUtilities(text)
+
+    expect(resolved).toStrictEqual([
+      {
+        color: 'rgb(0, 0, 0)',
+        utility: expect.objectContaining({
+          end: text.length,
+          prefix: 'bg',
+          start: 0,
+          variants: ['dark'],
+        }),
+      },
+    ])
+    expect(findTailwindThemeColors(text)).toStrictEqual(
+      resolved.map(({ color, utility }) => ({
+        color,
+        end: utility.end,
+        start: utility.start,
+      })),
+    )
+  })
   it('finds default Tailwind theme color utilities', () => {
     const result = findTailwindThemeColors('class="bg-red-500 text-sky-300"')
 
@@ -140,6 +166,14 @@ describe(findTailwindThemeColors, () => {
     ).toStrictEqual(text.split(' '))
   })
 
+  it('retains variants before the utility body but not CSS pseudo suffixes', () => {
+    const text = String.raw`dark:hover:bg-red-500 .focus\:text-white:focus {}`
+
+    expect(
+      findTailwindColorUtilities(text).map(utility => utility.variants),
+    ).toStrictEqual([['dark', 'hover'], ['focus']])
+  })
+
   it('parses v4 shadow color utilities and structural variants', () => {
     const text = [
       'group-hover/foo:inset-shadow-red-500',
@@ -223,6 +257,18 @@ describe(findTailwindThemeColors, () => {
         value: 'blue-500',
         opacity: '(--opacity)',
       },
+    ])
+  })
+
+  it('does not resolve explicit opacity modifiers with runtime values', () => {
+    expect(
+      findTailwindThemeColors(
+        'bg-red-500/(--alpha) text-white/[var(--alpha)] ring-black',
+      ),
+    ).toStrictEqual([
+      expect.objectContaining({
+        color: 'rgb(0, 0, 0)',
+      }),
     ])
   })
 

@@ -19,6 +19,24 @@ import {
 } from '../strategies'
 import type { ColorDetector } from '../types'
 
+export type StrategyRegistryConfig = Omit<
+  Pick<
+    NestedScopedConfigs,
+    | 'designTokenJsonMode'
+    | 'hslWithNoFunctionLanguages'
+    | 'matchHslWithNoFunction'
+    | 'matchRgbWithNoFunction'
+    | 'matchWords'
+    | 'namedColorMatchMode'
+    | 'rgbWithNoFunctionLanguages'
+    | 'useARGB'
+  >,
+  'hslWithNoFunctionLanguages' | 'rgbWithNoFunctionLanguages'
+> & {
+  readonly hslWithNoFunctionLanguages: readonly string[]
+  readonly rgbWithNoFunctionLanguages: readonly string[]
+}
+
 /**
  * Check if a language ID matches a pattern list.
  * Supports '*' (match all) and '!' prefix (exclude).
@@ -68,7 +86,7 @@ function isYamlLanguage(languageId: string): boolean {
  * @returns Color detectors that scan literal colors directly
  */
 function getDirectColorStrategies(
-  config: NestedScopedConfigs,
+  config: StrategyRegistryConfig,
   isJsonLang: boolean,
 ): ColorDetector[] {
   if (isJsonLang) {
@@ -114,7 +132,7 @@ function getDirectColorStrategies(
  */
 export function getStrategies(
   languageId: string,
-  config: NestedScopedConfigs,
+  config: StrategyRegistryConfig,
 ): ColorDetector[] {
   const isJsonLang = isJsonLanguage(languageId)
   if (isYamlLanguage(languageId)) {

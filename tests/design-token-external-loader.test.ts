@@ -64,6 +64,35 @@ describe('external design token references', () => {
     expect(readFileMock).not.toHaveBeenCalled()
   })
 
+  it('starts no token read after cancellation during a deferred external stat', async () => {
+    resetFiles()
+    const deferred = Promise.withResolvers<{
+      mtimeMs: number
+      size: number
+    }>()
+    statFileMock.mockReturnValueOnce(deferred.promise)
+    let cancelled = false
+    const { findJsonDesignTokens } = await importJsonStrategy()
+    const promise = findJsonDesignTokens(
+      createJsonReference('./palette.yaml#/brand/$value'),
+      {
+        ...trustedContext('json', '/workspace/root.json'),
+        signal: {
+          get isCancellationRequested() {
+            return cancelled
+          },
+        },
+      },
+    )
+
+    await vi.waitFor(() => expect(statFileMock).toHaveBeenCalledTimes(1))
+    cancelled = true
+    deferred.resolve({ mtimeMs: 1, size: 24 })
+
+    await expect(promise).resolves.toStrictEqual([])
+    expect(readFileMock).not.toHaveBeenCalled()
+  })
+
   it('resolves trusted JSON to YAML and YAML to JSON references', async () => {
     resetFiles()
     setFile(
@@ -212,6 +241,87 @@ $value: { colorSpace: srgb, components: [1, 0, 0] }
 
     expect(readFileMock).toHaveBeenCalledTimes(2)
   })
+
+  it('isolates the third unique file without resolving partial aliases', async () => {
+    resetFiles()
+    for (const [name, components] of [
+      ['one', [1, 0, 0]],
+      ['two', [0, 1, 0]],
+      ['three', [0, 0, 1]],
+    ] as const) {
+      setFile(
+        `/workspace/${name}.json`,
+        JSON.stringify({
+          brand: {
+            $type: 'color',
+            $value: { colorSpace: 'srgb', components },
+          },
+        }),
+      )
+    }
+    const { findJsonDesignTokens } = await importJsonStrategy()
+    const text = JSON.stringify({
+      one: { $type: 'color', $ref: './one.json#/brand/$value' },
+      two: { $type: 'color', $ref: './two.json#/brand/$value' },
+      three: { $type: 'color', $ref: './three.json#/brand/$value' },
+      alias: { $type: 'color', $value: '{three}' },
+    })
+    const context = {
+      ...trustedContext('json', '/workspace/root.json'),
+      workspaceReadBudget: createTestBudget(2),
+    }
+
+    const first = await findJsonDesignTokens(text, context)
+    const second = await findJsonDesignTokens(text, context)
+
+    expect(first.map(match => match.color)).toStrictEqual([
+      'rgb(255, 0, 0)',
+      'rgb(0, 255, 0)',
+    ])
+    expect(second).toStrictEqual(first)
+    expect(readFileMock).toHaveBeenCalledTimes(2)
+    expect(statFileMock.mock.calls.flat()).not.toContain(
+      '/workspace/three.json',
+    )
+  })
+
+  it('claims external documents before metadata and content reads', async () => {
+    resetFiles()
+    const dependencyPath = '/workspace/palette.json'
+    setFile(
+      dependencyPath,
+      JSON.stringify({
+        brand: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+        },
+      }),
+    )
+    const { findJsonDesignTokens } = await importJsonStrategy()
+    const text = createJsonReference('./palette.json#/brand/$value')
+
+    const exhaustedBudget = createTestBudget(1)
+    exhaustedBudget.tryClaim('/workspace/already-claimed.json')
+    await expect(
+      findJsonDesignTokens(text, {
+        ...trustedContext('json', '/workspace/root.json'),
+        workspaceReadBudget: exhaustedBudget,
+      }),
+    ).resolves.toStrictEqual([])
+    expect(statFileMock).not.toHaveBeenCalled()
+    expect(readFileMock).not.toHaveBeenCalled()
+
+    const repeatedBudget = createTestBudget(1)
+    repeatedBudget.tryClaim(dependencyPath)
+    await expect(
+      findJsonDesignTokens(text, {
+        ...trustedContext('json', '/workspace/root.json'),
+        workspaceReadBudget: repeatedBudget,
+      }),
+    ).resolves.toMatchObject([{ color: 'rgb(255, 0, 0)' }])
+    expect(statFileMock).toHaveBeenCalledWith(dependencyPath)
+    expect(readFileMock).toHaveBeenCalledWith(dependencyPath)
+  })
 })
 
 function createJsonReference(reference: string): string {
@@ -254,4 +364,20 @@ function setFile(
     size: explicitSize ?? new TextEncoder().encode(text).byteLength,
     text,
   })
+}
+
+function createTestBudget(maximum: number) {
+  const claimed = new Set<string>()
+  return {
+    tryClaim(identity: string) {
+      if (claimed.has(identity)) {
+        return true
+      }
+      if (claimed.size >= maximum) {
+        return false
+      }
+      claimed.add(identity)
+      return true
+    },
+  }
 }

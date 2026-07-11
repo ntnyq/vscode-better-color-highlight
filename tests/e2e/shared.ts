@@ -1,9 +1,20 @@
-import { commands, extensions, window, workspace } from 'vscode'
+import {
+  ConfigurationTarget,
+  commands,
+  extensions,
+  languages,
+  window,
+  workspace,
+} from 'vscode'
+import type { Uri } from 'vscode'
 
 const EXTENSION_ID = 'ntnyq.vscode-better-color-highlight'
 const GET_HIGHLIGHT_STATE_COMMAND = 'color-highlight.internal.getHighlightState'
 const HIGHLIGHT_STATE_WAIT_ATTEMPTS = 40
 const HIGHLIGHT_STATE_WAIT_INTERVAL_MS = 100
+const DIAGNOSTIC_WAIT_ATTEMPTS = 50
+const DIAGNOSTIC_WAIT_INTERVAL_MS = 100
+const CONFIG_SECTION = 'color-highlight'
 const REQUIRED_COMMANDS = [
   'color-highlight.enable',
   'color-highlight.disable',
@@ -11,6 +22,8 @@ const REQUIRED_COMMANDS = [
   'color-highlight.copyColorAsRgb',
   'color-highlight.copyColorAsHsl',
   'color-highlight.copyColorAsOklch',
+  'color-highlight.showWorkspacePalette',
+  'color-highlight.checkColorContrast',
 ] as const
 
 interface HighlightState {
@@ -69,6 +82,63 @@ export async function assertInMemoryCssHighlighting(): Promise<void> {
   )
 }
 
+/** Enable diagnostics temporarily and verify one deterministic CSS pair. */
+export async function assertInMemoryContrastDiagnostic(): Promise<void> {
+  const config = workspace.getConfiguration(CONFIG_SECTION)
+  const previousGlobalValue = config.inspect<boolean>(
+    'enableContrastDiagnostics',
+  )?.globalValue
+  const previousEffectiveValue = config.get<boolean>(
+    'enableContrastDiagnostics',
+    false,
+  )
+
+  try {
+    await config.update(
+      'enableContrastDiagnostics',
+      true,
+      ConfigurationTarget.Global,
+    )
+    await waitForConfigValue('enableContrastDiagnostics', true)
+
+    const document = await workspace.openTextDocument({
+      content: '.sample { color: #777; background-color: #777; }',
+      language: 'css',
+    })
+    await window.showTextDocument(document)
+
+    const diagnostics = await waitForDiagnostics(document.uri, 1)
+    const [diagnostic] = diagnostics
+    assertEqual(
+      diagnostic?.source,
+      'Better Color Highlight',
+      'Expected extension-owned contrast diagnostic',
+    )
+    assertEqual(
+      diagnostic?.code,
+      'low-color-contrast',
+      'Expected low-contrast diagnostic code',
+    )
+    assertEqual(
+      diagnostic?.message,
+      'Color contrast 1.00:1 is below WCAG AA 4.5:1 for normal text.',
+      'Expected deterministic low-contrast diagnostic',
+    )
+  } finally {
+    await workspace
+      .getConfiguration(CONFIG_SECTION)
+      .update(
+        'enableContrastDiagnostics',
+        previousGlobalValue,
+        ConfigurationTarget.Global,
+      )
+    await waitForConfigValue(
+      'enableContrastDiagnostics',
+      previousEffectiveValue,
+    )
+  }
+}
+
 /**
  * Wait for the asynchronous decoration pipeline to publish highlight state.
  *
@@ -96,6 +166,40 @@ export async function waitForHighlightState(
 
   throw new Error(
     `Expected ${expectedMatchCount} color matches for ${uri}; last state: ${JSON.stringify(lastState)}`,
+  )
+}
+
+async function waitForConfigValue<T>(key: string, expected: T): Promise<void> {
+  for (let attempt = 0; attempt < DIAGNOSTIC_WAIT_ATTEMPTS; attempt++) {
+    const value = workspace.getConfiguration(CONFIG_SECTION).get<T>(key)
+    if (value === expected) {
+      return
+    }
+
+    await wait(DIAGNOSTIC_WAIT_INTERVAL_MS)
+  }
+
+  assertEqual(
+    workspace.getConfiguration(CONFIG_SECTION).get<T>(key),
+    expected,
+    `Expected ${key} configuration to update`,
+  )
+}
+
+async function waitForDiagnostics(uri: Uri, expectedCount: number) {
+  let latest = languages.getDiagnostics(uri)
+
+  for (let attempt = 0; attempt < DIAGNOSTIC_WAIT_ATTEMPTS; attempt++) {
+    latest = languages.getDiagnostics(uri)
+    if (latest.length === expectedCount) {
+      return latest
+    }
+
+    await wait(DIAGNOSTIC_WAIT_INTERVAL_MS)
+  }
+
+  throw new Error(
+    `Expected ${expectedCount} diagnostics for ${uri.toString()}; received ${JSON.stringify(latest)}`,
   )
 }
 

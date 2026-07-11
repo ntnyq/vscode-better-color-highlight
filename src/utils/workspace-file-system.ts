@@ -100,6 +100,60 @@ function normalizeWorkspacePath(path: string): string {
 }
 
 /**
+ * Get a canonical identity for a workspace path or URI.
+ *
+ * Equivalent local file URI and fsPath spellings share one identity. Virtual
+ * URIs retain their full URI identity.
+ *
+ * @param value - Local path or workspace URI
+ * @returns Canonical identity suitable for deduplication
+ */
+export function getWorkspacePathIdentity(value: string): string {
+  if (/^file:/iu.test(value)) {
+    try {
+      const url = new URL(value)
+      const authority = url.hostname ? `//${url.hostname}` : ''
+      let path = decodeURIComponent(url.pathname)
+      if (/^\/[a-z]:\//iu.test(path)) {
+        path = path.slice(1)
+      }
+      return normalizeLocalWorkspacePath(`${authority}${path}`)
+    } catch {
+      return value
+    }
+  }
+  if (
+    isAbsoluteWorkspacePath(value) &&
+    (/^[a-z]:[/\\]/iu.test(value) || !/^[a-z][\d+.a-z-]*:/iu.test(value))
+  ) {
+    return normalizeLocalWorkspacePath(value)
+  }
+  return value
+}
+
+/** Normalize local path separators, segments, and Windows drive casing. */
+function normalizeLocalWorkspacePath(value: string): string {
+  const normalized = value.replaceAll('\\', '/')
+  const prefix = normalized.startsWith('/') ? '/' : ''
+  const segments: string[] = []
+
+  for (const segment of normalized.split('/')) {
+    if (!segment || segment === '.') {
+      continue
+    }
+    if (segment === '..') {
+      segments.pop()
+    } else {
+      segments.push(segment)
+    }
+  }
+  if (/^[a-z]:$/iu.test(segments[0] ?? '')) {
+    segments[0] = segments[0].toLowerCase()
+  }
+  return `${prefix}${segments.join('/')}`
+}
+
+/**
  * Convert a path or URI string to a VS Code Uri.
  *
  * @param value - The path or URI string to convert

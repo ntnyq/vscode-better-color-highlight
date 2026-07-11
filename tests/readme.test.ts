@@ -3,6 +3,27 @@ import { describe, expect, it } from 'vitest'
 import { scopedConfigs } from '../src/meta'
 
 describe('readme generated config documentation', () => {
+  it('contributes the workspace palette and contrast commands', async () => {
+    const packageJson = JSON.parse(await readFile('package.json', 'utf8')) as {
+      contributes: {
+        commands: { command: string; title: string }[]
+      }
+    }
+
+    expect(packageJson.contributes.commands).toStrictEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          command: 'color-highlight.showWorkspacePalette',
+          title: 'Show Workspace Palette',
+        }),
+        expect.objectContaining({
+          command: 'color-highlight.checkColorContrast',
+          title: 'Check Color Contrast',
+        }),
+      ]),
+    )
+  })
+
   it('preserves wildcard asterisks in language configuration defaults', async () => {
     const readme = await readFile('README.md', 'utf8')
 
@@ -31,6 +52,115 @@ describe('readme generated config documentation', () => {
       }),
     )
     expect(readme).toContain('#### `color-highlight.enableColorPicker`')
+  })
+
+  it('exposes bounded workspace palette glob settings', async () => {
+    const packageJson = JSON.parse(await readFile('package.json', 'utf8')) as {
+      contributes: {
+        configuration: {
+          properties: Record<string, { default: unknown; type: string }>
+        }
+      }
+    }
+    const properties = packageJson.contributes.configuration.properties
+
+    expect(properties['color-highlight.workspacePaletteInclude']).toStrictEqual(
+      expect.objectContaining({ default: '**/*', type: 'string' }),
+    )
+    expect(properties['color-highlight.workspacePaletteExclude']).toStrictEqual(
+      expect.objectContaining({
+        default:
+          '{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}',
+        type: 'string',
+      }),
+    )
+    expect(scopedConfigs.defaults.workspacePaletteInclude).toBe('**/*')
+    expect(scopedConfigs.defaults.workspacePaletteExclude).toBe(
+      '{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}',
+    )
+  })
+
+  it('documents opt-in contrast diagnostics', async () => {
+    const packageJson = JSON.parse(await readFile('package.json', 'utf8')) as {
+      contributes: {
+        configuration: {
+          properties: Record<string, { default: unknown; type: string }>
+        }
+      }
+    }
+    const readme = await readFile('README.md', 'utf8')
+
+    expect(
+      packageJson.contributes.configuration.properties[
+        'color-highlight.enableContrastDiagnostics'
+      ],
+    ).toStrictEqual(
+      expect.objectContaining({ default: false, type: 'boolean' }),
+    )
+    expect(scopedConfigs.defaults.enableContrastDiagnostics).toBe(false)
+    expect(readme).toContain('#### `color-highlight.enableContrastDiagnostics`')
+    expect(readme).toContain('deterministic foreground/background pairs')
+  })
+
+  it('documents the complete workspace palette contract', async () => {
+    const readme = await readFile('README.md', 'utf8')
+
+    expect(readme).toContain('## Workspace palette and color contrast')
+    expect(readme).toContain('`color-highlight.showWorkspacePalette`')
+    expect(readme).toContain('`color-highlight.checkColorContrast`')
+    expect(readme).toContain('`"**/*"`')
+    expect(readme).toContain(
+      '`"{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}"`',
+    )
+    expect(readme).toContain('256 workspace files')
+    expect(readme).toContain('512 KiB of UTF-8 text per file')
+    expect(readme).toMatch(/512\s+unique dependency-file reads/u)
+    expect(readme).toMatch(/2,000 retained occurrences per\s+file/u)
+    expect(readme).toContain('20,000 retained occurrences per scan')
+    expect(readme).toContain('1,024 distinct color groups')
+    expect(readme).toContain('occurrence truncation')
+    expect(readme).toContain('file truncation')
+    expect(readme).toContain('cancellable')
+    expect(readme).toMatch(/HEX, RGB, HSL,\s+or OKLCH/u)
+    expect(readme).toMatch(
+      /opens the document and selects the exact source\s+text/u,
+    )
+    expect(readme).toMatch(/does not retain a workspace index/u)
+  })
+
+  it('documents WCAG contrast and deterministic diagnostics boundaries', async () => {
+    const readme = await readFile('README.md', 'utf8')
+
+    expect(readme).toContain('WCAG 2.2')
+    expect(readme).toMatch(/4\.5:1 for AA\s+normal text/u)
+    expect(readme).toMatch(/3:1 for AA large text/u)
+    expect(readme).toMatch(/7:1 for AAA normal text/u)
+    expect(readme).toMatch(/4\.5:1 for AAA\s+large text/u)
+    expect(readme).toContain('translucent foreground')
+    expect(readme).toContain('translucent background')
+    expect(readme).toContain('default is `false`')
+    expect(readme).toContain('CSS rule')
+    expect(readme).toContain('inline `style` attribute')
+    expect(readme).toMatch(/same\s+complete Tailwind variant chain/u)
+    expect(readme).toContain('Check these colors')
+    expect(readme).toContain('Go to foreground color')
+    expect(readme).toContain('Go to background color')
+    expect(readme).toContain('Disable contrast diagnostics')
+    expect(readme).toContain('APCA')
+  })
+
+  it('documents workspace palette trust and Web compatibility', async () => {
+    const readme = await readFile('README.md', 'utf8')
+
+    expect(readme).toMatch(/do not execute project code/u)
+    expect(readme).toMatch(
+      /Direct colors remain\s+available in untrusted workspaces/u,
+    )
+    expect(readme).toMatch(/trusted cross-file dependency reads/u)
+    expect(readme).toContain('vscode.dev')
+    expect(readme).toContain('github.dev')
+    expect(readme).toContain('virtual workspaces')
+    expect(readme).toContain('VS Code Workspace FS')
   })
 
   it('documents default-on contextual color navigation', async () => {

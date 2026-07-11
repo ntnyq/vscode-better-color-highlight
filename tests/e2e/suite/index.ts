@@ -12,6 +12,7 @@ import {
 import {
   activateExtension,
   assertInMemoryCssHighlighting,
+  assertInMemoryContrastDiagnostic,
   assertRequiredCommands,
   waitForHighlightState,
 } from '../shared.ts'
@@ -38,6 +39,7 @@ export async function run() {
   await activateExtension()
   await assertRequiredCommands()
   await assertInMemoryCssHighlighting()
+  await assertInMemoryContrastDiagnostic()
 
   const extension = extensions.getExtension(EXTENSION_ID)
   assert.ok(extension, `Expected ${EXTENSION_ID} to be installed`)

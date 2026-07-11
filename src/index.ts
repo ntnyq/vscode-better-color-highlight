@@ -6,6 +6,7 @@ import { useColorHighlight } from './composables/use-color-highlight'
 import { useColorHover } from './composables/use-color-hover'
 import { useColorNavigation } from './composables/use-color-navigation'
 import { useColorProvider } from './composables/use-color-provider'
+import { useContrastDiagnostics } from './composables/use-contrast-diagnostics'
 import { logger } from './utils/logger'
 
 /**
@@ -20,6 +21,7 @@ const { activate, deactivate } = defineExtension(() => {
   useColorHover(colorDependencyRevision)
   useColorNavigation()
   useColorProvider()
+  useContrastDiagnostics(colorDependencyRevision)
 })
 
 export { activate, deactivate }

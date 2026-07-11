@@ -340,6 +340,133 @@ describe('css variable source cache', () => {
       '--brand',
     ])
   })
+
+  it('starts no dependency read after cancellation during a real source stat', async () => {
+    resetTestState()
+    const { loadCssVarSourceDeclarations } = await importCssVarSources()
+    let cancelled = false
+    const deferred = Promise.withResolvers<{ mtimeMs: number; size: number }>()
+    statMock.mockReturnValueOnce(deferred.promise)
+    const promise = loadCssVarSourceDeclarations({
+      filePath: '/tmp/entry.css',
+      paths: ['tokens.css'],
+      signal: {
+        get isCancellationRequested() {
+          return cancelled
+        },
+      },
+      trustedSelectors: [':root'],
+    })
+
+    await vi.waitFor(() => expect(statMock).toHaveBeenCalledTimes(1))
+    cancelled = true
+    deferred.resolve({ mtimeMs: 1, size: 24 })
+
+    await expect(promise).resolves.toStrictEqual([])
+    expect(readFileMock).not.toHaveBeenCalled()
+  })
+
+  it('shares a unique-read budget across cached source loads', async () => {
+    resetTestState()
+    const { loadCssVarSourceDeclarations } = await importCssVarSources()
+    const workspaceReadBudget = createTestBudget(2)
+    const dir = '/tmp/better-color-css-vars-budget'
+    for (const [name, color] of [
+      ['one', '#111111'],
+      ['two', '#222222'],
+      ['three', '#333333'],
+    ]) {
+      setFile(join(dir, `${name}.css`), `:root { --${name}: ${color}; }\n`)
+    }
+    const options = {
+      filePath: join(dir, 'entry.css'),
+      paths: ['one.css', 'one.css', 'two.css', 'three.css'],
+      trustedSelectors: [':root'],
+      workspaceReadBudget,
+    }
+
+    const first = await loadCssVarSourceDeclarations(options)
+    const second = await loadCssVarSourceDeclarations(options)
+
+    expect(first.map(declaration => declaration.name)).toStrictEqual([
+      '--one',
+      '--two',
+    ])
+    expect(second).toStrictEqual(first)
+    expect(readFileMock).toHaveBeenCalledTimes(2)
+    expect(statMock.mock.calls.flat()).not.toContain(join(dir, 'three.css'))
+  })
+
+  it('claims configured paths before directory and file metadata probes', async () => {
+    resetTestState()
+    const { loadCssVarSourceDeclarations } = await importCssVarSources()
+    const dir = '/tmp/better-color-css-vars-probe-budget'
+    const tokensPath = join(dir, 'tokens.css')
+    setFile(tokensPath, ':root { --brand: #336699; }\n')
+
+    const exhaustedBudget = createTestBudget(1)
+    exhaustedBudget.tryClaim(join(dir, 'already-claimed.css'))
+    await expect(
+      loadCssVarSourceDeclarations({
+        filePath: join(dir, 'entry.css'),
+        paths: ['tokens.css'],
+        trustedSelectors: [':root'],
+        workspaceReadBudget: exhaustedBudget,
+      }),
+    ).resolves.toStrictEqual([])
+    expect(isDirectoryMock).not.toHaveBeenCalled()
+    expect(statMock).not.toHaveBeenCalled()
+    expect(readFileMock).not.toHaveBeenCalled()
+
+    const repeatedBudget = createTestBudget(1)
+    repeatedBudget.tryClaim(tokensPath)
+    await expect(
+      loadCssVarSourceDeclarations({
+        filePath: join(dir, 'entry.css'),
+        paths: ['tokens.css'],
+        trustedSelectors: [':root'],
+        workspaceReadBudget: repeatedBudget,
+      }),
+    ).resolves.toMatchObject([{ name: '--brand' }])
+    expect(isDirectoryMock).toHaveBeenCalledWith(tokensPath)
+    expect(statMock).toHaveBeenCalledWith(tokensPath)
+    expect(readFileMock).toHaveBeenCalledWith(tokensPath)
+  })
+
+  it('discovers configured directories and globs within the shared budget', async () => {
+    resetTestState()
+    const { loadCssVarSourceDeclarations } = await importCssVarSources()
+    const dir = '/tmp/better-color-css-vars-discovery-budget'
+    const directoryPath = join(dir, 'tokens')
+    const directoryFile = join(directoryPath, 'brand.css')
+    const globFile = join(dir, 'shared', 'accent.scss')
+    directories.set(directoryPath, [])
+    globMatches.set(
+      createGlobMatchKey({
+        basePath: directoryPath,
+        pattern: '**/*.{css,scss,less}',
+      }),
+      [directoryFile],
+    )
+    globMatches.set(
+      createGlobMatchKey({ basePath: dir, pattern: 'shared/*.scss' }),
+      [globFile],
+    )
+    setFile(directoryFile, ':root { --brand: #336699; }\n')
+    setFile(globFile, ':root { --accent: #663399; }\n')
+
+    const declarations = await loadCssVarSourceDeclarations({
+      filePath: join(dir, 'entry.css'),
+      paths: ['tokens', 'shared/*.scss'],
+      trustedSelectors: [':root'],
+      workspaceReadBudget: createTestBudget(3),
+    })
+
+    expect(declarations.map(declaration => declaration.name)).toStrictEqual([
+      '--brand',
+      '--accent',
+    ])
+  })
 })
 
 function importCssVarSources(): Promise<typeof CssVarSourcesModule> {
@@ -372,4 +499,20 @@ function createGlobMatchKey(pattern: WorkspaceFindFilesMockPattern): string {
   }
 
   return `${pattern.basePath}\0${pattern.pattern}`
+}
+
+function createTestBudget(maximum: number) {
+  const claimed = new Set<string>()
+  return {
+    tryClaim(identity: string) {
+      if (claimed.has(identity)) {
+        return true
+      }
+      if (claimed.size >= maximum) {
+        return false
+      }
+      claimed.add(identity)
+      return true
+    },
+  }
 }

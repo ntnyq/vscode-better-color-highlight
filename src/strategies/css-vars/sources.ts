@@ -1,3 +1,4 @@
+import type { CancellationSignal } from '../../types'
 import {
   dirnameWorkspacePath,
   extnameWorkspacePath,
@@ -9,6 +10,7 @@ import {
   workspacePathIsDirectory,
 } from '../../utils/workspace-file-system'
 import type { WorkspaceFindFilesPattern } from '../../utils/workspace-file-system'
+import type { WorkspaceReadBudget } from '../../utils/workspace-read-budget'
 import type { CssVarDeclaration } from './parser'
 import { collectCssVarDeclarations } from './parser'
 
@@ -30,6 +32,8 @@ export interface LoadCssVarSourceDeclarationsOptions {
   readonly paths: readonly string[]
   readonly trustedSelectors: readonly string[]
   readonly debug?: (message: string) => void
+  readonly signal?: CancellationSignal
+  readonly workspaceReadBudget?: WorkspaceReadBudget
 }
 
 const cssVarSourceTextCache = new Map<string, CssVarSourceCacheEntry>()
@@ -44,11 +48,28 @@ export async function loadCssVarSourceDeclarations(
   options: LoadCssVarSourceDeclarationsOptions,
 ): Promise<CssVarDeclaration[]> {
   const declarations: CssVarDeclaration[] = []
+  if (options.signal?.isCancellationRequested) {
+    return declarations
+  }
   const filePaths = await collectCssVarSourceFilePaths(options)
+  if (options.signal?.isCancellationRequested) {
+    return declarations
+  }
   let sourceOrderOffset = 0
 
   for (const filePath of filePaths) {
-    const text = await readCachedCssVarSourceFile(filePath, options.debug)
+    if (options.signal?.isCancellationRequested) {
+      break
+    }
+    const text = await readCachedCssVarSourceFile(
+      filePath,
+      options.debug,
+      options.workspaceReadBudget,
+      options.signal,
+    )
+    if (options.signal?.isCancellationRequested) {
+      break
+    }
     if (text === null) {
       continue
     }
@@ -62,7 +83,7 @@ export async function loadCssVarSourceDeclarations(
     sourceOrderOffset += fileDeclarations.length
   }
 
-  return declarations
+  return options.signal?.isCancellationRequested ? [] : declarations
 }
 
 /**
@@ -78,6 +99,9 @@ async function collectCssVarSourceFilePaths(
   const seen = new Set<string>()
 
   for (const sourcePath of options.paths) {
+    if (options.signal?.isCancellationRequested) {
+      break
+    }
     if (filePaths.length >= MAX_CSS_VAR_SOURCE_FILES) {
       break
     }
@@ -86,7 +110,12 @@ async function collectCssVarSourceFilePaths(
       options.filePath,
       sourcePath,
       options.debug,
+      options.workspaceReadBudget,
+      options.signal,
     )
+    if (options.signal?.isCancellationRequested) {
+      break
+    }
 
     for (const candidate of candidates) {
       if (filePaths.length >= MAX_CSS_VAR_SOURCE_FILES) {
@@ -130,15 +159,21 @@ async function expandCssVarSourcePath(
   baseFilePath: string,
   sourcePath: string,
   debug?: (message: string) => void,
+  workspaceReadBudget?: WorkspaceReadBudget,
+  signal?: CancellationSignal,
 ): Promise<string[]> {
+  if (signal?.isCancellationRequested) {
+    return []
+  }
   if (isGlobPath(sourcePath)) {
     const normalizedSourcePath = normalizeCssVarSourceGlobPath(sourcePath)
 
     try {
-      return await findWorkspaceFiles(
+      const matches = await findWorkspaceFiles(
         resolveCssVarSourceGlob(baseFilePath, normalizedSourcePath),
         MAX_CSS_VAR_SOURCE_FILES,
       )
+      return signal?.isCancellationRequested ? [] : matches
     } catch {
       return skipPath(sourcePath, debug)
     }
@@ -146,8 +181,16 @@ async function expandCssVarSourcePath(
 
   const filePath = resolveCssVarSourcePath(baseFilePath, sourcePath)
 
-  if (await workspacePathIsDirectory(filePath)) {
-    return collectDirectoryCssVarSourceFilePaths(filePath, debug)
+  if (workspaceReadBudget && !workspaceReadBudget.tryClaim(filePath)) {
+    return skipPath(filePath, debug)
+  }
+
+  const isDirectory = await workspacePathIsDirectory(filePath)
+  if (signal?.isCancellationRequested) {
+    return []
+  }
+  if (isDirectory) {
+    return collectDirectoryCssVarSourceFilePaths(filePath, debug, signal)
   }
 
   return [filePath]
@@ -210,15 +253,20 @@ function splitAbsoluteCssVarSourceGlob(
 async function collectDirectoryCssVarSourceFilePaths(
   dirPath: string,
   debug?: (message: string) => void,
+  signal?: CancellationSignal,
 ): Promise<string[]> {
+  if (signal?.isCancellationRequested) {
+    return []
+  }
   try {
-    return await findWorkspaceFiles(
+    const matches = await findWorkspaceFiles(
       {
         basePath: dirPath,
         pattern: '**/*.{css,scss,less}',
       },
       MAX_CSS_VAR_SOURCE_FILES,
     )
+    return signal?.isCancellationRequested ? [] : matches
   } catch {
     return skipPath(dirPath, debug)
   }
@@ -234,9 +282,25 @@ async function collectDirectoryCssVarSourceFilePaths(
 async function readCachedCssVarSourceFile(
   filePath: string,
   debug?: (message: string) => void,
+  workspaceReadBudget?: WorkspaceReadBudget,
+  signal?: CancellationSignal,
 ): Promise<string | null> {
+  if (signal?.isCancellationRequested) {
+    return null
+  }
+  if (workspaceReadBudget && !workspaceReadBudget.tryClaim(filePath)) {
+    debugLog(
+      debug,
+      `Skipped CSS variable source file after budget: ${filePath}`,
+    )
+    return null
+  }
+
   try {
     const stats = await statWorkspaceFile(filePath)
+    if (signal?.isCancellationRequested) {
+      return null
+    }
     if (stats.size > MAX_CSS_VAR_SOURCE_FILE_SIZE) {
       debugLog(debug, `Skipped large CSS variable source file: ${filePath}`)
       return null
@@ -252,7 +316,13 @@ async function readCachedCssVarSourceFile(
       return cached.text
     }
 
+    if (signal?.isCancellationRequested) {
+      return null
+    }
     const text = await readWorkspaceFile(filePath)
+    if (signal?.isCancellationRequested) {
+      return null
+    }
     cssVarSourceTextCache.set(filePath, {
       documentVersion: stats.documentVersion,
       mtimeMs: stats.mtimeMs,
