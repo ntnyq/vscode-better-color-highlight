@@ -58,14 +58,6 @@ export async function resolveColorDefinition(
       case 'stylus': {
         return await resolveStylusVarDefinition(text, offset, context)
       }
-      case 'json':
-      case 'jsonc': {
-        return await resolveDesignTokenDocument(
-          parseJsonDesignTokenDocument(text),
-          offset,
-          context,
-        )
-      }
       case 'yaml':
       case 'yml': {
         return await resolveDesignTokenDocument(

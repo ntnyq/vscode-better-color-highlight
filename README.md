@@ -371,9 +371,9 @@ Cross-file CSS custom property resolution is conservative. It only runs when
 listed in `color-highlight.cssVariableTrustedSelectors`. Ambiguous runtime
 cascade cases are skipped instead of guessed.
 
-JSON and JSONC design token matching is conservative by default. It highlights
-only `value` and `$value` string fields. To highlight any JSON string whose
-complete value is a supported color, configure:
+JSON, JSONC, and JSON-formatted `.tokens` design token matching is conservative
+by default. It highlights only `value` and `$value` string fields. To highlight
+any string whose complete value is a supported color, configure:
 
 ```jsonc
 {
@@ -382,7 +382,7 @@ complete value is a supported color, configure:
 ```
 
 Use `"all"` to allow both token fields and broad string matching. `"off"`
-disables JSON, JSONC, and YAML design token matching.
+disables JSON, JSONC, JSON-formatted `.tokens`, and YAML design token matching.
 
 DTCG color tokens are supported in JSON, JSONC, JSON-formatted `.tokens`, and
 YAML. The structured

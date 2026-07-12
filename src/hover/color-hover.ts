@@ -29,15 +29,16 @@ const REPLACE_COMMANDS = {
 
 const ADJUST_ALPHA_COMMAND = 'color-highlight.adjustColorAlpha'
 const HOVER_COLUMN_PAD = '\u00A0'
+const MAX_COLOR_HOVER_MATCH_CACHE_SIZE = 32
 
 interface CancellationLike {
   readonly isCancellationRequested: boolean
 }
 
 /**
- * Pending or completed detector results keyed by document/config revision.
+ * Successfully completed detector results keyed by document/config revision.
  */
-export type ColorHoverMatchCache = Map<string, Promise<ColorMatch[]>>
+export type ColorHoverMatchCache = Map<string, ColorMatch[]>
 
 /**
  * Hover data for a detected color under the cursor.
@@ -180,6 +181,7 @@ export async function getColorHover(
 
   const context: StrategyContext = {
     languageId,
+    signal: cancellationToken,
     filePath,
     namedColorMatchMode: config.namedColorMatchMode,
     tailwindColorMode: config.tailwindColorMode,
@@ -202,21 +204,14 @@ export async function getColorHover(
       onDetectorError,
       text,
     })
-  let matchesPromise: Promise<ColorMatch[]>
-
-  if (matchCache && matchCacheKey) {
-    const cached = matchCache.get(matchCacheKey)
-    matchesPromise = cached ?? loadMatches()
-    if (!cached) {
-      matchCache.set(matchCacheKey, matchesPromise)
-    }
-  } else {
-    matchesPromise = loadMatches()
-  }
-
-  const matches = await matchesPromise
+  const cachedMatches =
+    matchCache && matchCacheKey ? matchCache.get(matchCacheKey) : undefined
+  const matches = cachedMatches ?? (await loadMatches())
   if (cancellationToken?.isCancellationRequested) {
     return null
+  }
+  if (!cachedMatches && matchCache && matchCacheKey) {
+    cacheCompletedMatches(matchCache, matchCacheKey, matches)
   }
 
   const match = findMatchAtOffset(matches, offset)
@@ -239,6 +234,24 @@ export async function getColorHover(
     },
     uri: filePath,
   }
+}
+
+function cacheCompletedMatches(
+  matchCache: ColorHoverMatchCache,
+  matchCacheKey: string,
+  matches: ColorMatch[],
+): void {
+  while (
+    !matchCache.has(matchCacheKey) &&
+    matchCache.size >= MAX_COLOR_HOVER_MATCH_CACHE_SIZE
+  ) {
+    const oldestKey = matchCache.keys().next().value
+    if (oldestKey === undefined) {
+      break
+    }
+    matchCache.delete(oldestKey)
+  }
+  matchCache.set(matchCacheKey, matches)
 }
 
 /**

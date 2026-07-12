@@ -4,7 +4,7 @@ import {
   getColorHover,
 } from '../src/hover/color-hover'
 import type { NestedScopedConfigs } from '../src/meta'
-import type { ColorDetector } from '../src/types'
+import type { ColorDetector, ColorMatch } from '../src/types'
 
 const defaultConfig: NestedScopedConfigs = {
   enable: true,
@@ -41,6 +41,7 @@ const defaultConfig: NestedScopedConfigs = {
 describe(getColorHover, () => {
   it('passes Tailwind theme settings to detectors', async () => {
     const detector = vi.fn<ColorDetector>(() => [])
+    const cancellationToken = { isCancellationRequested: false }
 
     await getColorHover({
       config: {
@@ -49,6 +50,7 @@ describe(getColorHover, () => {
         tailwindColorMode: 'v4',
         tailwindStylesheetPaths: ['theme.css'],
       },
+      cancellationToken,
       detectors: [detector],
       filePath: 'file:///tmp/example.html',
       languageId: 'html',
@@ -59,10 +61,92 @@ describe(getColorHover, () => {
     expect(detector).toHaveBeenCalledWith(
       '<div class="bg-brand">',
       expect.objectContaining({
+        signal: cancellationToken,
         tailwindColorMode: 'v4',
         tailwindStylesheetPaths: ['theme.css'],
       }),
     )
+  })
+
+  it('does not share a cancelled in-flight scan with another request', async () => {
+    const firstScan = Promise.withResolvers<ColorMatch[]>()
+    let invocation = 0
+    const detector = vi.fn<ColorDetector>(() => {
+      invocation++
+      return invocation === 1
+        ? firstScan.promise
+        : [{ start: 14, end: 21, color: 'rgb(255, 0, 0)' }]
+    })
+    let firstCancelled = false
+    const matchCache = new Map()
+    const options = {
+      config: { ...defaultConfig, enableHover: true },
+      detectors: [detector],
+      filePath: 'file:///tmp/example.css',
+      languageId: 'css',
+      matchCache,
+      matchCacheKey: 'file:///tmp/example.css:1:0',
+      offset: 16,
+      text: '.box { color: #ff0000; }',
+    }
+    const firstRequest = getColorHover({
+      ...options,
+      cancellationToken: {
+        get isCancellationRequested() {
+          return firstCancelled
+        },
+      },
+    })
+    await vi.waitFor(() => expect(detector).toHaveBeenCalledTimes(1))
+    firstCancelled = true
+
+    const secondRequest = getColorHover({
+      ...options,
+      cancellationToken: { isCancellationRequested: false },
+    })
+    firstScan.resolve([{ start: 14, end: 21, color: 'rgb(255, 0, 0)' }])
+
+    await expect(firstRequest).resolves.toBeNull()
+    await expect(secondRequest).resolves.toMatchObject({
+      originalColor: 'rgb(255, 0, 0)',
+    })
+    expect(detector).toHaveBeenCalledTimes(2)
+    expect(matchCache.get(options.matchCacheKey)).toStrictEqual([
+      { start: 14, end: 21, color: 'rgb(255, 0, 0)' },
+    ])
+  })
+
+  it('lets a cancelled detector stop before a deferred external read', async () => {
+    const deferredStat = Promise.withResolvers<null>()
+    let cancelled = false
+    const laterRead = vi.fn<() => void>()
+    const detector = vi.fn<ColorDetector>(async (_text, context) => {
+      await deferredStat.promise
+      if (context?.signal?.isCancellationRequested) {
+        return []
+      }
+      laterRead()
+      return []
+    })
+    const request = getColorHover({
+      cancellationToken: {
+        get isCancellationRequested() {
+          return cancelled
+        },
+      },
+      config: { ...defaultConfig, enableHover: true },
+      detectors: [detector],
+      filePath: 'file:///tmp/example.css',
+      languageId: 'css',
+      offset: 16,
+      text: '.box { color: #ff0000; }',
+    })
+    await vi.waitFor(() => expect(detector).toHaveBeenCalledTimes(1))
+    cancelled = true
+    deferredStat.resolve(null)
+
+    await expect(request).resolves.toBeNull()
+    expect(laterRead).not.toHaveBeenCalled()
   })
 
   it('reuses detector matches for the same document revision', async () => {
@@ -89,6 +173,33 @@ describe(getColorHover, () => {
     })
 
     expect(detector).toHaveBeenCalledTimes(2)
+  })
+
+  it('bounds concurrently completed cache entries to 32 revisions', async () => {
+    const deferredScan = Promise.withResolvers<null>()
+    const detector = vi.fn<ColorDetector>(async () => {
+      await deferredScan.promise
+      return [{ start: 14, end: 21, color: 'rgb(255, 0, 0)' }]
+    })
+    const matchCache = new Map()
+    const requests = Array.from({ length: 33 }, (_, index) =>
+      getColorHover({
+        config: { ...defaultConfig, enableHover: true },
+        detectors: [detector],
+        filePath: 'file:///tmp/example.css',
+        languageId: 'css',
+        matchCache,
+        matchCacheKey: `file:///tmp/example.css:${index}:0`,
+        offset: 16,
+        text: '.box { color: #ff0000; }',
+      }),
+    )
+    await vi.waitFor(() => expect(detector).toHaveBeenCalledTimes(33))
+
+    deferredScan.resolve(null)
+    await Promise.all(requests)
+
+    expect(matchCache.size).toBeLessThanOrEqual(32)
   })
 
   it('does not run detectors when hover is disabled', async () => {

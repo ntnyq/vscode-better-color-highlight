@@ -57,10 +57,6 @@ export function resolveDtcgColor(value: unknown): string | null {
   }
 
   const components = value.components as readonly number[]
-  if (!components.every(Number.isFinite)) {
-    return null
-  }
-
   const rgb = convertComponents(value.colorSpace, components)
   return rgb ? rgbString(...rgb, alpha) : null
 }

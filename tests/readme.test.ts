@@ -229,6 +229,12 @@ describe('readme generated config documentation', () => {
     expect(readme).toContain('- [x] YAML Design Tokens')
     expect(readme).toContain('all 14 DTCG color spaces')
     expect(readme).toContain('JSON-formatted `.tokens`')
+    expect(readme).toContain(
+      'JSON, JSONC, and JSON-formatted `.tokens` design token matching',
+    )
+    expect(readme).toMatch(
+      /`"off"`\s+disables JSON, JSONC, JSON-formatted `\.tokens`, and YAML/u,
+    )
     expect(readme).toContain('512 KiB')
     expect(
       packageJson.capabilities.untrustedWorkspaces.restrictedConfigurations,

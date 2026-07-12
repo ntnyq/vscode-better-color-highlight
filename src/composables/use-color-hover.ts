@@ -40,12 +40,6 @@ export function useColorHover(
         dependencyRevision.value,
         workspace.isTrusted,
       )
-      if (!matchCache.has(matchCacheKey) && matchCache.size >= 32) {
-        const oldestKey = matchCache.keys().next().value
-        if (oldestKey) {
-          matchCache.delete(oldestKey)
-        }
-      }
       const hover = await getColorHover({
         cancellationToken,
         config,
