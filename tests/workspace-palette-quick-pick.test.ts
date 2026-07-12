@@ -1,73 +1,133 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { QuickInputButton } from 'vscode'
+import type {
+  WorkspaceColorGroup,
+  WorkspacePaletteResult,
+} from '../src/workspace-palette/types'
 
 /* oxlint-disable vitest/prefer-import-in-mock -- partial VS Code boundary mocks intentionally avoid module-shape checking */
 
 const mocks = vi.hoisted(() => {
+  interface MockQuickPickItem {
+    readonly action?: string
+    readonly buttons: readonly QuickInputButton[]
+    readonly description?: string
+    readonly detail?: string
+    readonly label: string
+    readonly value?: string
+  }
+
+  interface MockTextDocument {
+    readonly getText: (selection: unknown) => string
+    readonly positionAt: (offset: number) => unknown
+  }
+
+  interface MockTextEditor {
+    readonly revealRange: (selection: unknown) => void
+    selection: unknown
+  }
+
+  interface MockQuickPickItemButtonEvent {
+    readonly button: QuickInputButton
+    readonly item: MockQuickPickItem
+  }
+  type MockProgressTask = (
+    progress: { readonly report: (value: unknown) => void },
+    cancellationToken: { readonly isCancellationRequested: boolean },
+  ) => unknown
+
   class MockQuickPick {
     public activeItems: unknown[] = []
     public buttons: unknown[] = []
     public busy = false
     public canSelectMany = false
     public disposed = false
-    public items: any[] = []
+    public items: MockQuickPickItem[] = []
     public placeholder: string | undefined
-    public selectedItems: any[] = []
+    public selectedItems: (MockQuickPickItem | undefined)[] = []
     public title: string | undefined
     private readonly acceptListeners: (() => unknown)[] = []
-    private readonly buttonListeners: ((event: any) => unknown)[] = []
-    private readonly quickButtonListeners: ((button: any) => unknown)[] = []
+    private readonly buttonListeners: ((
+      event: MockQuickPickItemButtonEvent,
+    ) => unknown)[] = []
+    private readonly quickButtonListeners: ((
+      button: QuickInputButton,
+    ) => unknown)[] = []
     private readonly hideListeners: (() => unknown)[] = []
 
-    public dispose() {
+    public dispose(): void {
       this.disposed = true
     }
 
-    public hide() {
+    public hide(): void {
       for (const listener of this.hideListeners) {
         listener()
       }
     }
 
-    public onDidAccept(listener: () => unknown) {
+    public onDidAccept(listener: () => unknown): {
+      readonly dispose: () => void
+    } {
       this.acceptListeners.push(listener)
-      return { dispose: () => this.remove(this.acceptListeners, listener) }
+      return {
+        dispose: () =>
+          MockQuickPick.removeListener(this.acceptListeners, listener),
+      }
     }
 
-    public onDidHide(listener: () => unknown) {
+    public onDidHide(listener: () => unknown): {
+      readonly dispose: () => void
+    } {
       this.hideListeners.push(listener)
-      return { dispose: () => this.remove(this.hideListeners, listener) }
+      return {
+        dispose: () =>
+          MockQuickPick.removeListener(this.hideListeners, listener),
+      }
     }
 
-    public onDidTriggerItemButton(listener: (event: any) => unknown) {
+    public onDidTriggerItemButton(
+      listener: (event: MockQuickPickItemButtonEvent) => unknown,
+    ): { readonly dispose: () => void } {
       this.buttonListeners.push(listener)
-      return { dispose: () => this.remove(this.buttonListeners, listener) }
+      return {
+        dispose: () =>
+          MockQuickPick.removeListener(this.buttonListeners, listener),
+      }
     }
 
-    public onDidTriggerButton(listener: (button: any) => unknown) {
+    public onDidTriggerButton(
+      listener: (button: QuickInputButton) => unknown,
+    ): { readonly dispose: () => void } {
       this.quickButtonListeners.push(listener)
-      return { dispose: () => this.remove(this.quickButtonListeners, listener) }
+      return {
+        dispose: () =>
+          MockQuickPick.removeListener(this.quickButtonListeners, listener),
+      }
     }
 
-    public show() {}
+    public show = vi.fn<() => void>()
 
-    public async accept(item: any) {
+    public async accept(item: MockQuickPickItem | undefined): Promise<void> {
       this.selectedItems = [item]
       await Promise.all(this.acceptListeners.map(listener => listener()))
     }
 
-    public async triggerButton(item: any, button: any) {
+    public async triggerButton(
+      item: MockQuickPickItem,
+      button: QuickInputButton,
+    ): Promise<void> {
       await Promise.all(
         this.buttonListeners.map(listener => listener({ button, item })),
       )
     }
 
-    public async triggerQuickButton(button: any) {
+    public async triggerQuickButton(button: QuickInputButton): Promise<void> {
       await Promise.all(
         this.quickButtonListeners.map(listener => listener(button)),
       )
     }
 
-    private remove(listeners: unknown[], listener: unknown) {
+    private static removeListener<T>(listeners: T[], listener: T): void {
       const index = listeners.indexOf(listener)
       if (index !== -1) {
         listeners.splice(index, 1)
@@ -79,12 +139,22 @@ const mocks = vi.hoisted(() => {
     MockQuickPick,
     clipboardWrite: vi.fn<(value: string) => Promise<void>>(),
     picks: [] as MockQuickPick[],
-    scanWorkspacePalette: vi.fn<(...args: any[]) => any>(),
-    openTextDocument: vi.fn<(...args: any[]) => any>(),
-    showInformationMessage: vi.fn<(...args: any[]) => any>(),
-    showTextDocument: vi.fn<(...args: any[]) => any>(),
-    showWarningMessage: vi.fn<(...args: any[]) => any>(),
-    withProgress: vi.fn<(...args: any[]) => any>(),
+    scanWorkspacePalette:
+      vi.fn<
+        (...args: readonly unknown[]) => Promise<WorkspacePaletteResult | null>
+      >(),
+    openTextDocument:
+      vi.fn<(...args: readonly unknown[]) => Promise<MockTextDocument>>(),
+    showInformationMessage:
+      vi.fn<(...args: readonly unknown[]) => Promise<unknown>>(),
+    showTextDocument:
+      vi.fn<(...args: readonly unknown[]) => Promise<MockTextEditor>>(),
+    showWarningMessage:
+      vi.fn<(...args: readonly unknown[]) => Promise<unknown>>(),
+    withProgress:
+      vi.fn<
+        (options: unknown, task: MockProgressTask) => Promise<unknown> | unknown
+      >(),
   }
 })
 
@@ -168,9 +238,13 @@ const red = {
     oklch: 'oklch(62.8% 0.2577 29.23)',
     rgb: 'rgb(255, 0, 0)',
   },
-}
+} satisfies WorkspaceColorGroup
 
-function colorGroup(color: string, hex: string, sourceText = hex) {
+function colorGroup(
+  color: string,
+  hex: string,
+  sourceText = hex,
+): WorkspaceColorGroup {
   return {
     color,
     occurrences: [
@@ -201,7 +275,7 @@ describe('workspace palette Quick Pick', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.picks.length = 0
-    mocks.withProgress.mockImplementation(async (_options, task) =>
+    mocks.withProgress.mockImplementation((_options, task) =>
       task(
         { report: vi.fn<(value: unknown) => void>() },
         { isCancellationRequested: false },

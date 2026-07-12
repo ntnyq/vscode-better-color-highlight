@@ -269,10 +269,11 @@ async function showOccurrenceQuickPick(
       await env.clipboard.writeText(outcome.item.value)
       continue
     }
-    if (outcome.item.occurrence) {
-      if (await navigateToOccurrence(outcome.item.occurrence)) {
-        return 'done'
-      }
+    if (
+      outcome.item.occurrence &&
+      (await navigateToOccurrence(outcome.item.occurrence))
+    ) {
+      return 'done'
     }
   }
 }
@@ -358,7 +359,7 @@ function resultRow(label: string, passed: boolean): QuickPickItem {
   }
 }
 
-async function runQuickPick<T extends QuickPickItem>({
+function runQuickPick<T extends QuickPickItem>({
   buttons,
   items,
   onItemButton,
@@ -371,41 +372,41 @@ async function runQuickPick<T extends QuickPickItem>({
   quickPick.placeholder = placeholder
   quickPick.title = title
 
-  return new Promise(resolve => {
-    const disposables: Disposable[] = []
-    let settled = false
-    const finish = (outcome: PickOutcome<T>): void => {
-      if (settled) {
+  const { promise, resolve } = Promise.withResolvers<PickOutcome<T>>()
+  const disposables: Disposable[] = []
+  let settled = false
+  const finish = (outcome: PickOutcome<T>): void => {
+    if (settled) {
+      return
+    }
+    settled = true
+    for (const disposable of disposables) {
+      disposable.dispose()
+    }
+    quickPick.dispose()
+    resolve(outcome)
+  }
+
+  disposables.push(
+    quickPick.onDidAccept(() => {
+      const item = quickPick.selectedItems[0]
+      if (item) {
+        finish({ kind: 'accept', item })
+      }
+    }),
+    quickPick.onDidHide(() => finish({ kind: 'cancel' })),
+    quickPick.onDidTriggerButton(button => {
+      if (button === QuickInputButtons.Back) {
+        finish({ kind: 'back' })
+      }
+    }),
+    quickPick.onDidTriggerItemButton(async ({ button, item }) => {
+      if (onItemButton && !(await onItemButton(item, button))) {
         return
       }
-      settled = true
-      for (const disposable of disposables) {
-        disposable.dispose()
-      }
-      quickPick.dispose()
-      resolve(outcome)
-    }
-
-    disposables.push(
-      quickPick.onDidAccept(() => {
-        const item = quickPick.selectedItems[0]
-        if (item) {
-          finish({ kind: 'accept', item })
-        }
-      }),
-      quickPick.onDidHide(() => finish({ kind: 'cancel' })),
-      quickPick.onDidTriggerButton(button => {
-        if (button === QuickInputButtons.Back) {
-          finish({ kind: 'back' })
-        }
-      }),
-      quickPick.onDidTriggerItemButton(async ({ button, item }) => {
-        if (onItemButton && !(await onItemButton(item, button))) {
-          return
-        }
-        finish({ button, item, kind: 'item-button' })
-      }),
-    )
-    quickPick.show()
-  })
+      finish({ button, item, kind: 'item-button' })
+    }),
+  )
+  quickPick.show()
+  return promise
 }

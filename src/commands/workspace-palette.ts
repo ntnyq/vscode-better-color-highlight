@@ -27,6 +27,16 @@ export interface ContrastCommandInput {
   readonly palette?: WorkspacePaletteResult
 }
 
+interface ContrastColorPair {
+  readonly background: ContrastColorSelection
+  readonly foreground: ContrastColorSelection
+}
+
+type ContrastColorPairSelection =
+  | { readonly kind: 'back' }
+  | { readonly kind: 'cancel' }
+  | ({ readonly kind: 'selected' } & ContrastColorPair)
+
 export async function showWorkspacePalette(): Promise<void> {
   const palette = await scanPalette()
   if (!palette) {
@@ -56,11 +66,11 @@ export async function showWorkspacePalette(): Promise<void> {
 export async function checkWorkspaceColorContrast(
   input: ContrastCommandInput = {},
 ): Promise<void> {
-  let palette = input.palette
-  if ((!input.background || !input.foreground) && !palette) {
-    palette = (await scanPalette()) ?? undefined
-  }
-  if ((!input.background || !input.foreground) && !palette) {
+  const requiresPalette = !input.background || !input.foreground
+  const palette =
+    input.palette ??
+    (requiresPalette ? ((await scanPalette()) ?? undefined) : undefined)
+  if (requiresPalette && !palette) {
     return
   }
   if (palette && palette.groups.length === 0) {
@@ -72,37 +82,23 @@ export async function checkWorkspaceColorContrast(
   let foreground = input.foreground
   while (true) {
     if (!background || !foreground) {
-      const availablePalette = palette
-      if (!availablePalette) {
+      if (!palette) {
         return
       }
-
-      if (!background) {
-        const selection = await selectContrastColor(
-          availablePalette,
-          'Background',
-          Boolean(foreground),
-        )
-        if (!selection || selection === 'back') {
-          return
-        }
-        background = selection
+      const selection = await selectContrastColorPair(
+        palette,
+        background,
+        foreground,
+      )
+      if (selection.kind === 'cancel') {
+        return
       }
-      if (!foreground) {
-        const selection = await selectContrastColor(
-          availablePalette,
-          'Foreground',
-          true,
-        )
-        if (!selection) {
-          return
-        }
-        if (selection === 'back') {
-          background = undefined
-          continue
-        }
-        foreground = selection
+      if (selection.kind === 'back') {
+        background = undefined
+        continue
       }
+      background = selection.background
+      foreground = selection.foreground
     }
 
     const action = await showContrastResult(
@@ -124,6 +120,37 @@ export async function checkWorkspaceColorContrast(
       foreground = undefined
     }
   }
+}
+
+async function selectContrastColorPair(
+  palette: WorkspacePaletteResult,
+  background: ContrastColorSelection | undefined,
+  foreground: ContrastColorSelection | undefined,
+): Promise<ContrastColorPairSelection> {
+  if (!background) {
+    const selection = await selectContrastColor(
+      palette,
+      'Background',
+      Boolean(foreground),
+    )
+    if (!selection || selection === 'back') {
+      return { kind: 'cancel' }
+    }
+    background = selection
+  }
+
+  if (!foreground) {
+    const selection = await selectContrastColor(palette, 'Foreground', true)
+    if (!selection) {
+      return { kind: 'cancel' }
+    }
+    if (selection === 'back') {
+      return { kind: 'back' }
+    }
+    foreground = selection
+  }
+
+  return { background, foreground, kind: 'selected' }
 }
 
 async function scanPalette(): Promise<WorkspacePaletteResult | null> {
