@@ -14,6 +14,36 @@ function ranges(text: string) {
   }))
 }
 
+function measureFastestDuration(
+  run: () => void,
+  now = performance.now.bind(performance),
+  samples = 5,
+) {
+  let fastestDuration = Number.POSITIVE_INFINITY
+
+  for (let sample = 0; sample < samples; sample++) {
+    const start = now()
+    run()
+    fastestDuration = Math.min(fastestDuration, now() - start)
+  }
+
+  return fastestDuration
+}
+
+describe(measureFastestDuration, () => {
+  it('uses the fastest timing sample to ignore scheduler pauses', () => {
+    const timestamps = [0, 120, 120, 160, 160, 202]
+
+    expect(
+      measureFastestDuration(
+        () => {},
+        () => timestamps.shift() ?? Number.NaN,
+        3,
+      ),
+    ).toBe(40)
+  })
+})
+
 describe(findTailwindThemeColors, () => {
   it('projects highlight matches from shared resolved utility metadata', () => {
     const text = 'dark:bg-black'
@@ -370,17 +400,26 @@ describe(findTailwindThemeColors, () => {
   })
 
   it('restarts across punctuation-heavy selectors in linear time', () => {
+    const smallText = `${'.foo#id:hover'.repeat(2500)}.bg-red-500 {}`
     const text = `${'.foo#id:hover'.repeat(10_000)}.bg-red-500 {}`
-    const start = performance.now()
 
-    expect(findTailwindThemeColors(text)).toStrictEqual([
+    findTailwindThemeColors(smallText)
+    let result = findTailwindThemeColors(text)
+    const smallDuration = measureFastestDuration(() => {
+      findTailwindThemeColors(smallText)
+    })
+    const largeDuration = measureFastestDuration(() => {
+      result = findTailwindThemeColors(text)
+    })
+
+    expect(result).toStrictEqual([
       {
         start: text.indexOf('bg-red-500'),
         end: text.indexOf('bg-red-500') + 'bg-red-500'.length,
         color: 'rgb(239, 68, 68)',
       },
     ])
-    expect(performance.now() - start).toBeLessThan(100)
+    expect(largeDuration / smallDuration).toBeLessThan(8)
   })
 
   it('handles colon and bracket-heavy input in linear time', () => {
