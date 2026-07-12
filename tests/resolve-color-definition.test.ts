@@ -221,4 +221,26 @@ describe('resolveColorDefinition', () => {
       expect.stringContaining('read failed'),
     )
   })
+
+  it('bounds and cancels external CSS variable definition reads', async () => {
+    loadCssVarSourceDeclarations.mockClear()
+    const signal = { isCancellationRequested: false }
+    const { resolveColorDefinition } =
+      await import('../src/color-navigation/resolve-color-definition')
+    const text = ':root { --brand: #f00; } a { color: var(--brand); }'
+
+    await resolveColorDefinition(text, text.indexOf('var(--brand)') + 4, {
+      ...baseContext,
+      signal,
+      resolveCssVariablesAcrossFiles: true,
+      cssVariablePaths: ['tokens.css'],
+    })
+
+    const workspaceReadBudget = expect.objectContaining({
+      tryClaim: expect.any(Function),
+    })
+    expect(loadCssVarSourceDeclarations).toHaveBeenCalledWith(
+      expect.objectContaining({ signal, workspaceReadBudget }),
+    )
+  })
 })

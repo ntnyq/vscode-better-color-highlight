@@ -343,6 +343,18 @@ describe('workspace palette Quick Pick', () => {
     expect(mocks.picks).toHaveLength(0)
   })
 
+  it('ignores malformed contrast command input', async () => {
+    const { checkWorkspaceColorContrast } =
+      await import('../src/commands/workspace-palette')
+
+    await expect(
+      checkWorkspaceColorContrast({ palette: {} } as never),
+    ).resolves.toBeUndefined()
+
+    expect(mocks.scanWorkspacePalette).not.toHaveBeenCalled()
+    expect(mocks.picks).toHaveLength(0)
+  })
+
   it('copies HEX from the group button without closing the palette', async () => {
     const { showWorkspacePalette } =
       await import('../src/commands/workspace-palette')

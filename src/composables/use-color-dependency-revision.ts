@@ -8,6 +8,7 @@ const COLOR_DEPENDENCY_GLOB =
   '**/*.{css,json,jsonc,less,sass,scss,tokens,yaml,yml}'
 const STYLESHEET_PATH_REGEX = /\.(?:css|less|sass|scss)$/iu
 const TOKEN_PATH_REGEX = /\.(?:json|jsonc|tokens|yaml|yml)$/iu
+const DEPENDENCY_INVALIDATION_DEBOUNCE_MS = 100
 
 function isCrossFileResolutionEnabled(): boolean {
   return (
@@ -37,14 +38,27 @@ export function useColorDependencyRevision(): Readonly<Ref<number>> {
   const revision = ref(0)
   let watcher: FileSystemWatcher | undefined
   let watcherDisposables: Disposable[] = []
+  let invalidationTimer: ReturnType<typeof setTimeout> | undefined
 
   const invalidate = (uri: Pick<Uri, 'path'>) => {
-    if (isRelevantDependency(uri.path)) {
-      revision.value++
+    if (!isRelevantDependency(uri.path)) {
+      return
     }
+
+    if (invalidationTimer) {
+      clearTimeout(invalidationTimer)
+    }
+    invalidationTimer = setTimeout(() => {
+      invalidationTimer = undefined
+      revision.value++
+    }, DEPENDENCY_INVALIDATION_DEBOUNCE_MS)
   }
 
   const disposeWatcher = () => {
+    if (invalidationTimer) {
+      clearTimeout(invalidationTimer)
+      invalidationTimer = undefined
+    }
     for (const disposable of watcherDisposables) {
       disposable.dispose()
     }

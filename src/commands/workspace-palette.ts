@@ -1,3 +1,4 @@
+import { isRecord, isString } from '@ntnyq/utils'
 import { ProgressLocation, window, workspace } from 'vscode'
 import { config } from '../config'
 import {
@@ -12,6 +13,7 @@ import {
   WorkspacePaletteScanConfigurationError,
 } from '../workspace-palette/scanner'
 import type {
+  WorkspaceColorGroup,
   WorkspaceColorOccurrence,
   WorkspacePaletteResult,
 } from '../workspace-palette/types'
@@ -65,6 +67,16 @@ export async function showWorkspacePalette(): Promise<void> {
 
 export async function checkWorkspaceColorContrast(
   input: ContrastCommandInput = {},
+): Promise<void> {
+  if (!isContrastCommandInput(input)) {
+    return
+  }
+
+  await runWorkspaceColorContrast(input)
+}
+
+async function runWorkspaceColorContrast(
+  input: ContrastCommandInput,
 ): Promise<void> {
   const requiresPalette = !input.background || !input.foreground
   const palette =
@@ -120,6 +132,81 @@ export async function checkWorkspaceColorContrast(
       foreground = undefined
     }
   }
+}
+
+function isContrastCommandInput(value: unknown): value is ContrastCommandInput {
+  return (
+    isRecord(value) &&
+    (value.background === undefined ||
+      isContrastColorSelection(value.background)) &&
+    (value.foreground === undefined ||
+      isContrastColorSelection(value.foreground)) &&
+    (value.palette === undefined || isWorkspacePaletteResult(value.palette))
+  )
+}
+
+function isContrastColorSelection(
+  value: unknown,
+): value is ContrastColorSelection {
+  return (
+    isRecord(value) &&
+    isString(value.color) &&
+    (value.occurrence === undefined ||
+      isWorkspaceColorOccurrence(value.occurrence))
+  )
+}
+
+function isWorkspacePaletteResult(
+  value: unknown,
+): value is WorkspacePaletteResult {
+  return (
+    isRecord(value) &&
+    Array.isArray(value.groups) &&
+    value.groups.every(isWorkspaceColorGroup) &&
+    typeof value.occurrenceTruncated === 'boolean' &&
+    isNonNegativeInteger(value.scannedFileCount) &&
+    isNonNegativeInteger(value.skippedFileCount) &&
+    typeof value.truncated === 'boolean'
+  )
+}
+
+function isWorkspaceColorGroup(value: unknown): value is WorkspaceColorGroup {
+  if (
+    !isRecord(value) ||
+    !isString(value.color) ||
+    !Array.isArray(value.occurrences) ||
+    !value.occurrences.every(isWorkspaceColorOccurrence) ||
+    !isRecord(value.presentations)
+  ) {
+    return false
+  }
+
+  const { presentations } = value
+  return (
+    isString(presentations.alpha) &&
+    isString(presentations.hex) &&
+    isString(presentations.hsl) &&
+    isString(presentations.oklch) &&
+    isString(presentations.rgb)
+  )
+}
+
+function isWorkspaceColorOccurrence(
+  value: unknown,
+): value is WorkspaceColorOccurrence {
+  return (
+    isRecord(value) &&
+    isString(value.color) &&
+    isNonNegativeInteger(value.start) &&
+    isNonNegativeInteger(value.end) &&
+    value.end >= value.start &&
+    isString(value.sourceText) &&
+    isString(value.uri)
+  )
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0
 }
 
 async function selectContrastColorPair(

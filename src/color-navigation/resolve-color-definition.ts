@@ -10,8 +10,10 @@ import { resolveStylusVarDefinition } from '../strategies/stylus-vars'
 import { resolveTailwindColorDefinition } from '../strategies/tailwind-theme/definition'
 import type { ColorDefinitionTarget, StrategyContext } from '../types'
 import { logger } from '../utils/logger'
+import { createWorkspaceReadBudget } from '../utils/workspace-read-budget'
 
 const DEFAULT_TRUSTED_CSS_VAR_SELECTORS = [':root', 'html', 'body', ':host']
+const MAX_CSS_DEFINITION_SOURCE_READS = 64
 
 /** Resolve a color-variable reference using the current language strategy. */
 export async function resolveColorDefinition(
@@ -115,7 +117,11 @@ async function resolveCssDefinition(
       ? await loadCssVarSourceDeclarations({
           filePath: context.filePath,
           paths: context.cssVariablePaths ?? [],
+          signal: context.signal,
           trustedSelectors,
+          workspaceReadBudget: createWorkspaceReadBudget(
+            MAX_CSS_DEFINITION_SOURCE_READS,
+          ),
         })
       : []
 

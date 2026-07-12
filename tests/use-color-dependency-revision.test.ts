@@ -66,7 +66,8 @@ vi.mock(
 )
 
 describe('useColorDependencyRevision', () => {
-  it('increments for enabled stylesheet and token dependency changes', async () => {
+  it('coalesces rapid stylesheet and token dependency changes', async () => {
+    vi.useFakeTimers()
     deactivateHandlers.length = 0
     documentChangeHandler = () => {}
     fileChangeHandler = () => {}
@@ -81,11 +82,15 @@ describe('useColorDependencyRevision', () => {
     fileChangeHandler({ path: '/theme.tokens' })
     fileChangeHandler({ path: '/notes.txt' })
 
-    expect(revision.value).toBe(3)
+    expect(revision.value).toBe(0)
+    await vi.advanceTimersByTimeAsync(100)
+    expect(revision.value).toBe(1)
     expect(deactivateHandlers).toHaveLength(1)
+    vi.useRealTimers()
   })
 
   it('watches CSS dependencies when Tailwind stylesheet paths are configured', async () => {
+    vi.useFakeTimers()
     deactivateHandlers.length = 0
     configSnapshot.resolveCssVariablesAcrossFiles = false
     configSnapshot.resolveDesignTokensAcrossFiles = false
@@ -99,6 +104,8 @@ describe('useColorDependencyRevision', () => {
     fileChangeHandler({ path: '/theme.css' })
     fileChangeHandler({ path: '/tokens.json' })
 
+    await vi.advanceTimersByTimeAsync(100)
     expect(revision.value).toBe(1)
+    vi.useRealTimers()
   })
 })
