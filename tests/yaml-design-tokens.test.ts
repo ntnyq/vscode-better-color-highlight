@@ -73,6 +73,22 @@ accent:
     expect(findYamlDesignTokens('token: [\n  invalid')).toStrictEqual([])
   })
 
+  it.each(['.inf', '-.inf', '.nan'])(
+    'rejects non-finite fallback components parsed from YAML: %s',
+    component => {
+      for (const colorSpace of ['lab', 'lch', 'oklab', 'oklch']) {
+        const text = `brand:
+  $type: color
+  $value:
+    colorSpace: ${colorSpace}
+    components: [none, ${component}, 0]
+    hex: '#00ff00'
+`
+        expect(findYamlDesignTokens(text)).toStrictEqual([])
+      }
+    },
+  )
+
   it('does not scan arbitrary YAML strings for literal colors', () => {
     const text = `name: red
 theme: "#ff0000"

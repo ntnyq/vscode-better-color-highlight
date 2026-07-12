@@ -219,6 +219,7 @@ describe('document color provider', () => {
     expect(detector).toHaveBeenCalledWith(
       '#ff000080',
       expect.objectContaining({
+        signal: activeToken,
         tailwindColorMode: 'v4',
         tailwindStylesheetPaths: ['theme.css'],
       }),

@@ -109,6 +109,27 @@ describe(getStrategies, () => {
     expect(strategies).not.toContain(findHwb)
   })
 
+  it('highlights plaintext .tokens documents with the JSON strategy', async () => {
+    const strategies = getStrategies(
+      'plaintext',
+      defaultConfig,
+      'file:///workspace/theme.tokens',
+    )
+
+    expect(strategies).toStrictEqual([findJsonDesignTokens])
+    await expect(
+      Promise.resolve(
+        strategies[0](
+          '{"brand":{"$type":"color","$value":{"colorSpace":"srgb","components":[1,0,0]}}}',
+          {
+            languageId: 'plaintext',
+            filePath: 'file:///workspace/theme.tokens',
+          },
+        ),
+      ),
+    ).resolves.toMatchObject([{ color: 'rgb(255, 0, 0)' }])
+  })
+
   it('uses only the design token strategy for yaml documents', () => {
     for (const languageId of ['yaml', 'yml']) {
       const strategies = getStrategies(languageId, defaultConfig)

@@ -124,6 +124,91 @@ describe('external design token references', () => {
     expect(yamlMatches).toMatchObject([{ color: 'rgb(0, 0, 255)' }])
   })
 
+  it('loads JSON-formatted .tokens dependencies', async () => {
+    resetFiles()
+    setFile(
+      '/workspace/palette.tokens',
+      JSON.stringify({
+        brand: {
+          $type: 'color',
+          $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+        },
+      }),
+    )
+    const { findJsonDesignTokens } = await importJsonStrategy()
+
+    await expect(
+      findJsonDesignTokens(
+        createJsonReference('./palette.tokens#/brand/$value'),
+        trustedContext('json', '/workspace/root.tokens'),
+      ),
+    ).resolves.toMatchObject([{ color: 'rgb(255, 0, 0)' }])
+  })
+
+  it('bounds every resolution run to 64 sequential unique dependency reads', async () => {
+    resetFiles()
+    const references: Record<string, unknown> = {}
+    for (let index = 0; index < 80; index++) {
+      const path = `/workspace/palette-${index}.json`
+      setFile(
+        path,
+        JSON.stringify({
+          brand: {
+            $type: 'color',
+            $value: { colorSpace: 'srgb', components: [1, 0, 0] },
+          },
+        }),
+      )
+      references[`color${index}`] = {
+        $type: 'color',
+        $ref: `./palette-${index}.json#/brand/$value`,
+      }
+    }
+    let activeStats = 0
+    let maximumActiveStats = 0
+    statFileMock.mockImplementation(async filePath => {
+      activeStats++
+      maximumActiveStats = Math.max(maximumActiveStats, activeStats)
+      await Promise.resolve()
+      activeStats--
+      return files.get(filePath)!
+    })
+    const { findJsonDesignTokens } = await importJsonStrategy()
+
+    const matches = await findJsonDesignTokens(
+      JSON.stringify(references),
+      trustedContext('json', '/workspace/root.json'),
+    )
+
+    expect(matches).toHaveLength(64)
+    expect(statFileMock).toHaveBeenCalledTimes(64)
+    expect(maximumActiveStats).toBe(1)
+  })
+
+  it('canonicalizes and evicts the 256-entry external document cache', async () => {
+    resetFiles()
+    for (let index = 0; index <= 256; index++) {
+      setFile(`/workspace/cache-${index}.json`, '{}')
+    }
+    files.set(
+      'file:///workspace/cache-0.json',
+      files.get('/workspace/cache-0.json')!,
+    )
+    const { loadDesignTokenDocument } =
+      await import('../src/strategies/design-tokens/external-loader')
+
+    await loadDesignTokenDocument('/workspace/cache-0.json')
+    await loadDesignTokenDocument('file:///workspace/cache-0.json')
+    expect(readFileMock).toHaveBeenCalledTimes(1)
+
+    for (let index = 1; index <= 256; index++) {
+      await loadDesignTokenDocument(`/workspace/cache-${index}.json`)
+    }
+    await loadDesignTokenDocument('/workspace/cache-0.json')
+
+    expect(readFileMock).toHaveBeenCalledTimes(258)
+  })
+
   it('resolves chained references and rejects cross-file cycles', async () => {
     resetFiles()
     setFile(

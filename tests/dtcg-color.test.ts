@@ -98,6 +98,21 @@ describe(resolveDtcgColor, () => {
     ).toBeNull()
   })
 
+  it.each(['lab', 'lch', 'oklab', 'oklch'])(
+    'rejects non-finite %s channels even when none has a fallback',
+    colorSpace => {
+      for (const invalid of [Infinity, -Infinity, Number.NaN]) {
+        expect(
+          resolveDtcgColor({
+            colorSpace,
+            components: ['none', invalid, 0],
+            hex: '#00ff00',
+          }),
+        ).toBeNull()
+      }
+    },
+  )
+
   it('ignores fallback hex when all structured components are present', () => {
     expect(
       resolveDtcgColor({

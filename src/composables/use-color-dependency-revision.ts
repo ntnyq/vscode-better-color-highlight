@@ -4,9 +4,10 @@ import type { Disposable, FileSystemWatcher, Uri } from 'vscode'
 import { workspace } from 'vscode'
 import { config } from '../config'
 
-const COLOR_DEPENDENCY_GLOB = '**/*.{css,json,jsonc,less,sass,scss,yaml,yml}'
+const COLOR_DEPENDENCY_GLOB =
+  '**/*.{css,json,jsonc,less,sass,scss,tokens,yaml,yml}'
 const STYLESHEET_PATH_REGEX = /\.(?:css|less|sass|scss)$/iu
-const TOKEN_PATH_REGEX = /\.(?:json|jsonc|yaml|yml)$/iu
+const TOKEN_PATH_REGEX = /\.(?:json|jsonc|tokens|yaml|yml)$/iu
 
 function isCrossFileResolutionEnabled(): boolean {
   return (

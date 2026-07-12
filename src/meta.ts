@@ -415,7 +415,7 @@ export const configs = {
     default: "{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}",
   } as ConfigItem<"color-highlight.workspacePaletteExclude">,
   /**
-   * Controls design token color matching. For JSON and JSONC, 'token-values' matches value and $value fields, 'strings' matches any color string value, and 'all' enables both modes. 'off' disables JSON, JSONC, and YAML token matching.
+   * Controls design token color matching. For JSON, JSONC, and .tokens files, 'token-values' matches value and $value fields, 'strings' matches any color string value, and 'all' enables both modes. 'off' disables JSON, JSONC, .tokens, and YAML token matching.
    * @key `color-highlight.designTokenJsonMode`
    * @default `"token-values"`
    * @type `string`
@@ -425,7 +425,7 @@ export const configs = {
     default: "token-values",
   } as ConfigItem<"color-highlight.designTokenJsonMode">,
   /**
-   * Resolve relative JSON, JSONC, and YAML design-token $ref references across files in trusted workspaces.
+   * Resolve relative JSON, JSONC, JSON-formatted .tokens, and YAML design-token $ref references across files in trusted workspaces.
    * @key `color-highlight.resolveDesignTokensAcrossFiles`
    * @default `false`
    * @type `boolean`

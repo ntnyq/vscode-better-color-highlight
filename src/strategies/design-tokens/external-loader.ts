@@ -1,12 +1,14 @@
 import type { CancellationSignal, ColorMatch } from '../../types'
 import {
   extnameWorkspacePath,
+  getWorkspacePathIdentity,
   isAbsoluteWorkspacePath,
   readWorkspaceFile,
   resolveWorkspacePath,
   statWorkspaceFile,
 } from '../../utils/workspace-file-system'
 import type { WorkspaceReadBudget } from '../../utils/workspace-read-budget'
+import { createWorkspaceReadBudget } from '../../utils/workspace-read-budget'
 import { resolveDtcgColor } from './color'
 import { parseJsonDesignTokenDocument } from './json-document'
 import {
@@ -41,6 +43,15 @@ export interface ResolveDesignTokenColorsOptions {
 }
 
 const MAX_EXTERNAL_FILE_SIZE = 512 * 1024
+const MAX_EXTERNAL_FILES_PER_REQUEST = 64
+const MAX_DOCUMENT_CACHE_SIZE = 256
+const SUPPORTED_EXTENSIONS = new Set([
+  '.json',
+  '.jsonc',
+  '.tokens',
+  '.yaml',
+  '.yml',
+])
 const documentCache = new Map<string, CachedDocument>()
 
 /** Resolve local and trusted relative external references for one document. */
@@ -49,6 +60,17 @@ export async function resolveDesignTokenColors(
   options: ResolveDesignTokenColorsOptions,
 ): Promise<ColorMatch[]> {
   const source = createDesignTokenSource(document, options.filePath)
+  const requestBudget = createWorkspaceReadBudget(
+    MAX_EXTERNAL_FILES_PER_REQUEST,
+  )
+  const workspaceReadBudget: WorkspaceReadBudget = {
+    tryClaim(filePath) {
+      return (
+        requestBudget.tryClaim(filePath) &&
+        (options.workspaceReadBudget?.tryClaim(filePath) ?? true)
+      )
+    },
+  }
   if (options.signal?.isCancellationRequested) {
     return []
   }
@@ -61,7 +83,7 @@ export async function resolveDesignTokenColors(
       source,
       new Set(),
       0,
-      options.workspaceReadBudget,
+      workspaceReadBudget,
       options.signal,
     )
     if (options.signal?.isCancellationRequested || resolved?.type !== 'color') {
@@ -72,22 +94,17 @@ export async function resolveDesignTokenColors(
       ? { start: token.range.start, end: token.range.end, color }
       : null
   }
-  if (options.signal) {
-    const matches: ColorMatch[] = []
-    for (const token of document.tokens) {
-      const match = await resolveToken(token)
-      if (options.signal.isCancellationRequested) {
-        return []
-      }
-      if (match) {
-        matches.push(match)
-      }
+  const matches: ColorMatch[] = []
+  for (const token of document.tokens) {
+    const match = await resolveToken(token)
+    if (options.signal?.isCancellationRequested) {
+      return []
     }
-    return matches
+    if (match) {
+      matches.push(match)
+    }
   }
-  const matches = await Promise.all(document.tokens.map(resolveToken))
-
-  return matches.filter(match => match !== null)
+  return matches
 }
 
 /** Resolve a token through local and relative external references. */
@@ -208,7 +225,7 @@ export async function loadDesignTokenDocument(
     return null
   }
   const extension = extnameWorkspacePath(filePath).toLowerCase()
-  if (!['.json', '.jsonc', '.yaml', '.yml'].includes(extension)) {
+  if (!SUPPORTED_EXTENSIONS.has(extension)) {
     return null
   }
   if (workspaceReadBudget && !workspaceReadBudget.tryClaim(filePath)) {
@@ -229,7 +246,8 @@ export async function loadDesignTokenDocument(
       stat.mtimeMs,
       stat.size,
     ])
-    const cached = documentCache.get(filePath)
+    const cacheKey = getWorkspacePathIdentity(filePath)
+    const cached = documentCache.get(cacheKey)
     if (cached?.signature === signature) {
       return cached.source
     }
@@ -241,19 +259,36 @@ export async function loadDesignTokenDocument(
     if (signal?.isCancellationRequested) {
       return null
     }
-    const document =
-      extension === '.json' || extension === '.jsonc'
-        ? parseJsonDesignTokenDocument(text)
-        : parseYamlDesignTokenDocument(text)
+    const document = parseDesignTokenDocument(text, extension)
     if (!document) {
       return null
     }
 
     const source = createDesignTokenSource(document, filePath)
-    documentCache.set(filePath, { source, signature })
+    cacheDesignTokenDocument(cacheKey, { source, signature })
     return source
   } catch {
     return null
+  }
+}
+
+function parseDesignTokenDocument(text: string, extension: string) {
+  return extension === '.yaml' || extension === '.yml'
+    ? parseYamlDesignTokenDocument(text)
+    : parseJsonDesignTokenDocument(text)
+}
+
+function cacheDesignTokenDocument(
+  cacheKey: string,
+  cached: CachedDocument,
+): void {
+  documentCache.set(cacheKey, cached)
+  if (documentCache.size <= MAX_DOCUMENT_CACHE_SIZE) {
+    return
+  }
+  const oldestKey = documentCache.keys().next().value
+  if (oldestKey !== undefined) {
+    documentCache.delete(oldestKey)
   }
 }
 

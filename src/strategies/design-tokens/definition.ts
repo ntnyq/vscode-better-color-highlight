@@ -1,4 +1,5 @@
-import type { ColorDefinitionTarget } from '../../types'
+import type { CancellationSignal, ColorDefinitionTarget } from '../../types'
+import { createWorkspaceReadBudget } from '../../utils/workspace-read-budget'
 import { resolveDtcgColor } from './color'
 import { resolveExternalDesignToken } from './external-loader'
 import {
@@ -12,6 +13,7 @@ import type { DesignTokenEntry, ParsedDesignTokenDocument } from './types'
 export interface ResolveDesignTokenDefinitionOptions {
   readonly filePath?: string
   readonly resolveDesignTokensAcrossFiles?: boolean
+  readonly signal?: CancellationSignal
   readonly workspaceIsTrusted?: boolean
 }
 
@@ -34,9 +36,14 @@ export function resolveDesignTokenDefinition(
 
   const source = createDesignTokenSource(document, options.filePath)
   if (options.resolveDesignTokensAcrossFiles && options.workspaceIsTrusted) {
-    return resolveExternalDesignToken(token, source, new Set(), 0).then(
-      resolved => toDefinitionTarget(token, resolved),
-    )
+    return resolveExternalDesignToken(
+      token,
+      source,
+      new Set(),
+      0,
+      createWorkspaceReadBudget(64),
+      options.signal,
+    ).then(resolved => toDefinitionTarget(token, resolved))
   }
 
   return toDefinitionTarget(

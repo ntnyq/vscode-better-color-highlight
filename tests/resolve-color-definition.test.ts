@@ -154,6 +154,23 @@ describe('resolveColorDefinition', () => {
     expect(resolveTailwindColorDefinition).not.toHaveBeenCalled()
   })
 
+  it('dispatches plaintext .tokens documents as JSON design tokens', async () => {
+    resolveTailwindColorDefinition.mockClear()
+    const { resolveColorDefinition } =
+      await import('../src/color-navigation/resolve-color-definition')
+    const text =
+      '{"brand":{"$type":"color","$value":{"colorSpace":"srgb","components":[1,0,0]}},"alias":{"$value":"{brand}"}}'
+
+    await expect(
+      resolveColorDefinition(text, text.indexOf('{brand}') + 2, {
+        ...baseContext,
+        filePath: 'file:///workspace/theme.tokens',
+        languageId: 'plaintext',
+      }),
+    ).resolves.not.toBeNull()
+    expect(resolveTailwindColorDefinition).not.toHaveBeenCalled()
+  })
+
   it.each(['json', 'jsonc'])(
     'does not resolve structured %s aliases in strings mode',
     async languageId => {

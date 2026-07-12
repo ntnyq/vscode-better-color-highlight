@@ -181,6 +181,7 @@ describe('provideColorDefinition', () => {
       expect.objectContaining({
         filePath: 'file:///workspace/source.css',
         languageId: 'css',
+        signal: activeToken,
         tailwindColorMode: 'v4',
         tailwindStylesheetPaths: ['theme.css'],
         workspaceIsTrusted: false,

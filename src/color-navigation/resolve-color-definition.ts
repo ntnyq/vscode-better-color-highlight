@@ -20,7 +20,7 @@ export async function resolveColorDefinition(
   context: StrategyContext,
 ): Promise<ColorDefinitionTarget | null> {
   try {
-    if (!isStructuredTokenLanguage(context.languageId)) {
+    if (!isStructuredTokenLanguage(context.languageId, context.filePath)) {
       const tailwindTarget = await resolveTailwindColorDefinition(
         text,
         offset,
@@ -29,6 +29,14 @@ export async function resolveColorDefinition(
       if (tailwindTarget) {
         return tailwindTarget
       }
+    }
+
+    if (isJsonTokenDocument(context.languageId, context.filePath)) {
+      return await resolveDesignTokenDocument(
+        parseJsonDesignTokenDocument(text),
+        offset,
+        context,
+      )
     }
 
     switch (context.languageId) {
@@ -76,8 +84,23 @@ export async function resolveColorDefinition(
   }
 }
 
-function isStructuredTokenLanguage(languageId: string): boolean {
-  return ['json', 'jsonc', 'yaml', 'yml'].includes(languageId)
+function isStructuredTokenLanguage(
+  languageId: string,
+  filePath?: string,
+): boolean {
+  return (
+    isJsonTokenDocument(languageId, filePath) ||
+    languageId === 'yaml' ||
+    languageId === 'yml'
+  )
+}
+
+function isJsonTokenDocument(languageId: string, filePath?: string): boolean {
+  return (
+    languageId === 'json' ||
+    languageId === 'jsonc' ||
+    Boolean(filePath && /\.tokens(?:$|[?#])/iu.test(filePath))
+  )
 }
 
 async function resolveCssDefinition(
@@ -120,6 +143,7 @@ async function resolveDesignTokenDocument(
     !shouldResolveStructuredDesignTokens(
       context.languageId,
       context.designTokenJsonMode,
+      context.filePath,
     )
   ) {
     return null
@@ -128,6 +152,7 @@ async function resolveDesignTokenDocument(
   return await resolveDesignTokenDefinition(document, offset, {
     filePath: context.filePath,
     resolveDesignTokensAcrossFiles: context.resolveDesignTokensAcrossFiles,
+    signal: context.signal,
     workspaceIsTrusted: context.workspaceIsTrusted,
   })
 }
@@ -136,10 +161,11 @@ async function resolveDesignTokenDocument(
 function shouldResolveStructuredDesignTokens(
   languageId: string,
   mode: StrategyContext['designTokenJsonMode'],
+  filePath?: string,
 ): boolean {
   if (mode === 'off') {
     return false
   }
 
-  return (languageId !== 'json' && languageId !== 'jsonc') || mode !== 'strings'
+  return !isJsonTokenDocument(languageId, filePath) || mode !== 'strings'
 }

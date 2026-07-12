@@ -35,7 +35,7 @@ export async function provideColorDefinition(
     const target = await resolveColorDefinition(
       text,
       document.offsetAt(position),
-      createStrategyContext(document),
+      createStrategyContext(document, cancellationToken),
     )
     if (!target || cancellationToken.isCancellationRequested) {
       return
@@ -66,9 +66,13 @@ export async function provideColorDefinition(
   }
 }
 
-function createStrategyContext(document: TextDocument): StrategyContext {
+function createStrategyContext(
+  document: TextDocument,
+  signal: CancellationToken,
+): StrategyContext {
   return {
     languageId: document.languageId,
+    signal,
     filePath: document.uri.toString(),
     namedColorMatchMode: config.namedColorMatchMode,
     tailwindColorMode: config.tailwindColorMode,

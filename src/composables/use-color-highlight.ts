@@ -150,7 +150,7 @@ async function runStrategies(
     return []
   }
 
-  const strategies = getStrategies(languageId, config)
+  const strategies = getStrategies(languageId, config, filePath)
 
   if (debug) {
     logger.info(

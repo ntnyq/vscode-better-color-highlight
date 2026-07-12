@@ -46,7 +46,11 @@ async function getActiveEditorColorValue(
   const document = editor.document
   const hover = await getColorHover({
     config,
-    detectors: getStrategies(document.languageId, config),
+    detectors: getStrategies(
+      document.languageId,
+      config,
+      document.uri.toString(),
+    ),
     filePath: document.uri.toString(),
     languageId: document.languageId,
     offset: document.offsetAt(editor.selection.active),

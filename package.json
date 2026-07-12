@@ -243,12 +243,12 @@
             "all",
             "off"
           ],
-          "description": "Controls design token color matching. For JSON and JSONC, 'token-values' matches value and $value fields, 'strings' matches any color string value, and 'all' enables both modes. 'off' disables JSON, JSONC, and YAML token matching."
+          "description": "Controls design token color matching. For JSON, JSONC, and .tokens files, 'token-values' matches value and $value fields, 'strings' matches any color string value, and 'all' enables both modes. 'off' disables JSON, JSONC, .tokens, and YAML token matching."
         },
         "color-highlight.resolveDesignTokensAcrossFiles": {
           "type": "boolean",
           "default": false,
-          "description": "Resolve relative JSON, JSONC, and YAML design-token $ref references across files in trusted workspaces."
+          "description": "Resolve relative JSON, JSONC, JSON-formatted .tokens, and YAML design-token $ref references across files in trusted workspaces."
         },
         "color-highlight.useARGB": {
           "type": "boolean",
@@ -395,6 +395,7 @@
         "color-highlight.scssLoadPaths",
         "color-highlight.resolveCssVariablesAcrossFiles",
         "color-highlight.cssVariablePaths",
+        "color-highlight.resolveDesignTokensAcrossFiles",
         "color-highlight.tailwindStylesheetPaths"
       ]
     },

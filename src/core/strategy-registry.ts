@@ -69,8 +69,12 @@ function isLanguageMatch(
  * @param languageId - The document language ID to check
  * @returns Whether the language is JSON or JSONC
  */
-function isJsonLanguage(languageId: string): boolean {
-  return languageId === 'json' || languageId === 'jsonc'
+function isJsonLanguage(languageId: string, filePath?: string): boolean {
+  return (
+    languageId === 'json' ||
+    languageId === 'jsonc' ||
+    Boolean(filePath && /\.tokens(?:$|[?#])/iu.test(filePath))
+  )
 }
 
 /** Check whether a language ID is YAML-like. */
@@ -128,13 +132,15 @@ function getDirectColorStrategies(
  *
  * @param languageId - The document's language ID
  * @param config - The current highlight configuration
+ * @param filePath - Optional document path used to recognize .tokens files
  * @returns Array of color detection strategies to apply
  */
 export function getStrategies(
   languageId: string,
   config: StrategyRegistryConfig,
+  filePath?: string,
 ): ColorDetector[] {
-  const isJsonLang = isJsonLanguage(languageId)
+  const isJsonLang = isJsonLanguage(languageId, filePath)
   if (isYamlLanguage(languageId)) {
     return config.designTokenJsonMode === 'off' ? [] : [findYamlDesignTokens]
   }

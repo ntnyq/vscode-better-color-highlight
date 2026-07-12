@@ -342,4 +342,16 @@ describe('tailwind contrast pairs', () => {
       findContrastPairs(text, context('html')),
     ).resolves.toStrictEqual([])
   })
+
+  it('scales across many independent static class attributes', async () => {
+    const text = Array.from(
+      { length: 2000 },
+      (_, index) =>
+        `<div data-index="${index}" class="bg-black text-white"></div>`,
+    ).join('\n')
+
+    await expect(
+      findContrastPairs(text, context('html')),
+    ).resolves.toHaveLength(2000)
+  }, 1000)
 })

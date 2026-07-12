@@ -189,7 +189,9 @@ describe('readme generated config documentation', () => {
     expect(readme).toContain('CSS custom property navigation uses')
     expect(readme).toContain('multiple selector or at-rule contexts')
     expect(readme).toContain('All cross-file reads are disabled')
-    expect(readme).toMatch(/relative JSON,\s+JSONC, YAML, or YML dependencies/u)
+    expect(readme).toMatch(
+      /relative JSON,\s+JSONC, JSON-formatted `\.tokens`, YAML, or YML dependencies/u,
+    )
     expect(readme).toMatch(
       /CSS sources[\s\S]{0,350}reads at most 64\s+source files of up to 512 KiB each/u,
     )
@@ -197,12 +199,15 @@ describe('readme generated config documentation', () => {
       /SCSS modules[\s\S]{0,350}maximum depth of 5, reads at most 32 files,[\s\S]{0,100}limits each dependency to 512 KiB/u,
     )
     expect(readme).toMatch(
-      /DTCG `\$ref` navigation[\s\S]{0,350}accepts only relative JSON,[\s\S]{0,150}at most 32 reference steps,[\s\S]{0,100}limits each external dependency to 512 KiB/u,
+      /DTCG `\$ref` navigation[\s\S]{0,450}accepts only relative JSON,[\s\S]{0,250}reads at most 64[\s\S]{0,150}at most 32 reference steps,[\s\S]{0,100}limits each[\s\S]{0,30}external dependency to 512 KiB/u,
     )
   })
 
   it('documents DTCG, YAML, and opt-in cross-file token resolution', async () => {
     const packageJson = JSON.parse(await readFile('package.json', 'utf8')) as {
+      capabilities: {
+        untrustedWorkspaces: { restrictedConfigurations: string[] }
+      }
       contributes: {
         configuration: {
           properties: Record<string, { default: unknown; type: string }>
@@ -223,7 +228,11 @@ describe('readme generated config documentation', () => {
     )
     expect(readme).toContain('- [x] YAML Design Tokens')
     expect(readme).toContain('all 14 DTCG color spaces')
+    expect(readme).toContain('JSON-formatted `.tokens`')
     expect(readme).toContain('512 KiB')
+    expect(
+      packageJson.capabilities.untrustedWorkspaces.restrictedConfigurations,
+    ).toContain('color-highlight.resolveDesignTokensAcrossFiles')
   })
 
   it('documents Tailwind v3/v4 settings and bounded theme loading', async () => {

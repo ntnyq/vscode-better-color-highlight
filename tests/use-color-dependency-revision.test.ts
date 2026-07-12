@@ -78,9 +78,10 @@ describe('useColorDependencyRevision', () => {
 
     documentChangeHandler({ document: { uri: { path: '/tokens.css' } } })
     fileChangeHandler({ path: '/tokens.yaml' })
+    fileChangeHandler({ path: '/theme.tokens' })
     fileChangeHandler({ path: '/notes.txt' })
 
-    expect(revision.value).toBe(2)
+    expect(revision.value).toBe(3)
     expect(deactivateHandlers).toHaveLength(1)
   })
 

@@ -143,13 +143,13 @@ Default: `"{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}
 
 #### `color-highlight.designTokenJsonMode`
 
-Description: Controls design token color matching. For JSON and JSONC, 'token-values' matches value and $value fields, 'strings' matches any color string value, and 'all' enables both modes. 'off' disables JSON, JSONC, and YAML token matching.  
+Description: Controls design token color matching. For JSON, JSONC, and .tokens files, 'token-values' matches value and $value fields, 'strings' matches any color string value, and 'all' enables both modes. 'off' disables JSON, JSONC, .tokens, and YAML token matching.  
 Type: `string`  
 Default: `"token-values"`
 
 #### `color-highlight.resolveDesignTokensAcrossFiles`
 
-Description: Resolve relative JSON, JSONC, and YAML design-token $ref references across files in trusted workspaces.  
+Description: Resolve relative JSON, JSONC, JSON-formatted .tokens, and YAML design-token $ref references across files in trusted workspaces.  
 Type: `boolean`  
 Default: `false`
 
@@ -287,7 +287,7 @@ and virtual workspaces when their files are readable by VS Code.
 - [x] Tailwind theme color utilities：`bg-red-500` `text-sky-300` `hover:border-white/75`
 - [x] Flutter/Dart：`Color(0xffRRGGBB)`、`Color.fromARGB(a, r, g, b)`
 - [x] Hyprland：`rgba(rrggbb)`、`rgba(rrggbbaa)`
-- [x] JSON / JSONC Design Tokens：legacy color strings and DTCG structured colors
+- [x] JSON / JSONC / `.tokens` Design Tokens：legacy color strings and DTCG structured colors
 - [x] YAML Design Tokens：DTCG structured colors
 
 ## Tailwind CSS theme colors
@@ -384,7 +384,8 @@ complete value is a supported color, configure:
 Use `"all"` to allow both token fields and broad string matching. `"off"`
 disables JSON, JSONC, and YAML design token matching.
 
-DTCG color tokens are supported in JSON, JSONC, and YAML. The structured
+DTCG color tokens are supported in JSON, JSONC, JSON-formatted `.tokens`, and
+YAML. The structured
 `$value` format accepts all 14 DTCG color spaces, inherited `$type: "color"`,
 curly aliases such as `{palette.brand}`, local JSON Pointer `$ref` values, and
 group `$root` tokens. For example:
@@ -402,7 +403,7 @@ palette:
 ```
 
 Relative cross-file references are opt-in. In a trusted workspace, enable the
-setting and reference a JSON, JSONC, or YAML token value:
+setting and reference a JSON, JSONC, `.tokens`, or YAML token value:
 
 ```jsonc
 {
@@ -414,14 +415,16 @@ setting and reference a JSON, JSONC, or YAML token value:
 }
 ```
 
-Only relative references are loaded, supported dependency files are limited to
-512 KiB, and external reads remain disabled in untrusted workspaces.
+Only relative references are loaded, each resolution reads at most 64 unique
+dependency files of up to 512 KiB, and external reads remain disabled in
+untrusted workspaces.
 
 ## Color navigation
 
 Go to Definition and Peek Definition are enabled by default for color-valued
 references in CSS custom properties, SCSS variables, Less variables, Stylus
-variables, and DTCG aliases or `$ref` values in JSON, JSONC, YAML, and YML.
+variables, and DTCG aliases or `$ref` values in JSON, JSONC, `.tokens`, YAML,
+and YML.
 References that are missing, cyclic, malformed, or do not ultimately resolve to
 a supported color do not produce a definition.
 
@@ -444,8 +447,9 @@ cross-file highlighting:
   limits each dependency to 512 KiB.
 - DTCG `$ref` navigation requires
   `color-highlight.resolveDesignTokensAcrossFiles`, accepts only relative JSON,
-  JSONC, YAML, or YML dependencies, resolves at most 32 reference steps, and
-  limits each external dependency to 512 KiB.
+  JSONC, JSON-formatted `.tokens`, YAML, or YML dependencies, reads at most 64
+  unique dependency files, resolves at most 32 reference steps, and limits each
+  external dependency to 512 KiB.
 
 All cross-file reads are disabled in untrusted workspaces. To turn off Go to
 Definition and Peek Definition while keeping color highlighting enabled, use:

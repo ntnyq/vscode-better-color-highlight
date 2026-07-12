@@ -39,6 +39,14 @@ export function resolveDtcgColor(value: unknown): string | null {
     return null
   }
 
+  if (
+    !value.components.every(
+      component => component === 'none' || Number.isFinite(component),
+    )
+  ) {
+    return null
+  }
+
   if (value.components.includes('none')) {
     const validationComponents = value.components.map(component =>
       component === 'none' ? 0 : component,

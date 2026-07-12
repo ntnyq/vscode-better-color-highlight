@@ -96,17 +96,24 @@ export async function findTailwindContrastPairs(
   )
   const rawUtilities = findTailwindColorUtilities(text)
   const pairs: ResolvedContrastPair[] = []
+  let utilityIndex = 0
   for (const attribute of attributes) {
     if (context.signal?.isCancellationRequested) {
       return []
     }
+    const attributeUtilities = takeAttributeUtilities(
+      rawUtilities,
+      utilityIndex,
+      attribute,
+    )
+    utilityIndex = attributeUtilities.nextIndex
     const attributeText = text.slice(attribute.valueStart, attribute.valueEnd)
     if (!isStaticRenderableClass(attributeText)) {
       continue
     }
     const groups = collectUtilityGroups(
       attribute,
-      rawUtilities,
+      attributeUtilities.utilities,
       resolvedByRange,
     )
 
@@ -148,6 +155,34 @@ export async function findTailwindContrastPairs(
     }
   }
   return pairs
+}
+
+function takeAttributeUtilities(
+  rawUtilities: readonly TailwindColorUtility[],
+  initialIndex: number,
+  attribute: { readonly valueEnd: number; readonly valueStart: number },
+): {
+  readonly nextIndex: number
+  readonly utilities: readonly TailwindColorUtility[]
+} {
+  let startIndex = initialIndex
+  while (
+    startIndex < rawUtilities.length &&
+    rawUtilities[startIndex].end <= attribute.valueStart
+  ) {
+    startIndex++
+  }
+  let endIndex = startIndex
+  while (
+    endIndex < rawUtilities.length &&
+    rawUtilities[endIndex].start < attribute.valueEnd
+  ) {
+    endIndex++
+  }
+  return {
+    nextIndex: endIndex,
+    utilities: rawUtilities.slice(startIndex, endIndex),
+  }
 }
 
 function collectUtilityGroups(

@@ -53,6 +53,7 @@ export async function provideDocumentColors(
 
   const context: StrategyContext = {
     languageId: document.languageId,
+    signal: cancellationToken,
     filePath: document.uri.toString(),
     namedColorMatchMode: config.namedColorMatchMode,
     tailwindColorMode: config.tailwindColorMode,
@@ -69,7 +70,11 @@ export async function provideDocumentColors(
   }
   const matches = await runColorDetectors({
     context,
-    detectors: getStrategies(document.languageId, config),
+    detectors: getStrategies(
+      document.languageId,
+      config,
+      document.uri.toString(),
+    ),
     onDetectorError: message => logger.error(message),
     text,
   })
