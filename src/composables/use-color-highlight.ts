@@ -16,14 +16,79 @@ import { DecorationTypeCache } from '../decorations/decoration-type'
 import type {
   ColorMatch,
   ColorMatchGroup,
+  CancellationSignal,
   HighlightRunConfig,
   MarkerType,
   Disposable,
   StrategyRunOptions,
 } from '../types'
-import { groupByColor } from '../utils/color-match'
+import { groupColorMatchesWithinLimits } from '../utils/color-match'
 import { shouldTrackEditor } from '../utils/editor-filter'
 import { logger } from '../utils/logger'
+
+const MAX_HIGHLIGHT_COLOR_COUNT = 256
+const MAX_HIGHLIGHT_MATCH_COUNT = 10_000
+
+interface HighlightRunCancellation {
+  /** Mark the associated strategy run as superseded. */
+  readonly cancel: () => void
+
+  /** Cancellation state passed to color detectors. */
+  readonly signal: CancellationSignal
+}
+
+function createHighlightRunCancellation(): HighlightRunCancellation {
+  let isCancellationRequested = false
+
+  return {
+    cancel() {
+      isCancellationRequested = true
+    },
+    signal: {
+      get isCancellationRequested() {
+        return isCancellationRequested
+      },
+    },
+  }
+}
+
+function handleHighlightRunError(
+  error: unknown,
+  cancellation: HighlightRunCancellation,
+  currentSignature: string | undefined,
+): string | undefined {
+  if (cancellation.signal.isCancellationRequested) {
+    return currentSignature
+  }
+
+  logger.error(`Color detection failed: ${error}`)
+  return undefined
+}
+
+function retainActiveCancellation(
+  activeCancellation: HighlightRunCancellation | undefined,
+  completedCancellation: HighlightRunCancellation,
+): HighlightRunCancellation | undefined {
+  return activeCancellation === completedCancellation
+    ? undefined
+    : activeCancellation
+}
+
+function logHighlightTruncation(
+  filePath: string,
+  detectedMatchCount: number,
+  retainedMatchCount: number,
+  retainedColorCount: number,
+  truncated: boolean,
+): void {
+  if (!truncated) {
+    return
+  }
+
+  logger.info(
+    `[debug] Truncated ${detectedMatchCount} detected matches to ${retainedMatchCount} matches and ${retainedColorCount} colors for ${filePath}`,
+  )
+}
 
 /**
  * Create a stable signature for the current text revision, language, and config.
@@ -119,7 +184,7 @@ function useDebouncedRef<T>(source: Ref<T>, ms: number): Disposable<Ref<T>> {
 
 /**
  * Run all applicable strategies on the given text.
- * Uses Promise.all for async strategies (fixes reference repo Promise.race bug).
+ * Cooperatively stops detector work when a newer editor run supersedes it.
  *
  * @param options - Strategy run options
  * @returns Flat array of all color matches from all strategies
@@ -128,6 +193,7 @@ async function runStrategies(
   options: StrategyRunOptions,
 ): Promise<ColorMatch[]> {
   const {
+    signal,
     text,
     languageId,
     filePath,
@@ -160,6 +226,7 @@ async function runStrategies(
 
   return await runColorDetectors({
     context: {
+      signal,
       languageId,
       filePath,
       namedColorMatchMode,
@@ -301,6 +368,7 @@ function setupEditorTracking(
   // Track the current config for this editor
   let pendingVersion = 0
   let lastRunSignature: string | undefined
+  let activeCancellation: HighlightRunCancellation | undefined
   let disposed = false
 
   // Watch debounced text and apply decorations
@@ -332,6 +400,8 @@ function setupEditorTracking(
       // even if this run exits early after clearing decorations.
       pendingVersion++
       const thisVersion = pendingVersion
+      activeCancellation?.cancel()
+      activeCancellation = undefined
       const text = debouncedText.value
 
       if (!text) {
@@ -379,8 +449,12 @@ function setupEditorTracking(
         )
       }
 
+      const runCancellation = createHighlightRunCancellation()
+      activeCancellation = runCancellation
+
       try {
         const matches = await runStrategies({
+          signal: runCancellation.signal,
           text,
           languageId: doc.languageId,
           filePath: doc.uri.toString(),
@@ -411,14 +485,24 @@ function setupEditorTracking(
           return
         }
 
-        const groups = groupByColor(matches)
+        const groupedMatches = groupColorMatchesWithinLimits(matches, {
+          maxColorCount: MAX_HIGHLIGHT_COLOR_COUNT,
+          maxMatchCount: MAX_HIGHLIGHT_MATCH_COUNT,
+        })
+        const { groups, matchCount, truncated } = groupedMatches
         const colors = Object.keys(groups)
 
         if (config.debug) {
           const colorCount = colors.length
-          const matchCount = matches.length
           logger.info(
             `[debug] Found ${matchCount} matches with ${colorCount} unique colors in ${doc.uri.fsPath}`,
+          )
+          logHighlightTruncation(
+            doc.uri.fsPath,
+            matches.length,
+            matchCount,
+            colorCount,
+            truncated,
           )
           for (const [color, colorMatches] of Object.entries(groups)) {
             logger.info(
@@ -431,7 +515,7 @@ function setupEditorTracking(
           colorCount: colors.length,
           colors,
           languageId: doc.languageId,
-          matchCount: matches.length,
+          matchCount,
           uri: doc.uri.toString(),
         })
         applyDecorations(
@@ -444,8 +528,16 @@ function setupEditorTracking(
         )
       } catch (error) {
         // Allow retry for the same text/config if a run fails unexpectedly.
-        lastRunSignature = undefined
-        logger.error(`Color detection failed: ${error}`)
+        lastRunSignature = handleHighlightRunError(
+          error,
+          runCancellation,
+          lastRunSignature,
+        )
+      } finally {
+        activeCancellation = retainActiveCancellation(
+          activeCancellation,
+          runCancellation,
+        )
       }
     },
     { immediate: true },
@@ -455,6 +547,8 @@ function setupEditorTracking(
     () => {
       disposed = true
       pendingVersion++
+      activeCancellation?.cancel()
+      activeCancellation = undefined
     },
     debouncedText.dispose,
     stopRevisionWatch,

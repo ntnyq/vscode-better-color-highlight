@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import type { ColorMatch } from '../src/types'
-import { groupByColor } from '../src/utils/color-match'
+import {
+  groupByColor,
+  groupColorMatchesWithinLimits,
+} from '../src/utils/color-match'
 
 describe(groupByColor, () => {
   it('groups matches by color', () => {
@@ -18,5 +21,32 @@ describe(groupByColor, () => {
 
   it('returns empty object for empty array', () => {
     expect(groupByColor([])).toStrictEqual({})
+  })
+
+  it('bounds retained matches and unique color groups', () => {
+    const matches: ColorMatch[] = [
+      { start: 0, end: 1, color: 'red' },
+      { start: 1, end: 2, color: 'blue' },
+      { start: 2, end: 3, color: 'green' },
+      { start: 3, end: 4, color: 'red' },
+      { start: 4, end: 5, color: 'blue' },
+    ]
+
+    expect(
+      groupColorMatchesWithinLimits(matches, {
+        maxColorCount: 2,
+        maxMatchCount: 3,
+      }),
+    ).toStrictEqual({
+      groups: {
+        blue: [{ start: 1, end: 2, color: 'blue' }],
+        red: [
+          { start: 0, end: 1, color: 'red' },
+          { start: 3, end: 4, color: 'red' },
+        ],
+      },
+      matchCount: 3,
+      truncated: true,
+    })
   })
 })

@@ -239,6 +239,21 @@ describe('document color provider', () => {
     expect(createColorInformation(document, matches)).toHaveLength(1)
   })
 
+  it('bounds native color information returned for one document', async () => {
+    const { createColorInformation } =
+      await import('../src/color-provider/document-color-provider')
+    const matches: ColorMatch[] = Array.from(
+      { length: 10_001 },
+      (_, index) => ({
+        start: index,
+        end: index + 1,
+        color: 'rgb(255, 0, 0)',
+      }),
+    )
+
+    expect(createColorInformation(document, matches)).toHaveLength(10_000)
+  })
+
   it('provides four native replacement presentations', async () => {
     const { provideColorPresentations } =
       await import('../src/color-provider/document-color-provider')

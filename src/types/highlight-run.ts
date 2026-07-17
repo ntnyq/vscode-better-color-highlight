@@ -1,4 +1,5 @@
 import type { NestedScopedConfigs } from '../meta'
+import type { CancellationSignal } from './color-highlight'
 
 /**
  * Configuration fields that affect a single highlight run.
@@ -32,6 +33,9 @@ export type HighlightRunConfig = Pick<
  * Options used when running color detection strategies.
  */
 export interface StrategyRunOptions {
+  /** Cancellation state for a superseded editor scan. */
+  readonly signal: CancellationSignal
+
   /**
    * The document text to analyze.
    */

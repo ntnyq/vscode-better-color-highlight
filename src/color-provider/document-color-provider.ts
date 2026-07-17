@@ -25,6 +25,7 @@ const PRESENTATION_FORMATS: readonly ColorPresentationFormat[] = [
   'hsl',
   'oklch',
 ]
+const MAX_DOCUMENT_COLOR_COUNT = 10_000
 
 /**
  * Detect colors for VS Code's native document color provider.
@@ -122,6 +123,10 @@ export function createColorInformation(
       color.a,
     )
     result.push(new ColorInformation(range, nativeColor))
+
+    if (result.length >= MAX_DOCUMENT_COLOR_COUNT) {
+      break
+    }
   }
 
   return result

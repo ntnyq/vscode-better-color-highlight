@@ -275,6 +275,58 @@ describe('useColorHighlight', () => {
     vi.useRealTimers()
   })
 
+  it('cancels a pending strategy run when the document changes', async () => {
+    setupTest()
+    vi.useFakeTimers()
+    const { promise, resolve } = Promise.withResolvers<ColorMatch[]>()
+    const strategy = vi.fn<ColorDetector>(() => promise)
+    strategyList = [strategy]
+
+    documentTextRef = createRef('.box { color: #ff0000; }')
+    visibleEditorsRef = createRef<unknown[]>([createEditor()])
+
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+
+    useColorHighlight()
+    const initialSignal = strategy.mock.calls[0]?.[1]?.signal
+    expect(initialSignal?.isCancellationRequested).toBe(false)
+
+    documentTextRef.value = '.box { color: #0000ff; }'
+    await vi.advanceTimersByTimeAsync(100)
+
+    expect(initialSignal?.isCancellationRequested).toBe(true)
+    expect(strategy.mock.calls[1]?.[1]?.signal?.isCancellationRequested).toBe(
+      false,
+    )
+
+    resolve([])
+    await vi.runAllTimersAsync()
+    vi.useRealTimers()
+  })
+
+  it('bounds the number of decoration types created for one editor', async () => {
+    setupTest()
+    asyncStrategy.mockResolvedValue(
+      Array.from({ length: 257 }, (_, index) => ({
+        start: index,
+        end: index + 1,
+        color: `rgb(${index % 256}, ${Math.floor(index / 256)}, 0)`,
+      })),
+    )
+    documentTextRef = createRef('x'.repeat(257))
+    visibleEditorsRef = createRef<unknown[]>([createEditor()])
+
+    const { useColorHighlight } =
+      await import('../src/composables/use-color-highlight')
+
+    useColorHighlight()
+    await flushPromises()
+    await flushPromises()
+
+    expect(createTextEditorDecorationType).toHaveBeenCalledTimes(256)
+  })
+
   it('applies successful strategy results when another strategy fails', async () => {
     setupTest()
     const failingStrategy = vi.fn<ColorDetector>(() => {
