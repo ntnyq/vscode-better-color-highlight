@@ -292,7 +292,7 @@ async function resolveCssVarValue(
     return { status: 'invalid' }
   }
 
-  const normalized = value.replaceAll(/!important\b/gu, '').trim()
+  const normalized = value.trim()
   const varUsages = getOutermostCssVarUsages(findCssVarUsages(normalized))
 
   if (varUsages.length > 0) {
@@ -466,10 +466,10 @@ function hasMultipleDeclarationContexts(
 }
 
 /**
- * Select the latest declaration by source order.
+ * Select a declaration by CSS priority, then source order.
  *
  * @param declarations - Declarations with the same name and selector context
- * @returns Declaration with the highest source order
+ * @returns Winning declaration for one selector context
  */
 function selectLatestDeclaration(
   declarations: readonly CssVarDeclaration[],
@@ -477,6 +477,13 @@ function selectLatestDeclaration(
   let latest = declarations[0]
 
   for (const declaration of declarations.slice(1)) {
+    if (declaration.isImportant !== latest.isImportant) {
+      if (declaration.isImportant) {
+        latest = declaration
+      }
+      continue
+    }
+
     if (declaration.sourceOrder > latest.sourceOrder) {
       latest = declaration
     }

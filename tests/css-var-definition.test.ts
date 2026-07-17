@@ -154,6 +154,24 @@ describe(resolveCssVarDefinition, () => {
     expect(target?.targetSelectionRange).toStrictEqual(rangeOf(text, '--brand'))
   })
 
+  it('navigates to an important declaration over a later normal one', async () => {
+    const text = `
+      :root {
+        --brand: red !important;
+        --brand: blue;
+      }
+      .card { color: var(--brand); }
+    `
+    const target = await resolveCssVarDefinition(
+      text,
+      text.lastIndexOf('var(--brand)') + 6,
+      optionsFor(text),
+    )
+
+    expect(target?.targetSelectionRange).toStrictEqual(rangeOf(text, '--brand'))
+    expect(target?.targetRange.end).toBe(text.indexOf('red') + 'red'.length)
+  })
+
   it('resolves a nested alias fallback before returning its declaration', async () => {
     const text = `
       :root { --base: #0ea5e9; --brand: var(--missing, var(--base)); }

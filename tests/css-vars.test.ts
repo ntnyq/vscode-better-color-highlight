@@ -212,6 +212,22 @@ describe(findCssVars, () => {
     })
   })
 
+  it('records terminal important priority outside the declaration value', () => {
+    const text = ':root { --brand: red ! /* priority */ important; }'
+    const [declaration] = collectCssVarDeclarations(text, {
+      trustedSelectors: [':root'],
+    })
+
+    expect(declaration).toMatchObject({
+      isImportant: true,
+      value: 'red',
+      valueRange: {
+        start: text.indexOf('red'),
+        end: text.indexOf('red') + 'red'.length,
+      },
+    })
+  })
+
   it('records CSS variable usage ranges and enclosing source context', () => {
     const text = `
       @media screen {
@@ -326,6 +342,19 @@ describe(findCssVars, () => {
 
     expect(result).toHaveLength(1)
     expect(result[0].color).toBe('rgb(0, 0, 255)')
+  })
+
+  it('prefers important variable declarations over later normal declarations', async () => {
+    const text = `
+      .a { --brand: #ff0000 !important; }
+      .a { --brand: #0000ff; }
+      .a { color: var(--brand); }
+    `
+
+    const result = await findCssVars(text)
+
+    expect(result).toHaveLength(1)
+    expect(result[0].color).toBe('rgb(255, 0, 0)')
   })
 
   it('resolves variables declared and used in one selector-list rule', async () => {

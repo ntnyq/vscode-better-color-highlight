@@ -1,4 +1,5 @@
 import type { ColorSourceRange } from '../../types'
+import { parseCssDeclarationValue } from '../../utils/css-declaration'
 
 export interface CssVarDeclaration {
   readonly atRuleContext: readonly string[]
@@ -9,6 +10,7 @@ export interface CssVarDeclaration {
   readonly selectorContext: readonly string[]
   readonly sourceOrder: number
   readonly filePath?: string
+  readonly isImportant: boolean
   readonly isTrusted: boolean
   readonly nameRange: ColorSourceRange
   readonly valueRange: ColorSourceRange
@@ -247,7 +249,7 @@ export function collectCssVarDeclarations(
   function pushDeclaration(
     declaration: Pick<
       CssVarDeclaration,
-      'name' | 'nameRange' | 'value' | 'valueRange'
+      'isImportant' | 'name' | 'nameRange' | 'value' | 'valueRange'
     >,
     normalizedSelector: string,
     selectorContext: readonly string[],
@@ -474,10 +476,13 @@ function createCssSourceContext(
 function scanCssVarDeclarations(
   body: string,
   bodyStart: number,
-): Pick<CssVarDeclaration, 'name' | 'nameRange' | 'value' | 'valueRange'>[] {
+): Pick<
+  CssVarDeclaration,
+  'isImportant' | 'name' | 'nameRange' | 'value' | 'valueRange'
+>[] {
   const declarations: Pick<
     CssVarDeclaration,
-    'name' | 'nameRange' | 'value' | 'valueRange'
+    'isImportant' | 'name' | 'nameRange' | 'value' | 'valueRange'
   >[] = []
   let current = ''
   let currentStart = 0
@@ -501,12 +506,13 @@ function scanCssVarDeclarations(
     const rawName = current.slice(0, colonIndex)
     const rawValue = current.slice(colonIndex + 1)
     const name = rawName.trim()
-    const value = rawValue.trim()
+    const { isImportant, value } = parseCssDeclarationValue(rawValue)
 
     if (CSS_VAR_NAME_REGEX.test(name) && value) {
       const nameStart = currentStart + rawName.indexOf(name)
       const valueStart = currentStart + colonIndex + 1 + rawValue.indexOf(value)
       declarations.push({
+        isImportant,
         name,
         value,
         nameRange: {
