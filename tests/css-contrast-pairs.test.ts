@@ -41,6 +41,24 @@ describe('css contrast pairs', () => {
     ])
   })
 
+  it('prefers important colors over later normal declarations', async () => {
+    const text = `.sample {
+      color: #000 !important;
+      color: #777;
+      background-color: #fff ! /* priority */ important;
+      background-color: #777;
+    }`
+
+    const pairs = await findContrastPairs(text, context('css'))
+
+    expect(pairs).toMatchObject([
+      {
+        foreground: { originalText: '#000' },
+        background: { originalText: '#fff' },
+      },
+    ])
+  })
+
   it('isolates rules and keeps source order through comments and strings', async () => {
     const text = [
       `.a { content: "; }"; color: red; /* ; } */ background-color: black; }`,

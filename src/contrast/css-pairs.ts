@@ -12,6 +12,7 @@ import {
 } from '../strategies'
 import type { ColorDetector, ColorMatch, StrategyContext } from '../types'
 import { parseResolvedColor } from '../utils/color/presentation'
+import { parseCssDeclarationValue } from '../utils/css-declaration'
 import { evaluateColorContrast } from './evaluate'
 import {
   collectStaticMarkupContexts,
@@ -44,6 +45,7 @@ const RENDERING_DEPENDENT_PROPERTIES = new Set([
 
 interface CssCandidate extends ContrastRange {
   readonly contextKey: string
+  readonly isImportant: boolean
 }
 
 interface CssCandidatePair {
@@ -425,12 +427,12 @@ function collectCandidatePairFromSegments(
       contextKey,
     )
     if (declaration?.property === 'color' && declaration.candidate) {
-      foreground = declaration.candidate
+      foreground = selectCascadingCandidate(foreground, declaration.candidate)
     } else if (
       declaration?.property === 'background-color' &&
       declaration.candidate
     ) {
-      background = declaration.candidate
+      background = selectCascadingCandidate(background, declaration.candidate)
     } else if (
       declaration &&
       RENDERING_DEPENDENT_PROPERTIES.has(declaration.property)
@@ -442,6 +444,18 @@ function collectCandidatePairFromSegments(
   return !isInvalidated && foreground && background
     ? { background, foreground }
     : null
+}
+
+/** Select the later candidate unless an existing important value wins. */
+function selectCascadingCandidate(
+  current: CssCandidate | undefined,
+  candidate: CssCandidate,
+): CssCandidate {
+  if (current?.isImportant && !candidate.isImportant) {
+    return current
+  }
+
+  return candidate
 }
 
 function parseDeclaration(
@@ -514,21 +528,19 @@ function parseDeclaration(
   while (valueEnd > valueStart && /\s/u.test(text[valueEnd - 1])) {
     valueEnd--
   }
-  const important = text
-    .slice(valueStart, valueEnd)
-    .match(/\s*!important\s*$/iu)
-  if (important?.index !== undefined) {
-    valueEnd = valueStart + important.index
-    while (valueEnd > valueStart && /\s/u.test(text[valueEnd - 1])) {
-      valueEnd--
-    }
-  }
+  const parsedValue = parseCssDeclarationValue(text.slice(valueStart, valueEnd))
+  valueEnd = valueStart + parsedValue.value.length
   if (valueStart >= valueEnd) {
     return null
   }
 
   return {
-    candidate: { contextKey, end: valueEnd, start: valueStart },
+    candidate: {
+      contextKey,
+      end: valueEnd,
+      isImportant: parsedValue.isImportant,
+      start: valueStart,
+    },
     property,
   }
 }
