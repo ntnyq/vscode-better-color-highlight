@@ -1,5 +1,11 @@
 # Tailwind CSS v4 Theme Color Design
 
+> **Status:** Implemented on 2026-07-11 in `8faa5bb`.
+>
+> This is a historical design record, not a roadmap. Refer to the
+> [project README](../../README.md), runtime source, and tests for current
+> behavior.
+
 ## Goal
 
 Upgrade Tailwind color highlighting from a hard-coded v3 default palette to a

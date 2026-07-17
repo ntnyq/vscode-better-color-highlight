@@ -1,5 +1,11 @@
 # Contextual Color Variables and Navigation Design
 
+> **Status:** Implemented on 2026-07-11 in `7ec8c4a`.
+>
+> This is a historical design record, not a roadmap. Refer to the
+> [project README](../../README.md), runtime source, and tests for current
+> behavior.
+
 ## Goal
 
 Resolve color variables using conservative source context and provide precise

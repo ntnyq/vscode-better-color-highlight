@@ -1,5 +1,11 @@
 # Quality Hardening Design
 
+> **Status:** Implemented on 2026-07-11 in `fef7344`.
+>
+> This is a historical design record, not a roadmap. Refer to the
+> [project README](../../README.md), runtime source, and tests for current
+> behavior.
+
 ## Summary
 
 The first roadmap phase hardens the repository before new product features are

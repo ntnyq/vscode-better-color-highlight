@@ -2,6 +2,12 @@
 
 Date: 2026-07-07
 
+> **Status:** Implemented on 2026-07-07 in `cd3f6cd`.
+>
+> This is a historical design record, not a roadmap. Refer to the
+> [project README](../../README.md), runtime source, and tests for current
+> behavior.
+
 ## Goal
 
 Enhance the optional color hover so users can copy, replace, and lightly adjust

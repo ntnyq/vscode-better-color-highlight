@@ -1,5 +1,11 @@
 # DTCG and YAML Design Token Design
 
+> **Status:** Implemented on 2026-07-11 in `4baf287`.
+>
+> This is a historical design record, not a roadmap. Refer to the
+> [project README](../../README.md), runtime source, and tests for current
+> behavior.
+
 ## Summary
 
 Extend design-token highlighting from legacy JSON string values to the stable

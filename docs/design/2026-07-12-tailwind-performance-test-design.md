@@ -1,5 +1,11 @@
 # Tailwind Performance Test Stabilization
 
+> **Status:** Implemented on 2026-07-12 in `bfe3a44`.
+>
+> This is a historical design record, not a roadmap. Refer to the
+> [project README](../../README.md), runtime source, and tests for current
+> behavior.
+
 ## Problem
 
 The Tailwind selector regression test asserts that one invocation finishes in

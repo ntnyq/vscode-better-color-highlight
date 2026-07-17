@@ -1,5 +1,11 @@
 # Workspace Palette and Contrast Diagnostics Design
 
+> **Status:** Implemented on 2026-07-12 in `35ec590`.
+>
+> This is a historical design record, not a roadmap. Refer to the
+> [project README](../../README.md), runtime source, and tests for current
+> behavior.
+
 ## Goal
 
 Add an on-demand, workspace-wide color palette and a low-noise contrast

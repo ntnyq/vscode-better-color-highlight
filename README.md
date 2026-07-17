@@ -469,6 +469,12 @@ provided to VS Code's native color picker with HEX, RGB, HSL, and OKLCH
 replacement presentations. It is disabled by default so the native swatch does
 not appear alongside the extension's custom marker unless explicitly requested.
 
+## Design records
+
+Completed architectural design records live in [`docs/design`](./docs/design/README.md).
+They preserve historical decisions and intentional non-goals; they are not a
+product roadmap or the authoritative description of current behavior.
+
 ## Credits
 
 This extension is implemented based on [naumovs/vscode-ext-color-highlight](https://github.com/naumovs/vscode-ext-color-highlight.git).

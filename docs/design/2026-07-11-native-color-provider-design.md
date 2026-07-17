@@ -1,5 +1,11 @@
 # Native Color Provider Design
 
+> **Status:** Implemented on 2026-07-11 in `7ff29b0`.
+>
+> This is a historical design record, not a roadmap. Refer to the
+> [project README](../../README.md), runtime source, and tests for current
+> behavior.
+
 ## Summary
 
 Add an optional VS Code `DocumentColorProvider` backed by the extension's
