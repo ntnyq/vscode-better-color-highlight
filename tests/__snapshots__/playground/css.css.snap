@@ -2850,6 +2850,125 @@
         "border": null,
         "overviewRulerColor": "rgb(255, 0, 0)"
       }
+    },
+    {
+      "index": 167,
+      "line": 428,
+      "column": 21,
+      "text": "#ef4444",
+      "range": [
+        9536,
+        9543
+      ],
+      "color": "rgb(239, 68, 68)",
+      "render": {
+        "backgroundColor": "rgb(239, 68, 68)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(239, 68, 68)"
+      }
+    },
+    {
+      "index": 168,
+      "line": 430,
+      "column": 21,
+      "text": "#3b82f6",
+      "range": [
+        9663,
+        9670
+      ],
+      "color": "rgb(59, 130, 246)",
+      "render": {
+        "backgroundColor": "rgb(59, 130, 246)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(59, 130, 246)"
+      }
+    },
+    {
+      "index": 169,
+      "line": 431,
+      "column": 10,
+      "text": "var(--priority-brand)",
+      "range": [
+        9681,
+        9702
+      ],
+      "color": "rgb(239, 68, 68)",
+      "render": {
+        "backgroundColor": "rgb(239, 68, 68)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(239, 68, 68)"
+      }
+    },
+    {
+      "index": 170,
+      "line": 436,
+      "column": 10,
+      "text": "#111827",
+      "range": [
+        9822,
+        9829
+      ],
+      "color": "rgb(17, 24, 39)",
+      "render": {
+        "backgroundColor": "rgb(17, 24, 39)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(17, 24, 39)"
+      }
+    },
+    {
+      "index": 171,
+      "line": 438,
+      "column": 10,
+      "text": "#6b7280",
+      "range": [
+        9943,
+        9950
+      ],
+      "color": "rgb(107, 114, 128)",
+      "render": {
+        "backgroundColor": "rgb(107, 114, 128)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(107, 114, 128)"
+      }
+    },
+    {
+      "index": 172,
+      "line": 439,
+      "column": 21,
+      "text": "#f9fafb",
+      "range": [
+        9972,
+        9979
+      ],
+      "color": "rgb(249, 250, 251)",
+      "render": {
+        "backgroundColor": "rgb(249, 250, 251)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(249, 250, 251)"
+      }
+    },
+    {
+      "index": 173,
+      "line": 441,
+      "column": 21,
+      "text": "#374151",
+      "range": [
+        10104,
+        10111
+      ],
+      "color": "rgb(55, 65, 81)",
+      "render": {
+        "backgroundColor": "rgb(55, 65, 81)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(55, 65, 81)"
+      }
     }
   ]
 }

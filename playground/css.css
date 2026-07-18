@@ -418,3 +418,25 @@
   color: var(--red2);
   border-color: var(--red-long);
 }
+
+/* =============================================
+ * CSS Declaration Priority
+ * ============================================= */
+
+/* Important custom properties win before source order. */
+.important-css-var {
+  --priority-brand: #ef4444 !important;
+  /* NOTE: This declaration is ineffective because the earlier value is !important. */
+  --priority-brand: #3b82f6;
+  color: var(--priority-brand);
+}
+
+/* Contrast diagnostics should use the effective foreground and background. */
+.important-contrast-pair {
+  color: #111827 !important;
+  /* NOTE: This declaration is ineffective because the earlier foreground is !important. */
+  color: #6b7280;
+  background-color: #f9fafb !important;
+  /* NOTE: This declaration is ineffective because the earlier background is !important. */
+  background-color: #374151;
+}
