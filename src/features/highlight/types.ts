@@ -20,6 +20,7 @@ export type MarkerType =
  */
 export type HighlightRunConfig = Pick<
   NestedScopedConfigs,
+  | 'ansiPalette'
   | 'enable'
   | 'languages'
   | 'useARGB'
@@ -38,6 +39,7 @@ export type HighlightRunConfig = Pick<
   | 'matchRgbWithNoFunction'
   | 'rgbWithNoFunctionLanguages'
   | 'matchHslWithNoFunction'
+  | 'matchAnsiEscapeCodes'
   | 'hslWithNoFunctionLanguages'
   | 'markerType'
   | 'markRuler'
@@ -47,6 +49,9 @@ export type HighlightRunConfig = Pick<
  * Options used when running color detection strategies.
  */
 export interface StrategyRunOptions {
+  /** Optional concrete RGB overrides for ANSI palette indexes 0-15. */
+  readonly ansiPalette: HighlightRunConfig['ansiPalette']
+
   /** Cancellation state for a superseded editor scan. */
   readonly signal: CancellationSignal
 

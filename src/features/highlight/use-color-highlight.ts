@@ -21,6 +21,7 @@ import {
 import { runColorDetectors } from '../../engine/detection/run-detectors'
 import { config } from '../../extension/config'
 import { shouldTrackEditor } from '../../extension/editor-filter'
+import { readObjectConfigValue } from '../../shared/config-value'
 import { logger } from '../../shared/logger'
 import { DecorationTypeCache } from './decorations/decoration-type'
 import { clearHighlightState, setHighlightState } from './state'
@@ -116,6 +117,8 @@ function createHighlightRunSignature(
     enable: highlightConfig.enable,
     languages: highlightConfig.languages,
     useARGB: highlightConfig.useARGB,
+    matchAnsiEscapeCodes: highlightConfig.matchAnsiEscapeCodes,
+    ansiPalette: readObjectConfigValue(highlightConfig, 'ansiPalette', {}),
     matchWords: highlightConfig.matchWords,
     namedColorMatchMode: highlightConfig.namedColorMatchMode,
     tailwindColorMode: highlightConfig.tailwindColorMode,
@@ -199,6 +202,7 @@ async function runStrategies(
 ): Promise<ColorMatch[]> {
   const {
     signal,
+    ansiPalette,
     text,
     languageId,
     filePath,
@@ -232,6 +236,7 @@ async function runStrategies(
   return await runColorDetectors({
     context: {
       signal,
+      ansiPalette,
       languageId,
       filePath,
       namedColorMatchMode,
@@ -460,6 +465,7 @@ function setupEditorTracking(
       try {
         const matches = await runStrategies({
           signal: runCancellation.signal,
+          ansiPalette: readObjectConfigValue(config, 'ansiPalette', {}),
           text,
           languageId: doc.languageId,
           filePath: doc.uri.toString(),

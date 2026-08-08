@@ -3,6 +3,7 @@ import { STYLE_LANGUAGES } from '../../shared/constants'
 import {
   findHexRGBA,
   findHexARGB,
+  findAnsiSgrColors,
   findColorFunctions,
   findHwb,
   findJsonDesignTokens,
@@ -24,6 +25,7 @@ export type StrategyRegistryConfig = Omit<
     NestedScopedConfigs,
     | 'designTokenJsonMode'
     | 'hslWithNoFunctionLanguages'
+    | 'matchAnsiEscapeCodes'
     | 'matchHslWithNoFunction'
     | 'matchRgbWithNoFunction'
     | 'matchWords'
@@ -142,7 +144,12 @@ export function getStrategies(
 ): ColorDetector[] {
   const isJsonLang = isJsonLanguage(languageId, filePath)
   if (isYamlLanguage(languageId)) {
-    return config.designTokenJsonMode === 'off' ? [] : [findYamlDesignTokens]
+    const strategies =
+      config.designTokenJsonMode === 'off' ? [] : [findYamlDesignTokens]
+    if (config.matchAnsiEscapeCodes) {
+      strategies.push(findAnsiSgrColors)
+    }
+    return strategies
   }
   const strategies = getDirectColorStrategies(config, isJsonLang)
 
@@ -192,6 +199,10 @@ export function getStrategies(
 
   if (languageId === 'dart') {
     strategies.push(findDartColors)
+  }
+
+  if (config.matchAnsiEscapeCodes) {
+    strategies.push(findAnsiSgrColors)
   }
 
   return strategies

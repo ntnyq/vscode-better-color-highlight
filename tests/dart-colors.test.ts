@@ -26,6 +26,8 @@ const defaultConfig: NestedScopedConfigs = {
   designTokenJsonMode: 'token-values',
   resolveDesignTokensAcrossFiles: false,
   useARGB: false,
+  matchAnsiEscapeCodes: false,
+  ansiPalette: {},
   matchRgbWithNoFunction: false,
   rgbWithNoFunctionLanguages: ['*'],
   matchHslWithNoFunction: false,

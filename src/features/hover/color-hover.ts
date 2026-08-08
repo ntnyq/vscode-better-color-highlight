@@ -1,5 +1,6 @@
 import type {
   ColorDetector,
+  ColorEditMode,
   ColorMatch,
   StrategyContext,
 } from '../../engine/detection'
@@ -11,6 +12,7 @@ import {
   getColorPresentations,
   type ColorPresentations,
 } from '../../shared/color/presentation'
+import { readObjectConfigValue } from '../../shared/config-value'
 
 /**
  * Copy command identifiers keyed by presentation format.
@@ -49,6 +51,9 @@ export type ColorHoverMatchCache = Map<string, ColorMatch[]>
  * Hover data for a detected color under the cursor.
  */
 export interface ColorHover {
+  /** Whether source-editing actions are safe for this match. */
+  readonly editMode?: ColorEditMode
+
   /**
    * Resolved rgb()/rgba() color value for the detected source text.
    */
@@ -185,6 +190,7 @@ export async function getColorHover(
   }
 
   const context: StrategyContext = {
+    ansiPalette: readObjectConfigValue(config, 'ansiPalette', {}),
     languageId,
     signal: cancellationToken,
     filePath,
@@ -232,6 +238,7 @@ export async function getColorHover(
   }
 
   return {
+    ...(match.editMode ? { editMode: match.editMode } : {}),
     originalColor: match.color,
     originalText: text.slice(match.start, match.end),
     presentations,
@@ -270,8 +277,7 @@ function cacheCompletedMatches(
 export function buildColorHoverMarkdown(hover: ColorHover): string {
   const { presentations } = hover
   const valueWidth = getHoverValueWidth(hover)
-
-  return [
+  const lines = [
     '**Color Highlight**',
     '',
     formatPresentationLine('HEX', 'hex', presentations.hex, hover, valueWidth),
@@ -284,8 +290,12 @@ export function buildColorHoverMarkdown(hover: ColorHover): string {
       hover,
       valueWidth,
     ),
-    formatAlphaLine(hover, valueWidth),
-  ].join('\n\n')
+  ]
+  if (canEditColor(hover)) {
+    lines.push(formatAlphaLine(hover, valueWidth))
+  }
+
+  return lines.join('\n\n')
 }
 
 /**
@@ -298,7 +308,7 @@ function getHoverValueWidth(hover: ColorHover): number {
   const { presentations } = hover
 
   return Math.max(
-    presentations.alpha.length,
+    canEditColor(hover) ? presentations.alpha.length : 0,
     presentations.hex.length,
     presentations.hsl.length,
     presentations.oklch.length,
@@ -326,7 +336,7 @@ function formatPresentationLine(
     `\`${formatHoverValue(value, valueWidth)}\``,
     `[$(copy)](${buildCommandLink(COPY_COMMANDS[format], value)})`,
   ]
-  if (!isDartColorSource(hover.originalText)) {
+  if (canEditColor(hover) && !isDartColorSource(hover.originalText)) {
     parts.push(
       `[$(replace)](${buildCommandLink(REPLACE_COMMANDS[format], {
         originalText: hover.originalText,
@@ -338,6 +348,11 @@ function formatPresentationLine(
   }
 
   return parts.join(' ')
+}
+
+/** Whether generic replacement and alpha controls are safe for this source. */
+function canEditColor(hover: ColorHover): boolean {
+  return hover.editMode !== 'read-only'
 }
 
 /**

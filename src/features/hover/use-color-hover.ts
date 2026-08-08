@@ -6,6 +6,7 @@ import {
   shouldProcessLanguage,
 } from '../../engine/detection/registry'
 import { config } from '../../extension/config'
+import { readObjectConfigValue } from '../../shared/config-value'
 import { logger } from '../../shared/logger'
 import {
   buildColorHoverMarkdown,
@@ -119,6 +120,8 @@ export function createHoverMatchCacheKey(
     designTokenJsonMode: config.designTokenJsonMode,
     resolveDesignTokensAcrossFiles: config.resolveDesignTokensAcrossFiles,
     useARGB: config.useARGB,
+    matchAnsiEscapeCodes: config.matchAnsiEscapeCodes,
+    ansiPalette: readObjectConfigValue(config, 'ansiPalette', {}),
     matchRgbWithNoFunction: config.matchRgbWithNoFunction,
     rgbWithNoFunctionLanguages: config.rgbWithNoFunctionLanguages,
     matchHslWithNoFunction: config.matchHslWithNoFunction,

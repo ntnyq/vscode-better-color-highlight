@@ -81,6 +81,8 @@ const testConfig = {
   tailwindColorMode: 'auto',
   tailwindStylesheetPaths: [],
   useARGB: false,
+  matchAnsiEscapeCodes: false,
+  ansiPalette: {},
   workspacePaletteExclude: defaultExclude,
   workspacePaletteInclude: '**/*',
 } satisfies NestedScopedConfigs
@@ -188,6 +190,7 @@ describe('workspace palette scanner', () => {
     const values = [uri('memfs:///a.css'), uri('memfs:///b.css')]
     const mutableConfig: NestedScopedConfigs = {
       ...testConfig,
+      ansiPalette: { red: '#ff0000' },
       cssVariablePaths: ['initial.css'],
       languages: ['css'],
       scssLoadPaths: ['initial-scss'],
@@ -195,6 +198,7 @@ describe('workspace palette scanner', () => {
     }
     findFiles.mockImplementation(() => {
       mutableConfig.cssVariablePaths.push('mutated.css')
+      mutableConfig.ansiPalette.red = '#aa0000'
       mutableConfig.languages.push('!css')
       mutableConfig.scssLoadPaths.push('mutated-scss')
       mutableConfig.tailwindStylesheetPaths.push('mutated-tailwind.css')
@@ -226,6 +230,9 @@ describe('workspace palette scanner', () => {
     )
     expect(
       contexts.every(context => context.tailwindStylesheetPaths?.length === 1),
+    ).toBe(true)
+    expect(
+      contexts.every(context => context.ansiPalette?.red === '#ff0000'),
     ).toBe(true)
     strategies.mockRestore()
   })

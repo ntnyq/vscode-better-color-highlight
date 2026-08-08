@@ -1,5 +1,6 @@
 import {
   activateExtension,
+  assertInMemoryAnsiHighlighting,
   assertInMemoryCssHighlighting,
   assertInMemoryContrastDiagnostic,
   assertRequiredCommands,
@@ -9,5 +10,6 @@ export async function run() {
   await activateExtension()
   await assertRequiredCommands()
   await assertInMemoryCssHighlighting()
+  await assertInMemoryAnsiHighlighting()
   await assertInMemoryContrastDiagnostic()
 }

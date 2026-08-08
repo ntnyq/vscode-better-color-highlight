@@ -17,6 +17,8 @@ const configSnapshot = {
   designTokenJsonMode: 'token-values',
   resolveDesignTokensAcrossFiles: false,
   useARGB: false,
+  matchAnsiEscapeCodes: false,
+  ansiPalette: {},
   matchRgbWithNoFunction: false,
   rgbWithNoFunctionLanguages: ['*'],
   matchHslWithNoFunction: false,
@@ -45,7 +47,7 @@ vi.mock(
 )
 
 describe('hover match cache signature', () => {
-  it('changes with Tailwind color mode and stylesheet paths', async () => {
+  it('changes with detector configuration', async () => {
     const { createHoverMatchCacheKey } =
       await import('../src/features/hover/use-color-hover')
     const createKey = () =>
@@ -56,8 +58,14 @@ describe('hover match cache signature', () => {
     const modeChanged = createKey()
     configSnapshot.tailwindStylesheetPaths = ['theme.css']
     const pathsChanged = createKey()
+    configSnapshot.matchAnsiEscapeCodes = true
+    const ansiEnabled = createKey()
+    configSnapshot.ansiPalette = { red: '#ff0000' }
+    const ansiPaletteChanged = createKey()
 
     expect(modeChanged).not.toBe(initial)
     expect(pathsChanged).not.toBe(modeChanged)
+    expect(ansiEnabled).not.toBe(pathsChanged)
+    expect(ansiPaletteChanged).not.toBe(ansiEnabled)
   })
 })

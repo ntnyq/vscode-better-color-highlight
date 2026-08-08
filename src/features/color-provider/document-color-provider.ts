@@ -21,6 +21,7 @@ import {
   parseResolvedColor,
 } from '../../shared/color/presentation'
 import type { ColorPresentationFormat } from '../../shared/color/presentation'
+import { readObjectConfigValue } from '../../shared/config-value'
 import { logger } from '../../shared/logger'
 
 const PRESENTATION_FORMATS: readonly ColorPresentationFormat[] = [
@@ -57,6 +58,7 @@ export async function provideDocumentColors(
   }
 
   const context: StrategyContext = {
+    ansiPalette: readObjectConfigValue(config, 'ansiPalette', {}),
     languageId: document.languageId,
     signal: cancellationToken,
     filePath: document.uri.toString(),
@@ -106,6 +108,10 @@ export function createColorInformation(
   const result: ColorInformation[] = []
 
   for (const match of matches) {
+    if (match.editMode === 'read-only') {
+      continue
+    }
+
     const key = `${match.start}:${match.end}:${match.color}`
     if (seen.has(key)) {
       continue

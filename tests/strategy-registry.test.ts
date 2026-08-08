@@ -3,6 +3,7 @@ import {
   getStrategies,
   shouldProcessLanguage,
 } from '../src/engine/detection/registry'
+import { findAnsiSgrColors } from '../src/engine/strategies/ansi-sgr'
 import { findColorFunctions } from '../src/engine/strategies/color-functions'
 import { findJsonDesignTokens } from '../src/engine/strategies/design-tokens/json-strategy'
 import { findYamlDesignTokens } from '../src/engine/strategies/design-tokens/yaml-strategy'
@@ -15,6 +16,7 @@ import { findTailwindThemeColors } from '../src/engine/strategies/tailwind-theme
 import type { NestedScopedConfigs } from '../src/meta'
 
 const defaultConfig: NestedScopedConfigs = {
+  ansiPalette: {},
   enable: true,
   enableColorPicker: false,
   enableContrastDiagnostics: false,
@@ -40,6 +42,7 @@ const defaultConfig: NestedScopedConfigs = {
   matchRgbWithNoFunction: false,
   rgbWithNoFunctionLanguages: ['*'],
   matchHslWithNoFunction: false,
+  matchAnsiEscapeCodes: false,
   hslWithNoFunctionLanguages: ['*'],
   markerType: 'background',
   markRuler: true,
@@ -58,6 +61,20 @@ describe(getStrategies, () => {
     const strategies = getStrategies('typescriptreact', defaultConfig)
 
     expect(strategies).toContain(findTailwindThemeColors)
+  })
+
+  it('includes ANSI SGR detection for every language when enabled', () => {
+    const config = { ...defaultConfig, matchAnsiEscapeCodes: true }
+
+    for (const languageId of ['typescript', 'json', 'yaml']) {
+      expect(getStrategies(languageId, config)).toContain(findAnsiSgrColors)
+    }
+  })
+
+  it('does not include ANSI SGR detection by default', () => {
+    expect(getStrategies('typescript', defaultConfig)).not.toContain(
+      findAnsiSgrColors,
+    )
   })
 
   it('uses ARGB mode when configured', () => {

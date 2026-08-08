@@ -8,6 +8,7 @@ import {
 import { runColorDetectors } from '../../engine/detection/run-detectors'
 import type { NestedScopedConfigs } from '../../meta'
 import { getColorPresentations } from '../../shared/color/presentation'
+import { readObjectConfigValue } from '../../shared/config-value'
 import { logger } from '../../shared/logger'
 import { createWorkspaceReadBudget } from '../../shared/workspace/read-budget'
 import { groupWorkspaceColorOccurrences } from './model'
@@ -23,11 +24,13 @@ const MAX_RETAINED_OCCURRENCE_COUNT = 20_000
 const MAX_COLOR_GROUP_COUNT = 1024
 
 export interface WorkspacePaletteScanConfig {
+  readonly ansiPalette: NestedScopedConfigs['ansiPalette']
   readonly cssVariablePaths: readonly string[]
   readonly cssVariableTrustedSelectors: readonly string[]
   readonly designTokenJsonMode: NestedScopedConfigs['designTokenJsonMode']
   readonly languages: readonly string[]
   readonly matchHslWithNoFunction: boolean
+  readonly matchAnsiEscapeCodes: boolean
   readonly matchRgbWithNoFunction: boolean
   readonly matchWords: boolean
   readonly maxFileSize: number
@@ -179,6 +182,7 @@ export async function scanWorkspacePalette({
 
     const context: StrategyContext = {
       signal: cancellationToken,
+      ansiPalette: config.ansiPalette,
       languageId: document.languageId,
       filePath: document.uri.toString(),
       namedColorMatchMode: config.namedColorMatchMode,
@@ -278,6 +282,9 @@ export function createWorkspacePaletteScanConfig(
 ): WorkspacePaletteScanConfig {
   return {
     ...config,
+    ansiPalette: {
+      ...readObjectConfigValue(config, 'ansiPalette', {}),
+    },
     cssVariablePaths: [...config.cssVariablePaths],
     cssVariableTrustedSelectors: [...config.cssVariableTrustedSelectors],
     hslWithNoFunctionLanguages: [...config.hslWithNoFunctionLanguages],

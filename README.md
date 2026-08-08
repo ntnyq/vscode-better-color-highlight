@@ -159,6 +159,18 @@ Description: Interpret 8-digit hex colors as ARGB instead of RGBA.
 Type: `boolean`  
 Default: `false`
 
+#### `color-highlight.matchAnsiEscapeCodes`
+
+Description: Highlight ANSI SGR foreground and background color escape sequences.  
+Type: `boolean`  
+Default: `false`
+
+#### `color-highlight.ansiPalette`
+
+Description: Optional #RRGGBB overrides for the base ANSI palette indexes 0-15. Unspecified colors use the built-in xterm-compatible palette.  
+Type: `object`  
+Default: `{}`
+
 #### `color-highlight.matchRgbWithNoFunction`
 
 Description: Highlight RGB values not wrapped in rgb() function.  
@@ -202,6 +214,44 @@ Type: `boolean`
 Default: `false`
 
 <!-- configs-list -->
+
+## ANSI SGR escape colors
+
+ANSI SGR color highlighting is opt-in. Enable it for source strings, scripts,
+fixtures, and captured output with:
+
+```jsonc
+{
+  "color-highlight.matchAnsiEscapeCodes": true,
+}
+```
+
+The detector recognizes standard foreground and background colors, their bright
+variants, indexed colors such as `38;5;N` and `48;5;N`, and truecolor forms such
+as `38;2;R;G;B` and `48;2;R;G;B`. Both semicolon-delimited and standard
+colon-delimited extended colors are supported. Escape introducers may be an
+actual ESC character or source spellings such as `\x1b`, `\u001b`, `\u{1b}`,
+`\033`, and `\e`.
+
+Base colors use a fixed xterm-compatible palette. Override any of its 16 named
+entries without redefining the rest:
+
+```jsonc
+{
+  "color-highlight.ansiPalette": {
+    "red": "#ff3344",
+    "brightRed": "#ff6677",
+    "brightBlack": "#666666",
+  },
+}
+```
+
+When one SGR sequence sets both foreground and background colors, the
+background color is highlighted. Other text attributes are ignored, and reset
+or default-color-only sequences do not produce a marker. ANSI matches are
+copy-only in hover details: generic replacement, alpha adjustment, and VS Code's
+native color picker are disabled because replacing the escape sequence with a
+CSS color would corrupt its source syntax.
 
 ## Workspace palette and color contrast
 
@@ -287,6 +337,7 @@ and virtual workspaces when their files are readable by VS Code.
 - [x] Tailwind theme color utilities：`bg-red-500` `text-sky-300` `hover:border-white/75`
 - [x] Flutter/Dart：`Color(0xffRRGGBB)`、`Color.fromARGB(a, r, g, b)`
 - [x] Hyprland：`rgba(rrggbb)`、`rgba(rrggbbaa)`
+- [x] ANSI SGR escape colors：basic, bright, indexed, and truecolor forms
 - [x] JSON / JSONC / `.tokens` Design Tokens：legacy color strings and DTCG structured colors
 - [x] YAML Design Tokens：DTCG structured colors
 
