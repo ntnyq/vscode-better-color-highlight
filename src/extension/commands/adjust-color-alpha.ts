@@ -1,5 +1,5 @@
 import {
-  formatDartColor,
+  formatDartColorWithAlphaDelta,
   isDartColorSource,
 } from '../../engine/strategies/dart-colors'
 import {
@@ -30,7 +30,10 @@ export async function adjustColorAlpha(value: unknown) {
   }
 
   const nextColor = withAlpha(color, color.a + payload.delta)
-  const dartReplacement = formatDartColor(nextColor, payload.originalText)
+  const dartReplacement = formatDartColorWithAlphaDelta(
+    payload.delta,
+    payload.originalText,
+  )
   if (dartReplacement) {
     await replaceActiveEditorRange(payload, dartReplacement)
     return

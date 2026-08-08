@@ -146,4 +146,20 @@ describe(findNamedColors, () => {
       ),
     ).toStrictEqual([])
   })
+
+  it(
+    'skips many Dart component names without repeated constructor scans',
+    { timeout: 500 },
+    () => {
+      const text =
+        'Color.from(alpha: 1, red: 0.1, green: 0.2, blue: 0.3);\n'.repeat(1600)
+
+      expect(
+        findNamedColors(text, {
+          languageId: 'dart',
+          namedColorMatchMode: 'always',
+        }),
+      ).toStrictEqual([])
+    },
+  )
 })

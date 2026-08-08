@@ -617,6 +617,30 @@ describe('useCommands', () => {
     )
   })
 
+  it('preserves floating-point Dart channels when adjusting alpha', async () => {
+    vi.resetModules()
+    registeredCommands.clear()
+    edit.mockClear()
+    replace.mockClear()
+    const { useCommands } = await import('../src/extension/commands')
+    useCommands()
+
+    sourceText =
+      'Color.from(alpha: 0.52345, red: 0.12345, green: 0.23456, blue: 0.34567)'
+    await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
+      delta: -0.1,
+      originalColor: 'rgba(31, 60, 88, 0.523)',
+      originalText: sourceText,
+      range: { start: 0, end: sourceText.length },
+      uri: 'file:///tmp/example.css',
+    })
+
+    expect(replace).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      'Color.from(alpha: 0.42345, red: 0.12345, green: 0.23456, blue: 0.34567)',
+    )
+  })
+
   it('does not edit Flutter Material color constants', async () => {
     vi.resetModules()
     registeredCommands.clear()

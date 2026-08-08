@@ -1,6 +1,7 @@
 import { hexARGBToRgb } from '../../../shared/color'
 import type { RgbaColor } from '../../../shared/color/presentation'
 import { FLUTTER_MATERIAL_COLOR_ARGB } from './material-colors'
+import { stripDartComments } from './scanner'
 
 const DART_INTEGER_LITERAL_REGEX = /^\d(?:_?\d)*$/u
 const DART_NUMBER_LITERAL_REGEX =
@@ -213,12 +214,6 @@ function parseParameters(
     return null
   }
   return parameters
-}
-
-function stripDartComments(source: string): string {
-  return source
-    .replaceAll(/\/\*[\s\S]*?\*\//gu, '')
-    .replaceAll(/\/\/[^\n\r]*/gu, '')
 }
 
 function parseByteLiteral(source: string): number | null {

@@ -1,7 +1,10 @@
 import { rgbString } from '../../shared/color'
 import { NAMED_COLORS } from '../../shared/constants'
 import type { ColorMatch, StrategyContext } from '../detection'
-import { isDartColorSyntaxNameAt } from './dart-colors'
+import {
+  findDartColorComponentNameStarts,
+  isDartColorSyntaxNameAt,
+} from './dart-colors'
 
 /**
  * Regex for CSS named color keywords.
@@ -54,6 +57,10 @@ export function findNamedColors(
   context?: StrategyContext,
 ): ColorMatch[] {
   const matches: ColorMatch[] = []
+  const dartColorComponentNameStarts =
+    context?.languageId === 'dart'
+      ? findDartColorComponentNameStarts(text)
+      : undefined
 
   for (const m of text.matchAll(NAMED_COLOR_REGEX)) {
     const prefix = m[1] ?? ''
@@ -66,7 +73,15 @@ export function findNamedColors(
 
     const start = (m.index ?? 0) + prefix.length
     const end = start + name.length
-    if (!isNamedColorAllowed(text, start, end, context)) {
+    if (
+      !isNamedColorAllowed(
+        text,
+        start,
+        end,
+        context,
+        dartColorComponentNameStarts,
+      )
+    ) {
       continue
     }
 
@@ -91,10 +106,11 @@ function isNamedColorAllowed(
   start: number,
   end: number,
   context?: StrategyContext,
+  dartColorComponentNameStarts?: ReadonlySet<number>,
 ): boolean {
   if (
     context?.languageId === 'dart' &&
-    isDartColorSyntaxNameAt(text, start, end)
+    isDartColorSyntaxNameAt(text, start, end, dartColorComponentNameStarts)
   ) {
     return false
   }

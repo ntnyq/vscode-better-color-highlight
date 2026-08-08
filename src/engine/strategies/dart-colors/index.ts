@@ -1,14 +1,14 @@
 import { rgbString } from '../../../shared/color'
 import type { ColorMatch } from '../../detection'
 import { isDartMaterialColorNameAt, parseDartColorSource } from './parser'
+import { findDartColorConstructorRanges, skipDartTrivia } from './scanner'
 
 export * from './presentation'
 
-const DART_COLOR_CONSTRUCTOR_HEAD_REGEX =
-  /(?<prefix>^|[^\w.])(?<head>Color(?:\.fromARGB|\.fromRGBO|\.from)?\s*\()/gu
 const DART_MATERIAL_COLOR_REFERENCE_REGEX =
   /(?<prefix>^|[^\w.])(?<source>Colors\.(?<name>[_a-zA-Z][_a-zA-Z0-9]*))/gu
 const DART_COLOR_FROM_COMPONENT_NAMES = new Set(['blue', 'green', 'red'])
+const DART_COLOR_FROM_COMPONENT_REGEX = /\b(?:blue|green|red)\b/gu
 
 /** Detect supported Flutter and Dart color expressions. */
 export function findDartColors(text: string): ColorMatch[] {
@@ -24,62 +24,53 @@ export function isDartColorSyntaxNameAt(
   text: string,
   start: number,
   end: number,
+  componentNameStarts = findDartColorComponentNameStarts(text),
 ): boolean {
-  if (isDartMaterialColorNameAt(text, start, end)) {
-    return true
-  }
+  return (
+    isDartMaterialColorNameAt(text, start, end) ||
+    (DART_COLOR_FROM_COMPONENT_NAMES.has(text.slice(start, end)) &&
+      componentNameStarts.has(start))
+  )
+}
 
-  const name = text.slice(start, end)
-  if (!DART_COLOR_FROM_COMPONENT_NAMES.has(name)) {
-    return false
-  }
+/** Find CSS named-color words used as `Color.from` component labels. */
+export function findDartColorComponentNameStarts(
+  text: string,
+): ReadonlySet<number> {
+  const constructorRanges = findDartColorConstructorRanges(text).filter(range =>
+    /^Color\.from\s*\(/u.test(range.head),
+  )
+  const componentNameStarts = new Set<number>()
+  let constructorIndex = 0
+  let activeConstructorEnd = -1
 
-  for (const match of text.matchAll(DART_COLOR_CONSTRUCTOR_HEAD_REGEX)) {
-    const prefix = match.groups?.prefix ?? ''
-    const head = match.groups?.head
-    if (!head || !/^Color\.from\s*\(/u.test(head)) {
-      continue
-    }
+  for (const match of text.matchAll(DART_COLOR_FROM_COMPONENT_REGEX)) {
+    const start = match.index ?? 0
+    const end = start + match[0].length
 
-    const constructorStart = (match.index ?? 0) + prefix.length
-    if (constructorStart > start) {
-      return false
-    }
-
-    const openParenthesis = constructorStart + head.lastIndexOf('(')
-    const constructorEnd = findClosingParenthesis(text, openParenthesis)
-    if (
-      constructorEnd !== null &&
-      start > openParenthesis &&
-      end < constructorEnd &&
-      /^(?:\s|\/\*[\s\S]*?\*\/|\/\/[^\n\r]*(?:\r?\n|$))*:/u.test(
-        text.slice(end, constructorEnd),
-      )
+    while (
+      constructorRanges[constructorIndex] &&
+      constructorRanges[constructorIndex].start < start
     ) {
-      return true
+      activeConstructorEnd = Math.max(
+        activeConstructorEnd,
+        constructorRanges[constructorIndex].end,
+      )
+      constructorIndex++
+    }
+
+    if (end < activeConstructorEnd && text[skipDartTrivia(text, end)] === ':') {
+      componentNameStarts.add(start)
     }
   }
 
-  return false
+  return componentNameStarts
 }
 
 function findDartColorConstructors(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
 
-  for (const match of text.matchAll(DART_COLOR_CONSTRUCTOR_HEAD_REGEX)) {
-    const prefix = match.groups?.prefix ?? ''
-    const head = match.groups?.head
-    if (!head) {
-      continue
-    }
-
-    const start = (match.index ?? 0) + prefix.length
-    const openParenthesis = start + head.lastIndexOf('(')
-    const end = findClosingParenthesis(text, openParenthesis)
-    if (end === null) {
-      continue
-    }
-
+  for (const { end, start } of findDartColorConstructorRanges(text)) {
     const source = text.slice(start, end)
     const parsed = parseDartColorSource(source)
     if (!parsed || parsed.kind === 'material') {
@@ -113,7 +104,8 @@ function findFlutterMaterialColors(text: string): ColorMatch[] {
 
     const start = (match.index ?? 0) + prefix.length
     const end = start + source.length
-    if (/^\s*(?:\.|\[)/u.test(text.slice(end))) {
+    const nextSourceCharacter = text[skipDartTrivia(text, end)]
+    if (nextSourceCharacter === '.' || nextSourceCharacter === '[') {
       continue
     }
 
@@ -136,75 +128,4 @@ function findFlutterMaterialColors(text: string): ColorMatch[] {
   }
 
   return matches
-}
-
-function findClosingParenthesis(
-  text: string,
-  openIndex: number,
-): number | null {
-  let depth = 0
-  let quote: "'" | '"' | null = null
-  let blockCommentDepth = 0
-  let isLineComment = false
-
-  for (let index = openIndex; index < text.length; index++) {
-    const character = text[index]
-    const nextCharacter = text[index + 1]
-
-    if (isLineComment) {
-      if (character === '\n' || character === '\r') {
-        isLineComment = false
-      }
-      continue
-    }
-
-    if (blockCommentDepth > 0) {
-      if (character === '/' && nextCharacter === '*') {
-        blockCommentDepth++
-        index++
-      } else if (character === '*' && nextCharacter === '/') {
-        blockCommentDepth--
-        index++
-      }
-      continue
-    }
-
-    if (quote) {
-      if (character === '\\') {
-        index++
-      } else if (character === quote) {
-        quote = null
-      }
-      continue
-    }
-
-    if (character === '/' && nextCharacter === '/') {
-      isLineComment = true
-      index++
-      continue
-    }
-    if (character === '/' && nextCharacter === '*') {
-      blockCommentDepth = 1
-      index++
-      continue
-    }
-    if (character === "'" || character === '"') {
-      quote = character
-      continue
-    }
-    if (character === '(') {
-      depth++
-      continue
-    }
-    if (character !== ')') {
-      continue
-    }
-
-    depth--
-    if (depth === 0) {
-      return index + 1
-    }
-  }
-
-  return null
 }

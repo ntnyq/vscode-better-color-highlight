@@ -1,5 +1,5 @@
 import type { RgbaColor } from '../../../shared/color/presentation'
-import { parseDartColorSource } from './parser'
+import { parseDartColorSource, type ParsedDartColorSource } from './parser'
 
 /** Check whether source text is a supported Dart color expression. */
 export function isDartColorSource(text: string): boolean {
@@ -16,6 +16,29 @@ export function formatDartColor(
     return null
   }
 
+  return formatParsedDartColor(color, source)
+}
+
+/** Format an alpha adjustment while preserving source floating-point channels. */
+export function formatDartColorWithAlphaDelta(
+  delta: number,
+  sourceText: string,
+): string | null {
+  const source = parseDartColorSource(sourceText)
+  if (!source || source.kind === 'material') {
+    return null
+  }
+
+  return formatParsedDartColor(
+    { ...source.color, a: source.color.a + delta },
+    source,
+  )
+}
+
+function formatParsedDartColor(
+  color: RgbaColor,
+  source: ParsedDartColorSource,
+): string | null {
   const alpha = toByte(color.a * 255)
   const red = toByte(color.r)
   const green = toByte(color.g)
@@ -35,7 +58,10 @@ export function formatDartColor(
       const colorSpace = source.hasExplicitSrgbColorSpace
         ? ', colorSpace: ColorSpace.sRGB'
         : ''
-      return `Color.from(alpha: ${formatNormalized(color.a)}, red: ${formatNormalized(red / 255)}, green: ${formatNormalized(green / 255)}, blue: ${formatNormalized(blue / 255)}${colorSpace})`
+      return `Color.from(alpha: ${formatNormalizedComponent(color.a)}, red: ${formatNormalizedComponent(color.r / 255)}, green: ${formatNormalizedComponent(color.g / 255)}, blue: ${formatNormalizedComponent(color.b / 255)}${colorSpace})`
+    }
+    case 'material': {
+      return null
     }
   }
 }
@@ -51,4 +77,9 @@ function toHexByte(value: number): string {
 function formatNormalized(value: number): string {
   const normalized = Math.min(Math.max(value, 0), 1)
   return String(Number(normalized.toFixed(3)))
+}
+
+function formatNormalizedComponent(value: number): string {
+  const normalized = Math.min(Math.max(value, 0), 1)
+  return String(Number(normalized.toPrecision(15)))
 }
