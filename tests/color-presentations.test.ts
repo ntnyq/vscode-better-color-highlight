@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getColorPresentations } from '../src/utils/color/presentation'
+import { getColorPresentations } from '../src/shared/color/presentation'
 
 describe(getColorPresentations, () => {
   it('formats rgba colors as hex, rgb, hsl, oklch, and alpha text', () => {

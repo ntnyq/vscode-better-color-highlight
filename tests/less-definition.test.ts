@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   findLessVars,
   resolveLessVarDefinition,
-} from '../src/strategies/less-vars'
+} from '../src/engine/strategies/less-vars'
 
 describe(resolveLessVarDefinition, () => {
   it('resolves a direct color usage to its exact declaration ranges', async () => {

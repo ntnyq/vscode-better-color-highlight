@@ -1,7 +1,7 @@
 import type * as ReactiveVscode from 'reactive-vscode'
 import { describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
-import type * as ProviderModule from '../src/color-navigation/definition-provider'
+import type * as ProviderModule from '../src/features/color-navigation/definition-provider'
 
 type DisposeFn = () => void
 let deactivateHandler: DisposeFn = () => {}
@@ -28,14 +28,14 @@ vi.mock(
       languages: { registerDefinitionProvider },
     }) as unknown as Partial<typeof Vscode>,
 )
-vi.mock(import('../src/color-navigation/definition-provider'), () => ({
+vi.mock(import('../src/features/color-navigation/definition-provider'), () => ({
   provideColorDefinition,
 }))
 
 describe('useColorNavigation', () => {
   it('registers every language for runtime filtering and disposes the provider', async () => {
     const { useColorNavigation } =
-      await import('../src/composables/use-color-navigation')
+      await import('../src/features/color-navigation/use-color-navigation')
 
     useColorNavigation()
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { groupWorkspaceColorOccurrences } from '../src/workspace-palette/model'
-import type { WorkspaceColorOccurrence } from '../src/workspace-palette/types'
+import { groupWorkspaceColorOccurrences } from '../src/features/workspace-palette/model'
+import type { WorkspaceColorOccurrence } from '../src/features/workspace-palette/types'
 
 const scanStats = {
   occurrenceTruncated: false,

@@ -91,7 +91,7 @@ Both are runtime dependencies and are bundled by the existing tsdown policy.
 
 ### Shared token model
 
-`src/strategies/design-tokens/types.ts` defines:
+`src/engine/strategies/design-tokens/types.ts` defines:
 
 ```ts
 export interface DesignTokenRange {

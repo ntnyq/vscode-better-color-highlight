@@ -1,9 +1,9 @@
 import { bench, describe } from 'vitest'
-import { findColorFunctions } from '../src/strategies/color-functions'
-import { collectCssVarDeclarations } from '../src/strategies/css-vars/parser'
-import { resolveCssVarMatches } from '../src/strategies/css-vars/resolver'
-import { findHexRGBA } from '../src/strategies/hex'
-import { findTailwindThemeColors } from '../src/strategies/tailwind-theme-colors'
+import { findColorFunctions } from '../src/engine/strategies/color-functions'
+import { collectCssVarDeclarations } from '../src/engine/strategies/css-vars/parser'
+import { resolveCssVarMatches } from '../src/engine/strategies/css-vars/resolver'
+import { findHexRGBA } from '../src/engine/strategies/hex'
+import { findTailwindThemeColors } from '../src/engine/strategies/tailwind-theme'
 
 const literalCss = Array.from(
   { length: 400 },

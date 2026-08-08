@@ -1,7 +1,7 @@
 import type * as ReactiveVscode from 'reactive-vscode'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
-import type { ResolvedContrastPair } from '../src/contrast/types'
+import type { ResolvedContrastPair } from '../src/features/contrast/types'
 
 type DisposeFn = () => void
 type EventHandler<T> = (event: T) => void
@@ -210,7 +210,7 @@ vi.mock(
 
 const findContrastPairs =
   vi.fn<() => Promise<readonly ResolvedContrastPair[]>>()
-vi.mock(import('../src/contrast/find-contrast-pairs'), () => ({
+vi.mock(import('../src/features/contrast/find-contrast-pairs'), () => ({
   findContrastPairs,
 }))
 
@@ -266,7 +266,7 @@ describe('useContrastDiagnostics', () => {
     documents.push(existing as unknown as Vscode.TextDocument)
     const { ref } = await import('reactive-vscode')
     const { useContrastDiagnostics } =
-      await import('../src/composables/use-contrast-diagnostics')
+      await import('../src/features/contrast/use-contrast-diagnostics')
 
     useContrastDiagnostics(ref(0))
     expect(collectionClear).toHaveBeenCalledTimes(1)
@@ -302,7 +302,7 @@ describe('useContrastDiagnostics', () => {
     findContrastPairs.mockReturnValueOnce(deferred.promise)
     const { ref } = await import('reactive-vscode')
     const { useContrastDiagnostics } =
-      await import('../src/composables/use-contrast-diagnostics')
+      await import('../src/features/contrast/use-contrast-diagnostics')
     useContrastDiagnostics(ref(0))
 
     await vi.advanceTimersByTimeAsync(200)
@@ -323,7 +323,7 @@ describe('useContrastDiagnostics', () => {
     findContrastPairs.mockReturnValueOnce(deferred.promise)
     const { ref } = await import('reactive-vscode')
     const { useContrastDiagnostics } =
-      await import('../src/composables/use-contrast-diagnostics')
+      await import('../src/features/contrast/use-contrast-diagnostics')
     useContrastDiagnostics(ref(0))
 
     await vi.advanceTimersByTimeAsync(200)
@@ -344,7 +344,7 @@ describe('useContrastDiagnostics', () => {
     findContrastPairs.mockReturnValueOnce(deferred.promise)
     const { ref } = await import('reactive-vscode')
     const { useContrastDiagnostics } =
-      await import('../src/composables/use-contrast-diagnostics')
+      await import('../src/features/contrast/use-contrast-diagnostics')
     useContrastDiagnostics(ref(0))
 
     await vi.advanceTimersByTimeAsync(200)
@@ -366,7 +366,7 @@ describe('useContrastDiagnostics', () => {
     findContrastPairs.mockReturnValueOnce(deferred.promise)
     const { ref } = await import('reactive-vscode')
     const { useContrastDiagnostics } =
-      await import('../src/composables/use-contrast-diagnostics')
+      await import('../src/features/contrast/use-contrast-diagnostics')
     useContrastDiagnostics(ref(0))
 
     await vi.advanceTimersByTimeAsync(200)
@@ -391,7 +391,7 @@ describe('useContrastDiagnostics', () => {
       .mockReturnValueOnce(newRun.promise)
     const { ref } = await import('reactive-vscode')
     const { useContrastDiagnostics } =
-      await import('../src/composables/use-contrast-diagnostics')
+      await import('../src/features/contrast/use-contrast-diagnostics')
     useContrastDiagnostics(ref(0))
 
     await vi.advanceTimersByTimeAsync(200)
@@ -430,7 +430,7 @@ describe('useContrastDiagnostics', () => {
     findContrastPairs.mockReturnValueOnce(deferred.promise)
     const { ref } = await import('reactive-vscode')
     const { useContrastDiagnostics } =
-      await import('../src/composables/use-contrast-diagnostics')
+      await import('../src/features/contrast/use-contrast-diagnostics')
     useContrastDiagnostics(ref(0))
 
     await vi.advanceTimersByTimeAsync(200)
@@ -448,7 +448,7 @@ describe('useContrastDiagnostics', () => {
     documents.push(document as unknown as Vscode.TextDocument)
     const { ref } = await import('reactive-vscode')
     const { useContrastDiagnostics } =
-      await import('../src/composables/use-contrast-diagnostics')
+      await import('../src/features/contrast/use-contrast-diagnostics')
     const result = useContrastDiagnostics(ref(0))
 
     expect(result).toBeUndefined()
@@ -494,7 +494,7 @@ describe('useContrastDiagnostics', () => {
     documents.push(document as unknown as Vscode.TextDocument)
     const { ref } = await import('reactive-vscode')
     const { useContrastDiagnostics } =
-      await import('../src/composables/use-contrast-diagnostics')
+      await import('../src/features/contrast/use-contrast-diagnostics')
     useContrastDiagnostics(ref(0))
 
     document.languageId = 'plaintext'
@@ -533,7 +533,7 @@ describe('useContrastDiagnostics', () => {
     const { ref } = await import('reactive-vscode')
     const dependencyRevision = ref(0)
     const { useContrastDiagnostics } =
-      await import('../src/composables/use-contrast-diagnostics')
+      await import('../src/features/contrast/use-contrast-diagnostics')
     useContrastDiagnostics(dependencyRevision)
 
     await vi.advanceTimersByTimeAsync(200)

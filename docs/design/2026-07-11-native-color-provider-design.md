@@ -62,7 +62,7 @@ state and invalidation complexity for the native picker phase.
 
 ### Shared detector execution
 
-`src/core/color-detection.ts` exports:
+`src/engine/detection/run-detectors.ts` exports:
 
 ```ts
 export interface RunColorDetectorsOptions {
@@ -91,7 +91,7 @@ versioned match cache and delegates only the uncached detector execution.
 
 ### Provider adapter
 
-`src/color-provider/document-color-provider.ts` exports the two provider
+`src/features/color-provider/document-color-provider.ts` exports the two provider
 operations:
 
 ```ts
@@ -123,7 +123,7 @@ HEX, RGB, HSL, and OKLCH labels.
 
 ### Registration and configuration
 
-`src/composables/use-color-provider.ts` registers one provider for `'*'` and
+`src/features/color-provider/use-color-provider.ts` registers one provider for `'*'` and
 disposes it on extension deactivation. The provider reads reactive configuration
 at request time, so toggling `enableColorPicker` does not require re-registration.
 

@@ -1,9 +1,9 @@
 import type * as ReactiveVscode from 'reactive-vscode'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
-import type * as ResolverModule from '../src/color-navigation/resolve-color-definition'
+import type * as ResolverModule from '../src/features/color-navigation/resolve-color-definition'
 import type { NestedScopedConfigs } from '../src/meta'
-import type * as LoggerModule from '../src/utils/logger'
+import type * as LoggerModule from '../src/shared/logger'
 
 class TestRange {
   public readonly start: unknown
@@ -85,11 +85,14 @@ vi.mock(
       defineConfig: () => configSnapshot,
     }) as unknown as Partial<typeof ReactiveVscode>,
 )
-vi.mock(import('../src/color-navigation/resolve-color-definition'), () => ({
-  resolveColorDefinition,
-}))
 vi.mock(
-  import('../src/utils/logger'),
+  import('../src/features/color-navigation/resolve-color-definition'),
+  () => ({
+    resolveColorDefinition,
+  }),
+)
+vi.mock(
+  import('../src/shared/logger'),
   () =>
     ({
       logger: { error: loggerError },
@@ -130,7 +133,7 @@ describe('provideColorDefinition', () => {
 
   it('honors enable, navigation, language, size, trust, and early cancellation gates', async () => {
     const { provideColorDefinition } =
-      await import('../src/color-navigation/definition-provider')
+      await import('../src/features/color-navigation/definition-provider')
     const document = createDocument()
 
     for (const mutate of [
@@ -167,7 +170,7 @@ describe('provideColorDefinition', () => {
     configSnapshot.tailwindStylesheetPaths = ['theme.css']
     resolveColorDefinition.mockResolvedValue(null)
     const { provideColorDefinition } =
-      await import('../src/color-navigation/definition-provider')
+      await import('../src/features/color-navigation/definition-provider')
 
     await provideColorDefinition(
       createDocument(),
@@ -202,7 +205,7 @@ describe('provideColorDefinition', () => {
   ])('allows enabled %s documents to reach navigation', async languageId => {
     resolveColorDefinition.mockResolvedValue(null)
     const { provideColorDefinition } =
-      await import('../src/color-navigation/definition-provider')
+      await import('../src/features/color-navigation/definition-provider')
 
     await provideColorDefinition(
       createDocument(
@@ -224,7 +227,7 @@ describe('provideColorDefinition', () => {
   it('rejects a runtime-disabled arbitrary language', async () => {
     configSnapshot.languages = ['*', '!templating-language']
     const { provideColorDefinition } =
-      await import('../src/color-navigation/definition-provider')
+      await import('../src/features/color-navigation/definition-provider')
 
     await expect(
       provideColorDefinition(
@@ -248,7 +251,7 @@ describe('provideColorDefinition', () => {
       targetSelectionRange: { start: 6, end: 8 },
     })
     const { provideColorDefinition } =
-      await import('../src/color-navigation/definition-provider')
+      await import('../src/features/color-navigation/definition-provider')
 
     const result = await provideColorDefinition(
       createDocument(),
@@ -277,7 +280,7 @@ describe('provideColorDefinition', () => {
     const target = createDocument('file:///workspace/tokens.css')
     openTextDocument.mockResolvedValue(target)
     const { provideColorDefinition } =
-      await import('../src/color-navigation/definition-provider')
+      await import('../src/features/color-navigation/definition-provider')
 
     const result = await provideColorDefinition(
       createDocument(),
@@ -315,7 +318,7 @@ describe('provideColorDefinition', () => {
       })
     })
     const { provideColorDefinition } =
-      await import('../src/color-navigation/definition-provider')
+      await import('../src/features/color-navigation/definition-provider')
 
     await expect(
       provideColorDefinition(
@@ -333,7 +336,7 @@ describe('provideColorDefinition', () => {
 
   it('isolates resolver and target-open failures with logging', async () => {
     const { provideColorDefinition } =
-      await import('../src/color-navigation/definition-provider')
+      await import('../src/features/color-navigation/definition-provider')
     resolveColorDefinition.mockRejectedValueOnce(new Error('resolver failed'))
     await expect(
       provideColorDefinition(

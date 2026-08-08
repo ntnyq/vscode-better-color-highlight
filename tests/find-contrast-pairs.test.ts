@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { findContrastPairs } from '../src/contrast/find-contrast-pairs'
-import { collectStaticMarkupContexts } from '../src/contrast/markup-contexts'
+import { findContrastPairs } from '../src/features/contrast/find-contrast-pairs'
+import { collectStaticMarkupContexts } from '../src/features/contrast/markup-contexts'
 
 function measureMalformedMarkup(count: number): number {
   const text = '<a x '.repeat(count)

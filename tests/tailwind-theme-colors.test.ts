@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   findTailwindThemeColors,
   resolveTailwindColorUtilities,
-} from '../src/strategies/tailwind-theme-colors'
-import { findTailwindColorUtilities } from '../src/strategies/tailwind-theme/utility'
+} from '../src/engine/strategies/tailwind-theme'
+import { findTailwindColorUtilities } from '../src/engine/strategies/tailwind-theme/utility'
 
 function ranges(text: string) {
   return findTailwindColorUtilities(text).map(utility => ({

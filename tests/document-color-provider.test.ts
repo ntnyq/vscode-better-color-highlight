@@ -1,9 +1,9 @@
 import type * as ReactiveVscode from 'reactive-vscode'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
+import type { ColorDetector, ColorMatch } from '../src/engine/detection'
 import type { NestedScopedConfigs } from '../src/meta'
-import type { ColorDetector, ColorMatch } from '../src/types'
-import type * as LoggerModule from '../src/utils/logger'
+import type * as LoggerModule from '../src/shared/logger'
 
 class TestColor {
   public readonly red: number
@@ -112,7 +112,7 @@ vi.mock(
 )
 
 vi.mock(
-  import('../src/utils/logger'),
+  import('../src/shared/logger'),
   () =>
     ({
       logger: { error: loggerError },
@@ -148,7 +148,7 @@ describe('document color provider', () => {
 
   it('does not scan when the native picker is disabled or cancelled', async () => {
     const { provideDocumentColors } =
-      await import('../src/color-provider/document-color-provider')
+      await import('../src/features/color-provider/document-color-provider')
 
     await expect(
       provideDocumentColors(document, activeToken),
@@ -163,7 +163,7 @@ describe('document color provider', () => {
   it('skips excluded languages, oversized text, and late cancellation', async () => {
     configSnapshot.enableColorPicker = true
     const { provideDocumentColors } =
-      await import('../src/color-provider/document-color-provider')
+      await import('../src/features/color-provider/document-color-provider')
 
     configSnapshot.languages = ['css']
     await expect(
@@ -192,7 +192,7 @@ describe('document color provider', () => {
   it('maps detected colors to native normalized channels and ranges', async () => {
     configSnapshot.enableColorPicker = true
     const { provideDocumentColors } =
-      await import('../src/color-provider/document-color-provider')
+      await import('../src/features/color-provider/document-color-provider')
 
     const result = await provideDocumentColors(document, activeToken)
 
@@ -208,9 +208,9 @@ describe('document color provider', () => {
     configSnapshot.tailwindColorMode = 'v4'
     configSnapshot.tailwindStylesheetPaths = ['theme.css']
     const { provideDocumentColors } =
-      await import('../src/color-provider/document-color-provider')
+      await import('../src/features/color-provider/document-color-provider')
     const detector = vi.fn<ColorDetector>(() => [])
-    const registry = await import('../src/core/strategy-registry')
+    const registry = await import('../src/engine/detection/registry')
     const strategies = vi
       .spyOn(registry, 'getStrategies')
       .mockReturnValue([detector])
@@ -230,7 +230,7 @@ describe('document color provider', () => {
 
   it('deduplicates matches and skips unsupported resolved colors', async () => {
     const { createColorInformation } =
-      await import('../src/color-provider/document-color-provider')
+      await import('../src/features/color-provider/document-color-provider')
     const matches: ColorMatch[] = [
       { start: 0, end: 7, color: 'rgb(255, 0, 0)' },
       { start: 0, end: 7, color: 'rgb(255, 0, 0)' },
@@ -242,7 +242,7 @@ describe('document color provider', () => {
 
   it('bounds native color information returned for one document', async () => {
     const { createColorInformation } =
-      await import('../src/color-provider/document-color-provider')
+      await import('../src/features/color-provider/document-color-provider')
     const matches: ColorMatch[] = Array.from(
       { length: 10_001 },
       (_, index) => ({
@@ -257,7 +257,7 @@ describe('document color provider', () => {
 
   it('provides four native replacement presentations', async () => {
     const { provideColorPresentations } =
-      await import('../src/color-provider/document-color-provider')
+      await import('../src/features/color-provider/document-color-provider')
     const range = { id: 'source-range' } as unknown as Vscode.Range
 
     const result = provideColorPresentations(
@@ -279,7 +279,7 @@ describe('document color provider', () => {
   it('uses ARGB byte order for native hex presentations when configured', async () => {
     configSnapshot.useARGB = true
     const { provideColorPresentations } =
-      await import('../src/color-provider/document-color-provider')
+      await import('../src/features/color-provider/document-color-provider')
     const range = { id: 'source-range' } as unknown as Vscode.Range
 
     const result = provideColorPresentations(
@@ -292,7 +292,7 @@ describe('document color provider', () => {
 
   it('provides a valid Dart replacement for Dart color constructors', async () => {
     const { provideColorPresentations } =
-      await import('../src/color-provider/document-color-provider')
+      await import('../src/features/color-provider/document-color-provider')
     const range = { id: 'source-range' } as unknown as Vscode.Range
     const dartDocument = {
       ...document,

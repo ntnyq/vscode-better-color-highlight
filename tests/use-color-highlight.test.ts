@@ -2,10 +2,10 @@ import { isFunction, isPlainObject } from '@ntnyq/utils'
 import type * as ReactiveVscode from 'reactive-vscode'
 import { describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
-import type * as StrategyRegistry from '../src/core/strategy-registry'
-import type { ColorDetector, ColorMatch } from '../src/types'
-import { shouldTrackDocument } from '../src/utils/editor-filter'
-import type * as LoggerModule from '../src/utils/logger'
+import type { ColorDetector, ColorMatch } from '../src/engine/detection'
+import type * as StrategyRegistry from '../src/engine/detection/registry'
+import { shouldTrackDocument } from '../src/extension/editor-filter'
+import type * as LoggerModule from '../src/shared/logger'
 
 interface TestRef<T> {
   value: T
@@ -127,7 +127,7 @@ vi.mock(
     }) as unknown as Partial<typeof ReactiveVscode>,
 )
 
-vi.mock(import('../src/core/strategy-registry'), async importOriginal => {
+vi.mock(import('../src/engine/detection/registry'), async importOriginal => {
   const original = await importOriginal<typeof StrategyRegistry>()
 
   return {
@@ -137,7 +137,7 @@ vi.mock(import('../src/core/strategy-registry'), async importOriginal => {
 })
 
 vi.mock(
-  import('../src/utils/logger'),
+  import('../src/shared/logger'),
   () =>
     ({
       logger: {
@@ -230,7 +230,7 @@ describe('useColorHighlight', () => {
     visibleEditorsRef = createRef<unknown[]>([editor])
 
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
 
     useColorHighlight()
     expect(asyncStrategy).toHaveBeenCalledTimes(1)
@@ -258,7 +258,7 @@ describe('useColorHighlight', () => {
     visibleEditorsRef = createRef<unknown[]>([editor])
 
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
 
     useColorHighlight()
     const strategyCalls = asyncStrategy.mock.calls
@@ -286,7 +286,7 @@ describe('useColorHighlight', () => {
     visibleEditorsRef = createRef<unknown[]>([createEditor()])
 
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
 
     useColorHighlight()
     const initialSignal = strategy.mock.calls[0]?.[1]?.signal
@@ -318,7 +318,7 @@ describe('useColorHighlight', () => {
     visibleEditorsRef = createRef<unknown[]>([createEditor()])
 
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
 
     useColorHighlight()
     await flushPromises()
@@ -340,9 +340,9 @@ describe('useColorHighlight', () => {
     documentTextRef = createRef('.box { color: #ff0000; }')
     visibleEditorsRef = createRef<unknown[]>([createEditor()])
 
-    const { logger } = await import('../src/utils/logger')
+    const { logger } = await import('../src/shared/logger')
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
 
     useColorHighlight()
     await flushPromises()
@@ -373,9 +373,10 @@ describe('useColorHighlight', () => {
     )
     visibleEditorsRef = createRef<unknown[]>([createEditor()])
 
-    const { getHighlightState } = await import('../src/core/highlight-state')
+    const { getHighlightState } =
+      await import('../src/features/highlight/state')
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
 
     useColorHighlight()
     await flushPromises()
@@ -402,7 +403,7 @@ describe('useColorHighlight', () => {
     visibleEditorsRef = createRef<unknown[]>([editor])
 
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
 
     useColorHighlight()
     await vi.runAllTimersAsync()
@@ -436,7 +437,7 @@ describe('useColorHighlight', () => {
     visibleEditorsRef = createRef<unknown[]>([editor])
 
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
 
     useColorHighlight()
     await flushPromises()
@@ -458,7 +459,7 @@ describe('useColorHighlight', () => {
     const stringifySpy = vi.spyOn(JSON, 'stringify')
 
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
 
     useColorHighlight()
     await flushPromises()
@@ -482,7 +483,7 @@ describe('useColorHighlight', () => {
     visibleEditorsRef = createRef<unknown[]>([editor])
 
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
 
     useColorHighlight()
     expect(documentTextRef.watchers.size).toBe(1)
@@ -499,7 +500,7 @@ describe('useColorHighlight', () => {
     visibleEditorsRef = createRef<unknown[]>([editor])
 
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
 
     useColorHighlight()
 
@@ -516,7 +517,7 @@ describe('useColorHighlight', () => {
     visibleEditorsRef = createRef<unknown[]>([createEditor()])
 
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
     useColorHighlight()
 
     await flushPromises()
@@ -540,7 +541,7 @@ describe('useColorHighlight', () => {
     visibleEditorsRef = createRef<unknown[]>([createEditor()])
 
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
     useColorHighlight()
     await flushPromises()
 
@@ -571,7 +572,7 @@ describe('useColorHighlight', () => {
     const dependencyRevision = createRef(0)
 
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
 
     const useColorHighlightWithDependencies = useColorHighlight as unknown as (
       revision: TestRef<number>,
@@ -594,7 +595,7 @@ describe('useColorHighlight', () => {
     visibleEditorsRef = createRef<unknown[]>([createEditor()])
 
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
     useColorHighlight()
 
     await flushPromises()
@@ -616,9 +617,9 @@ describe('useColorHighlight', () => {
     documentTextRef = createRef('.box { color: #ff0000; }')
     visibleEditorsRef = createRef<unknown[]>([createEditor()])
 
-    const { logger } = await import('../src/utils/logger')
+    const { logger } = await import('../src/shared/logger')
     const { useColorHighlight } =
-      await import('../src/composables/use-color-highlight')
+      await import('../src/features/highlight/use-color-highlight')
 
     useColorHighlight()
     await flushPromises()

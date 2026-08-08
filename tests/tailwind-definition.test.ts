@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { parseTailwindThemeSource } from '../src/strategies/tailwind-theme/parser'
-import type * as SourcesModule from '../src/strategies/tailwind-theme/sources'
+import { parseTailwindThemeSource } from '../src/engine/strategies/tailwind-theme/parser'
+import type * as SourcesModule from '../src/engine/strategies/tailwind-theme/sources'
 
 const loadTailwindThemeSources = vi.fn<
   typeof SourcesModule.loadTailwindThemeSources
@@ -8,7 +8,7 @@ const loadTailwindThemeSources = vi.fn<
   Promise.resolve([parseTailwindThemeSource(text, context.filePath)]),
 )
 
-vi.mock(import('../src/strategies/tailwind-theme/sources'), () => ({
+vi.mock(import('../src/engine/strategies/tailwind-theme/sources'), () => ({
   loadTailwindThemeSources,
 }))
 
@@ -36,7 +36,7 @@ describe('resolveTailwindColorDefinition', () => {
 }</style>
 <div class="hover:!bg-brand/50"></div>`
     const { resolveTailwindColorDefinition } =
-      await import('../src/strategies/tailwind-theme/definition')
+      await import('../src/engine/strategies/tailwind-theme/definition')
 
     const target = await resolveTailwindColorDefinition(
       text,
@@ -60,7 +60,7 @@ describe('resolveTailwindColorDefinition', () => {
 @theme inline { --color-brand: var(--brand); }</style>
 <div class="bg-brand!"></div>`
     const { resolveTailwindColorDefinition } =
-      await import('../src/strategies/tailwind-theme/definition')
+      await import('../src/engine/strategies/tailwind-theme/definition')
 
     await expect(
       resolveTailwindColorDefinition(
@@ -87,7 +87,7 @@ describe('resolveTailwindColorDefinition', () => {
     ])
     const text = '<div class="md:bg-brand/25"></div>'
     const { resolveTailwindColorDefinition } =
-      await import('../src/strategies/tailwind-theme/definition')
+      await import('../src/engine/strategies/tailwind-theme/definition')
 
     await expect(
       resolveTailwindColorDefinition(text, text.indexOf('brand'), {
@@ -112,7 +112,7 @@ describe('resolveTailwindColorDefinition', () => {
 }</style>
 <div class="tw:hover:bg-(--color-brand)!"></div>`
     const { resolveTailwindColorDefinition } =
-      await import('../src/strategies/tailwind-theme/definition')
+      await import('../src/engine/strategies/tailwind-theme/definition')
 
     await expect(
       resolveTailwindColorDefinition(
@@ -133,7 +133,7 @@ describe('resolveTailwindColorDefinition', () => {
 
   it('returns no target for defaults, arbitrary colors, resets, or invalid aliases', async () => {
     const { resolveTailwindColorDefinition } =
-      await import('../src/strategies/tailwind-theme/definition')
+      await import('../src/engine/strategies/tailwind-theme/definition')
     const cases = [
       '<div class="bg-red-500"></div>',
       '<div class="bg-[#123456]"></div>',
@@ -154,7 +154,7 @@ describe('resolveTailwindColorDefinition', () => {
   it('does not load theme sources unless the cursor is on a Tailwind token', async () => {
     loadTailwindThemeSources.mockClear()
     const { resolveTailwindColorDefinition } =
-      await import('../src/strategies/tailwind-theme/definition')
+      await import('../src/engine/strategies/tailwind-theme/definition')
     const text = '<div class="bg-brand">plain text</div>'
 
     await expect(

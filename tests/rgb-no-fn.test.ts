@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findRgbNoFunction } from '../src/strategies/rgb-no-fn'
+import { findRgbNoFunction } from '../src/engine/strategies/rgb-no-fn'
 
 describe(findRgbNoFunction, () => {
   it('finds bare RGB triplets with commas', () => {

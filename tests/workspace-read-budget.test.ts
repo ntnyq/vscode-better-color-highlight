@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { getWorkspacePathIdentity } from '../src/utils/workspace-file-system'
-import { createWorkspaceReadBudget } from '../src/utils/workspace-read-budget'
+import { getWorkspacePathIdentity } from '../src/shared/workspace/file-system'
+import { createWorkspaceReadBudget } from '../src/shared/workspace/read-budget'
 
 describe('workspace dependency read budget', () => {
   it('allows repeated claims without consuming another unique slot', () => {

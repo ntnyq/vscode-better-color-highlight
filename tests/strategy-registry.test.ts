@@ -2,17 +2,17 @@ import { describe, expect, it } from 'vitest'
 import {
   getStrategies,
   shouldProcessLanguage,
-} from '../src/core/strategy-registry'
+} from '../src/engine/detection/registry'
+import { findColorFunctions } from '../src/engine/strategies/color-functions'
+import { findJsonDesignTokens } from '../src/engine/strategies/design-tokens/json-strategy'
+import { findYamlDesignTokens } from '../src/engine/strategies/design-tokens/yaml-strategy'
+import { findHexRGBA, findHexARGB } from '../src/engine/strategies/hex'
+import { findHslNoFunction } from '../src/engine/strategies/hsl-no-fn'
+import { findHwb } from '../src/engine/strategies/hwb'
+import { findNamedColors } from '../src/engine/strategies/named-colors'
+import { findRgbNoFunction } from '../src/engine/strategies/rgb-no-fn'
+import { findTailwindThemeColors } from '../src/engine/strategies/tailwind-theme'
 import type { NestedScopedConfigs } from '../src/meta'
-import { findColorFunctions } from '../src/strategies/color-functions'
-import { findHexRGBA, findHexARGB } from '../src/strategies/hex'
-import { findHslNoFunction } from '../src/strategies/hsl-no-fn'
-import { findHwb } from '../src/strategies/hwb'
-import { findJsonDesignTokens } from '../src/strategies/json-design-tokens'
-import { findNamedColors } from '../src/strategies/named-colors'
-import { findRgbNoFunction } from '../src/strategies/rgb-no-fn'
-import { findTailwindThemeColors } from '../src/strategies/tailwind-theme-colors'
-import { findYamlDesignTokens } from '../src/strategies/yaml-design-tokens'
 
 const defaultConfig: NestedScopedConfigs = {
   enable: true,

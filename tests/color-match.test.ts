@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import type { ColorMatch } from '../src/types'
+import type { ColorMatch } from '../src/engine/detection'
 import {
   groupByColor,
   groupColorMatchesWithinLimits,
-} from '../src/utils/color-match'
+} from '../src/engine/detection/color-match'
 
 describe(groupByColor, () => {
   it('groups matches by color', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findHexRGBA, findHexARGB } from '../src/strategies/hex'
+import { findHexRGBA, findHexARGB } from '../src/engine/strategies/hex'
 
 describe(findHexRGBA, () => {
   it('finds 6-digit hex colors', () => {

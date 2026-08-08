@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { collectCssVarDeclarations } from '../src/strategies/css-vars/parser'
+import { collectCssVarDeclarations } from '../src/engine/strategies/css-vars/parser'
 import {
   resolveCssVarDefinition,
   resolveCssVarMatches,
-} from '../src/strategies/css-vars/resolver'
+} from '../src/engine/strategies/css-vars/resolver'
 
 function rangeOf(text: string, value: string, occurrence = 0) {
   let start = -1

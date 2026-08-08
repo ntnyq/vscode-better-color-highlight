@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findJsonDesignTokens } from '../src/strategies/json-design-tokens'
+import { findJsonDesignTokens } from '../src/engine/strategies/design-tokens/json-strategy'
 
 describe(findJsonDesignTokens, () => {
   it('finds DTCG group root tokens', () => {

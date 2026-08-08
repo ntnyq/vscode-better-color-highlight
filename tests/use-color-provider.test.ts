@@ -1,7 +1,7 @@
 import type * as ReactiveVscode from 'reactive-vscode'
 import { describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
-import type * as ProviderModule from '../src/color-provider/document-color-provider'
+import type * as ProviderModule from '../src/features/color-provider/document-color-provider'
 
 type DisposeFn = () => void
 
@@ -33,15 +33,18 @@ vi.mock(
     }) as unknown as Partial<typeof Vscode>,
 )
 
-vi.mock(import('../src/color-provider/document-color-provider'), () => ({
-  provideColorPresentations,
-  provideDocumentColors,
-}))
+vi.mock(
+  import('../src/features/color-provider/document-color-provider'),
+  () => ({
+    provideColorPresentations,
+    provideDocumentColors,
+  }),
+)
 
 describe('useColorProvider', () => {
   it('registers and disposes the native provider', async () => {
     const { useColorProvider } =
-      await import('../src/composables/use-color-provider')
+      await import('../src/features/color-provider/use-color-provider')
 
     useColorProvider()
 

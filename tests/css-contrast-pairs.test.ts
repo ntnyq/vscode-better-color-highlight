@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { findContrastPairs } from '../src/contrast/find-contrast-pairs'
-import type { StrategyContext } from '../src/types'
+import type { StrategyContext } from '../src/engine/detection'
+import { findContrastPairs } from '../src/features/contrast/find-contrast-pairs'
 
 function context(languageId: string): StrategyContext {
   return { languageId }

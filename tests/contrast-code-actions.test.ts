@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
-import type { ResolvedContrastPair } from '../src/contrast/types'
+import type { ResolvedContrastPair } from '../src/features/contrast/types'
 
 class Position {
   public readonly character: number
@@ -83,9 +83,9 @@ describe('contrast diagnostic code actions', () => {
       CONTRAST_DIAGNOSTIC_CODE,
       CONTRAST_DIAGNOSTIC_SOURCE,
       ContrastDiagnosticStore,
-    } = await import('../src/contrast/diagnostics')
+    } = await import('../src/features/contrast/diagnostics')
     const { createContrastCodeActionProvider } =
-      await import('../src/contrast/code-actions')
+      await import('../src/features/contrast/code-actions')
     const diagnostic = new Diagnostic(range)
     diagnostic.code = CONTRAST_DIAGNOSTIC_CODE
     diagnostic.source = CONTRAST_DIAGNOSTIC_SOURCE
@@ -133,9 +133,9 @@ describe('contrast diagnostic code actions', () => {
       CONTRAST_DIAGNOSTIC_CODE,
       CONTRAST_DIAGNOSTIC_SOURCE,
       ContrastDiagnosticStore,
-    } = await import('../src/contrast/diagnostics')
+    } = await import('../src/features/contrast/diagnostics')
     const { createContrastCodeActionProvider } =
-      await import('../src/contrast/code-actions')
+      await import('../src/features/contrast/code-actions')
     const diagnostic = new Diagnostic(range)
     diagnostic.code = CONTRAST_DIAGNOSTIC_CODE
     diagnostic.source = CONTRAST_DIAGNOSTIC_SOURCE

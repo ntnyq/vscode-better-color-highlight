@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resolveDtcgColor } from '../src/strategies/design-tokens/color'
+import { resolveDtcgColor } from '../src/engine/strategies/design-tokens/color'
 
 describe(resolveDtcgColor, () => {
   it.each([

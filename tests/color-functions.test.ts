@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findColorFunctions } from '../src/strategies/color-functions'
+import { findColorFunctions } from '../src/engine/strategies/color-functions'
 
 describe(findColorFunctions, () => {
   it('finds rgb() function', () => {

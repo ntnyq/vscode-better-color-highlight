@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { getStrategies } from '../src/core/strategy-registry'
+import type { ColorMatch } from '../src/engine/detection'
+import { getStrategies } from '../src/engine/detection/registry'
 import type { NestedScopedConfigs } from '../src/meta'
-import type { ColorMatch } from '../src/types'
 
 const defaultConfig: NestedScopedConfigs = {
   enable: true,

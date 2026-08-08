@@ -16,12 +16,12 @@ import {
   resolve,
 } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import { findScssVars } from '../src/strategies/scss-vars'
-import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
+import { findScssVars } from '../src/engine/strategies/scss-vars'
+import type * as WorkspaceFileSystem from '../src/shared/workspace/file-system'
 import { FIXTURE_SCSS } from './fixtures'
 
 vi.mock(
-  import('../src/utils/workspace-file-system'),
+  import('../src/shared/workspace/file-system'),
   () =>
     ({
       basenameWorkspacePath: basename,

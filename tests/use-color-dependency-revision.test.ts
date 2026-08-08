@@ -105,7 +105,7 @@ describe('useColorDependencyRevision', () => {
     vi.resetModules()
 
     const { useColorDependencyRevision } =
-      await import('../src/composables/use-color-dependency-revision')
+      await import('../src/extension/color-dependency-revision')
     const revision = useColorDependencyRevision()
 
     documentChangeHandler({ document: { uri: { path: '/tokens.css' } } })
@@ -129,7 +129,7 @@ describe('useColorDependencyRevision', () => {
     vi.resetModules()
 
     const { useColorDependencyRevision } =
-      await import('../src/composables/use-color-dependency-revision')
+      await import('../src/extension/color-dependency-revision')
     const revision = useColorDependencyRevision()
 
     fileChangeHandler({ path: '/theme.css' })
@@ -149,7 +149,7 @@ describe('useColorDependencyRevision', () => {
     vi.resetModules()
 
     const { useColorDependencyRevision } =
-      await import('../src/composables/use-color-dependency-revision')
+      await import('../src/extension/color-dependency-revision')
     const revision = useColorDependencyRevision()
 
     expect(createFileSystemWatcher).toHaveBeenCalledTimes(2)
@@ -172,7 +172,7 @@ describe('useColorDependencyRevision', () => {
     vi.resetModules()
 
     const { useColorDependencyRevision } =
-      await import('../src/composables/use-color-dependency-revision')
+      await import('../src/extension/color-dependency-revision')
     useColorDependencyRevision()
 
     expect(createFileSystemWatcher).toHaveBeenCalledTimes(3)

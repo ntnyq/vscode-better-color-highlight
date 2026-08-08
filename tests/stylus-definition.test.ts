@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resolveStylusVarDefinition } from '../src/strategies/stylus-vars'
+import { resolveStylusVarDefinition } from '../src/engine/strategies/stylus-vars'
 
 describe(resolveStylusVarDefinition, () => {
   it('resolves direct colors with exact ranges for bare variables', async () => {

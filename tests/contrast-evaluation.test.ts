@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { evaluateColorContrast } from '../src/contrast/evaluate'
-import type { RgbaColor } from '../src/utils/color/presentation'
+import { evaluateColorContrast } from '../src/features/contrast/evaluate'
+import type { RgbaColor } from '../src/shared/color/presentation'
 
 const black = { r: 0, g: 0, b: 0, a: 1 } as const
 const white = { r: 255, g: 255, b: 255, a: 1 } as const

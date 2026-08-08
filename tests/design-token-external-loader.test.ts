@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
+import type * as WorkspaceFileSystem from '../src/shared/workspace/file-system'
 
 interface FileState {
   documentVersion?: number
@@ -31,7 +31,7 @@ const statFileMock = vi.fn<
 })
 
 vi.mock(
-  import('../src/utils/workspace-file-system'),
+  import('../src/shared/workspace/file-system'),
   async importActual =>
     ({
       ...(await importActual()),
@@ -195,7 +195,7 @@ describe('external design token references', () => {
       files.get('/workspace/cache-0.json')!,
     )
     const { loadDesignTokenDocument } =
-      await import('../src/strategies/design-tokens/external-loader')
+      await import('../src/engine/strategies/design-tokens/external-loader')
 
     await loadDesignTokenDocument('/workspace/cache-0.json')
     await loadDesignTokenDocument('file:///workspace/cache-0.json')
@@ -423,11 +423,11 @@ function trustedContext(languageId: string, filePath: string) {
 }
 
 async function importJsonStrategy() {
-  return await import('../src/strategies/json-design-tokens')
+  return await import('../src/engine/strategies/design-tokens/json-strategy')
 }
 
 async function importYamlStrategy() {
-  return await import('../src/strategies/yaml-design-tokens')
+  return await import('../src/engine/strategies/design-tokens/yaml-strategy')
 }
 
 function resetFiles(): void {

@@ -173,17 +173,17 @@ HEX syntax with a `#` prefix because the hover format is explicitly `HEX`.
 
 Keep the feature inside the existing hover and command boundaries:
 
-- `src/hover/color-hover.ts`
+- `src/features/hover/color-hover.ts`
   - Continue to resolve color matches.
   - Build compact markdown rows with codicon command links.
   - Include `range`, `originalText`, and the row value in command payloads.
-- `src/commands.ts`
+- `src/extension/commands/index.ts`
   - Keep copy command registration.
   - Add replace and alpha adjustment command registration.
   - Keep command handlers small by delegating range validation, replacement,
     alpha adjustment, and HEX case handling to local helpers or focused utility
     functions.
-- `src/utils/color/presentation.ts`
+- `src/shared/color/presentation.ts`
   - Reuse existing color presentation generation.
   - Add a pure helper only if alpha adjustment needs to build presentations from
     RGBA channel values.

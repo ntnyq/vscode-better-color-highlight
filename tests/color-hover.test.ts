@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
+import type { ColorDetector, ColorMatch } from '../src/engine/detection'
 import {
   buildColorHoverMarkdown,
   getColorHover,
-} from '../src/hover/color-hover'
+} from '../src/features/hover/color-hover'
 import type { NestedScopedConfigs } from '../src/meta'
-import type { ColorDetector, ColorMatch } from '../src/types'
 
 const defaultConfig: NestedScopedConfigs = {
   enable: true,

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
+import type * as WorkspaceFileSystem from '../src/shared/workspace/file-system'
 
 interface TestStat {
   documentVersion?: number
@@ -28,7 +28,7 @@ const isDirectory = vi.fn<(path: string) => Promise<boolean>>(() =>
 )
 
 vi.mock(
-  import('../src/utils/workspace-file-system'),
+  import('../src/shared/workspace/file-system'),
   async importActual =>
     ({
       ...(await importActual()),
@@ -82,7 +82,7 @@ describe('tailwind definition source loading', () => {
     setFile('/repo/reference.css', reference)
     const text = '<div class="bg-imported text-referenced"></div>'
     const { resolveTailwindColorDefinition } =
-      await import('../src/strategies/tailwind-theme/definition')
+      await import('../src/engine/strategies/tailwind-theme/definition')
 
     await expect(
       resolveTailwindColorDefinition(
@@ -121,7 +121,7 @@ describe('tailwind definition source loading', () => {
     setFile('/repo/theme.css', '@theme { --color-brand: #123456; }')
     const text = '<div class="bg-brand"></div>'
     const { resolveTailwindColorDefinition } =
-      await import('../src/strategies/tailwind-theme/definition')
+      await import('../src/engine/strategies/tailwind-theme/definition')
 
     await expect(
       resolveTailwindColorDefinition(text, text.indexOf('brand'), baseContext),
@@ -141,7 +141,7 @@ describe('tailwind definition source loading', () => {
     setFile('/repo/theme.css', '@theme { --color-brand: #123456; }')
     const text = '<div class="bg-brand">plain text</div>'
     const { resolveTailwindColorDefinition } =
-      await import('../src/strategies/tailwind-theme/definition')
+      await import('../src/engine/strategies/tailwind-theme/definition')
 
     await expect(
       resolveTailwindColorDefinition(text, text.indexOf('plain'), baseContext),
@@ -160,7 +160,7 @@ describe('tailwind definition source loading', () => {
       )
       const text = '<div class="bg-old bg-final"></div>'
       const { resolveTailwindColorDefinition } =
-        await import('../src/strategies/tailwind-theme/definition')
+        await import('../src/engine/strategies/tailwind-theme/definition')
 
       await expect(
         resolveTailwindColorDefinition(text, text.indexOf('old'), baseContext),
@@ -188,7 +188,7 @@ describe('tailwind definition source loading', () => {
     )
     const text = '<div class="hover:bg-brand/50"></div>'
     const { resolveTailwindColorDefinition } =
-      await import('../src/strategies/tailwind-theme/definition')
+      await import('../src/engine/strategies/tailwind-theme/definition')
 
     await expect(
       resolveTailwindColorDefinition(text, text.indexOf('brand'), baseContext),

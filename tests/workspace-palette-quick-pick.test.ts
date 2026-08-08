@@ -3,7 +3,7 @@ import type { QuickInputButton } from 'vscode'
 import type {
   WorkspaceColorGroup,
   WorkspacePaletteResult,
-} from '../src/workspace-palette/types'
+} from '../src/features/workspace-palette/types'
 
 /* oxlint-disable vitest/prefer-import-in-mock -- partial VS Code boundary mocks intentionally avoid module-shape checking */
 
@@ -158,7 +158,7 @@ const mocks = vi.hoisted(() => {
   }
 })
 
-vi.mock('../src/config', () => ({
+vi.mock('../src/extension/config', () => ({
   config: {
     languages: ['*'],
     maxFileSize: 1_000_000,
@@ -167,7 +167,7 @@ vi.mock('../src/config', () => ({
   },
 }))
 
-vi.mock('../src/workspace-palette/scanner', () => ({
+vi.mock('../src/features/workspace-palette/scanner', () => ({
   createWorkspacePaletteScanConfig: (config: unknown) => config,
   scanWorkspacePalette: mocks.scanWorkspacePalette,
   WorkspacePaletteScanConfigurationError: class extends Error {},
@@ -292,7 +292,7 @@ describe('workspace palette Quick Pick', () => {
 
   it('shows scan status and disposes a cancelled palette picker', async () => {
     const { showWorkspacePalette } =
-      await import('../src/commands/workspace-palette')
+      await import('../src/extension/commands/workspace-palette')
 
     const session = showWorkspacePalette()
     await vi.waitFor(() => expect(mocks.picks).toHaveLength(1))
@@ -323,7 +323,7 @@ describe('workspace palette Quick Pick', () => {
 
   it('does not show a stale picker for empty or cancelled scans', async () => {
     const { showWorkspacePalette } =
-      await import('../src/commands/workspace-palette')
+      await import('../src/extension/commands/workspace-palette')
     mocks.scanWorkspacePalette.mockResolvedValueOnce({
       groups: [],
       occurrenceTruncated: false,
@@ -345,7 +345,7 @@ describe('workspace palette Quick Pick', () => {
 
   it('ignores malformed contrast command input', async () => {
     const { checkWorkspaceColorContrast } =
-      await import('../src/commands/workspace-palette')
+      await import('../src/extension/commands/workspace-palette')
 
     await expect(
       checkWorkspaceColorContrast({ palette: {} } as never),
@@ -357,7 +357,7 @@ describe('workspace palette Quick Pick', () => {
 
   it('copies HEX from the group button without closing the palette', async () => {
     const { showWorkspacePalette } =
-      await import('../src/commands/workspace-palette')
+      await import('../src/extension/commands/workspace-palette')
     const session = showWorkspacePalette()
     await vi.waitFor(() => expect(mocks.picks).toHaveLength(1))
     const pick = mocks.picks[0]
@@ -373,7 +373,7 @@ describe('workspace palette Quick Pick', () => {
 
   it('starts contrast from a group button and asks for its role', async () => {
     const { showWorkspacePalette } =
-      await import('../src/commands/workspace-palette')
+      await import('../src/extension/commands/workspace-palette')
     const session = showWorkspacePalette()
     await vi.waitFor(() => expect(mocks.picks).toHaveLength(1))
     const groupPick = mocks.picks[0]
@@ -395,7 +395,7 @@ describe('workspace palette Quick Pick', () => {
   it('offers four copy formats and returns from occurrences to the palette', async () => {
     const { QuickInputButtons } = await import('vscode')
     const { showWorkspacePalette } =
-      await import('../src/commands/workspace-palette')
+      await import('../src/extension/commands/workspace-palette')
     const session = showWorkspacePalette()
     await vi.waitFor(() => expect(mocks.picks).toHaveLength(1))
     await mocks.picks[0].accept(mocks.picks[0].items[0])
@@ -428,7 +428,7 @@ describe('workspace palette Quick Pick', () => {
   it('warns for a deleted occurrence and keeps its list open', async () => {
     mocks.openTextDocument.mockRejectedValueOnce(new Error('deleted'))
     const { showWorkspacePalette } =
-      await import('../src/commands/workspace-palette')
+      await import('../src/extension/commands/workspace-palette')
     const session = showWorkspacePalette()
     await vi.waitFor(() => expect(mocks.picks).toHaveLength(1))
     await mocks.picks[0].accept(mocks.picks[0].items[0])
@@ -455,7 +455,7 @@ describe('workspace palette Quick Pick', () => {
     })
     mocks.showTextDocument.mockResolvedValueOnce(editor)
     const { showWorkspacePalette } =
-      await import('../src/commands/workspace-palette')
+      await import('../src/extension/commands/workspace-palette')
     const session = showWorkspacePalette()
     await vi.waitFor(() => expect(mocks.picks).toHaveLength(1))
     await mocks.picks[0].accept(mocks.picks[0].items[0])
@@ -475,7 +475,7 @@ describe('workspace palette Quick Pick', () => {
       positionAt: (offset: number) => ({ offset }),
     })
     const { showWorkspacePalette } =
-      await import('../src/commands/workspace-palette')
+      await import('../src/extension/commands/workspace-palette')
     const session = showWorkspacePalette()
     await vi.waitFor(() => expect(mocks.picks).toHaveLength(1))
     await mocks.picks[0].accept(mocks.picks[0].items[0])
@@ -493,7 +493,7 @@ describe('workspace palette Quick Pick', () => {
 
   it('shows 21:1 and every WCAG level without scanning supplied colors', async () => {
     const { checkWorkspaceColorContrast } =
-      await import('../src/commands/workspace-palette')
+      await import('../src/extension/commands/workspace-palette')
     const session = checkWorkspaceColorContrast({
       background: { color: black.color },
       foreground: { color: white.color },
@@ -523,7 +523,7 @@ describe('workspace palette Quick Pick', () => {
 
   it('shows effective translucent foreground and translucent-background reason', async () => {
     const { checkWorkspaceColorContrast } =
-      await import('../src/commands/workspace-palette')
+      await import('../src/extension/commands/workspace-palette')
     let session = checkWorkspaceColorContrast({
       background: { color: black.color },
       foreground: { color: translucentWhite.color },
@@ -563,7 +563,7 @@ describe('workspace palette Quick Pick', () => {
       palette,
     }
     const { checkWorkspaceColorContrast } =
-      await import('../src/commands/workspace-palette')
+      await import('../src/extension/commands/workspace-palette')
 
     let session = checkWorkspaceColorContrast(input)
     await vi.waitFor(() => expect(mocks.picks).toHaveLength(1))
@@ -603,7 +603,7 @@ describe('workspace palette Quick Pick', () => {
       truncated: false,
     })
     const { checkWorkspaceColorContrast } =
-      await import('../src/commands/workspace-palette')
+      await import('../src/extension/commands/workspace-palette')
     const session = checkWorkspaceColorContrast()
     await vi.waitFor(() => expect(mocks.picks).toHaveLength(1))
     expect(mocks.picks[0].title).toBe('Background Color')

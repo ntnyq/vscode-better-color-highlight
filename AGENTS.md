@@ -4,12 +4,12 @@
 
 This repository is a TypeScript VS Code extension built with
 `reactive-vscode` and bundled by `tsdown`. Source code lives in `src/`.
-Extension activation is in `src/index.ts`, commands in `src/commands.ts`,
-highlight orchestration in `src/composables/`, strategy registration in
-`src/core/`, decoration rendering in `src/decorations/`, color parsers in
-`src/strategies/`, and shared utilities in `src/utils/`. Tests live in
-`tests/`; playground fixtures live in `playground/`; static assets live in
-`res/`; generated extension metadata is in `src/meta.ts`.
+Extension activation is in `src/index.ts`. VS Code configuration, commands,
+and editor integration live in `src/extension/`; user-facing capabilities
+live in `src/features/`; detection and parsing live in `src/engine/`; shared
+color, CSS, workspace, logging, and constant modules live in `src/shared/`.
+Tests live in `tests/`; playground fixtures live in `playground/`; static
+assets live in `res/`; generated extension metadata is in `src/meta.ts`.
 
 ## Build, Test, and Development Commands
 

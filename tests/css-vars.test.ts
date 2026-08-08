@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { findCssVars } from '../src/strategies/css-vars'
+import { findCssVars } from '../src/engine/strategies/css-vars'
 import {
   collectCssVarDeclarations,
   splitCssSelectorList,
-} from '../src/strategies/css-vars/parser'
-import type { CssVarDeclaration } from '../src/strategies/css-vars/parser'
+} from '../src/engine/strategies/css-vars/parser'
+import type { CssVarDeclaration } from '../src/engine/strategies/css-vars/parser'
 import {
   findCssVarUsages,
   resolveCssVarMatches,
-} from '../src/strategies/css-vars/resolver'
-import type { LoadCssVarSourceDeclarationsOptions } from '../src/strategies/css-vars/sources'
+} from '../src/engine/strategies/css-vars/resolver'
+import type { LoadCssVarSourceDeclarationsOptions } from '../src/engine/strategies/css-vars/sources'
 import { FIXTURE_VARS_CSS } from './fixtures'
 
 const { loadCssVarSourceDeclarationsMock } = vi.hoisted(() => ({
@@ -22,7 +22,7 @@ const { loadCssVarSourceDeclarationsMock } = vi.hoisted(() => ({
     .mockResolvedValue([]),
 }))
 
-vi.mock(import('../src/strategies/css-vars/sources'), () => ({
+vi.mock(import('../src/engine/strategies/css-vars/sources'), () => ({
   loadCssVarSourceDeclarations: loadCssVarSourceDeclarationsMock,
 }))
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findStylusVars } from '../src/strategies/stylus-vars'
+import { findStylusVars } from '../src/engine/strategies/stylus-vars'
 import { FIXTURE_STYLUS } from './fixtures'
 
 describe(findStylusVars, () => {

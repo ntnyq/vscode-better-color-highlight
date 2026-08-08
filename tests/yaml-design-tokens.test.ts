@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findYamlDesignTokens } from '../src/strategies/yaml-design-tokens'
+import { findYamlDesignTokens } from '../src/engine/strategies/design-tokens/yaml-strategy'
 
 describe(findYamlDesignTokens, () => {
   it('finds DTCG group root tokens', () => {

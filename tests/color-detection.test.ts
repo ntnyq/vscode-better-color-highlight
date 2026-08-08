@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { runColorDetectors } from '../src/core/color-detection'
-import type { ColorDetector, ColorMatch, StrategyContext } from '../src/types'
+import type {
+  ColorDetector,
+  ColorMatch,
+  StrategyContext,
+} from '../src/engine/detection'
+import { runColorDetectors } from '../src/engine/detection/run-detectors'
 
 const context: StrategyContext = { languageId: 'css' }
 const red: ColorMatch = { start: 0, end: 7, color: 'rgb(255, 0, 0)' }

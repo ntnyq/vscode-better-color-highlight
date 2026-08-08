@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findHslNoFunction } from '../src/strategies/hsl-no-fn'
+import { findHslNoFunction } from '../src/engine/strategies/hsl-no-fn'
 
 describe(findHslNoFunction, () => {
   it('finds bare HSL triplets with commas', () => {

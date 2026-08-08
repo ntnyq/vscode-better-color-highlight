@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findLessVars } from '../src/strategies/less-vars'
+import { findLessVars } from '../src/engine/strategies/less-vars'
 import { FIXTURE_LESS } from './fixtures'
 
 describe(findLessVars, () => {

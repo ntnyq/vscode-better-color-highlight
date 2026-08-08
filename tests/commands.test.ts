@@ -181,7 +181,7 @@ describe('useCommands', () => {
     vi.resetModules()
     registeredCommands.clear()
 
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
 
     useCommands()
 
@@ -211,7 +211,7 @@ describe('useCommands', () => {
     showWarningMessage.mockClear()
     sourceText = '.box { color: #777; background: #fff; }'
     const { contrastDiagnosticStore } =
-      await import('../src/contrast/diagnostics')
+      await import('../src/features/contrast/diagnostics')
     const { Range } = await import('vscode')
     contrastDiagnosticStore.set(activeTextEditor.document.uri, 4, [
       {
@@ -241,7 +241,7 @@ describe('useCommands', () => {
         },
       },
     ])
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
     useCommands()
 
     await registeredCommands.get(
@@ -319,7 +319,7 @@ describe('useCommands', () => {
     updateWorkspaceConfig.mockClear()
     sourceText = '.box { color: #777; background: #fff; }'
     const { contrastDiagnosticStore } =
-      await import('../src/contrast/diagnostics')
+      await import('../src/features/contrast/diagnostics')
     const { Range } = await import('vscode')
     contrastDiagnosticStore.set(activeTextEditor.document.uri, 4, [
       {
@@ -349,7 +349,7 @@ describe('useCommands', () => {
         },
       },
     ])
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
     useCommands()
 
     await registeredCommands.get(
@@ -376,7 +376,7 @@ describe('useCommands', () => {
     const updatePromise = Promise.resolve()
     updateConfig.mockReturnValue(updatePromise)
 
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
 
     useCommands()
     const result = registeredCommands.get('color-highlight.enable')?.()
@@ -390,7 +390,7 @@ describe('useCommands', () => {
     writeText.mockClear()
     writeText.mockResolvedValue()
 
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
 
     useCommands()
     await registeredCommands.get('color-highlight.copyColorAsHex')?.('#ff0000')
@@ -405,7 +405,7 @@ describe('useCommands', () => {
     writeText.mockClear()
     writeText.mockResolvedValue()
 
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
 
     useCommands()
     await registeredCommands.get('color-highlight.copyColorAsRgb')?.()
@@ -420,7 +420,7 @@ describe('useCommands', () => {
     replace.mockClear()
     sourceText = '.box { color: #ff0000; }'
 
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
 
     useCommands()
     await registeredCommands.get('color-highlight.replaceColorAsRgb')?.({
@@ -440,7 +440,7 @@ describe('useCommands', () => {
     replace.mockClear()
     sourceText = '.box { color: #ff0000; }'
 
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
 
     useCommands()
     await registeredCommands.get('color-highlight.replaceColorAsRgb')?.({
@@ -460,7 +460,7 @@ describe('useCommands', () => {
     replace.mockClear()
     sourceText = '.box { color: #00ff00; }'
 
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
 
     useCommands()
     await registeredCommands.get('color-highlight.replaceColorAsRgb')?.({
@@ -480,7 +480,7 @@ describe('useCommands', () => {
     replace.mockClear()
     sourceText = '.box { color: #FF0000; }'
 
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
 
     useCommands()
     await registeredCommands.get('color-highlight.replaceColorAsHex')?.({
@@ -500,7 +500,7 @@ describe('useCommands', () => {
     replace.mockClear()
     sourceText = 'Color(0xffff0000)'
 
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
 
     useCommands()
     await registeredCommands.get('color-highlight.replaceColorAsHex')?.({
@@ -520,7 +520,7 @@ describe('useCommands', () => {
     replace.mockClear()
     sourceText = '.box { color: #ff0000; }'
 
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
 
     useCommands()
     await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
@@ -542,7 +542,7 @@ describe('useCommands', () => {
     configSnapshot.useARGB = true
     sourceText = '.box { color: #80ff0000; }'
 
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
 
     useCommands()
     await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
@@ -563,7 +563,7 @@ describe('useCommands', () => {
     replace.mockClear()
     sourceText = 'Color(0xffff0000)'
 
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
 
     useCommands()
     await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
@@ -587,7 +587,7 @@ describe('useCommands', () => {
     replace.mockClear()
     sourceText = '.box { color: rgba(255, 0, 0, 0.95); }'
 
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
 
     useCommands()
     await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
@@ -608,7 +608,7 @@ describe('useCommands', () => {
     replace.mockClear()
     sourceText = '.box { color: hsl(0 100% 50%); }'
 
-    const { useCommands } = await import('../src/commands')
+    const { useCommands } = await import('../src/extension/commands')
 
     useCommands()
     await registeredCommands.get('color-highlight.adjustColorAlpha')?.({

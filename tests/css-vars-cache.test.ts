@@ -1,16 +1,16 @@
 import { join } from 'node:path'
 import { isString } from '@ntnyq/utils'
 import { describe, expect, it, vi } from 'vitest'
-import type * as CssVarSourcesModule from '../src/strategies/css-vars/sources'
-import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
-import type { WorkspaceFindFilesPattern } from '../src/utils/workspace-file-system'
+import type * as CssVarSourcesModule from '../src/engine/strategies/css-vars/sources'
+import type * as WorkspaceFileSystem from '../src/shared/workspace/file-system'
+import type { WorkspaceFindFilesPattern } from '../src/shared/workspace/file-system'
 
 const fileStats = new Map<string, { mtimeMs: number; size: number }>()
 const fileTexts = new Map<string, string>()
 const directories = new Map<string, string[]>()
 const globMatches = new Map<string, string[]>()
 type WorkspaceFindFilesMockPattern = string | WorkspaceFindFilesPattern
-const cssVarSourcesModulePath = '../src/strategies/css-vars/sources.ts'
+const cssVarSourcesModulePath = '../src/engine/strategies/css-vars/sources.ts'
 
 const readFileMock = vi.fn<(filePath: unknown) => Promise<string>>(filePath => {
   const normalizedFilePath = String(filePath)
@@ -42,7 +42,7 @@ const findFilesMock = vi.fn<
 )
 
 vi.mock(
-  import('../src/utils/workspace-file-system'),
+  import('../src/shared/workspace/file-system'),
   async importActual =>
     ({
       ...(await importActual()),

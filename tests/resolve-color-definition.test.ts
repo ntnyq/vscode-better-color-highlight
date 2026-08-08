@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import type * as CssSourcesModule from '../src/strategies/css-vars/sources'
-import type * as TailwindDefinitionModule from '../src/strategies/tailwind-theme/definition'
-import type * as LoggerModule from '../src/utils/logger'
+import type * as CssSourcesModule from '../src/engine/strategies/css-vars/sources'
+import type * as TailwindDefinitionModule from '../src/engine/strategies/tailwind-theme/definition'
+import type * as LoggerModule from '../src/shared/logger'
 
 const loggerError = vi.fn<(message: unknown) => void>()
 const loadCssVarSourceDeclarations = vi.fn<
@@ -12,16 +12,16 @@ const resolveTailwindColorDefinition = vi.fn<
 >(() => Promise.resolve(null))
 
 vi.mock(
-  import('../src/utils/logger'),
+  import('../src/shared/logger'),
   () =>
     ({
       logger: { error: loggerError },
     }) as unknown as typeof LoggerModule,
 )
-vi.mock(import('../src/strategies/css-vars/sources'), () => ({
+vi.mock(import('../src/engine/strategies/css-vars/sources'), () => ({
   loadCssVarSourceDeclarations,
 }))
-vi.mock(import('../src/strategies/tailwind-theme/definition'), () => ({
+vi.mock(import('../src/engine/strategies/tailwind-theme/definition'), () => ({
   resolveTailwindColorDefinition,
 }))
 
@@ -59,7 +59,7 @@ describe('resolveColorDefinition', () => {
     }
     resolveTailwindColorDefinition.mockResolvedValueOnce(expected)
     const { resolveColorDefinition } =
-      await import('../src/color-navigation/resolve-color-definition')
+      await import('../src/features/color-navigation/resolve-color-definition')
 
     await expect(
       resolveColorDefinition('class="bg-brand"', 10, {
@@ -100,7 +100,7 @@ describe('resolveColorDefinition', () => {
     ],
   ])('dispatches %s documents', async (languageId, text, usageText) => {
     const { resolveColorDefinition } =
-      await import('../src/color-navigation/resolve-color-definition')
+      await import('../src/features/color-navigation/resolve-color-definition')
     const usage = text.lastIndexOf(usageText)
 
     const target = await resolveColorDefinition(text, usage + 2, {
@@ -117,7 +117,7 @@ describe('resolveColorDefinition', () => {
 
   it('returns null for unsupported languages and disabled token mode', async () => {
     const { resolveColorDefinition } =
-      await import('../src/color-navigation/resolve-color-definition')
+      await import('../src/features/color-navigation/resolve-color-definition')
     const text =
       '{"brand":{"$type":"color","$value":"#f00"},"alias":{"$value":"{brand}"}}'
 
@@ -138,7 +138,7 @@ describe('resolveColorDefinition', () => {
 
   it('does not navigate to named variable values when matching is disabled', async () => {
     const { resolveColorDefinition } =
-      await import('../src/color-navigation/resolve-color-definition')
+      await import('../src/features/color-navigation/resolve-color-definition')
     const text = ':root { --brand: red; } a { color: var(--brand); }'
 
     await expect(
@@ -152,7 +152,7 @@ describe('resolveColorDefinition', () => {
   it('preserves JSON and JSONC design-token dispatch without Tailwind', async () => {
     resolveTailwindColorDefinition.mockClear()
     const { resolveColorDefinition } =
-      await import('../src/color-navigation/resolve-color-definition')
+      await import('../src/features/color-navigation/resolve-color-definition')
     const text =
       '{"brand":{"$type":"color","$value":{"colorSpace":"srgb","components":[1,0,0]}},"alias":{"$value":"{brand}"}}'
 
@@ -170,7 +170,7 @@ describe('resolveColorDefinition', () => {
   it('dispatches plaintext .tokens documents as JSON design tokens', async () => {
     resolveTailwindColorDefinition.mockClear()
     const { resolveColorDefinition } =
-      await import('../src/color-navigation/resolve-color-definition')
+      await import('../src/features/color-navigation/resolve-color-definition')
     const text =
       '{"brand":{"$type":"color","$value":{"colorSpace":"srgb","components":[1,0,0]}},"alias":{"$value":"{brand}"}}'
 
@@ -188,7 +188,7 @@ describe('resolveColorDefinition', () => {
     'does not resolve structured %s aliases in strings mode',
     async languageId => {
       const { resolveColorDefinition } =
-        await import('../src/color-navigation/resolve-color-definition')
+        await import('../src/features/color-navigation/resolve-color-definition')
       const text =
         '{"brand":{"$type":"color","$value":{"colorSpace":"srgb","components":[1,0,0]}},"alias":{"$value":"{brand}"}}'
 
@@ -204,7 +204,7 @@ describe('resolveColorDefinition', () => {
 
   it('keeps YAML alias navigation enabled in strings mode', async () => {
     const { resolveColorDefinition } =
-      await import('../src/color-navigation/resolve-color-definition')
+      await import('../src/features/color-navigation/resolve-color-definition')
     const text =
       'brand:\n  $type: color\n  $value: { colorSpace: srgb, components: [1, 0, 0] }\nalias:\n  $value: "{brand}"'
 
@@ -220,7 +220,7 @@ describe('resolveColorDefinition', () => {
   it('isolates resolver errors as a logged no-result', async () => {
     loadCssVarSourceDeclarations.mockRejectedValueOnce(new Error('read failed'))
     const { resolveColorDefinition } =
-      await import('../src/color-navigation/resolve-color-definition')
+      await import('../src/features/color-navigation/resolve-color-definition')
     const text = ':root { --brand: #f00; } a { color: var(--brand); }'
 
     await expect(
@@ -239,7 +239,7 @@ describe('resolveColorDefinition', () => {
     loadCssVarSourceDeclarations.mockClear()
     const signal = { isCancellationRequested: false }
     const { resolveColorDefinition } =
-      await import('../src/color-navigation/resolve-color-definition')
+      await import('../src/features/color-navigation/resolve-color-definition')
     const text = ':root { --brand: #f00; } a { color: var(--brand); }'
 
     await resolveColorDefinition(text, text.indexOf('var(--brand)') + 4, {

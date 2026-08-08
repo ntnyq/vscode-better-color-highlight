@@ -1,9 +1,9 @@
 import { isString } from '@ntnyq/utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { resolveTailwindTheme } from '../src/strategies/tailwind-theme/resolver'
-import type * as Sources from '../src/strategies/tailwind-theme/sources'
-import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
-import type { WorkspaceFindFilesPattern } from '../src/utils/workspace-file-system'
+import { resolveTailwindTheme } from '../src/engine/strategies/tailwind-theme/resolver'
+import type * as Sources from '../src/engine/strategies/tailwind-theme/sources'
+import type * as WorkspaceFileSystem from '../src/shared/workspace/file-system'
+import type { WorkspaceFindFilesPattern } from '../src/shared/workspace/file-system'
 
 interface TestStat {
   documentVersion?: number
@@ -42,7 +42,7 @@ const findFiles = vi.fn<
 )
 
 vi.mock(
-  import('../src/utils/workspace-file-system'),
+  import('../src/shared/workspace/file-system'),
   async importActual =>
     ({
       ...(await importActual()),
@@ -215,9 +215,9 @@ describe('loadTailwindThemeSources', () => {
     'loads embedded-style directives for trusted configured .%s documents',
     async (extension, languageId) => {
       const { findTailwindThemeColors } =
-        await import('../src/strategies/tailwind-theme-colors')
+        await import('../src/engine/strategies/tailwind-theme')
       const { resolveTailwindColorDefinition } =
-        await import('../src/strategies/tailwind-theme/definition')
+        await import('../src/engine/strategies/tailwind-theme/definition')
       const filePath = `/repo/page.${extension}`
       const importedPath = '/repo/imported.css'
       const referencedPath = '/repo/referenced.css'
@@ -554,7 +554,7 @@ describe('loadTailwindThemeSources', () => {
 })
 
 function importSources(): Promise<typeof Sources> {
-  return import('../src/strategies/tailwind-theme/sources')
+  return import('../src/engine/strategies/tailwind-theme/sources')
 }
 
 function setFile(

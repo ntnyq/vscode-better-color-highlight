@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import { resolveDesignTokenDefinition } from '../src/strategies/design-tokens/definition'
-import { resolveDesignTokenColors } from '../src/strategies/design-tokens/external-loader'
-import { parseJsonDesignTokenDocument } from '../src/strategies/design-tokens/json-document'
-import { resolveLocalDesignTokenColors } from '../src/strategies/design-tokens/resolver'
-import { parseYamlDesignTokenDocument } from '../src/strategies/design-tokens/yaml-document'
-import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
+import { resolveDesignTokenDefinition } from '../src/engine/strategies/design-tokens/definition'
+import { resolveDesignTokenColors } from '../src/engine/strategies/design-tokens/external-loader'
+import { parseJsonDesignTokenDocument } from '../src/engine/strategies/design-tokens/json-document'
+import { resolveLocalDesignTokenColors } from '../src/engine/strategies/design-tokens/resolver'
+import { parseYamlDesignTokenDocument } from '../src/engine/strategies/design-tokens/yaml-document'
+import type * as WorkspaceFileSystem from '../src/shared/workspace/file-system'
 
 interface FileState {
   documentVersion?: number
@@ -35,7 +35,7 @@ const { files, readFileMock, statFileMock } = vi.hoisted(() => {
 })
 
 vi.mock(
-  import('../src/utils/workspace-file-system'),
+  import('../src/shared/workspace/file-system'),
   async importActual =>
     ({
       ...(await importActual()),

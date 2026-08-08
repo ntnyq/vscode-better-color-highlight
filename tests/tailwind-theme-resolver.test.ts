@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { parseTailwindThemeSource } from '../src/strategies/tailwind-theme/parser'
+import { parseTailwindThemeSource } from '../src/engine/strategies/tailwind-theme/parser'
 import {
   resolveTailwindTheme,
   resolveTailwindThemeColor,
-} from '../src/strategies/tailwind-theme/resolver'
+} from '../src/engine/strategies/tailwind-theme/resolver'
 
 function rangeOf(text: string, value: string, occurrence = 0) {
   let start = -1

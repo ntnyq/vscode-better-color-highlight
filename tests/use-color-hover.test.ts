@@ -2,7 +2,7 @@ import type * as ReactiveVscode from 'reactive-vscode'
 import { describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
 import type { NestedScopedConfigs } from '../src/meta'
-import type * as LoggerModule from '../src/utils/logger'
+import type * as LoggerModule from '../src/shared/logger'
 
 const configSnapshot = {
   matchWords: false,
@@ -34,7 +34,7 @@ vi.mock(
 vi.mock(import('vscode'), () => ({}) as Partial<typeof Vscode>)
 
 vi.mock(
-  import('../src/utils/logger'),
+  import('../src/shared/logger'),
   () =>
     ({
       logger: {
@@ -47,7 +47,7 @@ vi.mock(
 describe('hover match cache signature', () => {
   it('changes with Tailwind color mode and stylesheet paths', async () => {
     const { createHoverMatchCacheKey } =
-      await import('../src/composables/use-color-hover')
+      await import('../src/features/hover/use-color-hover')
     const createKey = () =>
       createHoverMatchCacheKey('file:///example.html', 1, 'html', 0, true)
     const initial = createKey()

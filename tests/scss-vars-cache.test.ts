@@ -7,7 +7,7 @@ import {
   resolve,
 } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
+import type * as WorkspaceFileSystem from '../src/shared/workspace/file-system'
 
 const fileStats = new Map<string, { mtimeMs: number; size: number }>()
 const fileTexts = new Map<string, string>()
@@ -37,7 +37,7 @@ const statMock = vi.fn<
 })
 
 vi.mock(
-  import('../src/utils/workspace-file-system'),
+  import('../src/shared/workspace/file-system'),
   () =>
     ({
       basenameWorkspacePath: basename,
@@ -66,7 +66,7 @@ describe('scss variable dependency cache', () => {
     vi.resetModules()
 
     const { findScssVars, resolveScssVarDefinition } =
-      await import('../src/strategies/scss-vars')
+      await import('../src/engine/strategies/scss-vars')
 
     const dir = '/tmp/better-color-scss-cache'
     const tokensPath = join(dir, '_tokens.scss')
@@ -132,7 +132,7 @@ describe('scss variable dependency cache', () => {
     statMock.mockClear()
     vi.resetModules()
 
-    const { findScssVars } = await import('../src/strategies/scss-vars')
+    const { findScssVars } = await import('../src/engine/strategies/scss-vars')
 
     const dir = '/tmp/better-color-scss-unreadable'
     const tokensPath = join(dir, '_tokens.scss')
@@ -168,7 +168,7 @@ describe('scss variable dependency cache', () => {
     statMock.mockClear()
     vi.resetModules()
 
-    const { findScssVars } = await import('../src/strategies/scss-vars')
+    const { findScssVars } = await import('../src/engine/strategies/scss-vars')
 
     const dir = '/tmp/better-color-scss-large'
     const tokensPath = join(dir, '_tokens.scss')
@@ -202,7 +202,7 @@ describe('scss variable dependency cache', () => {
     statMock.mockClear()
     vi.resetModules()
 
-    const { findScssVars } = await import('../src/strategies/scss-vars')
+    const { findScssVars } = await import('../src/engine/strategies/scss-vars')
     const dir = '/tmp/better-color-scss-budget'
     for (const [name, color] of [
       ['one', '#111111'],
@@ -251,7 +251,7 @@ describe('scss variable dependency cache', () => {
     statMock.mockClear()
     vi.resetModules()
 
-    const { findScssVars } = await import('../src/strategies/scss-vars')
+    const { findScssVars } = await import('../src/engine/strategies/scss-vars')
     const dir = '/tmp/better-color-scss-probe-budget'
     const tokensPath = join(dir, '_tokens.scss')
     const entryPath = join(dir, 'entry.scss')

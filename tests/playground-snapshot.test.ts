@@ -8,14 +8,14 @@ import {
   resolve,
 } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import { getStrategies } from '../src/core/strategy-registry'
-import { buildDecorationOptions } from '../src/decorations/marker-types'
+import type { ColorMatch } from '../src/engine/detection'
+import { getStrategies } from '../src/engine/detection/registry'
+import { buildDecorationOptions } from '../src/features/highlight/decorations/marker-types'
 import type { NestedScopedConfigs } from '../src/meta'
-import type { ColorMatch } from '../src/types'
-import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
+import type * as WorkspaceFileSystem from '../src/shared/workspace/file-system'
 
 vi.mock(
-  import('../src/utils/workspace-file-system'),
+  import('../src/shared/workspace/file-system'),
   () =>
     ({
       basenameWorkspacePath: basename,

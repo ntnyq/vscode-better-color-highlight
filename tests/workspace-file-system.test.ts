@@ -9,7 +9,7 @@ import {
   readWorkspaceFile,
   resolveWorkspacePath,
   statWorkspaceFile,
-} from '../src/utils/workspace-file-system'
+} from '../src/shared/workspace/file-system'
 
 const fileUri = {
   scheme: 'file',

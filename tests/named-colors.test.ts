@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findNamedColors } from '../src/strategies/named-colors'
+import { findNamedColors } from '../src/engine/strategies/named-colors'
 
 describe(findNamedColors, () => {
   it('finds named color "red"', () => {

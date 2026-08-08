@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildDecorationOptions } from '../src/decorations/marker-types'
+import { buildDecorationOptions } from '../src/features/highlight/decorations/marker-types'
 
 describe(buildDecorationOptions, () => {
   it('renders background markers without a wrapping border', () => {

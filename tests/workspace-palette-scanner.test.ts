@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
-import type { NestedScopedConfigs } from '../src/meta'
-import type { ColorDetector, StrategyContext } from '../src/types'
-import type * as LoggerModule from '../src/utils/logger'
+import type { ColorDetector, StrategyContext } from '../src/engine/detection'
 import type {
   ScanWorkspacePaletteOptions,
   WorkspacePaletteProgress,
-} from '../src/workspace-palette/scanner'
+} from '../src/features/workspace-palette/scanner'
+import type { NestedScopedConfigs } from '../src/meta'
+import type * as LoggerModule from '../src/shared/logger'
 
 interface TestUri {
   readonly fsPath: string
@@ -44,7 +44,7 @@ vi.mock(
     }) as unknown as Partial<typeof Vscode>,
 )
 vi.mock(
-  import('../src/utils/logger'),
+  import('../src/shared/logger'),
   () =>
     ({
       logger: { error: vi.fn<(message: unknown) => void>() },
@@ -114,7 +114,7 @@ function activeToken(): Vscode.CancellationToken {
 
 async function scan(overrides: Partial<ScanWorkspacePaletteOptions> = {}) {
   const { scanWorkspacePalette } =
-    await import('../src/workspace-palette/scanner')
+    await import('../src/features/workspace-palette/scanner')
   return await scanWorkspacePalette({
     cancellationToken: activeToken(),
     config: testConfig,
@@ -206,7 +206,7 @@ describe('workspace palette scanner', () => {
       contexts.push(context!)
       return []
     })
-    const registry = await import('../src/core/strategy-registry')
+    const registry = await import('../src/engine/detection/registry')
     const strategies = vi
       .spyOn(registry, 'getStrategies')
       .mockReturnValue([detector])
@@ -246,7 +246,7 @@ describe('workspace palette scanner', () => {
       Promise.resolve(document(value, 'x'.repeat(5000))),
     )
     stat.mockResolvedValue({ size: 5000 })
-    const registry = await import('../src/core/strategy-registry')
+    const registry = await import('../src/engine/detection/registry')
     const strategies = vi
       .spyOn(registry, 'getStrategies')
       .mockReturnValue([detector])
@@ -334,7 +334,7 @@ describe('workspace palette scanner', () => {
       }
       return Promise.resolve(document(value))
     })
-    const registry = await import('../src/core/strategy-registry')
+    const registry = await import('../src/engine/detection/registry')
     const strategies = vi.spyOn(registry, 'getStrategies').mockReturnValue([])
 
     const result = await scan({ config: { ...testConfig, maxFileSize: 0 } })
@@ -361,7 +361,7 @@ describe('workspace palette scanner', () => {
         ? Promise.reject(new Error('cannot open'))
         : Promise.resolve(document(value)),
     )
-    const registry = await import('../src/core/strategy-registry')
+    const registry = await import('../src/engine/detection/registry')
     const failingDetector = vi.fn<ColorDetector>(() => {
       throw new Error('bad detector')
     })
@@ -408,7 +408,7 @@ describe('workspace palette scanner', () => {
       contexts.push(context!)
       return [{ color: 'rgb(255, 0, 0)', end: 7, start: 0 }]
     })
-    const registry = await import('../src/core/strategy-registry')
+    const registry = await import('../src/engine/detection/registry')
     const strategies = vi
       .spyOn(registry, 'getStrategies')
       .mockReturnValue([detector])
@@ -534,7 +534,7 @@ describe('workspace palette scanner', () => {
 
   it('validates empty and invalid globs before exposing partial data', async () => {
     const { WorkspacePaletteScanConfigurationError } =
-      await import('../src/workspace-palette/scanner')
+      await import('../src/features/workspace-palette/scanner')
 
     await expect(
       scan({ config: { ...testConfig, workspacePaletteInclude: '  ' } }),
@@ -582,7 +582,7 @@ describe('workspace palette scanner', () => {
         }
         return Promise.resolve([])
       })
-      const registry = await import('../src/core/strategy-registry')
+      const registry = await import('../src/engine/detection/registry')
       const strategies = vi
         .spyOn(registry, 'getStrategies')
         .mockReturnValue([detector])

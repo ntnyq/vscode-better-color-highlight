@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
-import type { ResolvedContrastPair } from '../src/contrast/types'
+import type { ResolvedContrastPair } from '../src/features/contrast/types'
 
 class Position {
   public readonly character: number
@@ -97,7 +97,7 @@ describe('createContrastDiagnosticEntries', () => {
 
   it('creates an extension-owned warning on the foreground with background context', async () => {
     const { createContrastDiagnosticEntries } =
-      await import('../src/contrast/diagnostics')
+      await import('../src/features/contrast/diagnostics')
 
     const [entry] = createContrastDiagnosticEntries(typedDocument, [
       pair('rgb(119, 119, 119)', 'rgb(255, 255, 255)'),
@@ -132,7 +132,7 @@ describe('createContrastDiagnosticEntries', () => {
 
   it('filters passing and indeterminate pairs while compositing translucent foregrounds', async () => {
     const { createContrastDiagnosticEntries } =
-      await import('../src/contrast/diagnostics')
+      await import('../src/features/contrast/diagnostics')
 
     const entries = createContrastDiagnosticEntries(typedDocument, [
       pair('rgb(0, 0, 0)', 'rgb(255, 255, 255)'),

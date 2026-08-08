@@ -7,7 +7,7 @@ import {
   resolve,
 } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type * as WorkspaceFileSystem from '../src/utils/workspace-file-system'
+import type * as WorkspaceFileSystem from '../src/shared/workspace/file-system'
 
 const fileTexts = new Map<string, string>()
 const fileVersions = new Map<string, number>()
@@ -40,7 +40,7 @@ const statMock = vi.fn<
 })
 
 vi.mock(
-  import('../src/utils/workspace-file-system'),
+  import('../src/shared/workspace/file-system'),
   () =>
     ({
       basenameWorkspacePath: basename,
@@ -74,7 +74,7 @@ describe('resolveScssVarDefinition', () => {
 
   it('resolves local direct values, aliases, last definitions, and excludes declarations', async () => {
     const { resolveScssVarDefinition } =
-      await import('../src/strategies/scss-vars')
+      await import('../src/engine/strategies/scss-vars')
     const text =
       '$base: #123456;\n$brand: red;\n$brand: $base;\na { color: $brand; }'
     const usage = text.lastIndexOf('$brand')
@@ -94,7 +94,7 @@ describe('resolveScssVarDefinition', () => {
     'returns null for missing, non-color, or cyclic local values',
     async text => {
       const { resolveScssVarDefinition } =
-        await import('../src/strategies/scss-vars')
+        await import('../src/engine/strategies/scss-vars')
       await expect(
         resolveScssVarDefinition(text, text.lastIndexOf('$') + 1, context),
       ).resolves.toBeNull()
@@ -103,7 +103,7 @@ describe('resolveScssVarDefinition', () => {
 
   it('calculates the value range after the declaration delimiter', async () => {
     const { resolveScssVarDefinition } =
-      await import('../src/strategies/scss-vars')
+      await import('../src/engine/strategies/scss-vars')
     const text = '$red:red;\na { color: $red; }'
 
     const target = await resolveScssVarDefinition(
@@ -119,7 +119,7 @@ describe('resolveScssVarDefinition', () => {
     'rejects malformed token %s consistently with detection',
     async token => {
       const { findScssVars, resolveScssVarDefinition } =
-        await import('../src/strategies/scss-vars')
+        await import('../src/engine/strategies/scss-vars')
       const text = `$brand: red;\na { color: ${token}; }`
 
       await expect(
@@ -136,7 +136,7 @@ describe('resolveScssVarDefinition', () => {
     ['@import "tokens";\na { color: $brand; }', '$brand'],
   ])('resolves module visibility for %s', async (entry, usageText) => {
     const { resolveScssVarDefinition } =
-      await import('../src/strategies/scss-vars')
+      await import('../src/engine/strategies/scss-vars')
     const dependency = '$brand: #336699;\n'
     fileTexts.set('/workspace/_tokens.scss', dependency)
 
@@ -151,7 +151,7 @@ describe('resolveScssVarDefinition', () => {
 
   it('resolves forwarded partial index modules and cross-file aliases', async () => {
     const { resolveScssVarDefinition } =
-      await import('../src/strategies/scss-vars')
+      await import('../src/engine/strategies/scss-vars')
     fileTexts.set('/workspace/tokens/_index.scss', '@forward "colors";\n')
     fileTexts.set(
       '/workspace/tokens/_colors.scss',
@@ -178,7 +178,7 @@ describe('resolveScssVarDefinition', () => {
     'rejects conflicting forwarded exports through %s',
     async (entry, usageText) => {
       const { findScssVars, resolveScssVarDefinition } =
-        await import('../src/strategies/scss-vars')
+        await import('../src/engine/strategies/scss-vars')
       fileTexts.set(
         '/workspace/_index.scss',
         '@forward "one";\n@forward "two";\n',
@@ -195,7 +195,7 @@ describe('resolveScssVarDefinition', () => {
 
   it('rejects conflicting star exports for detection and navigation', async () => {
     const { findScssVars, resolveScssVarDefinition } =
-      await import('../src/strategies/scss-vars')
+      await import('../src/engine/strategies/scss-vars')
     fileTexts.set('/workspace/_one.scss', '$brand: red;')
     fileTexts.set('/workspace/_two.scss', '$brand: blue;')
     const entry = '@use "one" as *;\n@use "two" as *;\na { color: $brand; }'
@@ -221,7 +221,7 @@ describe('resolveScssVarDefinition', () => {
     'rejects conflicting module namespaces for detection and navigation',
     async (entry, firstPath, secondPath) => {
       const { findScssVars, resolveScssVarDefinition } =
-        await import('../src/strategies/scss-vars')
+        await import('../src/engine/strategies/scss-vars')
       fileTexts.set(firstPath, '$brand: red;')
       fileTexts.set(secondPath, '$brand: blue;')
 
@@ -240,7 +240,7 @@ describe('resolveScssVarDefinition', () => {
 
   it('resolves modules from configured load paths', async () => {
     const { resolveScssVarDefinition } =
-      await import('../src/strategies/scss-vars')
+      await import('../src/engine/strategies/scss-vars')
     fileTexts.set('/styles/pkg/_index.scss', '$brand: #336699;')
     const entry = '@use "pkg";\na { color: pkg.$brand; }'
 
@@ -258,7 +258,7 @@ describe('resolveScssVarDefinition', () => {
 
   it('does not read modules when disabled or untrusted', async () => {
     const { resolveScssVarDefinition } =
-      await import('../src/strategies/scss-vars')
+      await import('../src/engine/strategies/scss-vars')
     fileTexts.set('/workspace/_tokens.scss', '$brand: #336699;')
     const entry = '@use "tokens";\na { color: tokens.$brand; }'
 
@@ -287,7 +287,7 @@ describe('resolveScssVarDefinition', () => {
     ['a CSS variable', 'a { color: var(--brand); }', 15],
   ])('does not read SCSS dependencies at %s', async (_, text, offset) => {
     const { resolveScssVarDefinition } =
-      await import('../src/strategies/scss-vars')
+      await import('../src/engine/strategies/scss-vars')
     fileTexts.set('/workspace/_tokens.scss', '$brand: #336699;')
     const entry = `@use "tokens";\n${text}`
 
@@ -303,7 +303,7 @@ describe('resolveScssVarDefinition', () => {
     'shares the 32-file limit across disjoint graphs during %s',
     async operation => {
       const { findScssVars, resolveScssVarDefinition } =
-        await import('../src/strategies/scss-vars')
+        await import('../src/engine/strategies/scss-vars')
       const imports = Array.from(
         { length: 20 },
         (_, index) => `@import "import-${index}";`,
@@ -352,7 +352,7 @@ describe('resolveScssVarDefinition', () => {
 
   it('keeps namespaced navigation aligned with detection at the shared budget boundary', async () => {
     const { findScssVars, resolveScssVarDefinition } =
-      await import('../src/strategies/scss-vars')
+      await import('../src/engine/strategies/scss-vars')
     const imports = Array.from(
       { length: 16 },
       (_, index) => `@import "import-${index}";`,
@@ -400,7 +400,7 @@ describe('resolveScssVarDefinition', () => {
 
   it('uses changed unsaved dependency text and rejects cross-file cycles', async () => {
     const { resolveScssVarDefinition } =
-      await import('../src/strategies/scss-vars')
+      await import('../src/engine/strategies/scss-vars')
     const entry = '@use "tokens";\na { color: tokens.$brand; }'
     fileTexts.set('/workspace/_tokens.scss', '$brand: 1rem;')
     fileVersions.set('/workspace/_tokens.scss', 1)

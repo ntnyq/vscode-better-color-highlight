@@ -4,7 +4,7 @@ import {
   relativeLuminance,
   contrastRatio,
   getContrastColor,
-} from '../src/utils/color'
+} from '../src/shared/color'
 
 describe(relativeLuminance, () => {
   it('returns ~1.0 for white', () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { resolveTailwindColorValue } from '../src/strategies/tailwind-theme/color'
-import { createTailwindBasePalette } from '../src/strategies/tailwind-theme/palette-v4'
+import { resolveTailwindColorValue } from '../src/engine/strategies/tailwind-theme/color'
+import { createTailwindBasePalette } from '../src/engine/strategies/tailwind-theme/palette-v4'
 
 describe(createTailwindBasePalette, () => {
   it('keeps the Tailwind v3 palette in auto mode without a v4 signal', () => {

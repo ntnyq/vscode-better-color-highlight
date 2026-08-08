@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { resolveLocalDesignTokenColors } from '../src/strategies/design-tokens/resolver'
+import { resolveLocalDesignTokenColors } from '../src/engine/strategies/design-tokens/resolver'
 import type {
   DesignTokenEntry,
   ParsedDesignTokenDocument,
-} from '../src/strategies/design-tokens/types'
+} from '../src/engine/strategies/design-tokens/types'
 
 const red = { colorSpace: 'srgb', components: [1, 0, 0] }
 

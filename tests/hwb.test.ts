@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findHwb } from '../src/strategies/hwb'
+import { findHwb } from '../src/engine/strategies/hwb'
 
 describe(findHwb, () => {
   it('finds hwb() with comma syntax', () => {
