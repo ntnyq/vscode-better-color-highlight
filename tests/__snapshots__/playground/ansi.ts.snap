@@ -1,0 +1,152 @@
+{
+  "file": "ansi.ts",
+  "languageId": "typescript",
+  "strategyNames": [
+    "findHexRGBA",
+    "findColorFunctions",
+    "findHwb",
+    "findTailwindThemeColors",
+    "findNamedColors",
+    "findRgbNoFunction",
+    "findHslNoFunction",
+    "findAnsiSgrColors"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 9,
+      "column": 36,
+      "text": "\\x1b[31m",
+      "range": [
+        292,
+        300
+      ],
+      "color": "rgb(205, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(205, 0, 0)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(205, 0, 0)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 10,
+      "column": 36,
+      "text": "\\u001b[44m",
+      "range": [
+        360,
+        370
+      ],
+      "color": "rgb(0, 0, 238)",
+      "render": {
+        "backgroundColor": "rgb(0, 0, 238)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 0, 238)"
+      }
+    },
+    {
+      "index": 2,
+      "line": 11,
+      "column": 37,
+      "text": "\\u{1b}[93m",
+      "range": [
+        433,
+        443
+      ],
+      "color": "rgb(255, 255, 0)",
+      "render": {
+        "backgroundColor": "rgb(255, 255, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 255, 0)"
+      }
+    },
+    {
+      "index": 3,
+      "line": 12,
+      "column": 37,
+      "text": "\\033[104m",
+      "range": [
+        507,
+        516
+      ],
+      "color": "rgb(92, 92, 255)",
+      "render": {
+        "backgroundColor": "rgb(92, 92, 255)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(92, 92, 255)"
+      }
+    },
+    {
+      "index": 4,
+      "line": 15,
+      "column": 38,
+      "text": "\\e[38;5;201m",
+      "range": [
+        610,
+        622
+      ],
+      "color": "rgb(255, 0, 255)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 255)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 255)"
+      }
+    },
+    {
+      "index": 5,
+      "line": 16,
+      "column": 38,
+      "text": "\\x1B[48;5;21m",
+      "range": [
+        684,
+        697
+      ],
+      "color": "rgb(0, 0, 255)",
+      "render": {
+        "backgroundColor": "rgb(0, 0, 255)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 0, 255)"
+      }
+    },
+    {
+      "index": 6,
+      "line": 19,
+      "column": 40,
+      "text": "\\x1b[38;2;57;197;187m",
+      "range": [
+        832,
+        853
+      ],
+      "color": "rgb(57, 197, 187)",
+      "render": {
+        "backgroundColor": "rgb(57, 197, 187)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(57, 197, 187)"
+      }
+    },
+    {
+      "index": 7,
+      "line": 20,
+      "column": 40,
+      "text": "\\u001b[48:2::239:202:25m",
+      "range": [
+        921,
+        945
+      ],
+      "color": "rgb(239, 202, 25)",
+      "render": {
+        "backgroundColor": "rgb(239, 202, 25)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(239, 202, 25)"
+      }
+    }
+  ]
+}

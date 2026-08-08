@@ -3,7 +3,8 @@
   "languageId": "jsonc",
   "strategyNames": [
     "findJsonDesignTokens",
-    "findNamedColors"
+    "findNamedColors",
+    "findAnsiSgrColors"
   ],
   "matches": [
     {

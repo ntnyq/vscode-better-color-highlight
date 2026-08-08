@@ -85,7 +85,7 @@ const snapshotConfig: NestedScopedConfigs = {
   designTokenJsonMode: 'token-values',
   resolveDesignTokensAcrossFiles: false,
   useARGB: false,
-  matchAnsiEscapeCodes: false,
+  matchAnsiEscapeCodes: true,
   ansiPalette: {},
   matchRgbWithNoFunction: true,
   rgbWithNoFunctionLanguages: ['*'],
@@ -143,6 +143,7 @@ async function collectFileSnapshot(fileName: string) {
       strategy(text, {
         languageId,
         filePath,
+        ansiPalette: snapshotConfig.ansiPalette,
         tailwindColorMode: snapshotConfig.tailwindColorMode,
         tailwindStylesheetPaths: snapshotConfig.tailwindStylesheetPaths,
         workspaceIsTrusted: true,

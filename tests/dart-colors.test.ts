@@ -89,6 +89,20 @@ describe(findDartColors, () => {
   })
 
   it.each([
+    ['Color(0XFF50D71E,)', 'rgb(80, 215, 30)'],
+    ['Color.fromARGB(1_28, 5_7, 1_97, 1_87,)', 'rgba(57, 197, 187, 0.502)'],
+    ['Color.fromRGBO(57, 197, 187, 5e-1,)', 'rgba(57, 197, 187, 0.5)'],
+    [
+      'Color.from(blue: .5, alpha: 25e-2, red: 1, green: 0,)',
+      'rgba(255, 0, 128, 0.25)',
+    ],
+  ])('resolves supported Dart literal syntax in %s', (text, color) => {
+    expect(findDartColors(text)).toStrictEqual([
+      { start: 0, end: text.length, color },
+    ])
+  })
+
+  it.each([
     ['Colors.deepPurple', 'rgb(103, 58, 183)'],
     ['Colors.deepPurpleAccent', 'rgb(124, 77, 255)'],
     ['Colors.lightBlueAccent', 'rgb(64, 196, 255)'],

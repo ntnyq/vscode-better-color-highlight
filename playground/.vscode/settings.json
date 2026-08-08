@@ -4,5 +4,6 @@
   "color-highlight.matchWords": true,
   "color-highlight.enableHover": true,
   "color-highlight.markerType": "background",
+  "color-highlight.matchAnsiEscapeCodes": true,
   "color-highlight.resolveScssVariablesAcrossFiles": true
 }

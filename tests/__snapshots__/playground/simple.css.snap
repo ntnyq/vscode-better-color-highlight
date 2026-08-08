@@ -9,7 +9,8 @@
     "findNamedColors",
     "findRgbNoFunction",
     "findHslNoFunction",
-    "findCssVars"
+    "findCssVars",
+    "findAnsiSgrColors"
   ],
   "matches": [
     {

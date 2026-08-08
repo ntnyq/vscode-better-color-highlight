@@ -8,7 +8,8 @@
     "findTailwindThemeColors",
     "findNamedColors",
     "findRgbNoFunction",
-    "findHslNoFunction"
+    "findHslNoFunction",
+    "findAnsiSgrColors"
   ],
   "matches": [
     {
