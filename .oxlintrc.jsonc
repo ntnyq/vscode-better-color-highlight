@@ -126,6 +126,12 @@
       },
     },
     {
+      "files": ["**/tests/**"],
+      "rules": {
+        "node/no-top-level-await": "off",
+      },
+    },
+    {
       "files": ["*.{spec,test}.{js,ts,tsx}", "*.{spec,test}-d.{ts,tsx}"],
       "plugins": ["vitest"],
       "rules": {

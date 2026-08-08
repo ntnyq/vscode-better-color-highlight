@@ -68,6 +68,7 @@ describe(findTailwindThemeColors, () => {
       })),
     )
   })
+
   it('finds default Tailwind theme color utilities', () => {
     const result = findTailwindThemeColors('class="bg-red-500 text-sky-300"')
 

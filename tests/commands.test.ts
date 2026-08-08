@@ -175,6 +175,7 @@ describe('useCommands', () => {
   beforeEach(() => {
     sourceText = '.box { color: #ff0000; }'
   })
+
   it('registers the workspace palette and contrast commands', async () => {
     vi.resetModules()
     registeredCommands.clear()

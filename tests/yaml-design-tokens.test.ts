@@ -9,6 +9,7 @@ describe(findYamlDesignTokens, () => {
       { color: 'rgb(255, 0, 0)' },
     ])
   })
+
   it('finds block and flow structured color values with precise ranges', () => {
     const text = `brand:
   $type: color

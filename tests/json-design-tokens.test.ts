@@ -16,6 +16,7 @@ describe(findJsonDesignTokens, () => {
       { color: 'rgb(255, 0, 0)' },
     ])
   })
+
   it('highlights structured DTCG colors at the components range', () => {
     const text = `{
       "brand": {
