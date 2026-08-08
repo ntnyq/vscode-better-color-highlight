@@ -106,6 +106,16 @@ describe(findDartColors, () => {
   })
 
   it.each([
+    ['Color.fromARGB(255, 255, 255, 255)', 'rgb(255, 255, 255)'],
+    ['Color.fromRGBO(0, 0, 0, 1)', 'rgb(0, 0, 0)'],
+    ['Color.fromRGBO(1, 2, 3, 0)', 'rgba(1, 2, 3, 0)'],
+  ])('accepts inclusive channel bounds in %s', (text, color) => {
+    expect(findDartColors(text)).toStrictEqual([
+      { start: 0, end: text.length, color },
+    ])
+  })
+
+  it.each([
     'Color.fromARGB(256, 57, 197, 187)',
     'Color.fromARGB(2/* gap */55, 0, 0, 0)',
     'Color.fromRGBO(256, 197, 187, 0.5)',

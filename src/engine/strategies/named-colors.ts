@@ -14,6 +14,7 @@ import {
  * Negative lookahead (?!-) prevents matching partial hyphenated names.
  */
 const NAMED_COLOR_REGEX = buildNamedColorRegex()
+const EMPTY_DART_COLOR_COMPONENT_NAME_STARTS: ReadonlySet<number> = new Set()
 
 /**
  * CSS-like language IDs where named colors should be restricted to values.
@@ -60,7 +61,7 @@ export function findNamedColors(
   const dartColorComponentNameStarts =
     context?.languageId === 'dart'
       ? findDartColorComponentNameStarts(text)
-      : undefined
+      : EMPTY_DART_COLOR_COMPONENT_NAME_STARTS
 
   for (const m of text.matchAll(NAMED_COLOR_REGEX)) {
     const prefix = m[1] ?? ''
@@ -106,7 +107,7 @@ function isNamedColorAllowed(
   start: number,
   end: number,
   context?: StrategyContext,
-  dartColorComponentNameStarts?: ReadonlySet<number>,
+  dartColorComponentNameStarts: ReadonlySet<number> = EMPTY_DART_COLOR_COMPONENT_NAME_STARTS,
 ): boolean {
   if (
     context?.languageId === 'dart' &&

@@ -52,13 +52,19 @@ function formatParsedDartColor(
       return `Color.fromARGB(${alpha}, ${red}, ${green}, ${blue})`
     }
     case 'fromRGBO': {
-      return `Color.fromRGBO(${red}, ${green}, ${blue}, ${formatNormalized(color.a)})`
+      return `Color.fromRGBO(${red}, ${green}, ${blue}, ${formatNormalizedComponent(color.a)})`
     }
     case 'from': {
       const colorSpace = source.hasExplicitSrgbColorSpace
         ? ', colorSpace: ColorSpace.sRGB'
         : ''
-      return `Color.from(alpha: ${formatNormalizedComponent(color.a)}, red: ${formatNormalizedComponent(color.r / 255)}, green: ${formatNormalizedComponent(color.g / 255)}, blue: ${formatNormalizedComponent(color.b / 255)}${colorSpace})`
+      return (
+        'Color.from(' +
+        `alpha: ${formatNormalizedComponent(color.a)}, ` +
+        `red: ${formatNormalizedComponent(color.r / 255)}, ` +
+        `green: ${formatNormalizedComponent(color.g / 255)}, ` +
+        `blue: ${formatNormalizedComponent(color.b / 255)}${colorSpace})`
+      )
     }
     case 'material': {
       return null
@@ -72,11 +78,6 @@ function toByte(value: number): number {
 
 function toHexByte(value: number): string {
   return value.toString(16).padStart(2, '0')
-}
-
-function formatNormalized(value: number): string {
-  const normalized = Math.min(Math.max(value, 0), 1)
-  return String(Number(normalized.toFixed(3)))
 }
 
 function formatNormalizedComponent(value: number): string {

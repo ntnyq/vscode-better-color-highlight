@@ -617,6 +617,29 @@ describe('useCommands', () => {
     )
   })
 
+  it('preserves RGBO opacity precision when adjusting alpha', async () => {
+    vi.resetModules()
+    registeredCommands.clear()
+    edit.mockClear()
+    replace.mockClear()
+    const { useCommands } = await import('../src/extension/commands')
+    useCommands()
+
+    sourceText = 'Color.fromRGBO(57, 197, 187, 0.52345)'
+    await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
+      delta: -0.1,
+      originalColor: 'rgba(57, 197, 187, 0.523)',
+      originalText: sourceText,
+      range: { start: 0, end: sourceText.length },
+      uri: 'file:///tmp/example.css',
+    })
+
+    expect(replace).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      'Color.fromRGBO(57, 197, 187, 0.42345)',
+    )
+  })
+
   it('preserves floating-point Dart channels when adjusting alpha', async () => {
     vi.resetModules()
     registeredCommands.clear()

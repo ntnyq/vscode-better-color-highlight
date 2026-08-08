@@ -32,7 +32,7 @@ export function parseDartColorSource(
   return (
     parseHexColor(source) ??
     parseFromArgbColor(source) ??
-    parseFromRgbaColor(source) ??
+    parseFromRgboColor(source) ??
     parseFromColor(source) ??
     parseMaterialColor(source)
   )
@@ -92,7 +92,7 @@ function parseFromArgbColor(source: string): ParsedDartColorSource | null {
   }
 }
 
-function parseFromRgbaColor(source: string): ParsedDartColorSource | null {
+function parseFromRgboColor(source: string): ParsedDartColorSource | null {
   const parameters = parsePositionalParameters(source, 'Color.fromRGBO')
   if (parameters?.length !== 4) {
     return null

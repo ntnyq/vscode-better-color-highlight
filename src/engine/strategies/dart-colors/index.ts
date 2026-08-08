@@ -24,7 +24,7 @@ export function isDartColorSyntaxNameAt(
   text: string,
   start: number,
   end: number,
-  componentNameStarts = findDartColorComponentNameStarts(text),
+  componentNameStarts: ReadonlySet<number>,
 ): boolean {
   return (
     isDartMaterialColorNameAt(text, start, end) ||

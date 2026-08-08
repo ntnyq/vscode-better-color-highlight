@@ -129,6 +129,15 @@ describe(findNamedColors, () => {
     ).toStrictEqual([])
   })
 
+  it('keeps plain named colors in Dart source', () => {
+    expect(
+      findNamedColors("const label = 'red';", {
+        languageId: 'dart',
+        namedColorMatchMode: 'always',
+      }),
+    ).toStrictEqual([{ start: 15, end: 18, color: 'rgb(255, 0, 0)' }])
+  })
+
   it('skips normalized Dart color component names', () => {
     expect(
       findNamedColors(
