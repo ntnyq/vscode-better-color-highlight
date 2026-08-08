@@ -2,6 +2,7 @@ import { runColorDetectors } from '../core/color-detection'
 import { shouldProcessLanguage } from '../core/strategy-registry'
 import type { NestedScopedConfigs } from '../meta'
 import type { ColorDetector, ColorMatch, StrategyContext } from '../types'
+import { isDartColorSource } from '../utils/color/dart-presentation'
 import {
   getColorPresentations,
   type ColorPresentations,
@@ -219,7 +220,9 @@ export async function getColorHover(
     return null
   }
 
-  const presentations = getColorPresentations(match.color)
+  const presentations = getColorPresentations(match.color, {
+    useARGB: config.useARGB,
+  })
   if (!presentations) {
     return null
   }
@@ -314,19 +317,23 @@ function formatPresentationLine(
   hover: ColorHover,
   valueWidth: number,
 ): string {
-  const replacePayload = {
-    originalText: hover.originalText,
-    range: hover.range,
-    uri: hover.uri,
-    value,
-  }
-
-  return [
+  const parts = [
     `\`${formatHoverLabel(label)}\``,
     `\`${formatHoverValue(value, valueWidth)}\``,
     `[$(copy)](${buildCommandLink(COPY_COMMANDS[format], value)})`,
-    `[$(replace)](${buildCommandLink(REPLACE_COMMANDS[format], replacePayload)})`,
-  ].join(' ')
+  ]
+  if (!isDartColorSource(hover.originalText)) {
+    parts.push(
+      `[$(replace)](${buildCommandLink(REPLACE_COMMANDS[format], {
+        originalText: hover.originalText,
+        range: hover.range,
+        uri: hover.uri,
+        value,
+      })})`,
+    )
+  }
+
+  return parts.join(' ')
 }
 
 /**

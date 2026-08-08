@@ -1,19 +1,18 @@
 import type {
   ColorDefinitionTarget,
-  ColorDetector,
   ColorMatch,
   ColorSourceRange,
+  StrategyContext,
 } from '../../types'
-import { findColorFunctions, resolveShorthandColor } from '../color-functions'
-import { findHexRGBA } from '../hex'
-import { findHwb } from '../hwb'
-import { findNamedColors } from '../named-colors'
+import { resolveShorthandColor } from '../color-functions'
+import { resolveDirectColor } from '../shared/direct-color'
 import { walkCssCode } from './parser'
 import type { CssSourceContext, CssVarDeclaration } from './parser'
 
 export interface ResolveCssVarMatchOptions {
   readonly currentDeclarations: readonly CssVarDeclaration[]
   readonly externalDeclarations: readonly CssVarDeclaration[]
+  readonly strategyContext?: StrategyContext
 }
 
 export interface CssVarUsage {
@@ -311,7 +310,10 @@ async function resolveCssVarValue(
     )
   }
 
-  const directColor = await resolveDirectColor(normalized)
+  const directColor = await resolveDirectColor(
+    normalized,
+    options.strategyContext,
+  )
   if (directColor) {
     return {
       status: 'resolved',
@@ -328,32 +330,6 @@ async function resolveCssVarValue(
   }
 
   return { status: 'missing' }
-}
-
-/**
- * Resolve a value that is itself a whole supported color.
- *
- * @param value - Normalized value text
- * @returns Resolved rgb()/rgba() string, or null when value is not a color
- */
-async function resolveDirectColor(value: string): Promise<string | null> {
-  const strategies: ColorDetector[] = [
-    findHexRGBA,
-    findColorFunctions,
-    findHwb,
-    text =>
-      findNamedColors(text, {
-        languageId: 'css',
-        namedColorMatchMode: 'always',
-      }),
-  ]
-  const results = await Promise.all(strategies.map(strategy => strategy(value)))
-  const matches = results.flat().sort((left, right) => left.start - right.start)
-  const exactMatch = matches.find(
-    match => match.start === 0 && match.end === value.length,
-  )
-
-  return exactMatch?.color ?? null
 }
 
 /**

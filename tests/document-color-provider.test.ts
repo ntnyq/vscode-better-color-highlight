@@ -141,6 +141,7 @@ describe('document color provider', () => {
     configSnapshot.maxFileSize = 1_000_000
     configSnapshot.tailwindColorMode = 'auto'
     configSnapshot.tailwindStylesheetPaths = []
+    configSnapshot.useARGB = false
     replace.mockClear()
     loggerError.mockClear()
   })
@@ -273,5 +274,52 @@ describe('document color provider', () => {
     expect(replace.mock.calls).toStrictEqual(
       result.map(presentation => [range, presentation.label]),
     )
+  })
+
+  it('uses ARGB byte order for native hex presentations when configured', async () => {
+    configSnapshot.useARGB = true
+    const { provideColorPresentations } =
+      await import('../src/color-provider/document-color-provider')
+    const range = { id: 'source-range' } as unknown as Vscode.Range
+
+    const result = provideColorPresentations(
+      new TestColor(1, 0, 0, 0.5) as unknown as Vscode.Color,
+      { document, range },
+    )
+
+    expect(result[0].label).toBe('#80ff0000')
+  })
+
+  it('provides a valid Dart replacement for Dart color constructors', async () => {
+    const { provideColorPresentations } =
+      await import('../src/color-provider/document-color-provider')
+    const range = { id: 'source-range' } as unknown as Vscode.Range
+    const dartDocument = {
+      ...document,
+      getText: () => 'Color(0xffff0000)',
+      languageId: 'dart',
+    } as unknown as Vscode.TextDocument
+
+    const result = provideColorPresentations(
+      new TestColor(1, 0, 0, 0.5) as unknown as Vscode.Color,
+      { document: dartDocument, range },
+    )
+
+    expect(result.map(presentation => presentation.label)).toStrictEqual([
+      'Color(0x80ff0000)',
+    ])
+
+    const fromArgbDocument = {
+      ...dartDocument,
+      getText: () => 'Color.fromARGB(255, 255, 0, 0)',
+    } as unknown as Vscode.TextDocument
+    const fromArgbResult = provideColorPresentations(
+      new TestColor(1, 0, 0, 0.5) as unknown as Vscode.Color,
+      { document: fromArgbDocument, range },
+    )
+
+    expect(
+      fromArgbResult.map(presentation => presentation.label),
+    ).toStrictEqual(['Color.fromARGB(128, 255, 0, 0)'])
   })
 })

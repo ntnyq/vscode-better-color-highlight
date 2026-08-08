@@ -1,13 +1,10 @@
 import type {
   ColorDefinitionTarget,
   ColorMatch,
-  ColorDetector,
   StrategyContext,
 } from '../types'
-import { findColorFunctions, resolveShorthandColor } from './color-functions'
-import { findHexRGBA } from './hex'
-import { findHwb } from './hwb'
-import { findNamedColors } from './named-colors'
+import { resolveShorthandColor } from './color-functions'
+import { resolveDirectColor } from './shared/direct-color'
 import {
   getCapturedVariableValue,
   resolveRangedVariableDefinition,
@@ -102,28 +99,6 @@ function getStylusVarDefinition(
 }
 
 /**
- * Resolve a raw Stylus value to a color using the base color strategies.
- *
- * @param value - The raw Stylus value to resolve
- * @returns The resolved rgb() color string, or null if no color is found
- */
-async function resolveDirectColor(value: string): Promise<string | null> {
-  const strategies: ColorDetector[] = [
-    findHexRGBA,
-    findColorFunctions,
-    findHwb,
-    findNamedColors,
-  ]
-
-  const results = await Promise.all(strategies.map(fn => fn(value)))
-  const allMatches = results.flat()
-  const exactMatch = allMatches.find(
-    match => match.start === 0 && match.end === value.length,
-  )
-  return exactMatch?.color ?? null
-}
-
-/**
  * Resolve Stylus variable values to colors, following nested variable references.
  *
  * @param value - The raw Stylus variable value
@@ -136,11 +111,12 @@ async function resolveVarValue(
   value: string,
   varDefs: Map<string, string>,
   currentName?: string,
+  context?: StrategyContext,
   seen = new Set<string>(),
 ): Promise<string | null> {
   const normalized = value.replaceAll(/!important\b/gu, '').trim()
 
-  const directColor = await resolveDirectColor(normalized)
+  const directColor = await resolveDirectColor(normalized, context)
   if (directColor) {
     return directColor
   }
@@ -165,6 +141,7 @@ async function resolveVarValue(
       refValue,
       varDefs,
       refName,
+      context,
       new Set([...seen, refName]),
     )
     if (resolved) {
@@ -221,7 +198,7 @@ function findStylusVarUsageAtOffset(
 export async function resolveStylusVarDefinition(
   text: string,
   offset: number,
-  context?: Pick<StrategyContext, 'filePath'>,
+  context?: Partial<StrategyContext>,
 ): Promise<ColorDefinitionTarget | null> {
   const definitions = collectRangedStylusVarDefs(text, context?.filePath ?? '')
   const usage = findStylusVarUsageAtOffset(text, offset, definitions)
@@ -234,7 +211,7 @@ export async function resolveStylusVarDefinition(
     definitions,
     getExactStylusVarAlias,
     async (value, name) =>
-      (await resolveDirectColor(value)) !== null ||
+      (await resolveDirectColor(value, context)) !== null ||
       resolveShorthandColor(value, name) !== null,
   )
   return definition ? toColorDefinitionTarget(usage, definition) : null
@@ -248,9 +225,13 @@ export async function resolveStylusVarDefinition(
  * Phase 2: Find all var usages and map them to resolved colors.
  *
  * @param text - The document text to scan for Stylus variable colors
+ * @param context - Optional strategy context with parser settings
  * @returns Array of color matches found in the text
  */
-export async function findStylusVars(text: string): Promise<ColorMatch[]> {
+export async function findStylusVars(
+  text: string,
+  context?: StrategyContext,
+): Promise<ColorMatch[]> {
   // Phase 1: Find variable definitions
   const rangedVarDefs = collectRangedStylusVarDefs(text, '')
   const varDefs = new Map(
@@ -261,7 +242,7 @@ export async function findStylusVars(text: string): Promise<ColorMatch[]> {
   // Resolve variable values to colors
   await Promise.all(
     [...varDefs.entries()].map(async ([name, value]) => {
-      const color = await resolveVarValue(value, varDefs, name)
+      const color = await resolveVarValue(value, varDefs, name, context)
       if (color) {
         varColors.set(name, color)
       }

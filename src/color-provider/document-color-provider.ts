@@ -11,6 +11,7 @@ import { config } from '../config'
 import { runColorDetectors } from '../core/color-detection'
 import { getStrategies, shouldProcessLanguage } from '../core/strategy-registry'
 import type { ColorMatch, StrategyContext } from '../types'
+import { formatDartColor } from '../utils/color/dart-presentation'
 import {
   formatColorPresentation,
   getColorPresentationsFromRgba,
@@ -143,19 +144,37 @@ export function provideColorPresentations(
   color: Color,
   context: { readonly document: TextDocument; readonly range: Range },
 ): ColorPresentation[] {
-  const presentations = getColorPresentationsFromRgba({
+  const rgba = {
     r: normalizedChannelToByte(color.red),
     g: normalizedChannelToByte(color.green),
     b: normalizedChannelToByte(color.blue),
     a: clampNormalizedChannel(color.alpha),
+  }
+  if (context.document.languageId === 'dart') {
+    const value = formatDartColor(rgba, context.document.getText(context.range))
+    return value ? [createColorPresentation(value, context.range)] : []
+  }
+
+  const presentations = getColorPresentationsFromRgba(rgba, {
+    useARGB: config.useARGB,
   })
 
-  return PRESENTATION_FORMATS.map(format => {
-    const value = formatColorPresentation(presentations, format)
-    const presentation = new ColorPresentation(value)
-    presentation.textEdit = TextEdit.replace(context.range, value)
-    return presentation
-  })
+  return PRESENTATION_FORMATS.map(format =>
+    createColorPresentation(
+      formatColorPresentation(presentations, format),
+      context.range,
+    ),
+  )
+}
+
+/** Build one native color presentation that replaces the selected range. */
+function createColorPresentation(
+  value: string,
+  range: Range,
+): ColorPresentation {
+  const presentation = new ColorPresentation(value)
+  presentation.textEdit = TextEdit.replace(range, value)
+  return presentation
 }
 
 /**

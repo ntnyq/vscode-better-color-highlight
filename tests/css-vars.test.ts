@@ -56,6 +56,34 @@ describe(findCssVars, () => {
     })
   })
 
+  it('uses ARGB interpretation for custom property values', async () => {
+    const text = ':root { --brand: #80ff0000; } .x { color: var(--brand); }'
+
+    const result = await findCssVars(text, {
+      languageId: 'css',
+      useARGB: true,
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.indexOf('var(--brand)'),
+        end: text.indexOf('var(--brand)') + 'var(--brand)'.length,
+        color: 'rgba(255, 0, 0, 0.502)',
+      },
+    ])
+  })
+
+  it('does not resolve named custom property values when disabled', async () => {
+    const text = ':root { --brand: red; } .x { color: var(--brand); }'
+
+    const result = await findCssVars(text, {
+      languageId: 'css',
+      namedColorMatchMode: 'never',
+    })
+
+    expect(result).toStrictEqual([])
+  })
+
   it('splits selector lists without splitting inside strings, brackets, or parentheses', () => {
     expect(
       splitCssSelectorList(

@@ -14,11 +14,39 @@ describe(findLessVars, () => {
     expect(text.slice(result[0].start, result[0].end)).toBe('@named-red')
   })
 
+  it('does not resolve named variable values when disabled', async () => {
+    const text = '@brand: red; .x { color: @brand; }'
+
+    const result = await findLessVars(text, {
+      languageId: 'less',
+      namedColorMatchMode: 'never',
+    })
+
+    expect(result).toStrictEqual([])
+  })
+
   it('finds Less variable usages when the definition is inline in a rule block', async () => {
     const text = '.theme { @named-red: #ff0000; color: @named-red; }'
     const result = await findLessVars(text)
     expect(result).toHaveLength(1)
     expect(result[0].color).toBe('rgb(255, 0, 0)')
+  })
+
+  it('uses ARGB interpretation for variable values', async () => {
+    const text = '@brand: #80ff0000; .x { color: @brand; }'
+
+    const result = await findLessVars(text, {
+      languageId: 'less',
+      useARGB: true,
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.lastIndexOf('@brand'),
+        end: text.lastIndexOf('@brand') + '@brand'.length,
+        color: 'rgba(255, 0, 0, 0.502)',
+      },
+    ])
   })
 
   it('resolves nested Less variable references', async () => {

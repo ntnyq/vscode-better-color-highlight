@@ -2,7 +2,6 @@ import type {
   CancellationSignal,
   ColorDefinitionTarget,
   ColorMatch,
-  ColorDetector,
   StrategyContext,
 } from '../types'
 import {
@@ -17,10 +16,7 @@ import {
   workspacePathExists,
 } from '../utils/workspace-file-system'
 import type { WorkspaceReadBudget } from '../utils/workspace-read-budget'
-import { findColorFunctions } from './color-functions'
-import { findHexRGBA } from './hex'
-import { findHwb } from './hwb'
-import { findNamedColors } from './named-colors'
+import { resolveDirectColor } from './shared/direct-color'
 import {
   getCapturedVariableValue,
   resolveRangedVariableDefinition,
@@ -106,28 +102,6 @@ interface ScssFileContentCacheEntry {
 const scssFileContentCache = new Map<string, ScssFileContentCacheEntry>()
 
 /**
- * Resolve a raw SCSS value to a color using the base color strategies.
- *
- * @param value - The raw SCSS value to resolve
- * @returns The resolved rgb() color string, or null if no color is found
- */
-async function resolveDirectColor(value: string): Promise<string | null> {
-  const strategies: ColorDetector[] = [
-    findHexRGBA,
-    findColorFunctions,
-    findHwb,
-    findNamedColors,
-  ]
-
-  const results = await Promise.all(strategies.map(fn => fn(value)))
-  const allMatches = results.flat()
-  const exactMatch = allMatches.find(
-    match => match.start === 0 && match.end === value.length,
-  )
-  return exactMatch?.color ?? null
-}
-
-/**
  * Resolve SCSS variable values to colors, following nested variable references.
  *
  * @param value - The raw SCSS variable value
@@ -138,11 +112,12 @@ async function resolveDirectColor(value: string): Promise<string | null> {
 async function resolveVarValue(
   value: string,
   varDefs: Map<string, string>,
+  context?: StrategyContext,
   seen = new Set<string>(),
 ): Promise<string | null> {
   const normalized = value.replaceAll(/!important\b/gu, '').trim()
 
-  const directColor = await resolveDirectColor(normalized)
+  const directColor = await resolveDirectColor(normalized, context)
   if (directColor) {
     return directColor
   }
@@ -161,6 +136,7 @@ async function resolveVarValue(
     const resolved = await resolveVarValue(
       refValue,
       varDefs,
+      context,
       new Set([...seen, refName]),
     )
     if (resolved) {
@@ -943,7 +919,7 @@ export async function resolveScssVarDefinition(
       usage.name,
       entryDefinitions,
       getExactScssVarAlias,
-      async value => (await resolveDirectColor(value)) !== null,
+      async value => (await resolveDirectColor(value, context)) !== null,
     )
     return definition ? toColorDefinitionTarget(usage, definition) : null
   }
@@ -963,7 +939,7 @@ export async function resolveScssVarDefinition(
     usage.name,
     targetModule.varDefs,
     getExactScssVarAlias,
-    async value => (await resolveDirectColor(value)) !== null,
+    async value => (await resolveDirectColor(value, context)) !== null,
   )
   return definition ? toColorDefinitionTarget(usage, definition) : null
 }
@@ -1000,14 +976,14 @@ export async function findScssVars(
   // Resolve variable values to colors
   await Promise.all(
     [...varDefs.entries()].map(async ([name, value]) => {
-      const color = await resolveVarValue(value, varDefs)
+      const color = await resolveVarValue(value, varDefs, context)
       if (color) {
         varColors.set(name, color)
       }
     }),
   )
 
-  const moduleColors = await resolveScssModuleColors(modules)
+  const moduleColors = await resolveScssModuleColors(modules, context)
 
   if (varColors.size === 0 && moduleColors.size === 0) {
     return []
@@ -1052,6 +1028,7 @@ export async function findScssVars(
  */
 async function resolveScssModuleColors(
   modules: ScssModule[],
+  context?: StrategyContext,
 ): Promise<Map<string, Map<string, string>>> {
   const moduleColors = new Map<string, Map<string, string>>()
 
@@ -1062,7 +1039,7 @@ async function resolveScssModuleColors(
       const rawVarDefs = toRawScssVarDefs(module.varDefs)
       await Promise.all(
         [...rawVarDefs.entries()].map(async ([name, value]) => {
-          const color = await resolveVarValue(value, rawVarDefs)
+          const color = await resolveVarValue(value, rawVarDefs, context)
           if (color) {
             colors.set(name, color)
           }

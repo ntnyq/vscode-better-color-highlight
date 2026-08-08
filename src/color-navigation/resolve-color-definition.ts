@@ -128,6 +128,7 @@ async function resolveCssDefinition(
   return resolveCssVarDefinition(text, offset, {
     currentDeclarations,
     externalDeclarations,
+    strategyContext: context,
   })
 }
 

@@ -1,3 +1,5 @@
+import { config } from '../config'
+import { formatDartColor } from '../utils/color/dart-presentation'
 import {
   formatColorPresentation,
   getColorPresentationsFromRgba,
@@ -25,7 +27,15 @@ export async function adjustColorAlpha(value: unknown) {
   }
 
   const nextColor = withAlpha(color, color.a + payload.delta)
-  const presentations = getColorPresentationsFromRgba(nextColor)
+  const dartReplacement = formatDartColor(nextColor, payload.originalText)
+  if (dartReplacement) {
+    await replaceActiveEditorRange(payload, dartReplacement)
+    return
+  }
+
+  const presentations = getColorPresentationsFromRgba(nextColor, {
+    useARGB: config.useARGB,
+  })
   const format = getFormatForSourceText(payload.originalText)
   const replacement = formatColorPresentation(presentations, format)
   const normalizedReplacement =

@@ -24,6 +24,10 @@ describe(findHwb, () => {
     expect(result).toHaveLength(1)
   })
 
+  it('ignores hwb() inside a larger identifier', () => {
+    expect(findHwb('myhwb(0, 0%, 0%) myhwb(0 0% 0%)')).toStrictEqual([])
+  })
+
   it('finds hwb() with decimal percentages in comma syntax', () => {
     const result = findHwb('color: hwb(0, 50.5%, 25.3%);')
     expect(result).toHaveLength(1)

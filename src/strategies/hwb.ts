@@ -31,6 +31,10 @@ export function findHwb(text: string): ColorMatch[] {
     }
 
     const start = m.index ?? 0
+    if (start > 0 && /[-\w]/u.test(text[start - 1])) {
+      continue
+    }
+
     const end = start + fullMatch.length
     const color = parseHwb(fullMatch)
     if (color) {
@@ -45,6 +49,10 @@ export function findHwb(text: string): ColorMatch[] {
     }
 
     const start = m.index ?? 0
+    if (start > 0 && /[-\w]/u.test(text[start - 1])) {
+      continue
+    }
+
     const end = start + fullMatch.length
     const color = parseHwb(fullMatch)
     if (color) {

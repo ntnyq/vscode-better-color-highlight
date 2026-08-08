@@ -174,6 +174,7 @@ vi.mock(
 describe('useCommands', () => {
   beforeEach(() => {
     sourceText = '.box { color: #ff0000; }'
+    configSnapshot.useARGB = false
   })
 
   it('registers the workspace palette and contrast commands', async () => {
@@ -492,6 +493,26 @@ describe('useCommands', () => {
     expect(replace).toHaveBeenCalledWith(expect.any(Object), '#FF0000')
   })
 
+  it('does not replace a Dart constructor with generic CSS syntax', async () => {
+    vi.resetModules()
+    registeredCommands.clear()
+    edit.mockClear()
+    replace.mockClear()
+    sourceText = 'Color(0xffff0000)'
+
+    const { useCommands } = await import('../src/commands')
+
+    useCommands()
+    await registeredCommands.get('color-highlight.replaceColorAsHex')?.({
+      originalText: sourceText,
+      range: { start: 0, end: sourceText.length },
+      uri: 'file:///tmp/example.css',
+      value: '#ff0000',
+    })
+
+    expect(replace).not.toHaveBeenCalled()
+  })
+
   it('adjusts alpha down and replaces hex with a transparent hex value', async () => {
     vi.resetModules()
     registeredCommands.clear()
@@ -511,6 +532,52 @@ describe('useCommands', () => {
     })
 
     expect(replace).toHaveBeenCalledWith(expect.any(Object), '#ff0000e6')
+  })
+
+  it('preserves ARGB byte order when adjusting hex alpha', async () => {
+    vi.resetModules()
+    registeredCommands.clear()
+    edit.mockClear()
+    replace.mockClear()
+    configSnapshot.useARGB = true
+    sourceText = '.box { color: #80ff0000; }'
+
+    const { useCommands } = await import('../src/commands')
+
+    useCommands()
+    await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
+      delta: 0.1,
+      originalColor: 'rgba(255, 0, 0, 0.502)',
+      originalText: '#80ff0000',
+      range: { start: 14, end: 23 },
+      uri: 'file:///tmp/example.css',
+    })
+
+    expect(replace).toHaveBeenCalledWith(expect.any(Object), '#9aff0000')
+  })
+
+  it('preserves Dart syntax when adjusting constructor alpha', async () => {
+    vi.resetModules()
+    registeredCommands.clear()
+    edit.mockClear()
+    replace.mockClear()
+    sourceText = 'Color(0xffff0000)'
+
+    const { useCommands } = await import('../src/commands')
+
+    useCommands()
+    await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
+      delta: -0.1,
+      originalColor: 'rgb(255, 0, 0)',
+      originalText: 'Color(0xffff0000)',
+      range: { start: 0, end: sourceText.length },
+      uri: 'file:///tmp/example.css',
+    })
+
+    expect(replace).toHaveBeenCalledWith(
+      expect.any(Object),
+      'Color(0xe6ff0000)',
+    )
   })
 
   it('clamps alpha up to opaque rgb syntax', async () => {

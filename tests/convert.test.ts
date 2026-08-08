@@ -164,6 +164,10 @@ describe(rgbString, () => {
     expect(rgbString(255, 0, 0, 0.5)).toBe('rgba(255, 0, 0, 0.5)')
   })
 
+  it('clamps negative alpha before formatting', () => {
+    expect(rgbString(255, 0, 0, -0.5)).toBe('rgba(255, 0, 0, 0)')
+  })
+
   it('uses rgb() when alpha is 1', () => {
     expect(rgbString(255, 0, 0, 1)).toBe('rgb(255, 0, 0)')
   })

@@ -1,3 +1,4 @@
+import { isDartColorSource } from '../utils/color/dart-presentation'
 import { replaceActiveEditorRange } from './editor-range'
 import { getReplaceColorPayload } from './payloads'
 import { preserveHexCase } from './source-format'
@@ -15,6 +16,9 @@ export async function replaceColorValue(
 ) {
   const payload = getReplaceColorPayload(value)
   if (!payload) {
+    return
+  }
+  if (isDartColorSource(payload.originalText)) {
     return
   }
 

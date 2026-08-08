@@ -59,5 +59,6 @@ export async function findCssVars(
   return resolveCssVarMatches(text, {
     currentDeclarations,
     externalDeclarations,
+    strategyContext: context,
   })
 }

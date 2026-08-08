@@ -148,6 +148,10 @@ describe(findColorFunctions, () => {
     expect(result[0].color).toBe('rgba(255, 0, 0, 0.5)')
   })
 
+  it('ignores color() inside a larger identifier', () => {
+    expect(findColorFunctions('mycolor(srgb 1 0 0)')).toStrictEqual([])
+  })
+
   it('preserves slash alpha in space-delimited rgb()', () => {
     const result = findColorFunctions('color: rgb(42 42 42 / 0.42);')
     expect(result).toHaveLength(1)

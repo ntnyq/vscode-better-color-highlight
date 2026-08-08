@@ -268,6 +268,23 @@ describe(getColorHover, () => {
     })
   })
 
+  it('uses ARGB byte order in hover presentations when configured', async () => {
+    const detector = vi.fn<ColorDetector>(() => [
+      { start: 14, end: 23, color: 'rgba(255, 0, 0, 0.5)' },
+    ])
+
+    const result = await getColorHover({
+      config: { ...defaultConfig, enableHover: true, useARGB: true },
+      detectors: [detector],
+      filePath: 'file:///tmp/example.css',
+      languageId: 'css',
+      offset: 16,
+      text: '.box { color: #80ff0000; }',
+    })
+
+    expect(result?.presentations.hex).toBe('#80ff0000')
+  })
+
   it('returns hover data from successful detectors when another detector fails', async () => {
     const failingDetector = vi.fn<ColorDetector>(() => {
       throw new Error('detector failed')
@@ -353,5 +370,25 @@ describe(buildColorHoverMarkdown, () => {
     expect(result).toContain(
       '%22uri%22%3A%22file%3A%2F%2F%2Ftmp%2Fexample.css%22',
     )
+  })
+
+  it('omits generic replacement actions for Dart constructors', () => {
+    const result = buildColorHoverMarkdown({
+      originalColor: 'rgb(255, 0, 0)',
+      originalText: 'Color(0xffff0000)',
+      range: { end: 17, start: 0 },
+      presentations: {
+        alpha: '100%',
+        hex: '#ff0000',
+        hsl: 'hsl(0 100% 50%)',
+        oklch: 'oklch(62.8% 0.258 29.2)',
+        rgb: 'rgb(255, 0, 0)',
+      },
+      uri: 'file:///tmp/example.dart',
+    })
+
+    expect(result).toContain('command:color-highlight.copyColorAsHex')
+    expect(result).not.toContain('color-highlight.replaceColorAs')
+    expect(result).toContain('command:color-highlight.adjustColorAlpha')
   })
 })

@@ -29,6 +29,14 @@ export interface ColorPresentations {
 }
 
 /**
+ * Options that affect color presentation syntax.
+ */
+export interface ColorPresentationOptions {
+  /** Whether transparent hex colors use AARRGGBB byte order. */
+  readonly useARGB?: boolean
+}
+
+/**
  * Color presentation formats available for copy and replacement commands.
  */
 export type ColorPresentationFormat = 'hex' | 'hsl' | 'oklch' | 'rgb'
@@ -66,13 +74,14 @@ export interface RgbaColor {
  */
 export function getColorPresentations(
   color: string,
+  options?: ColorPresentationOptions,
 ): ColorPresentations | null {
   const rgba = parseResolvedColor(color)
   if (!rgba) {
     return null
   }
 
-  return getColorPresentationsFromRgba(rgba)
+  return getColorPresentationsFromRgba(rgba, options)
 }
 
 /**
@@ -83,10 +92,11 @@ export function getColorPresentations(
  */
 export function getColorPresentationsFromRgba(
   color: RgbaColor,
+  options?: ColorPresentationOptions,
 ): ColorPresentations {
   return {
     alpha: formatAlpha(color.a),
-    hex: formatHex(color),
+    hex: formatHex(color, options),
     hsl: formatHsl(color),
     oklch: formatOklch(color),
     rgb: formatRgb(color),
@@ -171,9 +181,13 @@ function formatAlpha(alpha: number): string {
  * @param color - RGBA channel values.
  * @returns Hex color string, including alpha when alpha is below 1.
  */
-function formatHex({ a, b, g, r }: RgbaColor): string {
+function formatHex(
+  { a, b, g, r }: RgbaColor,
+  options?: ColorPresentationOptions,
+): string {
   const alpha = a < 1 ? toHexByte(a * 255) : ''
-  return `#${toHexByte(r)}${toHexByte(g)}${toHexByte(b)}${alpha}`
+  const rgb = `${toHexByte(r)}${toHexByte(g)}${toHexByte(b)}`
+  return options?.useARGB && alpha ? `#${alpha}${rgb}` : `#${rgb}${alpha}`
 }
 
 /**

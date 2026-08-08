@@ -11,4 +11,10 @@ describe(getColorPresentations, () => {
       rgb: 'rgba(255, 0, 0, 0.5)',
     })
   })
+
+  it('formats transparent hex in ARGB byte order when configured', () => {
+    expect(
+      getColorPresentations('rgba(255, 0, 0, 0.5)', { useARGB: true })?.hex,
+    ).toBe('#80ff0000')
+  })
 })

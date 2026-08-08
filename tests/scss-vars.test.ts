@@ -65,6 +65,23 @@ describe(findScssVars, () => {
     ])
   })
 
+  it('uses ARGB interpretation for variable values', async () => {
+    const text = '$brand: #80ff0000; .x { color: $brand; }'
+
+    const result = await findScssVars(text, {
+      languageId: 'scss',
+      useARGB: true,
+    })
+
+    expect(result).toStrictEqual([
+      {
+        start: text.lastIndexOf('$brand'),
+        end: text.lastIndexOf('$brand') + '$brand'.length,
+        color: 'rgba(255, 0, 0, 0.502)',
+      },
+    ])
+  })
+
   it('finds SCSS variable usages with named-color values', async () => {
     const text = `
       $named-red: red;
@@ -75,6 +92,17 @@ describe(findScssVars, () => {
       result.some(match => text.slice(match.start, match.end) === '$named-red'),
     ).toBe(true)
     expect(result.some(match => match.color === 'rgb(255, 0, 0)')).toBe(true)
+  })
+
+  it('does not resolve named variable values when disabled', async () => {
+    const text = '$brand: red; .x { color: $brand; }'
+
+    const result = await findScssVars(text, {
+      languageId: 'scss',
+      namedColorMatchMode: 'never',
+    })
+
+    expect(result).toStrictEqual([])
   })
 
   it('does not highlight a partial variable name inside a new definition name', async () => {

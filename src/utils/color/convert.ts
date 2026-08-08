@@ -581,6 +581,7 @@ export function rgbString(r: number, g: number, b: number, a?: number): string {
   r = clamp(Math.round(r), 0, 255)
   g = clamp(Math.round(g), 0, 255)
   b = clamp(Math.round(b), 0, 255)
+  a = a === undefined ? undefined : clamp(a, 0, 1)
 
   if (a !== undefined && a < 1) {
     return `rgba(${r}, ${g}, ${b}, ${Number(a.toFixed(3))})`

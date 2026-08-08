@@ -58,6 +58,7 @@
     "unicorn/no-immediate-mutation": "off",
     "unicorn/no-array-callback-reference": "off",
     "curly": ["warn", "all"],
+    "complexity": ["warn", 50],
     "func-style": ["warn", "declaration", { "allowArrowFunctions": true }],
     "max-lines": [
       "warn",

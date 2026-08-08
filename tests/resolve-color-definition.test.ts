@@ -136,6 +136,19 @@ describe('resolveColorDefinition', () => {
     ).resolves.toBeNull()
   })
 
+  it('does not navigate to named variable values when matching is disabled', async () => {
+    const { resolveColorDefinition } =
+      await import('../src/color-navigation/resolve-color-definition')
+    const text = ':root { --brand: red; } a { color: var(--brand); }'
+
+    await expect(
+      resolveColorDefinition(text, text.indexOf('var(--brand)') + 4, {
+        ...baseContext,
+        namedColorMatchMode: 'never',
+      }),
+    ).resolves.toBeNull()
+  })
+
   it('preserves JSON and JSONC design-token dispatch without Tailwind', async () => {
     resolveTailwindColorDefinition.mockClear()
     const { resolveColorDefinition } =
