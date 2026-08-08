@@ -29,6 +29,8 @@ const defaultConfig: NestedScopedConfigs = {
   tailwindColorMode: 'auto',
   tailwindStylesheetPaths: [],
   useARGB: false,
+  matchAnsiEscapeCodes: false,
+  ansiPalette: {},
   matchRgbWithNoFunction: false,
   rgbWithNoFunctionLanguages: ['*'],
   matchHslWithNoFunction: false,
@@ -64,6 +66,30 @@ describe(getColorHover, () => {
         signal: cancellationToken,
         tailwindColorMode: 'v4',
         tailwindStylesheetPaths: ['theme.css'],
+      }),
+    )
+  })
+
+  it('passes ANSI palette overrides to detectors', async () => {
+    const detector = vi.fn<ColorDetector>(() => [])
+
+    await getColorHover({
+      config: {
+        ...defaultConfig,
+        ansiPalette: { red: '#ff0000' },
+        enableHover: true,
+      },
+      detectors: [detector],
+      filePath: 'file:///tmp/example.ts',
+      languageId: 'typescript',
+      offset: 1,
+      text: String.raw`const red = '\x1b[31m'`,
+    })
+
+    expect(detector).toHaveBeenCalledWith(
+      String.raw`const red = '\x1b[31m'`,
+      expect.objectContaining({
+        ansiPalette: { red: '#ff0000' },
       }),
     )
   })
@@ -285,6 +311,32 @@ describe(getColorHover, () => {
     expect(result?.presentations.hex).toBe('#80ff0000')
   })
 
+  it('preserves read-only match semantics in hover results', async () => {
+    const text = String.raw`\x1b[31m`
+    const detector = vi.fn<ColorDetector>(() => [
+      {
+        color: 'rgb(205, 0, 0)',
+        editMode: 'read-only',
+        end: text.length,
+        start: 0,
+      },
+    ])
+
+    const result = await getColorHover({
+      config: { ...defaultConfig, enableHover: true },
+      detectors: [detector],
+      filePath: 'file:///tmp/example.ts',
+      languageId: 'typescript',
+      offset: 1,
+      text,
+    })
+
+    expect(result).toMatchObject({
+      editMode: 'read-only',
+      originalText: text,
+    })
+  })
+
   it('returns hover data from successful detectors when another detector fails', async () => {
     const failingDetector = vi.fn<ColorDetector>(() => {
       throw new Error('detector failed')
@@ -390,5 +442,27 @@ describe(buildColorHoverMarkdown, () => {
     expect(result).toContain('command:color-highlight.copyColorAsHex')
     expect(result).not.toContain('color-highlight.replaceColorAs')
     expect(result).toContain('command:color-highlight.adjustColorAlpha')
+  })
+
+  it('keeps copy actions but omits editing actions for read-only matches', () => {
+    const result = buildColorHoverMarkdown({
+      editMode: 'read-only',
+      originalColor: 'rgb(205, 0, 0)',
+      originalText: String.raw`\x1b[31m`,
+      range: { end: 9, start: 0 },
+      presentations: {
+        alpha: '100%',
+        hex: '#cd0000',
+        hsl: 'hsl(0 100% 40.2%)',
+        oklch: 'oklch(53.1% 0.218 29.2)',
+        rgb: 'rgb(205, 0, 0)',
+      },
+      uri: 'file:///tmp/example.ts',
+    })
+
+    expect(result).toContain('command:color-highlight.copyColorAsHex')
+    expect(result).not.toContain('color-highlight.replaceColorAs')
+    expect(result).not.toContain('color-highlight.adjustColorAlpha')
+    expect(result).not.toContain('`Alpha`')
   })
 })

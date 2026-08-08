@@ -185,6 +185,8 @@ function setupTest() {
     scssLoadPaths: [],
     maxFileSize: 1_000_000,
     useARGB: false,
+    matchAnsiEscapeCodes: false,
+    ansiPalette: {},
     designTokenJsonMode: 'token-values',
     resolveDesignTokensAcrossFiles: false,
     tailwindColorMode: 'auto',
@@ -561,6 +563,63 @@ describe('useColorHighlight', () => {
     await flushPromises()
 
     expect(asyncStrategy).toHaveBeenCalledTimes(3)
+  })
+
+  it('passes ANSI palette settings to strategies and includes them in reruns', async () => {
+    setupTest()
+    asyncStrategy.mockResolvedValue([])
+    documentTextRef = createRef(String.raw`const red = '\x1b[31m'`)
+    configSnapshot.matchAnsiEscapeCodes = true
+    configSnapshot.ansiPalette = { red: '#ff0000' }
+    visibleEditorsRef = createRef<unknown[]>([createEditor()])
+
+    const { useColorHighlight } =
+      await import('../src/features/highlight/use-color-highlight')
+    useColorHighlight()
+    await flushPromises()
+
+    expect(asyncStrategy).toHaveBeenLastCalledWith(
+      String.raw`const red = '\x1b[31m'`,
+      expect.objectContaining({
+        ansiPalette: { red: '#ff0000' },
+      }),
+    )
+
+    configSnapshot.ansiPalette = { red: '#aa0000' }
+    triggerGetterWatchers()
+    await flushPromises()
+
+    configSnapshot.matchAnsiEscapeCodes = false
+    triggerGetterWatchers()
+    await flushPromises()
+
+    expect(asyncStrategy).toHaveBeenCalledTimes(3)
+  })
+
+  it('reads object settings through the reactive configuration accessor', async () => {
+    setupTest()
+    asyncStrategy.mockResolvedValue([])
+    const ansiPalette = { red: '#ff0000' }
+    configSnapshot.get = (key: string) =>
+      key === 'ansiPalette' ? ansiPalette : undefined
+    Object.defineProperty(configSnapshot, 'ansiPalette', {
+      configurable: true,
+      get() {
+        throw new Error('nested configuration proxy must not be serialized')
+      },
+    })
+    documentTextRef = createRef(String.raw`const red = '\x1b[31m'`)
+    visibleEditorsRef = createRef<unknown[]>([createEditor()])
+
+    const { useColorHighlight } =
+      await import('../src/features/highlight/use-color-highlight')
+    useColorHighlight()
+    await flushPromises()
+
+    expect(asyncStrategy).toHaveBeenCalledWith(
+      String.raw`const red = '\x1b[31m'`,
+      expect.objectContaining({ ansiPalette }),
+    )
   })
 
   it('reruns unchanged documents when stylesheet dependencies change', async () => {

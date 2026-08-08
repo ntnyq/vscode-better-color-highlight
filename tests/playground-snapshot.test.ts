@@ -85,6 +85,8 @@ const snapshotConfig: NestedScopedConfigs = {
   designTokenJsonMode: 'token-values',
   resolveDesignTokensAcrossFiles: false,
   useARGB: false,
+  matchAnsiEscapeCodes: false,
+  ansiPalette: {},
   matchRgbWithNoFunction: true,
   rgbWithNoFunctionLanguages: ['*'],
   matchHslWithNoFunction: true,

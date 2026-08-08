@@ -54,6 +54,51 @@ describe('readme generated config documentation', () => {
     expect(readme).toContain('#### `color-highlight.enableColorPicker`')
   })
 
+  it('documents opt-in ANSI SGR highlighting and palette overrides', async () => {
+    const packageJson = JSON.parse(await readFile('package.json', 'utf8')) as {
+      contributes: {
+        configuration: {
+          properties: Record<
+            string,
+            {
+              additionalProperties?: boolean
+              default: unknown
+              properties?: Record<string, { pattern?: string; type: string }>
+              type: string
+            }
+          >
+        }
+      }
+    }
+    const properties = packageJson.contributes.configuration.properties
+    const readme = await readFile('README.md', 'utf8')
+
+    expect(properties['color-highlight.matchAnsiEscapeCodes']).toStrictEqual(
+      expect.objectContaining({ default: false, type: 'boolean' }),
+    )
+    expect(properties['color-highlight.ansiPalette']).toStrictEqual(
+      expect.objectContaining({
+        additionalProperties: false,
+        default: {},
+        type: 'object',
+      }),
+    )
+    expect(
+      properties['color-highlight.ansiPalette'].properties?.red,
+    ).toStrictEqual(
+      expect.objectContaining({
+        pattern: '^#[0-9a-fA-F]{6}$',
+        type: 'string',
+      }),
+    )
+    expect(scopedConfigs.defaults.matchAnsiEscapeCodes).toBe(false)
+    expect(scopedConfigs.defaults.ansiPalette).toStrictEqual({})
+    expect(readme).toContain('## ANSI SGR escape colors')
+    expect(readme).toContain('`38;5;N`')
+    expect(readme).toContain('`38;2;R;G;B`')
+    expect(readme).toContain('copy-only')
+  })
+
   it('exposes bounded workspace palette glob settings', async () => {
     const packageJson = JSON.parse(await readFile('package.json', 'utf8')) as {
       contributes: {

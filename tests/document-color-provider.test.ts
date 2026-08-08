@@ -81,6 +81,8 @@ const configSnapshot: NestedScopedConfigs = {
   tailwindColorMode: 'auto',
   tailwindStylesheetPaths: [],
   useARGB: false,
+  matchAnsiEscapeCodes: false,
+  ansiPalette: {},
   matchRgbWithNoFunction: false,
   rgbWithNoFunctionLanguages: ['*'],
   matchHslWithNoFunction: false,
@@ -142,6 +144,8 @@ describe('document color provider', () => {
     configSnapshot.tailwindColorMode = 'auto'
     configSnapshot.tailwindStylesheetPaths = []
     configSnapshot.useARGB = false
+    configSnapshot.matchAnsiEscapeCodes = false
+    configSnapshot.ansiPalette = {}
     replace.mockClear()
     loggerError.mockClear()
   })
@@ -205,6 +209,7 @@ describe('document color provider', () => {
 
   it('passes Tailwind theme settings to native color detectors', async () => {
     configSnapshot.enableColorPicker = true
+    configSnapshot.ansiPalette = { red: '#ff0000' }
     configSnapshot.tailwindColorMode = 'v4'
     configSnapshot.tailwindStylesheetPaths = ['theme.css']
     const { provideDocumentColors } =
@@ -220,6 +225,7 @@ describe('document color provider', () => {
     expect(detector).toHaveBeenCalledWith(
       '#ff000080',
       expect.objectContaining({
+        ansiPalette: { red: '#ff0000' },
         signal: activeToken,
         tailwindColorMode: 'v4',
         tailwindStylesheetPaths: ['theme.css'],
@@ -238,6 +244,22 @@ describe('document color provider', () => {
     ]
 
     expect(createColorInformation(document, matches)).toHaveLength(1)
+  })
+
+  it('skips read-only matches in the native color picker', async () => {
+    const { createColorInformation } =
+      await import('../src/features/color-provider/document-color-provider')
+
+    expect(
+      createColorInformation(document, [
+        {
+          color: 'rgb(205, 0, 0)',
+          editMode: 'read-only',
+          end: 9,
+          start: 0,
+        },
+      ]),
+    ).toStrictEqual([])
   })
 
   it('bounds native color information returned for one document', async () => {

@@ -20,6 +20,35 @@ export interface ColorMatch {
    * Used as the decoration key and for contrast calculation.
    */
   readonly color: string
+
+  /**
+   * Whether generic color-editing actions can safely replace the source.
+   * Omitted values use the generic editing behavior.
+   */
+  readonly editMode?: ColorEditMode
+}
+
+/** Source-editing behavior supported by a detected color match. */
+export type ColorEditMode = 'generic' | 'read-only'
+
+/** Optional concrete RGB overrides for the base ANSI color palette. */
+export interface AnsiPaletteOverrides {
+  readonly black?: string
+  readonly blue?: string
+  readonly brightBlack?: string
+  readonly brightBlue?: string
+  readonly brightCyan?: string
+  readonly brightGreen?: string
+  readonly brightMagenta?: string
+  readonly brightRed?: string
+  readonly brightWhite?: string
+  readonly brightYellow?: string
+  readonly cyan?: string
+  readonly green?: string
+  readonly magenta?: string
+  readonly red?: string
+  readonly white?: string
+  readonly yellow?: string
 }
 
 /**
@@ -45,6 +74,9 @@ export interface CancellationSignal {
 export interface StrategyContext {
   /** Optional cancellation shared by detector and dependency-loader work. */
   signal?: CancellationSignal
+
+  /** Optional concrete RGB overrides for ANSI palette indexes 0-15. */
+  ansiPalette?: AnsiPaletteOverrides
   /**
    * The document's language ID, e.g. "css" or "scss".
    */

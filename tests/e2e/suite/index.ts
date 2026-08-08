@@ -11,6 +11,7 @@ import {
 } from 'vscode'
 import {
   activateExtension,
+  assertInMemoryAnsiHighlighting,
   assertInMemoryCssHighlighting,
   assertInMemoryContrastDiagnostic,
   assertRequiredCommands,
@@ -39,6 +40,7 @@ export async function run() {
   await activateExtension()
   await assertRequiredCommands()
   await assertInMemoryCssHighlighting()
+  await assertInMemoryAnsiHighlighting()
   await assertInMemoryContrastDiagnostic()
 
   const extension = extensions.getExtension(EXTENSION_ID)

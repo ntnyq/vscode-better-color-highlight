@@ -82,6 +82,57 @@ export async function assertInMemoryCssHighlighting(): Promise<void> {
   )
 }
 
+/** Enable ANSI matching temporarily and verify object-config palette handling. */
+export async function assertInMemoryAnsiHighlighting(): Promise<void> {
+  const config = workspace.getConfiguration(CONFIG_SECTION)
+  const previousEnabledGlobal = config.inspect<boolean>(
+    'matchAnsiEscapeCodes',
+  )?.globalValue
+  const previousEnabled = config.get<boolean>('matchAnsiEscapeCodes', false)
+  const previousPaletteGlobal =
+    config.inspect<Record<string, string>>('ansiPalette')?.globalValue
+  const previousPalette = config.get<Record<string, string>>('ansiPalette', {})
+
+  try {
+    const ansiPalette = { red: '#123456' }
+    await config.update('ansiPalette', ansiPalette, ConfigurationTarget.Global)
+    await config.update(
+      'matchAnsiEscapeCodes',
+      true,
+      ConfigurationTarget.Global,
+    )
+    await waitForConfigValue('ansiPalette', ansiPalette)
+    await waitForConfigValue('matchAnsiEscapeCodes', true)
+
+    const document = await workspace.openTextDocument({
+      content: String.raw`const value = '\x1b[31m'`,
+      language: 'typescript',
+    })
+    await window.showTextDocument(document)
+
+    const state = await waitForHighlightState(document.uri.toString(), 1)
+    assertEqual(state.colorCount, 1, 'Expected one ANSI color')
+    assertEqual(
+      state.colors[0],
+      'rgb(18, 52, 86)',
+      'Expected ANSI palette override',
+    )
+  } finally {
+    await config.update(
+      'ansiPalette',
+      previousPaletteGlobal,
+      ConfigurationTarget.Global,
+    )
+    await config.update(
+      'matchAnsiEscapeCodes',
+      previousEnabledGlobal,
+      ConfigurationTarget.Global,
+    )
+    await waitForConfigValue('ansiPalette', previousPalette)
+    await waitForConfigValue('matchAnsiEscapeCodes', previousEnabled)
+  }
+}
+
 /** Enable diagnostics temporarily and verify one deterministic CSS pair. */
 export async function assertInMemoryContrastDiagnostic(): Promise<void> {
   const config = workspace.getConfiguration(CONFIG_SECTION)
@@ -172,7 +223,7 @@ export async function waitForHighlightState(
 async function waitForConfigValue<T>(key: string, expected: T): Promise<void> {
   for (let attempt = 0; attempt < DIAGNOSTIC_WAIT_ATTEMPTS; attempt++) {
     const value = workspace.getConfiguration(CONFIG_SECTION).get<T>(key)
-    if (value === expected) {
+    if (JSON.stringify(value) === JSON.stringify(expected)) {
       return
     }
 
@@ -180,8 +231,8 @@ async function waitForConfigValue<T>(key: string, expected: T): Promise<void> {
   }
 
   assertEqual(
-    workspace.getConfiguration(CONFIG_SECTION).get<T>(key),
-    expected,
+    JSON.stringify(workspace.getConfiguration(CONFIG_SECTION).get<T>(key)),
+    JSON.stringify(expected),
     `Expected ${key} configuration to update`,
   )
 }

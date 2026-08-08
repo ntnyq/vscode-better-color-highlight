@@ -123,6 +123,8 @@ export type ConfigKey =
   | "color-highlight.designTokenJsonMode"
   | "color-highlight.resolveDesignTokensAcrossFiles"
   | "color-highlight.useARGB"
+  | "color-highlight.matchAnsiEscapeCodes"
+  | "color-highlight.ansiPalette"
   | "color-highlight.matchRgbWithNoFunction"
   | "color-highlight.rgbWithNoFunctionLanguages"
   | "color-highlight.matchHslWithNoFunction"
@@ -153,6 +155,8 @@ export interface ConfigKeyTypeMap {
   "color-highlight.designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
   "color-highlight.resolveDesignTokensAcrossFiles": boolean,
   "color-highlight.useARGB": boolean,
+  "color-highlight.matchAnsiEscapeCodes": boolean,
+  "color-highlight.ansiPalette": { 'black'?: string; 'red'?: string; 'green'?: string; 'yellow'?: string; 'blue'?: string; 'magenta'?: string; 'cyan'?: string; 'white'?: string; 'brightBlack'?: string; 'brightRed'?: string; 'brightGreen'?: string; 'brightYellow'?: string; 'brightBlue'?: string; 'brightMagenta'?: string; 'brightCyan'?: string; 'brightWhite'?: string },
   "color-highlight.matchRgbWithNoFunction": boolean,
   "color-highlight.rgbWithNoFunctionLanguages": string[],
   "color-highlight.matchHslWithNoFunction": boolean,
@@ -184,6 +188,8 @@ export interface ConfigShorthandMap {
   designTokenJsonMode: "color-highlight.designTokenJsonMode",
   resolveDesignTokensAcrossFiles: "color-highlight.resolveDesignTokensAcrossFiles",
   useARGB: "color-highlight.useARGB",
+  matchAnsiEscapeCodes: "color-highlight.matchAnsiEscapeCodes",
+  ansiPalette: "color-highlight.ansiPalette",
   matchRgbWithNoFunction: "color-highlight.matchRgbWithNoFunction",
   rgbWithNoFunctionLanguages: "color-highlight.rgbWithNoFunctionLanguages",
   matchHslWithNoFunction: "color-highlight.matchHslWithNoFunction",
@@ -215,6 +221,8 @@ export interface ConfigShorthandTypeMap {
   designTokenJsonMode: ("token-values" | "strings" | "all" | "off"),
   resolveDesignTokensAcrossFiles: boolean,
   useARGB: boolean,
+  matchAnsiEscapeCodes: boolean,
+  ansiPalette: { 'black'?: string; 'red'?: string; 'green'?: string; 'yellow'?: string; 'blue'?: string; 'magenta'?: string; 'cyan'?: string; 'white'?: string; 'brightBlack'?: string; 'brightRed'?: string; 'brightGreen'?: string; 'brightYellow'?: string; 'brightBlue'?: string; 'brightMagenta'?: string; 'brightCyan'?: string; 'brightWhite'?: string },
   matchRgbWithNoFunction: boolean,
   rgbWithNoFunctionLanguages: string[],
   matchHslWithNoFunction: boolean,
@@ -445,6 +453,26 @@ export const configs = {
     default: false,
   } as ConfigItem<"color-highlight.useARGB">,
   /**
+   * Highlight ANSI SGR foreground and background color escape sequences.
+   * @key `color-highlight.matchAnsiEscapeCodes`
+   * @default `false`
+   * @type `boolean`
+   */
+  matchAnsiEscapeCodes: {
+    key: "color-highlight.matchAnsiEscapeCodes",
+    default: false,
+  } as ConfigItem<"color-highlight.matchAnsiEscapeCodes">,
+  /**
+   * Optional #RRGGBB overrides for the base ANSI palette indexes 0-15. Unspecified colors use the built-in xterm-compatible palette.
+   * @key `color-highlight.ansiPalette`
+   * @default `{}`
+   * @type `object`
+   */
+  ansiPalette: {
+    key: "color-highlight.ansiPalette",
+    default: {},
+  } as ConfigItem<"color-highlight.ansiPalette">,
+  /**
    * Highlight RGB values not wrapped in rgb() function.
    * @key `color-highlight.matchRgbWithNoFunction`
    * @default `false`
@@ -538,6 +566,8 @@ export interface ScopedConfigKeyTypeMap {
   "designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
   "resolveDesignTokensAcrossFiles": boolean,
   "useARGB": boolean,
+  "matchAnsiEscapeCodes": boolean,
+  "ansiPalette": { 'black'?: string; 'red'?: string; 'green'?: string; 'yellow'?: string; 'blue'?: string; 'magenta'?: string; 'cyan'?: string; 'white'?: string; 'brightBlack'?: string; 'brightRed'?: string; 'brightGreen'?: string; 'brightYellow'?: string; 'brightBlue'?: string; 'brightMagenta'?: string; 'brightCyan'?: string; 'brightWhite'?: string },
   "matchRgbWithNoFunction": boolean,
   "rgbWithNoFunctionLanguages": string[],
   "matchHslWithNoFunction": boolean,
@@ -571,6 +601,8 @@ export const scopedConfigs = {
     "designTokenJsonMode": "token-values",
     "resolveDesignTokensAcrossFiles": false,
     "useARGB": false,
+    "matchAnsiEscapeCodes": false,
+    "ansiPalette": {},
     "matchRgbWithNoFunction": false,
     "rgbWithNoFunctionLanguages": ["*"],
     "matchHslWithNoFunction": false,
@@ -604,6 +636,8 @@ export interface NestedConfigs {
     "designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
     "resolveDesignTokensAcrossFiles": boolean,
     "useARGB": boolean,
+    "matchAnsiEscapeCodes": boolean,
+    "ansiPalette": { 'black'?: string; 'red'?: string; 'green'?: string; 'yellow'?: string; 'blue'?: string; 'magenta'?: string; 'cyan'?: string; 'white'?: string; 'brightBlack'?: string; 'brightRed'?: string; 'brightGreen'?: string; 'brightYellow'?: string; 'brightBlue'?: string; 'brightMagenta'?: string; 'brightCyan'?: string; 'brightWhite'?: string },
     "matchRgbWithNoFunction": boolean,
     "rgbWithNoFunctionLanguages": string[],
     "matchHslWithNoFunction": boolean,
@@ -636,6 +670,8 @@ export interface NestedScopedConfigs {
   "designTokenJsonMode": ("token-values" | "strings" | "all" | "off"),
   "resolveDesignTokensAcrossFiles": boolean,
   "useARGB": boolean,
+  "matchAnsiEscapeCodes": boolean,
+  "ansiPalette": { 'black'?: string; 'red'?: string; 'green'?: string; 'yellow'?: string; 'blue'?: string; 'magenta'?: string; 'cyan'?: string; 'white'?: string; 'brightBlack'?: string; 'brightRed'?: string; 'brightGreen'?: string; 'brightYellow'?: string; 'brightBlue'?: string; 'brightMagenta'?: string; 'brightCyan'?: string; 'brightWhite'?: string },
   "matchRgbWithNoFunction": boolean,
   "rgbWithNoFunctionLanguages": string[],
   "matchHslWithNoFunction": boolean,

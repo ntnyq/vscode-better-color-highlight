@@ -255,6 +255,83 @@
           "default": false,
           "description": "Interpret 8-digit hex colors as ARGB instead of RGBA."
         },
+        "color-highlight.matchAnsiEscapeCodes": {
+          "type": "boolean",
+          "default": false,
+          "description": "Highlight ANSI SGR foreground and background color escape sequences."
+        },
+        "color-highlight.ansiPalette": {
+          "type": "object",
+          "default": {},
+          "additionalProperties": false,
+          "properties": {
+            "black": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "red": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "green": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "yellow": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "blue": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "magenta": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "cyan": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "white": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "brightBlack": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "brightRed": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "brightGreen": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "brightYellow": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "brightBlue": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "brightMagenta": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "brightCyan": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "brightWhite": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            }
+          },
+          "description": "Optional #RRGGBB overrides for the base ANSI palette indexes 0-15. Unspecified colors use the built-in xterm-compatible palette."
+        },
         "color-highlight.matchRgbWithNoFunction": {
           "type": "boolean",
           "default": false,
