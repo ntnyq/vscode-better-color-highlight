@@ -13,8 +13,8 @@ import {
   shouldProcessLanguage,
 } from '../../engine/detection/registry'
 import { runColorDetectors } from '../../engine/detection/run-detectors'
+import { formatDartColor } from '../../engine/strategies/dart-colors'
 import { config } from '../../extension/config'
-import { formatDartColor } from '../../shared/color/dart-presentation'
 import {
   formatColorPresentation,
   getColorPresentationsFromRgba,
@@ -153,14 +153,28 @@ export function provideColorPresentations(
   color: Color,
   context: { readonly document: TextDocument; readonly range: Range },
 ): ColorPresentation[] {
-  const rgba = {
-    r: normalizedChannelToByte(color.red),
-    g: normalizedChannelToByte(color.green),
-    b: normalizedChannelToByte(color.blue),
+  const normalized = {
+    r: clampNormalizedChannel(color.red),
+    g: clampNormalizedChannel(color.green),
+    b: clampNormalizedChannel(color.blue),
     a: clampNormalizedChannel(color.alpha),
   }
+  const rgba = {
+    r: normalizedChannelToByte(normalized.r),
+    g: normalizedChannelToByte(normalized.g),
+    b: normalizedChannelToByte(normalized.b),
+    a: normalized.a,
+  }
   if (context.document.languageId === 'dart') {
-    const value = formatDartColor(rgba, context.document.getText(context.range))
+    const value = formatDartColor(
+      {
+        r: normalized.r * 255,
+        g: normalized.g * 255,
+        b: normalized.b * 255,
+        a: normalized.a,
+      },
+      context.document.getText(context.range),
+    )
     return value ? [createColorPresentation(value, context.range)] : []
   }
 

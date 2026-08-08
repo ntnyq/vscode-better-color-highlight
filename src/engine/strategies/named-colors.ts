@@ -1,6 +1,10 @@
 import { rgbString } from '../../shared/color'
 import { NAMED_COLORS } from '../../shared/constants'
 import type { ColorMatch, StrategyContext } from '../detection'
+import {
+  findDartColorComponentNameStarts,
+  isDartColorSyntaxNameAt,
+} from './dart-colors'
 
 /**
  * Regex for CSS named color keywords.
@@ -10,6 +14,7 @@ import type { ColorMatch, StrategyContext } from '../detection'
  * Negative lookahead (?!-) prevents matching partial hyphenated names.
  */
 const NAMED_COLOR_REGEX = buildNamedColorRegex()
+const EMPTY_DART_COLOR_COMPONENT_NAME_STARTS: ReadonlySet<number> = new Set()
 
 /**
  * CSS-like language IDs where named colors should be restricted to values.
@@ -53,6 +58,10 @@ export function findNamedColors(
   context?: StrategyContext,
 ): ColorMatch[] {
   const matches: ColorMatch[] = []
+  const dartColorComponentNameStarts =
+    context?.languageId === 'dart'
+      ? findDartColorComponentNameStarts(text)
+      : EMPTY_DART_COLOR_COMPONENT_NAME_STARTS
 
   for (const m of text.matchAll(NAMED_COLOR_REGEX)) {
     const prefix = m[1] ?? ''
@@ -65,7 +74,15 @@ export function findNamedColors(
 
     const start = (m.index ?? 0) + prefix.length
     const end = start + name.length
-    if (!isNamedColorAllowed(text, start, end, context)) {
+    if (
+      !isNamedColorAllowed(
+        text,
+        start,
+        end,
+        context,
+        dartColorComponentNameStarts,
+      )
+    ) {
       continue
     }
 
@@ -90,7 +107,15 @@ function isNamedColorAllowed(
   start: number,
   end: number,
   context?: StrategyContext,
+  dartColorComponentNameStarts: ReadonlySet<number> = EMPTY_DART_COLOR_COMPONENT_NAME_STARTS,
 ): boolean {
+  if (
+    context?.languageId === 'dart' &&
+    isDartColorSyntaxNameAt(text, start, end, dartColorComponentNameStarts)
+  ) {
+    return false
+  }
+
   const isCssLike = context && CSS_LIKE_LANGUAGES.has(context.languageId)
   const isStylusLike = context && STYLUS_LIKE_LANGUAGES.has(context.languageId)
   const isStyleLike = isCssLike || isStylusLike

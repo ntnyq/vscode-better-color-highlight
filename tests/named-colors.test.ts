@@ -119,4 +119,56 @@ describe(findNamedColors, () => {
       { start: 15, end: 18, color: 'rgb(255, 0, 0)' },
     ])
   })
+
+  it('defers Flutter Material members to the Dart color strategy', () => {
+    expect(
+      findNamedColors('final color = Colors.red;', {
+        languageId: 'dart',
+        namedColorMatchMode: 'always',
+      }),
+    ).toStrictEqual([])
+  })
+
+  it('keeps plain named colors in Dart source', () => {
+    expect(
+      findNamedColors("const label = 'red';", {
+        languageId: 'dart',
+        namedColorMatchMode: 'always',
+      }),
+    ).toStrictEqual([{ start: 15, end: 18, color: 'rgb(255, 0, 0)' }])
+  })
+
+  it('skips normalized Dart color component names', () => {
+    expect(
+      findNamedColors(
+        `final color = Color.from(
+          alpha: 1,
+          red: 0.2,
+          green: 0.3,
+          blue: 0.4,
+          colorSpace: ColorSpace.displayP3,
+        );`,
+        {
+          languageId: 'dart',
+          namedColorMatchMode: 'always',
+        },
+      ),
+    ).toStrictEqual([])
+  })
+
+  it(
+    'skips many Dart component names without repeated constructor scans',
+    { timeout: 500 },
+    () => {
+      const text =
+        'Color.from(alpha: 1, red: 0.1, green: 0.2, blue: 0.3);\n'.repeat(1600)
+
+      expect(
+        findNamedColors(text, {
+          languageId: 'dart',
+          namedColorMatchMode: 'always',
+        }),
+      ).toStrictEqual([])
+    },
+  )
 })

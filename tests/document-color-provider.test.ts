@@ -343,5 +343,57 @@ describe('document color provider', () => {
     expect(
       fromArgbResult.map(presentation => presentation.label),
     ).toStrictEqual(['Color.fromARGB(128, 255, 0, 0)'])
+
+    const fromRgbaDocument = {
+      ...dartDocument,
+      getText: () => 'Color.fromRGBO(255, 0, 0, 1)',
+    } as unknown as Vscode.TextDocument
+    const fromRgbaResult = provideColorPresentations(
+      new TestColor(1, 0, 0, 0.5) as unknown as Vscode.Color,
+      { document: fromRgbaDocument, range },
+    )
+
+    expect(
+      fromRgbaResult.map(presentation => presentation.label),
+    ).toStrictEqual(['Color.fromRGBO(255, 0, 0, 0.5)'])
+
+    const fromDocument = {
+      ...dartDocument,
+      getText: () =>
+        'Color.from(alpha: 1, red: 1, green: 0, blue: 0, colorSpace: ColorSpace.sRGB)',
+    } as unknown as Vscode.TextDocument
+    const fromResult = provideColorPresentations(
+      new TestColor(1, 0, 0, 0.5) as unknown as Vscode.Color,
+      { document: fromDocument, range },
+    )
+
+    expect(fromResult.map(presentation => presentation.label)).toStrictEqual([
+      'Color.from(alpha: 0.5, red: 1, green: 0, blue: 0, colorSpace: ColorSpace.sRGB)',
+    ])
+  })
+
+  it('preserves floating-point channels in Dart picker presentations', async () => {
+    const { provideColorPresentations } =
+      await import('../src/features/color-provider/document-color-provider')
+    const range = { id: 'source-range' } as unknown as Vscode.Range
+    const dartDocument = {
+      ...document,
+      getText: () => 'Color.from(alpha: 1, red: 1, green: 0, blue: 0)',
+      languageId: 'dart',
+    } as unknown as Vscode.TextDocument
+
+    const result = provideColorPresentations(
+      new TestColor(
+        0.10123,
+        0.20234,
+        0.30345,
+        0.45678,
+      ) as unknown as Vscode.Color,
+      { document: dartDocument, range },
+    )
+
+    expect(result.map(presentation => presentation.label)).toStrictEqual([
+      'Color.from(alpha: 0.45678, red: 0.10123, green: 0.20234, blue: 0.30345)',
+    ])
   })
 })

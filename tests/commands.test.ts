@@ -580,6 +580,117 @@ describe('useCommands', () => {
     )
   })
 
+  it('preserves modern Dart constructor syntax when adjusting alpha', async () => {
+    vi.resetModules()
+    registeredCommands.clear()
+    edit.mockClear()
+    replace.mockClear()
+    const { useCommands } = await import('../src/extension/commands')
+    useCommands()
+
+    sourceText = 'Color.fromRGBO(57, 197, 187, 0.5)'
+    await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
+      delta: -0.1,
+      originalColor: 'rgba(57, 197, 187, 0.5)',
+      originalText: sourceText,
+      range: { start: 0, end: sourceText.length },
+      uri: 'file:///tmp/example.css',
+    })
+
+    expect(replace).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      'Color.fromRGBO(57, 197, 187, 0.4)',
+    )
+
+    sourceText = 'Color.from(alpha: 0.5, red: 1, green: 0, blue: 0)'
+    await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
+      delta: -0.1,
+      originalColor: 'rgba(255, 0, 0, 0.5)',
+      originalText: sourceText,
+      range: { start: 0, end: sourceText.length },
+      uri: 'file:///tmp/example.css',
+    })
+
+    expect(replace).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      'Color.from(alpha: 0.4, red: 1, green: 0, blue: 0)',
+    )
+  })
+
+  it('preserves RGBO opacity precision when adjusting alpha', async () => {
+    vi.resetModules()
+    registeredCommands.clear()
+    edit.mockClear()
+    replace.mockClear()
+    const { useCommands } = await import('../src/extension/commands')
+    useCommands()
+
+    sourceText = 'Color.fromRGBO(57, 197, 187, 0.52345)'
+    await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
+      delta: -0.1,
+      originalColor: 'rgba(57, 197, 187, 0.523)',
+      originalText: sourceText,
+      range: { start: 0, end: sourceText.length },
+      uri: 'file:///tmp/example.css',
+    })
+
+    expect(replace).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      'Color.fromRGBO(57, 197, 187, 0.42345)',
+    )
+  })
+
+  it('preserves floating-point Dart channels when adjusting alpha', async () => {
+    vi.resetModules()
+    registeredCommands.clear()
+    edit.mockClear()
+    replace.mockClear()
+    const { useCommands } = await import('../src/extension/commands')
+    useCommands()
+
+    sourceText =
+      'Color.from(alpha: 0.52345, red: 0.12345, green: 0.23456, blue: 0.34567)'
+    await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
+      delta: -0.1,
+      originalColor: 'rgba(31, 60, 88, 0.523)',
+      originalText: sourceText,
+      range: { start: 0, end: sourceText.length },
+      uri: 'file:///tmp/example.css',
+    })
+
+    expect(replace).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      'Color.from(alpha: 0.42345, red: 0.12345, green: 0.23456, blue: 0.34567)',
+    )
+  })
+
+  it('does not edit Flutter Material color constants', async () => {
+    vi.resetModules()
+    registeredCommands.clear()
+    edit.mockClear()
+    replace.mockClear()
+    sourceText = 'Colors.deepPurple'
+    const payload = {
+      originalText: sourceText,
+      range: { start: 0, end: sourceText.length },
+      uri: 'file:///tmp/example.css',
+    }
+    const { useCommands } = await import('../src/extension/commands')
+    useCommands()
+
+    await registeredCommands.get('color-highlight.replaceColorAsHex')?.({
+      ...payload,
+      value: '#673ab7',
+    })
+    await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
+      ...payload,
+      delta: -0.1,
+      originalColor: 'rgb(103, 58, 183)',
+    })
+
+    expect(replace).not.toHaveBeenCalled()
+  })
+
   it('clamps alpha up to opaque rgb syntax', async () => {
     vi.resetModules()
     registeredCommands.clear()
