@@ -1,6 +1,7 @@
 import { rgbString } from '../../shared/color'
 import { NAMED_COLORS } from '../../shared/constants'
 import type { ColorMatch, StrategyContext } from '../detection'
+import { isDartColorSyntaxNameAt } from './dart-colors'
 
 /**
  * Regex for CSS named color keywords.
@@ -91,6 +92,13 @@ function isNamedColorAllowed(
   end: number,
   context?: StrategyContext,
 ): boolean {
+  if (
+    context?.languageId === 'dart' &&
+    isDartColorSyntaxNameAt(text, start, end)
+  ) {
+    return false
+  }
+
   const isCssLike = context && CSS_LIKE_LANGUAGES.has(context.languageId)
   const isStylusLike = context && STYLUS_LIKE_LANGUAGES.has(context.languageId)
   const isStyleLike = isCssLike || isStylusLike

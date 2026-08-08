@@ -99,12 +99,80 @@
     },
     {
       "index": 5,
-      "line": 14,
+      "line": 10,
+      "column": 24,
+      "text": "Color.fromRGBO(57, 197, 187, 0.5)",
+      "range": [
+        391,
+        424
+      ],
+      "color": "rgba(57, 197, 187, 0.5)",
+      "render": {
+        "backgroundColor": "rgb(57, 197, 187)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(57, 197, 187)"
+      }
+    },
+    {
+      "index": 6,
+      "line": 11,
+      "column": 29,
+      "text": "Color.from(\n    alpha: 0.75,\n    red: 0.224,\n    green: 0.773,\n    blue: 0.733,\n    colorSpace: ColorSpace.sRGB,\n  )",
+      "range": [
+        454,
+        570
+      ],
+      "color": "rgba(57, 197, 187, 0.75)",
+      "render": {
+        "backgroundColor": "rgb(57, 197, 187)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(57, 197, 187)"
+      }
+    },
+    {
+      "index": 7,
+      "line": 22,
+      "column": 34,
+      "text": "Colors.deepPurple",
+      "range": [
+        814,
+        831
+      ],
+      "color": "rgb(103, 58, 183)",
+      "render": {
+        "backgroundColor": "rgb(103, 58, 183)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(103, 58, 183)"
+      }
+    },
+    {
+      "index": 8,
+      "line": 23,
+      "column": 33,
+      "text": "Colors.lightBlueAccent",
+      "range": [
+        865,
+        887
+      ],
+      "color": "rgb(64, 196, 255)",
+      "render": {
+        "backgroundColor": "rgb(64, 196, 255)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(64, 196, 255)"
+      }
+    },
+    {
+      "index": 9,
+      "line": 35,
       "column": 28,
       "text": "#efca19",
       "range": [
-        604,
-        611
+        1271,
+        1278
       ],
       "color": "rgb(239, 202, 25)",
       "render": {
@@ -115,13 +183,13 @@
       }
     },
     {
-      "index": 6,
-      "line": 14,
+      "index": 10,
+      "line": 35,
       "column": 40,
       "text": "rgb(57, 197, 187)",
       "range": [
-        616,
-        633
+        1283,
+        1300
       ],
       "color": "rgb(57, 197, 187)",
       "render": {
@@ -132,13 +200,13 @@
       }
     },
     {
-      "index": 7,
-      "line": 15,
+      "index": 11,
+      "line": 36,
       "column": 30,
       "text": "rgb(57, 197, 187)",
       "range": [
-        663,
-        680
+        1330,
+        1347
       ],
       "color": "rgb(57, 197, 187)",
       "render": {

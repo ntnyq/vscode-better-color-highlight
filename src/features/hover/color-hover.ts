@@ -6,8 +6,8 @@ import type {
 } from '../../engine/detection'
 import { shouldProcessLanguage } from '../../engine/detection/registry'
 import { runColorDetectors } from '../../engine/detection/run-detectors'
+import { isDartColorSource } from '../../engine/strategies/dart-colors'
 import type { NestedScopedConfigs } from '../../meta'
-import { isDartColorSource } from '../../shared/color/dart-presentation'
 import {
   getColorPresentations,
   type ColorPresentations,

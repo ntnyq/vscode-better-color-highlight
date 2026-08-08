@@ -1,4 +1,4 @@
-import { isDartColorSource } from '../../shared/color/dart-presentation'
+import { isDartColorSource } from '../../engine/strategies/dart-colors'
 import { replaceActiveEditorRange } from './editor-range'
 import { getReplaceColorPayload } from './payloads'
 import { preserveHexCase } from './source-format'

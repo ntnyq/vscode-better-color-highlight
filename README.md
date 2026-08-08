@@ -335,7 +335,7 @@ and virtual workspaces when their files are readable by VS Code.
 - [x] CSS / SCSS / Less / Stylus variables
 - [x] Extra expressions：bare RGB / HSL triplets、`--color-rgb: 255 0 0` shorthands
 - [x] Tailwind theme color utilities：`bg-red-500` `text-sky-300` `hover:border-white/75`
-- [x] Flutter/Dart：`Color(0xffRRGGBB)`、`Color.fromARGB(a, r, g, b)`
+- [x] Flutter/Dart：`Color(0xffRRGGBB)`、`Color.fromARGB(a, r, g, b)`、`Color.fromRGBO(r, g, b, o)`、`Color.from(...)`、`Colors.deepPurple`
 - [x] Hyprland：`rgba(rrggbb)`、`rgba(rrggbbaa)`
 - [x] ANSI SGR escape colors：basic, bright, indexed, and truecolor forms
 - [x] JSON / JSONC / `.tokens` Design Tokens：legacy color strings and DTCG structured colors
@@ -540,7 +540,7 @@ Compared with the original Color Highlight extension, this project keeps the fam
 - More CSS Color 4 coverage, including whitespace syntax, slash alpha, `hwb()`, `lab()`, `lch()`, `oklab()`, `oklch()`, and `color()`.
 - More accurate slash-alpha handling for `rgb()` / `rgba()` / `hsl()` / `hsla()` and shorthand color expressions.
 - Safer hex detection: `#RGB` / `#RGBA` remain supported, while short numeric `0xabc` / `0xabcd` values are ignored to avoid number-literal false positives.
-- Dart/Flutter colors: `Color(0xffRRGGBB)` and `Color.fromARGB(a, r, g, b)`.
+- Dart/Flutter colors: `Color(0xffRRGGBB)`, `Color.fromARGB(a, r, g, b)`, `Color.fromRGBO(r, g, b, opacity)`, normalized `Color.from(...)`, and direct Flutter Material constants such as `Colors.deepPurple`.
 - Hyprland `rgba(rrggbb)` and `rgba(rrggbbaa)` syntax.
 - Transparent colors stay visible by rendering markers with an opaque display color while preserving the represented color value.
 - Named CSS color matching is more configurable through `color-highlight.namedColorMatchMode`.

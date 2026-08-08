@@ -119,4 +119,31 @@ describe(findNamedColors, () => {
       { start: 15, end: 18, color: 'rgb(255, 0, 0)' },
     ])
   })
+
+  it('defers Flutter Material members to the Dart color strategy', () => {
+    expect(
+      findNamedColors('final color = Colors.red;', {
+        languageId: 'dart',
+        namedColorMatchMode: 'always',
+      }),
+    ).toStrictEqual([])
+  })
+
+  it('skips normalized Dart color component names', () => {
+    expect(
+      findNamedColors(
+        `final color = Color.from(
+          alpha: 1,
+          red: 0.2,
+          green: 0.3,
+          blue: 0.4,
+          colorSpace: ColorSpace.displayP3,
+        );`,
+        {
+          languageId: 'dart',
+          namedColorMatchMode: 'always',
+        },
+      ),
+    ).toStrictEqual([])
+  })
 })

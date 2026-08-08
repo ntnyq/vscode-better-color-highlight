@@ -13,8 +13,8 @@ import {
   shouldProcessLanguage,
 } from '../../engine/detection/registry'
 import { runColorDetectors } from '../../engine/detection/run-detectors'
+import { formatDartColor } from '../../engine/strategies/dart-colors'
 import { config } from '../../extension/config'
-import { formatDartColor } from '../../shared/color/dart-presentation'
 import {
   formatColorPresentation,
   getColorPresentationsFromRgba,
