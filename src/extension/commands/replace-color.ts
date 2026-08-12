@@ -18,7 +18,7 @@ export async function replaceColorValue(
   if (!payload) {
     return
   }
-  if (isDartColorSource(payload.originalText)) {
+  if (payload.sourceKind || isDartColorSource(payload.originalText)) {
     return
   }
 

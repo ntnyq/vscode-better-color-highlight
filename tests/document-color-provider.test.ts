@@ -372,6 +372,40 @@ describe('document color provider', () => {
     ])
   })
 
+  it('preserves Android XML and Compose packed ARGB syntax', async () => {
+    const { provideColorPresentations } =
+      await import('../src/features/color-provider/document-color-provider')
+    const range = { id: 'source-range' } as unknown as Vscode.Range
+    const androidDocument = {
+      ...document,
+      getText: () => '#ffff0000',
+      languageId: 'xml',
+      uri: {
+        toString: () => 'file:///app/src/main/res/values/colors.xml',
+      },
+    } as unknown as Vscode.TextDocument
+
+    expect(
+      provideColorPresentations(
+        new TestColor(1, 0, 0, 0.5) as unknown as Vscode.Color,
+        { document: androidDocument, range },
+      ).map(presentation => presentation.label),
+    ).toStrictEqual(['#80ff0000'])
+
+    const composeDocument = {
+      ...document,
+      getText: () => 'Color(0xFFFF0000)',
+      languageId: 'kotlin',
+      uri: { toString: () => 'file:///app/src/main/Brand.kt' },
+    } as unknown as Vscode.TextDocument
+    expect(
+      provideColorPresentations(
+        new TestColor(1, 0, 0, 0.5) as unknown as Vscode.Color,
+        { document: composeDocument, range },
+      ).map(presentation => presentation.label),
+    ).toStrictEqual(['Color(0x80FF0000)'])
+  })
+
   it('preserves floating-point channels in Dart picker presentations', async () => {
     const { provideColorPresentations } =
       await import('../src/features/color-provider/document-color-provider')

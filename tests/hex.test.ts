@@ -46,6 +46,30 @@ describe(findHexRGBA, () => {
       { start: 26, end: 31, color: 'rgba(255, 255, 0, 0)' },
     ])
   })
+
+  it('uses Android alpha-first semantics only in Android resource XML', () => {
+    expect(
+      findHexRGBA('#80ff0000', {
+        filePath: 'file:///app/src/main/res/values/colors.xml',
+        languageId: 'xml',
+      }),
+    ).toStrictEqual([
+      {
+        start: 0,
+        end: 9,
+        color: 'rgba(255, 0, 0, 0.502)',
+        editMode: 'source',
+        sourceKind: 'android-xml-hex',
+      },
+    ])
+
+    expect(
+      findHexRGBA('#80ff0000', {
+        filePath: 'file:///workspace/example.xml',
+        languageId: 'xml',
+      }),
+    ).toStrictEqual([{ start: 0, end: 9, color: 'rgba(128, 255, 0, 0)' }])
+  })
 })
 
 describe(findHexARGB, () => {

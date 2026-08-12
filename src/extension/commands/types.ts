@@ -1,3 +1,4 @@
+import type { ColorSourceKind } from '../../engine/detection'
 import type { ColorPresentationFormat } from '../../shared/color/presentation'
 
 /**
@@ -13,6 +14,7 @@ export interface OffsetRange {
 export interface ReplaceColorPayload {
   readonly originalText: string
   readonly range: OffsetRange
+  readonly sourceKind?: ColorSourceKind
   readonly uri: string
   readonly value: string
 }
@@ -22,5 +24,6 @@ export interface AdjustColorAlphaPayload {
   readonly originalColor: string
   readonly originalText: string
   readonly range: OffsetRange
+  readonly sourceKind?: ColorSourceKind
   readonly uri: string
 }

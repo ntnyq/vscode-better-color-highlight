@@ -556,6 +556,28 @@ describe('useCommands', () => {
     expect(replace).toHaveBeenCalledWith(expect.any(Object), '#9aff0000')
   })
 
+  it('uses source presentation metadata when adjusting Android alpha', async () => {
+    vi.resetModules()
+    registeredCommands.clear()
+    edit.mockClear()
+    replace.mockClear()
+    sourceText = '#80ff0000'
+
+    const { useCommands } = await import('../src/extension/commands')
+
+    useCommands()
+    await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
+      delta: -0.25,
+      originalColor: 'rgba(255, 0, 0, 0.502)',
+      originalText: sourceText,
+      range: { start: 0, end: sourceText.length },
+      sourceKind: 'android-xml-hex',
+      uri: 'file:///tmp/example.css',
+    })
+
+    expect(replace).toHaveBeenCalledWith(expect.any(Object), '#40ff0000')
+  })
+
   it('preserves Dart syntax when adjusting constructor alpha', async () => {
     vi.resetModules()
     registeredCommands.clear()

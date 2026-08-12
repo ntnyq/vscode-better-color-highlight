@@ -1,5 +1,38 @@
 import type { ColorMatch, ColorMatchGroup } from './'
 
+/**
+ * Prefer complete semantic color ranges over nested literal matches.
+ *
+ * Matches are returned in source order. Exact duplicates keep the first input
+ * match, while partially crossing ranges are retained because neither fully
+ * describes the other.
+ */
+export function arbitrateColorMatches(
+  matches: readonly ColorMatch[],
+): ColorMatch[] {
+  const candidates = matches
+    .map((match, index) => ({ index, match }))
+    .sort(
+      (left, right) =>
+        left.match.start - right.match.start ||
+        right.match.end - left.match.end ||
+        left.index - right.index,
+    )
+  const accepted: ColorMatch[] = []
+  let farthestAcceptedEnd = -1
+
+  for (const { match } of candidates) {
+    if (match.end <= farthestAcceptedEnd) {
+      continue
+    }
+
+    accepted.push(match)
+    farthestAcceptedEnd = match.end
+  }
+
+  return accepted
+}
+
 export interface ColorMatchGroupLimits {
   /** Maximum number of unique colors to retain. */
   readonly maxColorCount: number

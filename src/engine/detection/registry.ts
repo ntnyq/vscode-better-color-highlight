@@ -5,6 +5,7 @@ import {
   findHexARGB,
   findAnsiSgrColors,
   findColorFunctions,
+  findComposeArgbHexColors,
   findHwb,
   findJsonDesignTokens,
   findNamedColors,
@@ -199,6 +200,10 @@ export function getStrategies(
 
   if (languageId === 'dart') {
     strategies.push(findDartColors)
+  }
+
+  if (languageId === 'kotlin') {
+    strategies.push(findComposeArgbHexColors)
   }
 
   if (config.matchAnsiEscapeCodes) {

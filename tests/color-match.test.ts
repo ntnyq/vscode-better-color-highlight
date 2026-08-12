@@ -1,9 +1,35 @@
 import { describe, expect, it } from 'vitest'
 import type { ColorMatch } from '../src/engine/detection'
 import {
+  arbitrateColorMatches,
   groupByColor,
   groupColorMatchesWithinLimits,
 } from '../src/engine/detection/color-match'
+
+describe(arbitrateColorMatches, () => {
+  it('prefers one complete semantic expression over nested literal matches', () => {
+    const matches: ColorMatch[] = [
+      { start: 14, end: 21, color: 'rgb(255, 0, 0)' },
+      {
+        start: 7,
+        end: 36,
+        color: 'rgb(140, 83, 162)',
+      },
+      { start: 27, end: 34, color: 'rgb(0, 0, 255)' },
+    ]
+
+    expect(arbitrateColorMatches(matches)).toStrictEqual([matches[1]])
+  })
+
+  it('deduplicates exact ranges and retains non-containing overlaps', () => {
+    const first = { start: 0, end: 7, color: 'rgb(255, 0, 0)' }
+    const crossing = { start: 5, end: 12, color: 'rgb(0, 0, 255)' }
+
+    expect(
+      arbitrateColorMatches([first, { ...first }, crossing]),
+    ).toStrictEqual([first, crossing])
+  })
+})
 
 describe(groupByColor, () => {
   it('groups matches by color', () => {

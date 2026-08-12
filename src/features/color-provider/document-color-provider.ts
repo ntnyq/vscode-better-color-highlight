@@ -13,7 +13,10 @@ import {
   shouldProcessLanguage,
 } from '../../engine/detection/registry'
 import { runColorDetectors } from '../../engine/detection/run-detectors'
-import { formatDartColor } from '../../engine/strategies/dart-colors'
+import {
+  formatColorForSource,
+  resolveColorSourceKind,
+} from '../../engine/presentation/source-color'
 import { config } from '../../extension/config'
 import {
   formatColorPresentation,
@@ -165,15 +168,22 @@ export function provideColorPresentations(
     b: normalizedChannelToByte(normalized.b),
     a: normalized.a,
   }
-  if (context.document.languageId === 'dart') {
-    const value = formatDartColor(
+  const sourceText = context.document.getText(context.range)
+  const sourceKind = resolveColorSourceKind({
+    filePath: context.document.uri.toString(),
+    languageId: context.document.languageId,
+    sourceText,
+  })
+  if (sourceKind) {
+    const value = formatColorForSource(
       {
         r: normalized.r * 255,
         g: normalized.g * 255,
         b: normalized.b * 255,
         a: normalized.a,
       },
-      context.document.getText(context.range),
+      sourceText,
+      sourceKind,
     )
     return value ? [createColorPresentation(value, context.range)] : []
   }

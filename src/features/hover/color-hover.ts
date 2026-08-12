@@ -2,11 +2,12 @@ import type {
   ColorDetector,
   ColorEditMode,
   ColorMatch,
+  ColorSourceKind,
   StrategyContext,
 } from '../../engine/detection'
 import { shouldProcessLanguage } from '../../engine/detection/registry'
 import { runColorDetectors } from '../../engine/detection/run-detectors'
-import { isDartColorSource } from '../../engine/strategies/dart-colors'
+import { isArgbSourceKind } from '../../engine/presentation/source-color'
 import type { NestedScopedConfigs } from '../../meta'
 import {
   getColorPresentations,
@@ -68,6 +69,9 @@ export interface ColorHover {
    * Copy-ready color representations shown in the hover.
    */
   readonly presentations: ColorPresentations
+
+  /** Language-specific source syntax used by editing adapters. */
+  readonly sourceKind?: ColorSourceKind
 
   /**
    * Source range of the color match in document offsets.
@@ -231,7 +235,7 @@ export async function getColorHover(
   }
 
   const presentations = getColorPresentations(match.color, {
-    useARGB: config.useARGB,
+    useARGB: config.useARGB || isArgbSourceKind(match.sourceKind),
   })
   if (!presentations) {
     return null
@@ -242,6 +246,7 @@ export async function getColorHover(
     originalColor: match.color,
     originalText: text.slice(match.start, match.end),
     presentations,
+    ...(match.sourceKind ? { sourceKind: match.sourceKind } : {}),
     range: {
       start: match.start,
       end: match.end,
@@ -336,7 +341,7 @@ function formatPresentationLine(
     `\`${formatHoverValue(value, valueWidth)}\``,
     `[$(copy)](${buildCommandLink(COPY_COMMANDS[format], value)})`,
   ]
-  if (canEditColor(hover) && !isDartColorSource(hover.originalText)) {
+  if (canReplaceColor(hover)) {
     parts.push(
       `[$(replace)](${buildCommandLink(REPLACE_COMMANDS[format], {
         originalText: hover.originalText,
@@ -353,6 +358,11 @@ function formatPresentationLine(
 /** Whether generic replacement and alpha controls are safe for this source. */
 function canEditColor(hover: ColorHover): boolean {
   return hover.editMode !== 'read-only'
+}
+
+/** Whether generic CSS replacement syntax is valid for this source. */
+function canReplaceColor(hover: ColorHover): boolean {
+  return canEditColor(hover) && hover.editMode !== 'source'
 }
 
 /**
@@ -387,6 +397,7 @@ function formatAlphaLine(hover: ColorHover, valueWidth: number): string {
     originalColor: hover.originalColor,
     originalText: hover.originalText,
     range: hover.range,
+    ...(hover.sourceKind ? { sourceKind: hover.sourceKind } : {}),
     uri: hover.uri,
   }
 

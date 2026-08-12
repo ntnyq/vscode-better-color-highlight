@@ -1,3 +1,4 @@
+import { formatColorForSourceWithAlphaDelta } from '../../engine/presentation/source-color'
 import {
   formatDartColorWithAlphaDelta,
   isDartColorSource,
@@ -30,6 +31,17 @@ export async function adjustColorAlpha(value: unknown) {
   }
 
   const nextColor = withAlpha(color, color.a + payload.delta)
+  if (payload.sourceKind) {
+    const sourceReplacement = formatColorForSourceWithAlphaDelta(
+      payload.delta,
+      payload.originalText,
+      payload.sourceKind,
+    )
+    if (sourceReplacement) {
+      await replaceActiveEditorRange(payload, sourceReplacement)
+    }
+    return
+  }
   const dartReplacement = formatDartColorWithAlphaDelta(
     payload.delta,
     payload.originalText,

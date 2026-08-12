@@ -311,6 +311,33 @@ describe(getColorHover, () => {
     expect(result?.presentations.hex).toBe('#80ff0000')
   })
 
+  it('uses source-specific ARGB presentations without changing global config', async () => {
+    const detector = vi.fn<ColorDetector>(() => [
+      {
+        start: 14,
+        end: 23,
+        color: 'rgba(255, 0, 0, 0.502)',
+        editMode: 'source',
+        sourceKind: 'android-xml-hex',
+      },
+    ])
+
+    const result = await getColorHover({
+      config: { ...defaultConfig, enableHover: true },
+      detectors: [detector],
+      filePath: 'file:///app/src/main/res/values/colors.xml',
+      languageId: 'xml',
+      offset: 16,
+      text: '<color name="brand">#80ff0000</color>',
+    })
+
+    expect(result).toMatchObject({
+      editMode: 'source',
+      sourceKind: 'android-xml-hex',
+      presentations: { hex: '#80ff0000' },
+    })
+  })
+
   it('preserves read-only match semantics in hover results', async () => {
     const text = String.raw`\x1b[31m`
     const detector = vi.fn<ColorDetector>(() => [
@@ -426,6 +453,7 @@ describe(buildColorHoverMarkdown, () => {
 
   it('omits generic replacement actions for Dart constructors', () => {
     const result = buildColorHoverMarkdown({
+      editMode: 'source',
       originalColor: 'rgb(255, 0, 0)',
       originalText: 'Color(0xffff0000)',
       range: { end: 17, start: 0 },
@@ -436,12 +464,14 @@ describe(buildColorHoverMarkdown, () => {
         oklch: 'oklch(62.8% 0.258 29.2)',
         rgb: 'rgb(255, 0, 0)',
       },
+      sourceKind: 'dart',
       uri: 'file:///tmp/example.dart',
     })
 
     expect(result).toContain('command:color-highlight.copyColorAsHex')
     expect(result).not.toContain('color-highlight.replaceColorAs')
     expect(result).toContain('command:color-highlight.adjustColorAlpha')
+    expect(result).toContain('%22sourceKind%22%3A%22dart%22')
   })
 
   it('keeps copy actions but omits editing actions for read-only matches', () => {

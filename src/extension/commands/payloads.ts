@@ -1,4 +1,5 @@
 import { isNumber, isRecord, isString } from '@ntnyq/utils'
+import { isColorSourceKind } from '../../engine/presentation/source-color'
 import { getOffsetRange } from './offset-range'
 import type { AdjustColorAlphaPayload, ReplaceColorPayload } from './types'
 
@@ -23,6 +24,9 @@ export function getReplaceColorPayload(
   return {
     originalText: value.originalText,
     range,
+    ...(isColorSourceKind(value.sourceKind)
+      ? { sourceKind: value.sourceKind }
+      : {}),
     uri: value.uri,
     value: value.value,
   }
@@ -57,6 +61,9 @@ export function getAdjustColorAlphaPayload(
     originalColor: value.originalColor,
     originalText: value.originalText,
     range,
+    ...(isColorSourceKind(value.sourceKind)
+      ? { sourceKind: value.sourceKind }
+      : {}),
     uri: value.uri,
   }
 }

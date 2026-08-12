@@ -1,5 +1,6 @@
 import { hexToRgb, hexARGBToRgb, rgbString } from '../../shared/color'
 import type { ColorMatch, StrategyContext } from '../detection'
+import { isAndroidResourceXml } from '../presentation/source-context'
 
 /**
  * Regex for hex colors: #RGB, #RRGGBB, #RGBA, #RRGGBBAA, and 0x prefix.
@@ -38,6 +39,18 @@ function isDartColorConstructorHex(
   return /Color\(\s*$/u.test(text.slice(Math.max(0, start - 16), start))
 }
 
+/** Whether a packed HEX literal belongs to a Compose Color constructor. */
+function isComposeColorConstructorHex(
+  text: string,
+  start: number,
+  context?: StrategyContext,
+): boolean {
+  if (context?.languageId !== 'kotlin') {
+    return false
+  }
+  return /\bColor\(\s*$/u.test(text.slice(Math.max(0, start - 24), start))
+}
+
 /**
  * Detect hex colors in RGBA mode (default).
  * Matches #RGB, #RRGGBB, #RGBA, #RRGGBBAA and 0x prefix variants.
@@ -68,20 +81,38 @@ export function findHexRGBA(
       continue
     }
 
-    const result = hexToRgb(fullMatch)
+    const isAndroidHex =
+      fullMatch.startsWith('#') &&
+      Boolean(
+        context && isAndroidResourceXml(context.languageId, context.filePath),
+      )
+    const result = isAndroidHex ? hexARGBToRgb(fullMatch) : hexToRgb(fullMatch)
     if (!result) {
       continue
     }
 
     const start = (m.index ?? 0) + preceding.length
-    if (isDartColorConstructorHex(text, start, context)) {
+    if (
+      isDartColorConstructorHex(text, start, context) ||
+      isComposeColorConstructorHex(text, start, context)
+    ) {
       continue
     }
 
     const end = start + fullMatch.length
     const color = rgbString(result.r, result.g, result.b, result.a)
 
-    matches.push({ start, end, color })
+    matches.push({
+      start,
+      end,
+      color,
+      ...(isAndroidHex
+        ? {
+            editMode: 'source' as const,
+            sourceKind: 'android-xml-hex' as const,
+          }
+        : {}),
+    })
   }
 
   return matches
@@ -122,14 +153,32 @@ export function findHexARGB(
     }
 
     const start = (m.index ?? 0) + preceding.length
-    if (isDartColorConstructorHex(text, start, context)) {
+    if (
+      isDartColorConstructorHex(text, start, context) ||
+      isComposeColorConstructorHex(text, start, context)
+    ) {
       continue
     }
 
     const end = start + fullMatch.length
     const color = rgbString(result.r, result.g, result.b, result.a)
 
-    matches.push({ start, end, color })
+    const isAndroidHex =
+      fullMatch.startsWith('#') &&
+      Boolean(
+        context && isAndroidResourceXml(context.languageId, context.filePath),
+      )
+    matches.push({
+      start,
+      end,
+      color,
+      ...(isAndroidHex
+        ? {
+            editMode: 'source' as const,
+            sourceKind: 'android-xml-hex' as const,
+          }
+        : {}),
+    })
   }
 
   return matches

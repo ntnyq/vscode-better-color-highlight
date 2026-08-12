@@ -86,6 +86,8 @@ function findDartColorConstructors(text: string): ColorMatch[] {
         parsed.color.b,
         parsed.color.a,
       ),
+      editMode: 'source',
+      sourceKind: 'dart',
     })
   }
 

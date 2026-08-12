@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest'
 import { findDartColors } from '../src/engine/strategies/dart-colors'
 
+const dartSourceMetadata = {
+  editMode: 'source',
+  sourceKind: 'dart',
+} as const
+
 describe(findDartColors, () => {
+  it('declares source-specific editing metadata for Dart constructors', () => {
+    expect(findDartColors('Color(0xffff0000)')).toMatchObject([
+      { editMode: 'source', sourceKind: 'dart' },
+    ])
+  })
+
   it('resolves Color(0xAARRGGBB) as ARGB', () => {
     const text = 'static const primary = Color(0xffB11016);'
 
@@ -10,6 +21,7 @@ describe(findDartColors, () => {
         start: text.indexOf('Color('),
         end: text.indexOf(';'),
         color: 'rgb(177, 16, 22)',
+        ...dartSourceMetadata,
       },
     ])
   })
@@ -22,6 +34,7 @@ describe(findDartColors, () => {
         start: text.indexOf('Color.fromARGB'),
         end: text.indexOf(';'),
         color: 'rgba(57, 197, 187, 0.502)',
+        ...dartSourceMetadata,
       },
     ])
   })
@@ -34,6 +47,7 @@ describe(findDartColors, () => {
         start: 0,
         end: text.length,
         color: 'rgba(57, 197, 187, 0.502)',
+        ...dartSourceMetadata,
       },
     ])
   })
@@ -49,6 +63,7 @@ describe(findDartColors, () => {
         start,
         end: start + 'Color(0xffB11016)'.length,
         color: 'rgb(177, 16, 22)',
+        ...dartSourceMetadata,
       },
     ])
   })
@@ -66,6 +81,7 @@ describe(findDartColors, () => {
         start: text.indexOf('Color.fromRGBO'),
         end: text.indexOf(';'),
         color: 'rgba(57, 197, 187, 0.5)',
+        ...dartSourceMetadata,
       },
     ])
   })
@@ -84,6 +100,7 @@ describe(findDartColors, () => {
         start: text.indexOf('Color.from('),
         end: text.indexOf(';'),
         color: 'rgba(255, 0, 128, 0.25)',
+        ...dartSourceMetadata,
       },
     ])
   })
@@ -98,7 +115,7 @@ describe(findDartColors, () => {
     ],
   ])('resolves supported Dart literal syntax in %s', (text, color) => {
     expect(findDartColors(text)).toStrictEqual([
-      { start: 0, end: text.length, color },
+      { start: 0, end: text.length, color, ...dartSourceMetadata },
     ])
   })
 
@@ -125,7 +142,7 @@ describe(findDartColors, () => {
     ['Color.fromRGBO(1, 2, 3, 0)', 'rgba(1, 2, 3, 0)'],
   ])('accepts inclusive channel bounds in %s', (text, color) => {
     expect(findDartColors(text)).toStrictEqual([
-      { start: 0, end: text.length, color },
+      { start: 0, end: text.length, color, ...dartSourceMetadata },
     ])
   })
 

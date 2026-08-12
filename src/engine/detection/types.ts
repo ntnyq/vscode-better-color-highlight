@@ -21,6 +21,9 @@ export interface ColorMatch {
    */
   readonly color: string
 
+  /** Source syntax used to resolve and safely edit the color. */
+  readonly sourceKind?: ColorSourceKind
+
   /**
    * Whether generic color-editing actions can safely replace the source.
    * Omitted values use the generic editing behavior.
@@ -29,7 +32,10 @@ export interface ColorMatch {
 }
 
 /** Source-editing behavior supported by a detected color match. */
-export type ColorEditMode = 'generic' | 'read-only'
+export type ColorEditMode = 'generic' | 'source' | 'read-only'
+
+/** Source syntaxes that require language-aware presentation behavior. */
+export type ColorSourceKind = 'android-xml-hex' | 'compose-argb-hex' | 'dart'
 
 /** Optional concrete RGB overrides for the base ANSI color palette. */
 export interface AnsiPaletteOverrides {

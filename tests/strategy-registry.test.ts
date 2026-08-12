@@ -5,6 +5,7 @@ import {
 } from '../src/engine/detection/registry'
 import { findAnsiSgrColors } from '../src/engine/strategies/ansi-sgr'
 import { findColorFunctions } from '../src/engine/strategies/color-functions'
+import { findComposeArgbHexColors } from '../src/engine/strategies/compose-colors'
 import { findJsonDesignTokens } from '../src/engine/strategies/design-tokens/json-strategy'
 import { findYamlDesignTokens } from '../src/engine/strategies/design-tokens/yaml-strategy'
 import { findHexRGBA, findHexARGB } from '../src/engine/strategies/hex'
@@ -82,6 +83,15 @@ describe(getStrategies, () => {
     const strategies = getStrategies('typescript', config)
     expect(strategies).toContain(findHexARGB)
     expect(strategies).not.toContain(findHexRGBA)
+  })
+
+  it('adds Compose packed-color detection only for Kotlin documents', () => {
+    expect(getStrategies('kotlin', defaultConfig)).toContain(
+      findComposeArgbHexColors,
+    )
+    expect(getStrategies('java', defaultConfig)).not.toContain(
+      findComposeArgbHexColors,
+    )
   })
 
   it('includes named colors for CSS languages', () => {

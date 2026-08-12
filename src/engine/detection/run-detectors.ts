@@ -1,4 +1,5 @@
 import type { ColorDetector, ColorMatch, StrategyContext } from './'
+import { arbitrateColorMatches } from './color-match'
 
 /**
  * Inputs for one concurrent detector run.
@@ -59,7 +60,7 @@ export async function runColorDetectors({
         )
       }
     }
-    return matches
+    return arbitrateColorMatches(matches)
   }
 
   const results = await Promise.all(
@@ -79,5 +80,5 @@ export async function runColorDetectors({
     }),
   )
 
-  return results.flat()
+  return arbitrateColorMatches(results.flat())
 }

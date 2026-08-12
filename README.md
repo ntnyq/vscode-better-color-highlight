@@ -335,11 +335,26 @@ and virtual workspaces when their files are readable by VS Code.
 - [x] CSS / SCSS / Less / Stylus variables
 - [x] Extra expressions：bare RGB / HSL triplets、`--color-rgb: 255 0 0` shorthands
 - [x] Tailwind theme color utilities：`bg-red-500` `text-sky-300` `hover:border-white/75`
+- [x] Android / Jetpack Compose：resource `#ARGB` / `#AARRGGBB`、`Color(0xAARRGGBB)`
 - [x] Flutter/Dart：`Color(0xffRRGGBB)`、`Color.fromARGB(a, r, g, b)`、`Color.fromRGBO(r, g, b, o)`、`Color.from(...)`、`Colors.deepPurple`
 - [x] Hyprland：`rgba(rrggbb)`、`rgba(rrggbbaa)`
 - [x] ANSI SGR escape colors：basic, bright, indexed, and truecolor forms
 - [x] JSON / JSONC / `.tokens` Design Tokens：legacy color strings and DTCG structured colors
 - [x] YAML Design Tokens：DTCG structured colors
+
+### Language-aware packed colors
+
+Hex alpha order is inferred only from unambiguous source context. CSS and
+generic hex values keep alpha last, while Android resource XML, Jetpack
+Compose, and Dart packed colors use alpha first. Android detection is limited
+to XML files under Android `res/color`, `res/drawable`, `res/mipmap`, and
+`res/values` directories; Compose detection is limited to complete Kotlin
+`Color(0xAARRGGBB)` expressions.
+
+The color picker and alpha commands preserve the original language syntax.
+Complete constructor expressions own their editor range, so their nested hex
+literals are not highlighted or edited a second time. The global `useARGB`
+setting remains available as a compatibility override for generic hex input.
 
 ## Tailwind CSS theme colors
 

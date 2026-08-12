@@ -1,6 +1,7 @@
 export * from './hex'
 export { findAnsiSgrColors } from './ansi-sgr'
 export { findColorFunctions } from './color-functions'
+export { findComposeArgbHexColors } from './compose-colors'
 export { findDartColors } from './dart-colors'
 export { findHwb } from './hwb'
 export { findJsonDesignTokens } from './design-tokens/json-strategy'
