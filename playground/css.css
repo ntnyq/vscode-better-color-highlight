@@ -115,10 +115,10 @@
  * HWB Function
  * ============================================= */
 
-/* hwb() comma syntax */
-.hwb-comma {
-  color: hwb(0, 0%, 0%);
-  background: hwb(210, 20%, 30%);
+/* hwb() modern syntax */
+.hwb-modern {
+  color: hwb(0 0% 0%);
+  background: hwb(210 20% 30%);
 }
 
 /* hwb() space syntax */
@@ -129,13 +129,13 @@
 
 /* hwb() with alpha */
 .hwb-alpha {
-  color: hwb(0, 0%, 0%, 0.5);
+  color: hwb(0 0% 0% / 0.5);
   background: hwb(210 20% 30% / 0.8);
 }
 
 /* hwb() with degree units */
 .hwb-units {
-  color: hwb(0deg, 0%, 0%);
+  color: hwb(0deg 0% 0%);
   background: hwb(120deg 20% 30%);
 }
 
@@ -150,15 +150,15 @@
  * LCH Function
  * ============================================= */
 
-/* lch() comma syntax */
-.lch-comma {
-  color: lch(50, 30, 0);
-  background: lch(70, 40, 120);
+/* lch() modern syntax */
+.lch-modern {
+  color: lch(50 30 0);
+  background: lch(70 40 120);
 }
 
-/* lcha() with alpha */
-.lcha {
-  color: lcha(50, 30, 0, 0.5);
+/* lch() with alpha */
+.lch-alpha {
+  color: lch(50 30 0 / 0.5);
   background: lch(70 40 120 / 0.8);
 }
 
@@ -181,13 +181,13 @@
 
 /* oklch() */
 .oklch {
-  color: oklch(0.5, 0.15, 0);
-  background: oklch(0.7, 0.2, 200);
+  color: oklch(0.5 0.15 0);
+  background: oklch(0.7 0.2 200);
 }
 
-/* oklcha() with alpha */
-.oklcha {
-  color: oklcha(0.5, 0.15, 0, 0.5);
+/* oklch() with alpha */
+.oklch-alpha {
+  color: oklch(0.5 0.15 0 / 0.5);
   background: oklch(0.7 0.2 200 / 0.8);
 }
 
@@ -210,13 +210,13 @@
 
 /* lab() */
 .lab {
-  color: lab(50, 0, 0);
-  background: lab(70, 20, -30);
+  color: lab(50 0 0);
+  background: lab(70 20 -30);
 }
 
-/* laba() with alpha */
-.laba {
-  color: laba(50, 0, 0, 0.5);
+/* lab() with alpha */
+.lab-alpha {
+  color: lab(50 0 0 / 0.5);
   background: lab(70 20 -30 / 0.8);
 }
 
@@ -226,13 +226,13 @@
 
 /* oklab() */
 .oklab {
-  color: oklab(0.5, 0, 0);
-  background: oklab(0.7, 0.1, -0.05);
+  color: oklab(0.5 0 0);
+  background: oklab(0.7 0.1 -0.05);
 }
 
-/* oklaba() with alpha */
-.oklaba {
-  color: oklaba(0.5, 0, 0, 0.5);
+/* oklab() with alpha */
+.oklab-alpha {
+  color: oklab(0.5 0 0 / 0.5);
   background: oklab(0.7 0.1 -0.05 / 0.8);
 }
 
@@ -270,9 +270,27 @@
 .color-space-all {
   color: color(srgb 1 0.2 0.1);
   background: color(srgb-linear 0.8 0.2 0.1);
+  box-shadow: 0 0 0 2px color(display-p3-linear 0.8 0.2 0.1);
   border-color: color(a98-rgb 0.6 0.2 0.9);
   outline-color: color(xyz-d50 0.4 0.3 0.2 / 0.7);
   text-decoration-color: color(xyz-d65 0.4 0.3 0.2);
+}
+
+/* Missing components resolve to zero outside interpolation */
+.missing-components {
+  color: rgb(none 255 none / none);
+  background: oklch(none none none / none);
+}
+
+/* Statically resolvable CSS Color 5 mixtures */
+.color-mix {
+  color: color-mix(in srgb, #ff0000 20%, #0000ff);
+  background: color-mix(red, color(display-p3 0 0 1));
+  border-color: color-mix(
+    in oklch longer hue,
+    oklch(0.6 0.2 30),
+    oklch(0.6 0.2 90)
+  );
 }
 
 /* Extra expression samples for manual checking:
@@ -347,7 +365,7 @@
 .mixed {
   background: linear-gradient(rgb(255, 0, 0), hsl(210, 50%, 50%), #00ff00);
   border: 2px solid rgba(0, 0, 255, 0.5);
-  box-shadow: 0 0 5px hwb(0, 0%, 0%);
+  box-shadow: 0 0 5px hwb(0 0% 0%);
 }
 
 /* Colors in comments should also be highlighted */

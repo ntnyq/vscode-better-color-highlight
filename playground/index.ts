@@ -74,58 +74,58 @@ const hslaSpaceB = 'hsl(210 50% 50% / 0.5)'
 // =============================================
 
 // hwb() comma syntax
-const hwbComma = 'hwb(0, 0%, 0%)'
-const hwbCommaB = 'hwb(210, 20%, 30%)'
+const hwb = 'hwb(0 0% 0%)'
+const hwbB = 'hwb(210 20% 30%)'
 
 // hwb() space syntax
 const hwbSpace = 'hwb(0 0% 0%)'
 
 // hwb() with alpha
-const hwbAlpha = 'hwb(0, 0%, 0%, 0.5)'
+const hwbAlpha = 'hwb(0 0% 0% / 0.5)'
 
 // =============================================
 // LCH Function
 // =============================================
 
 // lch()
-const lch = 'lch(50, 30, 0)'
-const lchB = 'lch(70, 40, 120)'
+const lch = 'lch(50 30 0)'
+const lchB = 'lch(70 40 120)'
 
-// lcha() with alpha
-const lcha = 'lcha(50, 30, 0, 0.5)'
+// lch() with alpha
+const lchAlpha = 'lch(50 30 0 / 0.5)'
 
 // =============================================
 // OKLCH Function
 // =============================================
 
 // oklch()
-const oklch = 'oklch(0.5, 0.15, 0)'
-const oklchB = 'oklch(0.7, 0.2, 200)'
+const oklch = 'oklch(0.5 0.15 0)'
+const oklchB = 'oklch(0.7 0.2 200)'
 
-// oklcha() with alpha
-const oklcha = 'oklcha(0.5, 0.15, 0, 0.5)'
+// oklch() with alpha
+const oklchAlpha = 'oklch(0.5 0.15 0 / 0.5)'
 
 // =============================================
 // LAB Function
 // =============================================
 
 // lab()
-const lab = 'lab(50, 0, 0)'
-const labB = 'lab(70, 20, -30)'
+const lab = 'lab(50 0 0)'
+const labB = 'lab(70 20 -30)'
 
-// laba() with alpha
-const laba = 'laba(50, 0, 0, 0.5)'
+// lab() with alpha
+const labAlpha = 'lab(50 0 0 / 0.5)'
 
 // =============================================
 // OKLab Function
 // =============================================
 
 // oklab()
-const oklab = 'oklab(0.5, 0, 0)'
-const oklabB = 'oklab(0.7, 0.1, -0.05)'
+const oklab = 'oklab(0.5 0 0)'
+const oklabB = 'oklab(0.7 0.1 -0.05)'
 
-// oklaba() with alpha
-const oklaba = 'oklaba(0.5, 0, 0, 0.5)'
+// oklab() with alpha
+const oklabAlpha = 'oklab(0.5 0 0 / 0.5)'
 
 // =============================================
 // Named Colors

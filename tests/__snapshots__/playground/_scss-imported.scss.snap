@@ -23,12 +23,12 @@
         65,
         88
       ],
-      "color": "rgb(25, 128, 230)",
+      "color": "rgb(26, 128, 230)",
       "render": {
-        "backgroundColor": "rgb(25, 128, 230)",
+        "backgroundColor": "rgb(26, 128, 230)",
         "color": "#000000",
         "border": null,
-        "overviewRulerColor": "rgb(25, 128, 230)"
+        "overviewRulerColor": "rgb(26, 128, 230)"
       }
     },
     {
@@ -40,12 +40,12 @@
         121,
         143
       ],
-      "color": "rgb(25, 128, 230)",
+      "color": "rgb(26, 128, 230)",
       "render": {
-        "backgroundColor": "rgb(25, 128, 230)",
+        "backgroundColor": "rgb(26, 128, 230)",
         "color": "#000000",
         "border": null,
-        "overviewRulerColor": "rgb(25, 128, 230)"
+        "overviewRulerColor": "rgb(26, 128, 230)"
       }
     }
   ]

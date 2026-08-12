@@ -325,12 +325,13 @@ and virtual workspaces when their files are readable by VS Code.
 <!-- cSpell: disable-next-line -->
 
 - [x] Hex：`#RGB` `#RRGGBB` `#RGBA` `#RRGGBBAA` `0xRRGGBB` `0xRRGGBBAA`
-- [x] `rgb()` / `rgba()`（whitespace, comma and slash alpha）
-- [x] `hsl()` / `hsla()`（percentage, angle and slash alpha）
-- [x] `hwb()`
-- [x] `lab()` / `lch()`
-- [x] `oklab()` / `oklch()`
-- [x] `color()`：`srgb` `srgb-linear` `display-p3` `a98-rgb` `prophoto-rgb` `rec2020` `xyz`
+- [x] `rgb()` / `rgba()`（modern whitespace/slash and legacy comma syntax）
+- [x] `hsl()` / `hsla()`（modern whitespace/slash and legacy comma syntax）
+- [x] `hwb()`（modern whitespace/slash syntax）
+- [x] `lab()` / `lch()`（modern whitespace/slash syntax）
+- [x] `oklab()` / `oklch()`（modern whitespace/slash syntax）
+- [x] `color()`：`srgb` `srgb-linear` `display-p3` `display-p3-linear` `a98-rgb` `prophoto-rgb` `rec2020` `xyz`
+- [x] Static `color-mix()`：predefined interpolation spaces, percentages, premultiplied alpha, hue methods, and nested colors
 - [x] Named color（`red` `rebeccapurple`）
 - [x] CSS / SCSS / Less / Stylus variables
 - [x] Extra expressions：bare RGB / HSL triplets、`--color-rgb: 255 0 0` shorthands
@@ -355,6 +356,26 @@ The color picker and alpha commands preserve the original language syntax.
 Complete constructor expressions own their editor range, so their nested hex
 literals are not highlighted or edited a second time. The global `useARGB`
 setting remains available as a compatibility override for generic hex input.
+
+### Static CSS color expressions
+
+Modern CSS color functions accept the Color 4 `none` component. A missing
+component resolves to zero for a standalone preview and is carried through
+supported `color-mix()` interpolation. Comma syntax remains available only for
+the legacy `rgb()` / `rgba()` and `hsl()` / `hsla()` forms; `hwb()`, Lab, LCH,
+OKLab, OKLCH, and `color()` use their standards-defined space and slash syntax.
+
+The balanced expression parser resolves static `color-mix()` operands made
+from supported functions, named colors, HEX colors, `transparent`, and nested
+mixtures. It supports all predefined Color 4 interpolation spaces, the
+`shorter`, `longer`, `increasing`, and `decreasing` hue methods, normalized
+percentages, and premultiplied alpha. Intermediate wide-gamut channels retain
+floating-point precision until the final editor preview is produced.
+
+Runtime-dependent operands such as `var()`, `currentColor`, `calc()`, custom
+color profiles, and environment-dependent color functions are intentionally
+left unresolved. Their statically detectable nested colors may still be
+highlighted independently.
 
 ## Tailwind CSS theme colors
 

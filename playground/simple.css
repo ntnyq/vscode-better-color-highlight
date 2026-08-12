@@ -71,7 +71,7 @@
 
 /* hwb() comma syntax */
 .hwb-comma {
-  color: hwb(0, 0%, 0%);
+  color: hwb(0 0% 0%);
 }
 
 /* hwb() space syntax with alpha */
@@ -84,16 +84,16 @@
  * ============================================= */
 
 .lch {
-  color: lch(50, 30, 0);
+  color: lch(50 30 0);
 }
 .oklch {
-  color: oklch(0.5, 0.15, 0);
+  color: oklch(0.5 0.15 0);
 }
 .lab {
-  color: lab(50, 0, 0);
+  color: lab(50 0 0);
 }
 .oklab {
-  color: oklab(0.5, 0, 0);
+  color: oklab(0.5 0 0);
 }
 
 /* =============================================
@@ -123,7 +123,7 @@
 .mixed {
   background: linear-gradient(rgb(255, 0, 0), hsl(210, 50%, 50%), #00ff00);
   border: 2px solid rgba(0, 0, 255, 0.5);
-  box-shadow: 0 0 5px hwb(0, 0%, 0%);
+  box-shadow: 0 0 5px hwb(0 0% 0%);
 }
 
 /* =============================================

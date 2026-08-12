@@ -142,3 +142,16 @@ Sources:
 4. Static relative CSS colors and `alpha()`.
 5. SwiftUI/UIKit and Unity detectors, selected or reordered according to user
    demand.
+
+## Delivery Status
+
+The first two delivery units are now implemented:
+
+1. Source-aware presentation metadata, overlap arbitration, and contextual
+   Android XML, Compose, and Dart packed-color handling.
+2. CSS Color 4 `none` and `display-p3-linear` support, standards-aligned modern
+   function validation, high-precision color-space conversion, and statically
+   resolvable `color-mix()` expressions.
+
+The remaining items are still research proposals rather than release
+commitments.

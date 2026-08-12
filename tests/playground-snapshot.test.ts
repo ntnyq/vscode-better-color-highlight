@@ -9,6 +9,7 @@ import {
 } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import type { ColorMatch } from '../src/engine/detection'
+import { arbitrateColorMatches } from '../src/engine/detection/color-match'
 import { getStrategies } from '../src/engine/detection/registry'
 import { buildDecorationOptions } from '../src/features/highlight/decorations/marker-types'
 import type { NestedScopedConfigs } from '../src/meta'
@@ -114,22 +115,7 @@ function getLineColumn(text: string, offset: number) {
 }
 
 function dedupeAndSortMatches(matches: ColorMatch[]) {
-  const seen = new Set<string>()
-
-  return [...matches]
-    .sort(
-      (a, b) =>
-        a.start - b.start || a.end - b.end || a.color.localeCompare(b.color),
-    )
-    .filter(match => {
-      const key = `${match.start}:${match.end}:${match.color}`
-      if (seen.has(key)) {
-        return false
-      }
-
-      seen.add(key)
-      return true
-    })
+  return arbitrateColorMatches(matches)
 }
 
 async function collectFileSnapshot(fileName: string) {
