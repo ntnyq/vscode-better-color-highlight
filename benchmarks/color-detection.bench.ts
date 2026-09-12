@@ -1,4 +1,4 @@
-import { bench, describe } from 'vitest'
+import { describe, test } from 'vitest'
 import { findColorFunctions } from '../src/engine/strategies/color-functions'
 import { collectCssVarDeclarations } from '../src/engine/strategies/css-vars/parser'
 import { resolveCssVarMatches } from '../src/engine/strategies/css-vars/resolver'
@@ -35,23 +35,31 @@ const declarations = collectCssVarDeclarations(variableCss, {
 })
 
 describe('color detection', () => {
-  bench('direct CSS literals', () => {
-    findHexRGBA(literalCss)
-    findColorFunctions(literalCss)
+  test('direct CSS literals', async ({ bench }) => {
+    await bench('direct CSS literals', () => {
+      findHexRGBA(literalCss)
+      findColorFunctions(literalCss)
+    }).run()
   })
 
-  bench('Tailwind utilities', () => {
-    findTailwindThemeColors(tailwindMarkup)
+  test('Tailwind utilities', async ({ bench }) => {
+    await bench('Tailwind utilities', () => {
+      findTailwindThemeColors(tailwindMarkup)
+    }).run()
   })
 
-  bench('bounded Tailwind candidate scanning', () => {
-    findTailwindThemeColors(adversarialTailwind)
+  test('bounded Tailwind candidate scanning', async ({ bench }) => {
+    await bench('bounded Tailwind candidate scanning', () => {
+      findTailwindThemeColors(adversarialTailwind)
+    }).run()
   })
 
-  bench('CSS custom property resolution', async () => {
-    await resolveCssVarMatches(variableUsages, {
-      currentDeclarations: declarations,
-      externalDeclarations: [],
-    })
+  test('CSS custom property resolution', async ({ bench }) => {
+    await bench('CSS custom property resolution', async () => {
+      await resolveCssVarMatches(variableUsages, {
+        currentDeclarations: declarations,
+        externalDeclarations: [],
+      })
+    }).run()
   })
 })

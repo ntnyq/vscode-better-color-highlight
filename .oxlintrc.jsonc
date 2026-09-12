@@ -99,6 +99,7 @@
         "includeExports": true,
       },
     ],
+    "one-var": ["warn", "never"],
   },
   "overrides": [
     {
