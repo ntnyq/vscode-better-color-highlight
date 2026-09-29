@@ -5,7 +5,9 @@ import type { ResolvedContrastPair } from './types'
 
 const MAX_SOURCE_LENGTH = 512 * 1024
 
-/** Find deterministic same-context foreground/background color pairs. */
+/**
+ * Find deterministic same-context foreground/background color pairs.
+ */
 export async function findContrastPairs(
   text: string,
   context: StrategyContext,
@@ -47,6 +49,9 @@ export async function findContrastPairs(
     })
 }
 
+/**
+ * Return the earliest source offset in a foreground/background pair.
+ */
 function pairStart(pair: ResolvedContrastPair): number {
   return Math.min(pair.foreground.range.start, pair.background.range.start)
 }

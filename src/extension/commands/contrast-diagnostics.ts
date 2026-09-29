@@ -16,6 +16,9 @@ import { commands } from '../../meta'
 
 const STALE_WARNING = 'These color diagnostics are no longer current.'
 
+/**
+ * Open the contrast checker for a validated stored diagnostic pair.
+ */
 export async function checkContrastDiagnosticPair(
   value: unknown,
 ): Promise<void> {
@@ -30,6 +33,9 @@ export async function checkContrastDiagnosticPair(
   })
 }
 
+/**
+ * Reveal the requested color from a validated stored contrast diagnostic.
+ */
 export async function revealContrastDiagnosticColor(
   value: unknown,
   role: 'background' | 'foreground',
@@ -48,6 +54,9 @@ export async function revealContrastDiagnosticColor(
   editor.revealRange(range)
 }
 
+/**
+ * Disable workspace contrast diagnostics after validating the command payload.
+ */
 export async function disableContrastDiagnostics(
   value: unknown,
 ): Promise<void> {
@@ -59,6 +68,9 @@ export async function disableContrastDiagnostics(
     .update('enableContrastDiagnostics', false, ConfigurationTarget.Workspace)
 }
 
+/**
+ * Resolve a diagnostic only while its document version and source text match.
+ */
 async function resolveStoredDiagnostic(
   value: unknown,
 ): Promise<
@@ -106,6 +118,9 @@ async function resolveStoredDiagnostic(
   }
 }
 
+/**
+ * Validate and extract a serialized contrast diagnostic command payload.
+ */
 function getPayload(
   value: unknown,
 ): ContrastDiagnosticCommandPayload | undefined {
@@ -127,6 +142,9 @@ function getPayload(
   }
 }
 
+/**
+ * Check that a position contains nonnegative integer line and character values.
+ */
 function isPosition(
   value: unknown,
 ): value is { readonly character: number; readonly line: number } {
@@ -139,14 +157,23 @@ function isPosition(
   )
 }
 
+/**
+ * Check whether a value is a non-null object.
+ */
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
+/**
+ * Check whether an unknown value is an integer number.
+ */
 function isInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value)
 }
 
+/**
+ * Verify that a stored color range still contains its original document text.
+ */
 function matchesOriginalText(
   document: TextDocument,
   color: ResolvedContrastColor,
@@ -166,6 +193,9 @@ function matchesOriginalText(
   return document.getText(range) === color.originalText
 }
 
+/**
+ * Convert a diagnostic color into a contrast selection with its occurrence.
+ */
 function toSelection(document: TextDocument, color: ResolvedContrastColor) {
   return {
     color: color.color,
@@ -179,6 +209,9 @@ function toSelection(document: TextDocument, color: ResolvedContrastColor) {
   }
 }
 
+/**
+ * Warn that a stored contrast diagnostic is no longer valid.
+ */
 async function warnStale(): Promise<void> {
   await window.showWarningMessage(STALE_WARNING)
 }

@@ -62,12 +62,16 @@ const RAW_TEXT_ELEMENT_NAMES = new Set([
   'xmp',
 ])
 
-/** Whether a file can contain CSS inside markup-style `<style>` elements. */
+/**
+ * Whether a file can contain CSS inside markup-style `<style>` elements.
+ */
 export function isEmbeddedStyleFilePath(filePath: string): boolean {
   return EMBEDDED_STYLE_FILE_REGEX.test(filePath)
 }
 
-/** Parse the Tailwind theme constructs in one stylesheet source. */
+/**
+ * Parse the Tailwind theme constructs in one stylesheet source.
+ */
 export function parseTailwindThemeSource(
   text: string,
   filePath?: string,
@@ -86,6 +90,9 @@ export function parseTailwindThemeSource(
   return parseTailwindCssSource(text, filePath)
 }
 
+/**
+ * Collect CSS theme declarations, custom properties, and source directives.
+ */
 function parseTailwindCssSource(
   text: string,
   filePath?: string,
@@ -171,6 +178,9 @@ function parseTailwindCssSource(
   }
 }
 
+/**
+ * Locate embedded style contents while skipping markup decoys and raw text.
+ */
 function findStyleElementContents(
   text: string,
 ): readonly TailwindSourceRange[] {
@@ -215,6 +225,9 @@ function findStyleElementContents(
   return ranges
 }
 
+/**
+ * Skip comments, declarations, and eligible strings that resemble markup.
+ */
 function skipMarkupDecoy(
   text: string,
   cursor: number,
@@ -247,6 +260,9 @@ function skipMarkupDecoy(
   return null
 }
 
+/**
+ * Check preceding punctuation for a possible source string literal.
+ */
 function isSourceStringStart(text: string, start: number): boolean {
   let cursor = start - 1
   while (cursor >= 0 && /\s/u.test(text[cursor])) {
@@ -255,6 +271,9 @@ function isSourceStringStart(text: string, start: number): boolean {
   return cursor >= 0 && /[!([{,:=?]/u.test(text[cursor])
 }
 
+/**
+ * Skip a source string with escapes and recover at applicable line endings.
+ */
 function skipSourceString(
   text: string,
   start: number,
@@ -272,6 +291,9 @@ function skipSourceString(
   return text.length
 }
 
+/**
+ * Read a markup tag's name, extent, and closing or self-closing state.
+ */
 function readMarkupTag(text: string, start: number): MarkupTag | null {
   let cursor = start + 1
   const closing = text[cursor] === '/'
@@ -307,6 +329,9 @@ function readMarkupTag(text: string, start: number): MarkupTag | null {
   }
 }
 
+/**
+ * Find the closing tag range for a raw-text element.
+ */
 function findRawTextElementClose(
   text: string,
   start: number,
@@ -332,6 +357,9 @@ function findRawTextElementClose(
   return null
 }
 
+/**
+ * Match a lowercase ASCII name at an offset without case sensitivity.
+ */
 function matchesAsciiCaseInsensitive(
   text: string,
   start: number,
@@ -345,14 +373,23 @@ function matchesAsciiCaseInsensitive(
   return true
 }
 
+/**
+ * Check whether a character is an ASCII letter.
+ */
 function isAsciiLetter(char: string | undefined): boolean {
   return char !== undefined && /[a-z]/iu.test(char)
 }
 
+/**
+ * Check whether a character can continue a markup tag name.
+ */
 function isMarkupNameChar(char: string | undefined): boolean {
   return char !== undefined && /[\w:-]/u.test(char)
 }
 
+/**
+ * Find the offset after a tag's closing bracket, ignoring quoted attributes.
+ */
 function findMarkupTagEnd(text: string, start: number): number {
   let quote: '"' | "'" | undefined
   for (let cursor = start; cursor < text.length; cursor++) {
@@ -370,6 +407,9 @@ function findMarkupTagEnd(text: string, start: number): number {
   return -1
 }
 
+/**
+ * Merge embedded CSS sources and translate their ranges to document offsets.
+ */
 function mergeEmbeddedStyleSources(
   text: string,
   ranges: readonly TailwindSourceRange[],
@@ -413,6 +453,9 @@ function mergeEmbeddedStyleSources(
   }
 }
 
+/**
+ * Translate a source range by a fixed offset.
+ */
 function shiftRange(
   range: TailwindSourceRange,
   offset: number,
@@ -420,6 +463,9 @@ function shiftRange(
   return { start: range.start + offset, end: range.end + offset }
 }
 
+/**
+ * Recognize supported theme preludes after normalizing comments and spacing.
+ */
 function parseThemePrelude(
   prelude: string,
 ): 'default' | 'inline' | 'static' | null {
@@ -436,6 +482,9 @@ function parseThemePrelude(
   return null
 }
 
+/**
+ * Parse an import or reference directive with its source and specifier ranges.
+ */
 function parseDirective(
   text: string,
   start: number,
@@ -464,6 +513,9 @@ function parseDirective(
   }
 }
 
+/**
+ * Extract a quoted or URL-wrapped directive target and its range.
+ */
 function readDirectiveSpecifier(target: string): RangedSpecifier | null {
   const trimmed = target.trimStart()
   const leadingWhitespace = target.length - trimmed.length
@@ -516,6 +568,9 @@ function readDirectiveSpecifier(target: string): RangedSpecifier | null {
       }
 }
 
+/**
+ * Find a closing quote while skipping escaped characters.
+ */
 function findQuoteEnd(text: string, start: number, quote: '"' | "'"): number {
   for (let cursor = start + 1; cursor < text.length; cursor++) {
     if (text[cursor] === '\\') {
@@ -527,6 +582,9 @@ function findQuoteEnd(text: string, start: number, quote: '"' | "'"): number {
   return -1
 }
 
+/**
+ * Collect custom property declarations and ranges from a theme block.
+ */
 function scanThemeDeclarations(
   text: string,
   block: ThemeBlock,
@@ -602,6 +660,9 @@ function scanThemeDeclarations(
   return declarations
 }
 
+/**
+ * Restore a custom property's original value text and source range.
+ */
 function restoreCustomPropertyValue(
   text: string,
   declaration: CssVarDeclaration,
@@ -638,6 +699,9 @@ function restoreCustomPropertyValue(
   }
 }
 
+/**
+ * Find a declaration terminator outside parentheses, comments, and strings.
+ */
 function findDeclarationValueEnd(text: string, start: number): number {
   let parenDepth = 0
   for (let cursor = start; cursor < text.length; cursor++) {
@@ -658,6 +722,9 @@ function findDeclarationValueEnd(text: string, start: number): number {
   return text.length
 }
 
+/**
+ * Find the next CSS statement or block boundary outside nested syntax.
+ */
 function findTopLevelBoundary(text: string, start: number): ScanBoundary {
   let parenDepth = 0
   for (let cursor = start; cursor < text.length; cursor++) {
@@ -680,6 +747,9 @@ function findTopLevelBoundary(text: string, start: number): ScanBoundary {
   return { kind: 'unterminated', offset: text.length }
 }
 
+/**
+ * Find a matching closing brace while skipping comments and strings.
+ */
 function findMatchingBrace(text: string, open: number): number {
   let depth = 1
   for (let cursor = open + 1; cursor < text.length; cursor++) {
@@ -697,6 +767,9 @@ function findMatchingBrace(text: string, open: number): number {
   return -1
 }
 
+/**
+ * Skip CSS whitespace and block comments.
+ */
 function skipCssTrivia(text: string, start: number): number {
   let cursor = start
   while (cursor < text.length) {
@@ -714,6 +787,9 @@ function skipCssTrivia(text: string, start: number): number {
   return cursor
 }
 
+/**
+ * Skip one CSS comment or quoted string at the current offset.
+ */
 function skipCommentOrString(text: string, start: number): number {
   if (text[start] === '/' && text[start + 1] === '*') {
     const end = text.indexOf('*/', start + 2)
@@ -733,6 +809,9 @@ function skipCommentOrString(text: string, start: number): number {
   return text.length
 }
 
+/**
+ * Replace CSS block comments with spaces.
+ */
 function stripComments(value: string): string {
   return value.replaceAll(/\/\*[\s\S]*?\*\//gu, ' ')
 }

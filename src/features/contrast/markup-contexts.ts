@@ -85,6 +85,9 @@ const RAW_TEXT_ELEMENT_NAMES = new Set([
   'xmp',
 ])
 
+/**
+ * Collect static markup attributes and style regions while skipping host code.
+ */
 export function collectStaticMarkupContexts(
   text: string,
   languageId: string,
@@ -163,6 +166,9 @@ export function collectStaticMarkupContexts(
   return { attributes, styles }
 }
 
+/**
+ * Skip an opening Astro frontmatter block, consuming unterminated blocks.
+ */
 function findAstroFrontmatterEnd(text: string): number {
   if (!text.startsWith('---')) {
     return 0
@@ -183,11 +189,17 @@ function findAstroFrontmatterEnd(text: string): number {
   return text.length
 }
 
+/**
+ * Find the next line start or the end of the document.
+ */
 function findNextLineStart(text: string, start: number): number {
   const newline = text.indexOf('\n', start)
   return newline === -1 ? text.length : newline + 1
 }
 
+/**
+ * Skip a balanced or moustache host expression while respecting lexical tokens.
+ */
 function findHostExpressionEnd(
   text: string,
   start: number,
@@ -223,6 +235,9 @@ function findHostExpressionEnd(
   return text.length
 }
 
+/**
+ * Advance over a JavaScript-like token and update regex and delimiter context.
+ */
 function skipJsLikeToken(
   text: string,
   start: number,
@@ -364,6 +379,9 @@ function skipJsLikeToken(
   return start + 1
 }
 
+/**
+ * Initialize the state used to distinguish for-of and classic for headers.
+ */
 function createForHeaderContext(): ForHeaderContext {
   return {
     delimiterDepth: 0,
@@ -374,6 +392,9 @@ function createForHeaderContext(): ForHeaderContext {
   }
 }
 
+/**
+ * Return the for-header context at the top of the parenthesis stack.
+ */
 function getActiveForHeader(
   state: JsLikeScanState,
 ): ForHeaderContext | undefined {
@@ -381,6 +402,9 @@ function getActiveForHeader(
   return typeof context === 'object' ? context : undefined
 }
 
+/**
+ * Track nested delimiters and left-hand tokens in the active for header.
+ */
 function recordForHeaderDelimiter(
   state: JsLikeScanState,
   delimiter: string,
@@ -399,6 +423,9 @@ function recordForHeaderDelimiter(
   }
 }
 
+/**
+ * Initialize lexical state for scanning JavaScript-like host expressions.
+ */
 function createJsLikeScanState(): JsLikeScanState {
   return {
     canStartRegex: true,
@@ -408,6 +435,9 @@ function createJsLikeScanState(): JsLikeScanState {
   }
 }
 
+/**
+ * Skip quoted host text while respecting backslash escapes.
+ */
 function skipQuotedJsLikeText(
   text: string,
   start: number,
@@ -427,6 +457,9 @@ function skipQuotedJsLikeText(
   return text.length
 }
 
+/**
+ * Skip a regex literal and flags, respecting escapes and character classes.
+ */
 function skipRegexLiteral(text: string, start: number): number {
   let escaped = false
   let inCharacterClass = false
@@ -460,6 +493,9 @@ interface ParsedTag {
   readonly name: string
 }
 
+/**
+ * Parse a markup tag's quoted attributes while skipping host expressions.
+ */
 function parseTag(
   text: string,
   start: number,
@@ -549,11 +585,17 @@ function parseTag(
   return text.length
 }
 
+/**
+ * Recover from a malformed tag at the next closing bracket or document end.
+ */
 function findTagRecoveryEnd(text: string, start: number): number {
   const end = text.indexOf('>', start)
   return end === -1 ? text.length : end + 1
 }
 
+/**
+ * Find a raw-text element's closing tag start in lowercased source.
+ */
 function findRawElementStart(
   lowerText: string,
   start: number,
@@ -574,6 +616,9 @@ function findRawElementStart(
   return -1
 }
 
+/**
+ * Skip through a raw-text element's closing tag or the document end.
+ */
 function findRawElementEnd(
   text: string,
   lowerText: string,

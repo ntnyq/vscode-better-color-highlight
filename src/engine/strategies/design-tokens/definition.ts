@@ -18,7 +18,9 @@ export interface ResolveDesignTokenDefinitionOptions {
   readonly workspaceIsTrusted?: boolean
 }
 
-/** Resolve the alias expression at an offset to its final color token. */
+/**
+ * Resolve the alias expression at an offset to its final color token.
+ */
 export function resolveDesignTokenDefinition(
   document: ParsedDesignTokenDocument,
   offset: number,
@@ -53,12 +55,18 @@ export function resolveDesignTokenDefinition(
   )
 }
 
+/**
+ * Check whether a token contains a pointer or curly-brace alias.
+ */
 function isDesignTokenAlias(token: DesignTokenEntry): boolean {
   return Boolean(
     token.reference || getDesignTokenCurlyReferencePath(token.value),
   )
 }
 
+/**
+ * Build a navigation target only for a resolved color token with a range.
+ */
 function toDefinitionTarget(
   origin: DesignTokenEntry,
   resolved: ResolvedDesignToken | null,

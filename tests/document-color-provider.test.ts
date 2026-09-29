@@ -4,6 +4,7 @@ import type * as Vscode from 'vscode'
 import type { ColorDetector, ColorMatch } from '../src/engine/detection'
 import type { NestedScopedConfigs } from '../src/meta'
 import type * as LoggerModule from '../src/shared/logger'
+import { semanticColorFixtures } from './fixtures/semantic-colors'
 
 class TestColor {
   public readonly red: number
@@ -149,6 +150,24 @@ describe('document color provider', () => {
     replace.mockClear()
     loggerError.mockClear()
   })
+
+  it.each(semanticColorFixtures)(
+    'excludes semantic $languageId ranges from generic color picker edits',
+    async ({ text, languageId }) => {
+      configSnapshot.enableColorPicker = true
+      const { provideDocumentColors } =
+        await import('../src/features/color-provider/document-color-provider')
+      const sourceDocument = {
+        ...document,
+        languageId,
+        uri: { toString: () => `file:///tmp/semantic.${languageId}` },
+        getText: () => text,
+      } as Vscode.TextDocument
+      await expect(
+        provideDocumentColors(sourceDocument, activeToken),
+      ).resolves.toStrictEqual([])
+    },
+  )
 
   it('does not scan when the native picker is disabled or cancelled', async () => {
     const { provideDocumentColors } =

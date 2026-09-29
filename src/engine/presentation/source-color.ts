@@ -23,7 +23,9 @@ const COLOR_SOURCE_KINDS: ReadonlySet<ColorSourceKind> = new Set([
   'dart',
 ])
 
-/** Validate source syntax metadata received from command payloads. */
+/**
+ * Validate source syntax metadata received from command payloads.
+ */
 export function isColorSourceKind(value: unknown): value is ColorSourceKind {
   return (
     typeof value === 'string' &&
@@ -31,7 +33,9 @@ export function isColorSourceKind(value: unknown): value is ColorSourceKind {
   )
 }
 
-/** Resolve source-specific presentation behavior from document context. */
+/**
+ * Resolve source-specific presentation behavior from document context.
+ */
 export function resolveColorSourceKind({
   filePath,
   languageId,
@@ -56,7 +60,9 @@ export function resolveColorSourceKind({
   return undefined
 }
 
-/** Whether a source syntax serializes alpha before RGB channels. */
+/**
+ * Whether a source syntax serializes alpha before RGB channels.
+ */
 export function isArgbSourceKind(sourceKind?: ColorSourceKind): boolean {
   return (
     sourceKind === 'android-xml-hex' ||
@@ -65,7 +71,9 @@ export function isArgbSourceKind(sourceKind?: ColorSourceKind): boolean {
   )
 }
 
-/** Format a resolved color using its original language-specific syntax. */
+/**
+ * Format a resolved color using its original language-specific syntax.
+ */
 export function formatColorForSource(
   color: RgbaColor,
   sourceText: string,
@@ -84,7 +92,9 @@ export function formatColorForSource(
   }
 }
 
-/** Adjust alpha while preserving the original language-specific syntax. */
+/**
+ * Adjust alpha while preserving the original language-specific syntax.
+ */
 export function formatColorForSourceWithAlphaDelta(
   delta: number,
   sourceText: string,
@@ -106,6 +116,9 @@ export function formatColorForSourceWithAlphaDelta(
   )
 }
 
+/**
+ * Parse packed Android or Compose ARGB source into RGBA channels.
+ */
 function parsePackedArgbSource(
   sourceText: string,
   sourceKind: ColorSourceKind,
@@ -125,18 +138,27 @@ function parsePackedArgbSource(
   return color ? { a: color.a ?? 1, b: color.b, g: color.g, r: color.r } : null
 }
 
+/**
+ * Format Android XML HEX while retaining explicit alpha and letter case.
+ */
 function formatAndroidXmlHex(color: RgbaColor, sourceText: string): string {
   const channelCount = sourceText.length - 1
   const includeAlpha = color.a < 1 || channelCount === 4 || channelCount === 8
   return formatArgbHex(color, '#', includeAlpha, sourceText)
 }
 
+/**
+ * Format a Compose Color constructor with packed ARGB channels.
+ */
 function formatComposeArgbHex(color: RgbaColor, sourceText: string): string {
   const sourceHex = sourceText.match(COMPOSE_ARGB_HEX_REGEX)?.groups?.hex ?? ''
   const hex = formatArgbHex(color, '0x', true, sourceHex)
   return `Color(${hex})`
 }
 
+/**
+ * Serialize optional alpha before RGB using the source HEX letter case.
+ */
 function formatArgbHex(
   color: RgbaColor,
   prefix: '#' | '0x',
@@ -149,12 +171,18 @@ function formatArgbHex(
   return `${prefix}${shouldUseUppercaseHex(sourceText) ? channels.toUpperCase() : channels}`
 }
 
+/**
+ * Clamp and round a channel to a two-digit hexadecimal byte.
+ */
 function toHexByte(value: number): string {
   return Math.round(Math.min(Math.max(value, 0), 255))
     .toString(16)
     .padStart(2, '0')
 }
 
+/**
+ * Check whether the source uses uppercase HEX letters exclusively.
+ */
 function shouldUseUppercaseHex(sourceText: string): boolean {
   const letters = sourceText.replaceAll(/[^a-f]/giu, '')
   return /[A-F]/u.test(letters) && !/[a-f]/u.test(letters)

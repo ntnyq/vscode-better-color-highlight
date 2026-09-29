@@ -9,6 +9,9 @@ const scanStats = {
   truncated: false,
 } as const
 
+/**
+ * Create a workspace color occurrence fixture with explicit source metadata.
+ */
 function occurrence(
   uri: string,
   start: number,

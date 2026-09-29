@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import type { StrategyContext } from '../src/engine/detection'
 import { findContrastPairs } from '../src/features/contrast/find-contrast-pairs'
 
+/**
+ * Create a minimal detector context for the requested language.
+ */
 function context(languageId: string): StrategyContext {
   return { languageId }
 }

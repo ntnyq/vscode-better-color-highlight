@@ -120,6 +120,7 @@ describe(findColorFunctions, () => {
         start: 0,
         end: 19,
         color: 'rgb(1, 1, 1)',
+        editMode: 'read-only',
       },
     ])
   })

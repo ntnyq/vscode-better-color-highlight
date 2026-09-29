@@ -6,6 +6,9 @@ import {
 import type { RgbaColor } from '../../shared/color/presentation'
 import type { ColorContrastEvaluation } from './types'
 
+/**
+ * Evaluate composited foreground contrast when the background is opaque.
+ */
 export function evaluateColorContrast(
   foreground: RgbaColor,
   background: RgbaColor,
@@ -43,6 +46,9 @@ export function evaluateColorContrast(
   }
 }
 
+/**
+ * Clamp RGB channels to byte bounds and alpha to zero through one.
+ */
 function clampRgba({ a, b, g, r }: RgbaColor): RgbaColor {
   return {
     r: clamp(r, 0, 255),
@@ -52,6 +58,9 @@ function clampRgba({ a, b, g, r }: RgbaColor): RgbaColor {
   }
 }
 
+/**
+ * Constrain a number to the inclusive minimum and maximum bounds.
+ */
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }

@@ -20,7 +20,9 @@ import { findContrastPairs } from './find-contrast-pairs'
 
 const DIAGNOSTIC_DEBOUNCE_MS = 200
 
-/** Maintain opt-in low-contrast diagnostics for currently open documents. */
+/**
+ * Maintain opt-in low-contrast diagnostics for currently open documents.
+ */
 export function useContrastDiagnostics(
   dependencyRevision: Readonly<Ref<number>>,
 ): void {
@@ -241,12 +243,18 @@ export function useContrastDiagnostics(
   })
 }
 
+/**
+ * Find an open text document by its serialized URI.
+ */
 function findOpenDocument(uri: string): TextDocument | undefined {
   return workspace.textDocuments.find(
     document => document.uri.toString() === uri,
   )
 }
 
+/**
+ * Check diagnostic settings, document eligibility, language, and size limits.
+ */
 function shouldDiagnose(document: TextDocument): boolean {
   if (
     !config.enableContrastDiagnostics ||

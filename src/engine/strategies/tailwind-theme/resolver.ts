@@ -46,7 +46,9 @@ type ThemeCascadeEvent =
 const EXACT_VAR_REGEX = /^var\(\s*(?<name>--[-\w]+)\s*\)$/u
 const MAX_ALIAS_DEPTH = 32
 
-/** Merge parsed sources with the selected base palette and resolve colors. */
+/**
+ * Merge parsed sources with the selected base palette and resolve colors.
+ */
 export function resolveTailwindTheme(
   sources: readonly ParsedTailwindThemeSource[],
   options: ResolveTailwindThemeOptions = {},
@@ -54,7 +56,9 @@ export function resolveTailwindTheme(
   return Promise.resolve(resolveTailwindThemeImmediately(sources, options))
 }
 
-/** Synchronously merge parsed sources for detectors that do not load files. */
+/**
+ * Synchronously merge parsed sources for detectors that do not load files.
+ */
 export function resolveTailwindThemeImmediately(
   sources: readonly ParsedTailwindThemeSource[],
   options: ResolveTailwindThemeOptions = {},
@@ -103,7 +107,9 @@ export function resolveTailwindThemeImmediately(
   }
 }
 
-/** Resolve one utility color name from an already resolved theme. */
+/**
+ * Resolve one utility color name from an already resolved theme.
+ */
 export function resolveTailwindThemeColor(
   theme: TailwindColorTheme,
   name: string,
@@ -111,6 +117,9 @@ export function resolveTailwindThemeColor(
   return Promise.resolve(theme.colors.get(name) ?? null)
 }
 
+/**
+ * Collect supported theme declarations as ordered cascade events.
+ */
 function createCascadeEvents(
   sources: readonly ParsedTailwindThemeSource[],
 ): ThemeCascadeEvent[] {
@@ -126,6 +135,9 @@ function createCascadeEvents(
   return events
 }
 
+/**
+ * Convert a color theme declaration into a set, remove, or reset event.
+ */
 function createCascadeEvent(
   declaration: TailwindThemeDeclaration,
 ): ThemeCascadeEvent | null {
@@ -160,6 +172,9 @@ function createCascadeEvent(
   }
 }
 
+/**
+ * Resolve a theme color and its aliases with cycle and depth guards.
+ */
 function resolveDefinition(
   name: string,
   definition: ThemeValueDefinition,
@@ -213,6 +228,9 @@ function resolveDefinition(
     : null
 }
 
+/**
+ * Resolve a custom property color through guarded property and theme aliases.
+ */
 function resolveRegularProperty(
   name: string,
   definitions: ReadonlyMap<string, ThemeValueDefinition>,
@@ -273,6 +291,9 @@ function resolveRegularProperty(
   )
 }
 
+/**
+ * Select the last property declaration only when its context is unambiguous.
+ */
 function selectRegularProperty(
   name: string,
   declarations: readonly CssVarDeclaration[],
@@ -292,6 +313,9 @@ function selectRegularProperty(
   return contexts.size === 1 ? (candidates.at(-1) ?? null) : null
 }
 
+/**
+ * Resolve automatic palette selection from the presence of v4 signals.
+ */
 function selectResolvedMode(
   mode: TailwindColorMode,
   hasV4Signal: boolean,
@@ -302,6 +326,9 @@ function selectResolvedMode(
   return hasV4Signal ? 'v4' : 'v3'
 }
 
+/**
+ * Remove CSS comments and surrounding whitespace before resolving a value.
+ */
 function normalizeSemanticValue(value: string): string {
   return value.replaceAll(/\/\*[\s\S]*?\*\//gu, ' ').trim()
 }

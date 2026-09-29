@@ -50,7 +50,9 @@ export interface TailwindColorUtility {
   readonly variants: readonly string[]
 }
 
-/** Find complete Tailwind color utility tokens in one bounded forward scan. */
+/**
+ * Find complete Tailwind color utility tokens in one bounded forward scan.
+ */
 export function findTailwindColorUtilities(
   text: string,
 ): TailwindColorUtility[] {
@@ -84,6 +86,9 @@ export function findTailwindColorUtilities(
   return utilities
 }
 
+/**
+ * Find a utility token boundary while respecting brackets and escapes.
+ */
 function findTokenEnd(
   text: string,
   start: number,
@@ -118,6 +123,9 @@ function findTokenEnd(
   return text.length
 }
 
+/**
+ * Detect a new selector without splitting decimal opacity modifiers.
+ */
 function isSelectorRestart(
   text: string,
   start: number,
@@ -138,6 +146,9 @@ function isSelectorRestart(
   )
 }
 
+/**
+ * Parse a color utility candidate with valid surrounding variants.
+ */
 function parseCandidate(
   candidate: string,
   start: number,
@@ -186,6 +197,9 @@ function parseCandidate(
   return null
 }
 
+/**
+ * Parse a utility prefix and value after validating important markers.
+ */
 function parseBody(
   input: string,
 ): Omit<TailwindColorUtility, 'end' | 'start' | 'variants'> | null {
@@ -217,6 +231,9 @@ function parseBody(
   return null
 }
 
+/**
+ * Parse a named, arbitrary, or custom-property color and optional opacity.
+ */
 function parseValueAndOpacity(
   input: string,
 ): Pick<TailwindColorUtility, 'kind' | 'opacity' | 'value'> | null {
@@ -249,6 +266,9 @@ function parseValueAndOpacity(
     : null
 }
 
+/**
+ * Split outside balanced brackets and parentheses, respecting escapes.
+ */
 function splitTopLevel(value: string, separator: string): string[] | null {
   const segments: string[] = []
   let segmentStart = 0
@@ -293,6 +313,9 @@ function splitTopLevel(value: string, separator: string): string[] | null {
   return segments
 }
 
+/**
+ * Split into at most two segments outside brackets and parentheses.
+ */
 function splitTopLevelOnce(
   value: string,
   separator: string,
@@ -301,6 +324,9 @@ function splitTopLevelOnce(
   return !segments || segments.length > 2 ? null : [segments[0], segments[1]]
 }
 
+/**
+ * Validate a Tailwind variant and its optional modifier.
+ */
 function isValidVariant(variant: string): boolean {
   const split = splitTopLevelOnce(variant, '/')
   if (!split) {
@@ -313,6 +339,9 @@ function isValidVariant(variant: string): boolean {
   return isValidVariantPart(base, true)
 }
 
+/**
+ * Validate a named, arbitrary, or permitted compound variant part.
+ */
 function isValidVariantPart(value: string, allowCompound: boolean): boolean {
   if (isWrapped(value, '[', ']')) {
     return value.length > 2
@@ -330,6 +359,9 @@ function isValidVariantPart(value: string, allowCompound: boolean): boolean {
   return /^[a-z][\w-]*$/iu.test(value)
 }
 
+/**
+ * Validate numeric, arbitrary, and custom-property opacity syntax.
+ */
 function isValidOpacity(value: string): boolean {
   if (!value) {
     return false
@@ -343,10 +375,16 @@ function isValidOpacity(value: string): boolean {
   return /^(?:\d+(?:\.\d+)?|\.\d+)%?$/u.test(value)
 }
 
+/**
+ * Check whether a value has the requested opening and closing delimiters.
+ */
 function isWrapped(value: string, open: string, close: string): boolean {
   return value.startsWith(open) && value.endsWith(close)
 }
 
+/**
+ * Decode arbitrary-value underscores while preserving escaped underscores.
+ */
 function decodeArbitraryValue(value: string): string {
   let decoded = ''
   for (let index = 0; index < value.length; index++) {

@@ -63,7 +63,9 @@ export class ContrastDiagnosticStore {
 
 export const contrastDiagnosticStore = new ContrastDiagnosticStore()
 
-/** Convert deterministic contrast pairs into extension-owned diagnostics. */
+/**
+ * Convert deterministic contrast pairs into extension-owned diagnostics.
+ */
 export function createContrastDiagnosticEntries(
   document: Pick<TextDocument, 'positionAt' | 'uri'>,
   pairs: readonly ResolvedContrastPair[],
@@ -103,6 +105,9 @@ export function createContrastDiagnosticEntries(
   return entries
 }
 
+/**
+ * Convert source offsets to a VS Code document range.
+ */
 function toRange(
   document: Pick<TextDocument, 'positionAt'>,
   range: { readonly end: number; readonly start: number },
@@ -113,10 +118,16 @@ function toRange(
   )
 }
 
+/**
+ * Serialize range endpoints into a diagnostic lookup key.
+ */
 function rangeKey(range: Pick<Range, 'end' | 'start'>): string {
   return `${range.start.line}:${range.start.character}:${range.end.line}:${range.end.character}`
 }
 
+/**
+ * Normalize a URI object or existing string into a lookup key.
+ */
 function uriKey(uri: Pick<Uri, 'toString'> | string): string {
   return typeof uri === 'string' ? uri : uri.toString()
 }

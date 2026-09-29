@@ -579,17 +579,26 @@ $value: { colorSpace: srgb, components: [1, 0, 0] }
   })
 })
 
+/**
+ * Return the source range of the first matching fixture substring.
+ */
 function rangeOf(text: string, value: string) {
   const start = text.indexOf(value)
   return { start, end: start + value.length }
 }
 
+/**
+ * Clear in-memory files and their read and stat mock history.
+ */
 function resetFiles(): void {
   files.clear()
   readFileMock.mockClear()
   statFileMock.mockClear()
 }
 
+/**
+ * Store a token file fixture with controllable size and document version.
+ */
 function setFile(
   filePath: string,
   text: string,

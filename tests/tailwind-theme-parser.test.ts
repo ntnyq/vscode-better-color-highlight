@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { parseTailwindThemeSource } from '../src/engine/strategies/tailwind-theme/parser'
 
+/**
+ * Return the range of a requested substring occurrence in fixture text.
+ */
 function rangeOf(text: string, value: string, occurrence = 0) {
   let start = -1
   for (let index = 0; index <= occurrence; index++) {

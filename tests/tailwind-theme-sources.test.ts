@@ -245,6 +245,7 @@ describe('loadTailwindThemeSources', () => {
       await expect(
         findTailwindThemeColors(text, context),
       ).resolves.toContainEqual({
+        editMode: 'read-only',
         start: text.indexOf('bg-brand'),
         end: text.indexOf('bg-brand') + 'bg-brand'.length,
         color: 'rgb(171, 205, 239)',
@@ -553,10 +554,16 @@ describe('loadTailwindThemeSources', () => {
   })
 })
 
+/**
+ * Import the Tailwind source loader after test mocks are installed.
+ */
 function importSources(): Promise<typeof Sources> {
   return import('../src/engine/strategies/tailwind-theme/sources')
 }
 
+/**
+ * Store theme source text and cache-validation metadata in the test filesystem.
+ */
 function setFile(
   path: string,
   text: string,
@@ -567,10 +574,16 @@ function setFile(
   stats.set(path, { documentVersion, mtimeMs, size: text.length })
 }
 
+/**
+ * Create a lookup key for a plain or workspace-relative glob pattern.
+ */
 function key(pattern: string | WorkspaceFindFilesPattern): string {
   return isString(pattern) ? pattern : `${pattern.basePath}\0${pattern.pattern}`
 }
 
+/**
+ * Create a read budget that treats file URIs and local paths as one identity.
+ */
 function createTestBudget(maximum: number) {
   const claimed = new Set<string>()
   return {

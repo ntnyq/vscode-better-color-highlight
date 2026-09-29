@@ -174,6 +174,7 @@ vi.mock(
 describe('useCommands', () => {
   beforeEach(() => {
     sourceText = '.box { color: #ff0000; }'
+    configSnapshot.enableHover = true
     configSnapshot.useARGB = false
   })
 
@@ -399,19 +400,23 @@ describe('useCommands', () => {
     expect(showInformationMessage).toHaveBeenCalledWith('Copied #ff0000')
   })
 
-  it('copies the active editor color when a copy command has no hover argument', async () => {
-    vi.resetModules()
-    registeredCommands.clear()
-    writeText.mockClear()
-    writeText.mockResolvedValue()
+  it.each([true, false])(
+    'copies the active editor color with enableHover=%s and no hover argument',
+    async enableHover => {
+      configSnapshot.enableHover = enableHover
+      vi.resetModules()
+      registeredCommands.clear()
+      writeText.mockClear()
+      writeText.mockResolvedValue()
 
-    const { useCommands } = await import('../src/extension/commands')
+      const { useCommands } = await import('../src/extension/commands')
 
-    useCommands()
-    await registeredCommands.get('color-highlight.copyColorAsRgb')?.()
+      useCommands()
+      await registeredCommands.get('color-highlight.copyColorAsRgb')?.()
 
-    expect(writeText).toHaveBeenCalledWith('rgb(255, 0, 0)')
-  })
+      expect(writeText).toHaveBeenCalledWith('rgb(255, 0, 0)')
+    },
+  )
 
   it('replaces the active editor color range when original text matches', async () => {
     vi.resetModules()

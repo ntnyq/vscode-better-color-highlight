@@ -16,7 +16,9 @@ import { createWorkspaceReadBudget } from '../../shared/workspace/read-budget'
 const DEFAULT_TRUSTED_CSS_VAR_SELECTORS = [':root', 'html', 'body', ':host']
 const MAX_CSS_DEFINITION_SOURCE_READS = 64
 
-/** Resolve a color-variable reference using the current language strategy. */
+/**
+ * Resolve a color-variable reference using the current language strategy.
+ */
 export async function resolveColorDefinition(
   text: string,
   offset: number,
@@ -79,6 +81,9 @@ export async function resolveColorDefinition(
   }
 }
 
+/**
+ * Recognize supported JSON and YAML design-token documents.
+ */
 function isStructuredTokenLanguage(
   languageId: string,
   filePath?: string,
@@ -90,6 +95,9 @@ function isStructuredTokenLanguage(
   )
 }
 
+/**
+ * Recognize JSON, JSONC, and documents with a .tokens extension.
+ */
 function isJsonTokenDocument(languageId: string, filePath?: string): boolean {
   return (
     languageId === 'json' ||
@@ -98,6 +106,9 @@ function isJsonTokenDocument(languageId: string, filePath?: string): boolean {
   )
 }
 
+/**
+ * Resolve a CSS variable definition using local and enabled trusted sources.
+ */
 async function resolveCssDefinition(
   text: string,
   offset: number,
@@ -133,6 +144,10 @@ async function resolveCssDefinition(
   })
 }
 
+/**
+ * Resolve a parsed token document's definition when its matching mode allows
+ * it.
+ */
 async function resolveDesignTokenDocument(
   document: Parameters<typeof resolveDesignTokenDefinition>[0] | null,
   offset: number,
@@ -157,7 +172,9 @@ async function resolveDesignTokenDocument(
   })
 }
 
-/** Match structured navigation availability to each detector's mode gates. */
+/**
+ * Match structured navigation availability to each detector's mode gates.
+ */
 function shouldResolveStructuredDesignTokens(
   languageId: string,
   mode: StrategyContext['designTokenJsonMode'],

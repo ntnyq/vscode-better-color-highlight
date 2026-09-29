@@ -469,10 +469,16 @@ describe('css variable source cache', () => {
   })
 })
 
+/**
+ * Import the CSS variable source loader after test mocks are installed.
+ */
 function importCssVarSources(): Promise<typeof CssVarSourcesModule> {
   return import(cssVarSourcesModulePath) as Promise<typeof CssVarSourcesModule>
 }
 
+/**
+ * Reset the mocked filesystem, call history, and loaded modules between tests.
+ */
 function resetTestState() {
   fileStats.clear()
   fileTexts.clear()
@@ -485,6 +491,9 @@ function resetTestState() {
   vi.resetModules()
 }
 
+/**
+ * Store CSS source text and stat metadata in the test filesystem.
+ */
 function setFile(filePath: string, text: string, mtimeMs = 1) {
   fileTexts.set(filePath, text)
   fileStats.set(filePath, {
@@ -493,6 +502,9 @@ function setFile(filePath: string, text: string, mtimeMs = 1) {
   })
 }
 
+/**
+ * Create a lookup key for a plain or workspace-relative glob pattern.
+ */
 function createGlobMatchKey(pattern: WorkspaceFindFilesMockPattern): string {
   if (isString(pattern)) {
     return pattern
@@ -501,6 +513,9 @@ function createGlobMatchKey(pattern: WorkspaceFindFilesMockPattern): string {
   return `${pattern.basePath}\0${pattern.pattern}`
 }
 
+/**
+ * Create a test read budget that charges each distinct identity once.
+ */
 function createTestBudget(maximum: number) {
   const claimed = new Set<string>()
   return {

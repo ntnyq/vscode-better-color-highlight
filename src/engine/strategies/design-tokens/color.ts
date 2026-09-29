@@ -128,6 +128,9 @@ function convertComponents(
   }
 }
 
+/**
+ * Validate DTCG HSL component bounds and convert the channels to RGB.
+ */
 function convertHslComponents(
   hue: number,
   saturation: number,
@@ -140,6 +143,9 @@ function convertHslComponents(
     : null
 }
 
+/**
+ * Validate DTCG HWB component bounds and convert the channels to RGB.
+ */
 function convertHwbComponents(
   hue: number,
   whiteness: number,
@@ -152,6 +158,9 @@ function convertHwbComponents(
     : null
 }
 
+/**
+ * Validate DTCG Lab lightness and convert the channels to RGB.
+ */
 function convertLabComponents(
   lightness: number,
   a: number,
@@ -160,6 +169,9 @@ function convertLabComponents(
   return isBoundedNumber(lightness, 0, 100) ? labToRgb(lightness, a, b) : null
 }
 
+/**
+ * Validate DTCG LCH component bounds and convert the channels to RGB.
+ */
 function convertLchComponents(
   lightness: number,
   chroma: number,
@@ -170,6 +182,9 @@ function convertLchComponents(
     : null
 }
 
+/**
+ * Validate DTCG Oklab lightness and convert the channels to RGB.
+ */
 function convertOklabComponents(
   lightness: number,
   a: number,
@@ -178,6 +193,9 @@ function convertOklabComponents(
   return isBoundedNumber(lightness, 0, 1) ? oklabToRgb(lightness, a, b) : null
 }
 
+/**
+ * Validate DTCG Oklch component bounds and convert the channels to RGB.
+ */
 function convertOklchComponents(
   lightness: number,
   chroma: number,
@@ -203,7 +221,9 @@ function resolveHexFallback(
   return rgb ? rgbString(rgb.r, rgb.g, rgb.b, alpha) : null
 }
 
-/** Check an inclusive finite numeric interval. */
+/**
+ * Check an inclusive finite numeric interval.
+ */
 function isBoundedNumber(
   value: number,
   minimum: number,
@@ -212,12 +232,16 @@ function isBoundedNumber(
   return Number.isFinite(value) && value >= minimum && value <= maximum
 }
 
-/** Check a hue in the DTCG [0, 360) interval. */
+/**
+ * Check a hue in the DTCG [0, 360) interval.
+ */
 function isHue(value: number): boolean {
   return Number.isFinite(value) && value >= 0 && value < 360
 }
 
-/** Check for a plain object-like record. */
+/**
+ * Check for a plain object-like record.
+ */
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }

@@ -1,5 +1,8 @@
 import { readFileSync } from 'node:fs'
 
+/**
+ * Read a UTF-8 fixture relative to this fixture module.
+ */
 function readFixture(relativePath: string): string {
   return readFileSync(new URL(relativePath, import.meta.url), 'utf8')
 }

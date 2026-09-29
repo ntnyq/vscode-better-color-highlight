@@ -23,7 +23,9 @@ export interface ContrastDiagnosticCommandPayload {
   readonly version: number
 }
 
-/** Create Quick Fixes for exact, current diagnostics owned by this extension. */
+/**
+ * Create Quick Fixes for exact, current diagnostics owned by this extension.
+ */
 export function createContrastCodeActionProvider(
   store: ContrastDiagnosticStore,
 ): CodeActionProvider {
@@ -81,6 +83,9 @@ export function createContrastCodeActionProvider(
   }
 }
 
+/**
+ * Create a quick fix command associated with a contrast diagnostic.
+ */
 function createAction(
   title: string,
   command: string,
@@ -93,6 +98,9 @@ function createAction(
   return action
 }
 
+/**
+ * Check whether a diagnostic belongs to this extension's contrast checks.
+ */
 function isOwnedDiagnostic(diagnostic: Diagnostic): boolean {
   return (
     diagnostic.source === CONTRAST_DIAGNOSTIC_SOURCE &&
@@ -100,6 +108,9 @@ function isOwnedDiagnostic(diagnostic: Diagnostic): boolean {
   )
 }
 
+/**
+ * Serialize a diagnostic range with its document URI and version.
+ */
 function toPayload(
   document: TextDocument,
   range: Range,

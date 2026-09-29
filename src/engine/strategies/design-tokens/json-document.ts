@@ -33,7 +33,9 @@ export function parseJsonDesignTokenDocument(
   }
 }
 
-/** Walk one token group or token object. */
+/**
+ * Walk one token group or token object.
+ */
 function walkObject(
   node: Node,
   path: readonly string[],
@@ -83,7 +85,9 @@ function walkObject(
   }
 }
 
-/** Choose the source expression highlighted for one token. */
+/**
+ * Choose the source expression highlighted for one token.
+ */
 function getTokenRange(
   valueNode: Node | undefined,
   referenceNode: Node | undefined,
@@ -106,7 +110,9 @@ function getTokenRange(
   return getNodeContentRange(valueNode)
 }
 
-/** Return a range excluding JSON string quote delimiters. */
+/**
+ * Return a range excluding JSON string quote delimiters.
+ */
 function getNodeContentRange(node: Node): DesignTokenRange {
   const delimiterWidth = node.type === 'string' ? 1 : 0
   return {
@@ -115,7 +121,9 @@ function getNodeContentRange(node: Node): DesignTokenRange {
   }
 }
 
-/** Read a string-valued object property. */
+/**
+ * Read a string-valued object property.
+ */
 function getStringProperty(node: Node, key: string): string | undefined {
   const valueNode = getPropertyValueNode(node, key)
   return valueNode?.type === 'string'
@@ -123,7 +131,9 @@ function getStringProperty(node: Node, key: string): string | undefined {
     : undefined
 }
 
-/** Find a property value node by key. */
+/**
+ * Find a property value node by key.
+ */
 function getPropertyValueNode(node: Node, key: string): Node | undefined {
   for (const property of getObjectProperties(node)) {
     const [keyNode, valueNode] = property.children ?? []
@@ -135,7 +145,9 @@ function getPropertyValueNode(node: Node, key: string): Node | undefined {
   return undefined
 }
 
-/** Get property child nodes from an object AST node. */
+/**
+ * Get property child nodes from an object AST node.
+ */
 function getObjectProperties(node: Node): readonly Node[] {
   return node.children?.filter(child => child.type === 'property') ?? []
 }

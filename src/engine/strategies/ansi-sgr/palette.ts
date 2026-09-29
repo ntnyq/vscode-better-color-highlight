@@ -42,7 +42,9 @@ const ANSI_PALETTE_NAMES = [
   'brightWhite',
 ] as const satisfies readonly (keyof AnsiPaletteOverrides)[]
 
-/** Resolve a conventional xterm 256-color palette index. */
+/**
+ * Resolve a conventional xterm 256-color palette index.
+ */
 export function resolveAnsiPaletteColor(
   index: number,
   overrides?: AnsiPaletteOverrides,
@@ -71,6 +73,9 @@ export function resolveAnsiPaletteColor(
   return [level, level, level]
 }
 
+/**
+ * Parse a six-digit HEX palette override into RGB bytes.
+ */
 function parseHexColor(value: string): RgbChannels | null {
   const match = value.match(
     /^#(?<red>[\da-f]{2})(?<green>[\da-f]{2})(?<blue>[\da-f]{2})$/iu,

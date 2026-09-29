@@ -32,6 +32,9 @@ const createTextEditorDecorationType = vi.fn<() => { dispose: DisposeFn }>(
 )
 const asyncStrategy = vi.fn<() => Promise<ColorMatch[]>>()
 
+/**
+ * Create a test ref that notifies direct and getter watchers on assignment.
+ */
 function createRef<T>(initialValue: T): TestRef<T> {
   let value = initialValue
   const watchers = new Set<(nextValue: T) => void>()
@@ -52,16 +55,25 @@ function createRef<T>(initialValue: T): TestRef<T> {
   }
 }
 
+/**
+ * Distinguish a test ref from a getter watch source.
+ */
 function isTestRef<T>(source: TestRef<T> | (() => T)): source is TestRef<T> {
   return !isFunction(source)
 }
 
+/**
+ * Run all registered getter watchers in the test harness.
+ */
 function triggerGetterWatchers() {
   for (const watcher of getterWatchers) {
     watcher()
   }
 }
 
+/**
+ * Register a test watcher with optional immediate delivery and disposal.
+ */
 function watchRef<T>(
   source: TestRef<T> | (() => T),
   listener: (value: T) => void,
@@ -116,6 +128,7 @@ vi.mock(
   import('reactive-vscode'),
   () =>
     ({
+      effectScope: () => ({ run: (fn: () => void) => fn(), stop: () => {} }),
       defineConfig: vi.fn<() => Record<string, unknown>>(() => configSnapshot),
       onDeactivate: onDeactivateMock,
       ref: createRef,
@@ -147,6 +160,9 @@ vi.mock(
     }) as unknown as Partial<typeof LoggerModule>,
 )
 
+/**
+ * Create a minimal document fixture for URI-scheme filtering.
+ */
 function createDocument(scheme: string) {
   return {
     uri: {
@@ -155,6 +171,9 @@ function createDocument(scheme: string) {
   } as Parameters<typeof shouldTrackDocument>[0]
 }
 
+/**
+ * Create a CSS editor fixture with mocked decoration support.
+ */
 function createEditor() {
   return {
     document: {
@@ -171,6 +190,9 @@ function createEditor() {
   }
 }
 
+/**
+ * Reset highlight mocks, watchers, configuration, and detector state.
+ */
 function setupTest() {
   vi.clearAllMocks()
   vi.resetModules()
@@ -202,6 +224,9 @@ function setupTest() {
   strategyList = [asyncStrategy]
 }
 
+/**
+ * Advance two microtask turns for pending highlight promises.
+ */
 async function flushPromises() {
   await Promise.resolve()
   await Promise.resolve()

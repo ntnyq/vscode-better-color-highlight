@@ -19,14 +19,23 @@ export function findYamlDesignTokens(
     readonly resolveDesignTokensAcrossFiles?: false
   },
 ): ColorMatch[]
+/**
+ * Detect YAML token colors with optional trusted external reference resolution.
+ */
 export function findYamlDesignTokens(
   text: string,
   context: StrategyContext & { readonly resolveDesignTokensAcrossFiles: true },
 ): ColorMatch[] | Promise<ColorMatch[]>
+/**
+ * Detect YAML token colors according to the document's resolution context.
+ */
 export function findYamlDesignTokens(
   text: string,
   context?: StrategyContext,
 ): ColorMatch[] | Promise<ColorMatch[]>
+/**
+ * Resolve YAML token colors locally or through trusted external references.
+ */
 export function findYamlDesignTokens(
   text: string,
   context?: StrategyContext,

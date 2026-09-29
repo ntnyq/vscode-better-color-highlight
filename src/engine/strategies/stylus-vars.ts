@@ -2,6 +2,7 @@ import type { ColorDefinitionTarget } from '../definition/types'
 import type { ColorMatch, StrategyContext } from '../detection'
 import { resolveShorthandColor } from './color-functions'
 import { resolveDirectColor } from './shared/direct-color'
+import { resolveVariableColors } from './shared/variable-colors'
 import {
   getCapturedVariableValue,
   resolveRangedVariableDefinition,
@@ -43,6 +44,9 @@ interface StylusVarDefinition {
   value: string
 }
 
+/**
+ * Collect Stylus variable definitions with name and value source ranges.
+ */
 function collectRangedStylusVarDefs(
   text: string,
   filePath: string,
@@ -96,60 +100,6 @@ function getStylusVarDefinition(
 }
 
 /**
- * Resolve Stylus variable values to colors, following nested variable references.
- *
- * @param value - The raw Stylus variable value
- * @param varDefs - All Stylus variable definitions in the document
- * @param currentName - Optional current variable name used as shorthand hint
- * @param seen - Variables already visited to avoid cycles
- * @returns The resolved rgb() color string, or null if no color is found
- */
-async function resolveVarValue(
-  value: string,
-  varDefs: Map<string, string>,
-  currentName?: string,
-  context?: StrategyContext,
-  seen = new Set<string>(),
-): Promise<string | null> {
-  const normalized = value.replaceAll(/!important\b/gu, '').trim()
-
-  const directColor = await resolveDirectColor(normalized, context)
-  if (directColor) {
-    return directColor
-  }
-
-  const shorthandColor = resolveShorthandColor(normalized, currentName)
-  if (shorthandColor) {
-    return shorthandColor
-  }
-
-  const refName = getExactStylusVarAlias(normalized)
-  if (refName) {
-    if (seen.has(refName)) {
-      return null
-    }
-
-    const refValue = varDefs.get(refName)
-    if (!refValue) {
-      return null
-    }
-
-    const resolved = await resolveVarValue(
-      refValue,
-      varDefs,
-      refName,
-      context,
-      new Set([...seen, refName]),
-    )
-    if (resolved) {
-      return resolved
-    }
-  }
-
-  return null
-}
-
-/**
  * Parse a value that is exactly one Stylus variable alias.
  *
  * @param value - Normalized Stylus value
@@ -160,6 +110,9 @@ function getExactStylusVarAlias(value: string): string | null {
   return match?.groups?.name ?? null
 }
 
+/**
+ * Find a known Stylus variable reference at an offset, excluding declarations.
+ */
 function findStylusVarUsageAtOffset(
   text: string,
   offset: number,
@@ -192,6 +145,9 @@ function findStylusVarUsageAtOffset(
   return null
 }
 
+/**
+ * Resolve a Stylus reference through local aliases to a color definition.
+ */
 export async function resolveStylusVarDefinition(
   text: string,
   offset: number,
@@ -234,16 +190,13 @@ export async function findStylusVars(
   const varDefs = new Map(
     [...rangedVarDefs].map(([name, definition]) => [name, definition.value]),
   )
-  const varColors = new Map<string, string>() // name -> resolved color
-
-  // Resolve variable values to colors
-  await Promise.all(
-    [...varDefs.entries()].map(async ([name, value]) => {
-      const color = await resolveVarValue(value, varDefs, name, context)
-      if (color) {
-        varColors.set(name, color)
-      }
-    }),
+  const varColors = await resolveVariableColors(
+    varDefs,
+    getExactStylusVarAlias,
+    async (value, name) =>
+      (await resolveDirectColor(value, context)) ??
+      resolveShorthandColor(value, name),
+    context?.signal,
   )
 
   if (varColors.size === 0) {

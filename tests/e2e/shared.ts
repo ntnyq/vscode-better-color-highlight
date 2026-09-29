@@ -82,7 +82,9 @@ export async function assertInMemoryCssHighlighting(): Promise<void> {
   )
 }
 
-/** Enable ANSI matching temporarily and verify object-config palette handling. */
+/**
+ * Enable ANSI matching temporarily and verify object-config palette handling.
+ */
 export async function assertInMemoryAnsiHighlighting(): Promise<void> {
   const config = workspace.getConfiguration(CONFIG_SECTION)
   const previousEnabledGlobal = config.inspect<boolean>(
@@ -133,7 +135,9 @@ export async function assertInMemoryAnsiHighlighting(): Promise<void> {
   }
 }
 
-/** Enable diagnostics temporarily and verify one deterministic CSS pair. */
+/**
+ * Enable diagnostics temporarily and verify one deterministic CSS pair.
+ */
 export async function assertInMemoryContrastDiagnostic(): Promise<void> {
   const config = workspace.getConfiguration(CONFIG_SECTION)
   const previousGlobalValue = config.inspect<boolean>(
@@ -220,6 +224,9 @@ export async function waitForHighlightState(
   )
 }
 
+/**
+ * Wait for a configuration value to match structurally within the retry limit.
+ */
 async function waitForConfigValue<T>(key: string, expected: T): Promise<void> {
   for (let attempt = 0; attempt < DIAGNOSTIC_WAIT_ATTEMPTS; attempt++) {
     const value = workspace.getConfiguration(CONFIG_SECTION).get<T>(key)
@@ -237,6 +244,9 @@ async function waitForConfigValue<T>(key: string, expected: T): Promise<void> {
   )
 }
 
+/**
+ * Wait for a document's diagnostic count or fail with the latest diagnostics.
+ */
 async function waitForDiagnostics(uri: Uri, expectedCount: number) {
   let latest = languages.getDiagnostics(uri)
 

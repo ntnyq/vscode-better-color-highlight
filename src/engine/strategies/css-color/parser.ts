@@ -93,7 +93,9 @@ const COLOR_FUNCTION_SPACES: ReadonlySet<CssColorSpace> = new Set([
   'xyz-d65',
 ])
 
-/** Scan complete, balanced CSS color function ranges. */
+/**
+ * Scan complete, balanced CSS color function ranges.
+ */
 export function scanCssColorFunctions(text: string): FunctionCandidate[] {
   const candidates: FunctionCandidate[] = []
   const stack: {
@@ -138,6 +140,9 @@ export function scanCssColorFunctions(text: string): FunctionCandidate[] {
   return candidates
 }
 
+/**
+ * Read a CSS function name immediately before an opening parenthesis.
+ */
 function getFunctionHead(
   text: string,
   openIndex: number,
@@ -152,11 +157,16 @@ function getFunctionHead(
     : undefined
 }
 
-/** Parse one complete static CSS color expression. */
+/**
+ * Parse one complete static CSS color expression.
+ */
 export function parseCssColorExpression(source: string): CssColorValue | null {
   return parseCssColorExpressionAtDepth(source, 0)
 }
 
+/**
+ * Parse a static CSS color expression within the nesting depth limit.
+ */
 function parseCssColorExpressionAtDepth(
   source: string,
   depth: number,
@@ -214,13 +224,17 @@ function parseCssColorExpressionAtDepth(
   }
 }
 
-/** Parse one complete hwb() expression. */
+/**
+ * Parse one complete hwb() expression.
+ */
 export function parseHwbColor(source: string): CssColorValue | null {
   const envelope = parseFunctionEnvelope(source.trim())
   return envelope?.name === 'hwb' ? parseHwbArguments(envelope.args) : null
 }
 
-/** Format a parsed color for the extension's decoration contract. */
+/**
+ * Format a parsed color for the extension's decoration contract.
+ */
 export function formatCssColor(color: CssColorValue): string {
   const srgb = convertCssColor(color, 'srgb')
   const channels = srgb.channels.map((channel, index) =>
@@ -235,6 +249,9 @@ export function formatCssColor(color: CssColorValue): string {
   )
 }
 
+/**
+ * Extract a function name and arguments from one complete balanced expression.
+ */
 function parseFunctionEnvelope(
   source: string,
 ): { readonly args: string; readonly name: string } | null {
@@ -253,6 +270,9 @@ function parseFunctionEnvelope(
   return { args: source.slice(openIndex + 1, closeIndex), name }
 }
 
+/**
+ * Find a matching closing parenthesis while respecting quoted strings.
+ */
 function findMatchingParenthesis(text: string, openIndex: number): number {
   let depth = 0
   let quote: '"' | "'" | null = null
@@ -283,6 +303,9 @@ function findMatchingParenthesis(text: string, openIndex: number): number {
   return -1
 }
 
+/**
+ * Parse a CSS HEX literal into normalized sRGB channels and alpha.
+ */
 function parseHexColor(source: string): CssColorValue | null {
   if (!/^#[a-f\d]{3,4}(?:[a-f\d]{2}){0,2}$/iu.test(source)) {
     return null
@@ -297,6 +320,9 @@ function parseHexColor(source: string): CssColorValue | null {
     : null
 }
 
+/**
+ * Resolve a named CSS color or the transparent keyword into sRGB.
+ */
 function parseColorKeyword(source: string): CssColorValue | null {
   const normalized = source.toLowerCase()
   if (normalized === 'transparent') {
@@ -313,6 +339,9 @@ function parseColorKeyword(source: string): CssColorValue | null {
     : null
 }
 
+/**
+ * Parse modern or legacy RGB function arguments.
+ */
 function parseRgbFunction(args: string): CssColorValue | null {
   if (args.includes(',')) {
     return parseLegacyRgb(args)
@@ -326,6 +355,9 @@ function parseRgbFunction(args: string): CssColorValue | null {
   return createColorFromComponents('srgb', channels, parsed.alpha)
 }
 
+/**
+ * Parse comma-separated RGB arguments with consistent channel units.
+ */
 function parseLegacyRgb(args: string): CssColorValue | null {
   if (args.includes('/')) {
     return null
@@ -359,6 +391,9 @@ function parseLegacyRgb(args: string): CssColorValue | null {
     : null
 }
 
+/**
+ * Parse modern or legacy HSL function arguments.
+ */
 function parseHslFunction(args: string): CssColorValue | null {
   if (args.includes(',')) {
     return parseLegacyHsl(args)
@@ -375,6 +410,9 @@ function parseHslFunction(args: string): CssColorValue | null {
   return createColorFromComponents('hsl', channels, parsed.alpha)
 }
 
+/**
+ * Parse comma-separated HSL arguments with percentage saturation and lightness.
+ */
 function parseLegacyHsl(args: string): CssColorValue | null {
   if (args.includes('/')) {
     return null
@@ -392,6 +430,9 @@ function parseLegacyHsl(args: string): CssColorValue | null {
   return alpha ? createColorFromComponents('hsl', channels, alpha) : null
 }
 
+/**
+ * Parse modern HWB arguments with optional alpha.
+ */
 function parseHwbArguments(args: string): CssColorValue | null {
   if (args.includes(',')) {
     return null
@@ -408,6 +449,9 @@ function parseHwbArguments(args: string): CssColorValue | null {
   return createColorFromComponents('hwb', channels, parsed.alpha)
 }
 
+/**
+ * Parse Lab-family arguments using channel-specific percentage scales.
+ */
 function parseLabLikeFunction(
   space: 'lab' | 'lch' | 'oklab' | 'oklch',
   args: string,
@@ -430,6 +474,9 @@ function parseLabLikeFunction(
   return createColorFromComponents(space, channels, parsed.alpha)
 }
 
+/**
+ * Return the value represented by 100 percent for a Lab-family channel.
+ */
 function getLabPercentageScale(
   space: 'lab' | 'lch' | 'oklab' | 'oklch',
   index: number,
@@ -446,6 +493,9 @@ function getLabPercentageScale(
   return 0.4
 }
 
+/**
+ * Parse color() arguments in a supported explicit color space.
+ */
 function parseColorSpaceFunction(args: string): CssColorValue | null {
   if (args.includes(',')) {
     return null
@@ -477,6 +527,9 @@ function parseColorSpaceFunction(args: string): CssColorValue | null {
   )
 }
 
+/**
+ * Parse three whitespace-separated channels and optional slash alpha.
+ */
 function parseModernArguments(args: string): {
   readonly alpha: ParsedComponent
   readonly channels: readonly [string, string, string]
@@ -505,6 +558,9 @@ function parseModernArguments(args: string): {
   }
 }
 
+/**
+ * Parse an RGB number or percentage into a normalized component.
+ */
 function parseRgbComponent(source: string): ParsedComponent | null {
   const percentage = parsePercentage(source)
   if (percentage) {
@@ -514,6 +570,9 @@ function parseRgbComponent(source: string): ParsedComponent | null {
   return number ? { ...number, value: number.value / 255 } : null
 }
 
+/**
+ * Parse a hue angle into degrees while preserving allowed missing values.
+ */
 function parseAngle(source: string, allowNone = true): ParsedComponent | null {
   if (allowNone && source.toLowerCase() === 'none') {
     return { missing: true, value: 0 }
@@ -539,6 +598,9 @@ function parseAngle(source: string, allowNone = true): ParsedComponent | null {
   }
 }
 
+/**
+ * Parse a numeric component or an allowed none keyword.
+ */
 function parseNumber(source: string, allowNone = true): ParsedComponent | null {
   if (allowNone && source.toLowerCase() === 'none') {
     return { missing: true, value: 0 }
@@ -548,6 +610,9 @@ function parseNumber(source: string, allowNone = true): ParsedComponent | null {
     : null
 }
 
+/**
+ * Parse a percentage as a fraction while preserving allowed missing values.
+ */
 function parsePercentage(
   source: string,
   allowNone = true,
@@ -561,6 +626,9 @@ function parsePercentage(
     : null
 }
 
+/**
+ * Parse a number or scale a percentage to the channel's reference range.
+ */
 function parseNumberOrPercentage(
   source: string,
   percentageScale: number,
@@ -572,6 +640,9 @@ function parseNumberOrPercentage(
   return parseNumber(source)
 }
 
+/**
+ * Normalize a percentage-like component expressed as a number or percentage.
+ */
 function parsePercentLikeComponent(source: string): ParsedComponent | null {
   const percentage = parsePercentage(source)
   if (percentage) {
@@ -581,6 +652,9 @@ function parsePercentLikeComponent(source: string): ParsedComponent | null {
   return number ? { ...number, value: number.value / 100 } : null
 }
 
+/**
+ * Parse and clamp alpha while preserving allowed missing values.
+ */
 function parseAlpha(
   source: string,
   allowNone: boolean,
@@ -593,10 +667,16 @@ function parseAlpha(
   return number ? { ...number, value: clamp(number.value, 0, 1) } : null
 }
 
+/**
+ * Create a fully opaque alpha component that is not missing.
+ */
 function defaultAlpha(): ParsedComponent {
   return { missing: false, value: 1 }
 }
 
+/**
+ * Create a color from finite parsed channels and their missing-value flags.
+ */
 function createColorFromComponents(
   space: CssColorSpace,
   components: readonly (ParsedComponent | null)[],
@@ -620,6 +700,9 @@ function createColorFromComponents(
   )
 }
 
+/**
+ * Resolve color-mix() items in the requested space with weighted alpha.
+ */
 function parseColorMixFunction(
   args: string,
   depth: number,
@@ -668,6 +751,9 @@ function parseColorMixFunction(
   }
 }
 
+/**
+ * Parse a supported interpolation space and optional polar hue method.
+ */
 function parseInterpolationMethod(source: string): {
   readonly hueMethod: HueInterpolationMethod
   readonly space: CssColorSpace
@@ -691,6 +777,9 @@ function parseInterpolationMethod(source: string): {
   return { hueMethod, space: space as CssColorSpace }
 }
 
+/**
+ * Parse a mix color with an optional leading or trailing percentage.
+ */
 function parseMixItem(source: string, depth: number): MixItem | null {
   const suffix = source.match(MIX_PERCENTAGE_SUFFIX_REGEX)
   const prefix = source.match(MIX_PERCENTAGE_PREFIX_REGEX)
@@ -712,6 +801,9 @@ function parseMixItem(source: string, depth: number): MixItem | null {
   return { color, percentage: percentage * 100 }
 }
 
+/**
+ * Distribute omitted mix weights and compute normalized weights and alpha.
+ */
 function normalizeMixPercentages(items: readonly MixItem[]): {
   readonly alphaMultiplier: number
   readonly items: readonly WeightedColor[]
@@ -746,6 +838,9 @@ function normalizeMixPercentages(items: readonly MixItem[]): {
   }
 }
 
+/**
+ * Interpolate colors with missing-component carryover and premultiplied alpha.
+ */
 function interpolateColors(
   first: CssColorValue,
   second: CssColorValue,
@@ -803,6 +898,9 @@ function interpolateColors(
   ])
 }
 
+/**
+ * Adjust hue endpoints in place for the selected interpolation direction.
+ */
 function fixupHues(
   first: ColorChannels,
   second: ColorChannels,
@@ -842,6 +940,9 @@ function fixupHues(
   }
 }
 
+/**
+ * Split CSS arguments outside parentheses and quoted strings.
+ */
 function splitTopLevel(source: string, separator: ',' | '/'): string[] {
   const parts: string[] = []
   let depth = 0
@@ -876,10 +977,16 @@ function splitTopLevel(source: string, separator: ',' | '/'): string[] {
   return parts
 }
 
+/**
+ * Linearly interpolate between two channel values.
+ */
 function interpolate(first: number, second: number, progress: number): number {
   return first + (second - first) * progress
 }
 
+/**
+ * Constrain a number to the inclusive minimum and maximum bounds.
+ */
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(Math.max(value, minimum), maximum)
 }

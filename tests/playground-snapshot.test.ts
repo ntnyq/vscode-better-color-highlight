@@ -97,14 +97,23 @@ const snapshotConfig: NestedScopedConfigs = {
   debug: false,
 }
 
+/**
+ * Map a playground file extension to a language, defaulting to plaintext.
+ */
 function getLanguageId(fileName: string): string {
   return EXTENSION_LANGUAGE_MAP.get(extname(fileName)) ?? 'plaintext'
 }
 
+/**
+ * Resolve the stored snapshot path for a playground file.
+ */
 function getSnapshotPath(fileName: string): string {
   return join(SNAPSHOT_DIR, `${fileName}.snap`)
 }
 
+/**
+ * Convert a source offset into one-based snapshot line and column values.
+ */
 function getLineColumn(text: string, offset: number) {
   const before = text.slice(0, offset)
   const lines = before.split('\n')
@@ -114,10 +123,17 @@ function getLineColumn(text: string, offset: number) {
   }
 }
 
+/**
+ * Arbitrate duplicate and overlapping matches into source order for snapshots.
+ */
 function dedupeAndSortMatches(matches: ColorMatch[]) {
   return arbitrateColorMatches(matches)
 }
 
+/**
+ * Detect playground colors and serialize their source positions and
+ * decorations.
+ */
 async function collectFileSnapshot(fileName: string) {
   const filePath = join(PLAYGROUND_DIR, fileName)
   const text = await readFile(filePath, 'utf8')

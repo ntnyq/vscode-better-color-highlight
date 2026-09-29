@@ -67,12 +67,16 @@ const COMPONENT_CATEGORIES: Readonly<
   'xyz-d65': RGB_COMPONENTS,
 }
 
-/** Whether a CSS color space uses a cylindrical hue component. */
+/**
+ * Whether a CSS color space uses a cylindrical hue component.
+ */
 export function isPolarColorSpace(space: CssColorSpace): boolean {
   return POLAR_SPACES.has(space)
 }
 
-/** Index of a polar color space's hue channel. */
+/**
+ * Index of a polar color space's hue channel.
+ */
 export function getHueChannelIndex(space: CssColorSpace): number | null {
   switch (space) {
     case 'hsl':
@@ -89,7 +93,9 @@ export function getHueChannelIndex(space: CssColorSpace): number | null {
   }
 }
 
-/** Convert a high-precision color value without clipping intermediate channels. */
+/**
+ * Convert a high-precision color value without clipping intermediate channels.
+ */
 export function convertCssColor(
   color: CssColorValue,
   targetSpace: CssColorSpace,
@@ -118,6 +124,9 @@ export function convertCssColor(
   }
 }
 
+/**
+ * Convert channels directly where supported or through XYZ D65.
+ */
 function convertChannels(
   sourceSpace: CssColorSpace,
   targetSpace: CssColorSpace,
@@ -138,7 +147,9 @@ function convertChannels(
   return fromXyzD65(targetSpace, toXyzD65(sourceSpace, channels))
 }
 
-/** Create an opaque or translucent color with no missing components. */
+/**
+ * Create an opaque or translucent color with no missing components.
+ */
 export function createCssColor(
   space: CssColorSpace,
   channels: ColorChannels,
@@ -148,11 +159,16 @@ export function createCssColor(
   return { alpha, channels, missing, space }
 }
 
-/** Normalize a hue to the [0, 360) interval. */
+/**
+ * Normalize a hue to the [0, 360) interval.
+ */
 export function normalizeHue(value: number): number {
   return ((value % 360) + 360) % 360
 }
 
+/**
+ * Transfer missing-component flags between analogous color-space channels.
+ */
 function convertMissingComponents(
   sourceSpace: CssColorSpace,
   targetSpace: CssColorSpace,
@@ -196,6 +212,9 @@ function convertMissingComponents(
   return missing
 }
 
+/**
+ * Combine explicit missing flags with powerless components for interpolation.
+ */
 function getEffectiveMissing(color: CssColorValue): MissingColorComponents {
   const missing = [...color.missing] as MissingColorComponents
   const powerless = getPowerlessComponents(color.space, color.channels)
@@ -205,6 +224,9 @@ function getEffectiveMissing(color: CssColorValue): MissingColorComponents {
   return missing
 }
 
+/**
+ * Identify hue components that have no effect at the current channel values.
+ */
 function getPowerlessComponents(
   space: CssColorSpace,
   channels: ColorChannels,
@@ -228,6 +250,9 @@ function getPowerlessComponents(
   return missing
 }
 
+/**
+ * Convert supported color-space channels to XYZ with a D65 white point.
+ */
 function toXyzD65(
   space: CssColorSpace,
   channels: ColorChannels,
@@ -317,6 +342,9 @@ function toXyzD65(
   }
 }
 
+/**
+ * Convert XYZ D65 channels to a supported target color space.
+ */
 function fromXyzD65(space: CssColorSpace, xyz: ColorChannels): ColorChannels {
   switch (space) {
     case 'srgb': {
@@ -396,6 +424,9 @@ function fromXyzD65(space: CssColorSpace, xyz: ColorChannels): ColorChannels {
   }
 }
 
+/**
+ * Transform linear sRGB channels to XYZ D65.
+ */
 function linearSrgbToXyz(channels: ColorChannels): ColorChannels {
   return multiplyMatrixAndVector(
     [
@@ -407,6 +438,9 @@ function linearSrgbToXyz(channels: ColorChannels): ColorChannels {
   )
 }
 
+/**
+ * Transform XYZ D65 channels to linear sRGB.
+ */
 function xyzToLinearSrgb(xyz: ColorChannels): ColorChannels {
   return multiplyMatrixAndVector(
     [
@@ -418,6 +452,9 @@ function xyzToLinearSrgb(xyz: ColorChannels): ColorChannels {
   )
 }
 
+/**
+ * Adapt XYZ channels from the D50 white point to D65.
+ */
 function adaptD50ToD65(xyz: ColorChannels): ColorChannels {
   return multiplyMatrixAndVector(
     [
@@ -429,6 +466,9 @@ function adaptD50ToD65(xyz: ColorChannels): ColorChannels {
   )
 }
 
+/**
+ * Adapt XYZ channels from the D65 white point to D50.
+ */
 function adaptD65ToD50(xyz: ColorChannels): ColorChannels {
   return multiplyMatrixAndVector(
     [
@@ -440,6 +480,9 @@ function adaptD65ToD50(xyz: ColorChannels): ColorChannels {
   )
 }
 
+/**
+ * Convert Lab channels to XYZ using the D50 reference white.
+ */
 function labToXyzD50([lightness, a, b]: ColorChannels): ColorChannels {
   const fy = (lightness + 16) / 116
   const fx = fy + a / 500
@@ -449,6 +492,9 @@ function labToXyzD50([lightness, a, b]: ColorChannels): ColorChannels {
   ) as ColorChannels
 }
 
+/**
+ * Convert XYZ D50 channels to Lab.
+ */
 function xyzD50ToLab(xyz: ColorChannels): ColorChannels {
   const [fx, fy, fz] = xyz.map((coordinate, index) =>
     labF(coordinate / D50_REFERENCE_WHITE[index]),
@@ -456,11 +502,17 @@ function xyzD50ToLab(xyz: ColorChannels): ColorChannels {
   return [116 * fy - 16, 500 * (fx - fy), 200 * (fy - fz)]
 }
 
+/**
+ * Convert polar lightness, chroma, and hue to Cartesian Lab-family channels.
+ */
 function lchToLab([lightness, chroma, hue]: ColorChannels): ColorChannels {
   const radians = (hue * Math.PI) / 180
   return [lightness, chroma * Math.cos(radians), chroma * Math.sin(radians)]
 }
 
+/**
+ * Convert Cartesian Lab-family channels to lightness, chroma, and hue.
+ */
 function labToLch([lightness, a, b]: ColorChannels): ColorChannels {
   return [
     lightness,
@@ -469,6 +521,9 @@ function labToLch([lightness, a, b]: ColorChannels): ColorChannels {
   ]
 }
 
+/**
+ * Convert Oklab channels to linear sRGB without gamut clipping.
+ */
 function oklabToLinearSrgb([lightness, a, b]: ColorChannels): ColorChannels {
   const lPrime = lightness + 0.3963377774 * a + 0.2158037573 * b
   const mPrime = lightness - 0.1055613458 * a - 0.0638541728 * b
@@ -483,6 +538,9 @@ function oklabToLinearSrgb([lightness, a, b]: ColorChannels): ColorChannels {
   ]
 }
 
+/**
+ * Convert linear sRGB channels to Oklab.
+ */
 function linearSrgbToOklab([red, green, blue]: ColorChannels): ColorChannels {
   const l = Math.cbrt(
     0.4122214708 * red + 0.5363325363 * green + 0.0514459929 * blue,
@@ -500,6 +558,10 @@ function linearSrgbToOklab([red, green, blue]: ColorChannels): ColorChannels {
   ]
 }
 
+/**
+ * Convert HSL channels to normalized sRGB with bounded saturation and
+ * lightness.
+ */
 function hslToSrgb([hue, saturation, lightness]: ColorChannels): ColorChannels {
   const h = normalizeHue(hue) / 360
   const s = clamp(saturation, 0, 1)
@@ -515,6 +577,9 @@ function hslToSrgb([hue, saturation, lightness]: ColorChannels): ColorChannels {
   ) as ColorChannels
 }
 
+/**
+ * Convert normalized sRGB channels to HSL with hue expressed in degrees.
+ */
 function srgbToHsl([red, green, blue]: ColorChannels): ColorChannels {
   const max = Math.max(red, green, blue)
   const min = Math.min(red, green, blue)
@@ -537,6 +602,9 @@ function srgbToHsl([red, green, blue]: ColorChannels): ColorChannels {
   return [hue * 60, saturation, lightness]
 }
 
+/**
+ * Convert HWB channels to sRGB, normalizing excessive whiteness and blackness.
+ */
 function hwbToSrgb([hue, whiteness, blackness]: ColorChannels): ColorChannels {
   const white = clamp(whiteness, 0, 1)
   const black = clamp(blackness, 0, 1)
@@ -552,11 +620,17 @@ function hwbToSrgb([hue, whiteness, blackness]: ColorChannels): ColorChannels {
   ) as ColorChannels
 }
 
+/**
+ * Derive hue, whiteness, and blackness from normalized sRGB channels.
+ */
 function srgbToHwb(channels: ColorChannels): ColorChannels {
   const [hue] = srgbToHsl(channels)
   return [hue, Math.min(...channels), 1 - Math.max(...channels)]
 }
 
+/**
+ * Apply a three-by-three color conversion matrix to a channel vector.
+ */
 function multiplyMatrixAndVector(
   matrix: Matrix3x3,
   vector: ColorChannels,
@@ -574,6 +648,9 @@ function multiplyMatrixAndVector(
   ]
 }
 
+/**
+ * Decode an sRGB channel to linear light while preserving its sign.
+ */
 function srgbToLinear(value: number): number {
   const sign = Math.sign(value)
   const absolute = Math.abs(value)
@@ -585,6 +662,9 @@ function srgbToLinear(value: number): number {
   )
 }
 
+/**
+ * Encode a linear-light channel with the sRGB transfer function.
+ */
 function linearToSrgb(value: number): number {
   const sign = Math.sign(value)
   const absolute = Math.abs(value)
@@ -596,26 +676,41 @@ function linearToSrgb(value: number): number {
   )
 }
 
+/**
+ * Decode an A98 RGB channel to linear light while preserving its sign.
+ */
 function a98RgbToLinear(value: number): number {
   return Math.sign(value) * Math.abs(value) ** 2.19921875
 }
 
+/**
+ * Encode a linear-light channel with the A98 RGB transfer function.
+ */
 function linearToA98Rgb(value: number): number {
   return Math.sign(value) * Math.abs(value) ** (1 / 2.19921875)
 }
 
+/**
+ * Decode a ProPhoto RGB channel to linear light while preserving its sign.
+ */
 function prophotoToLinear(value: number): number {
   const sign = Math.sign(value)
   const absolute = Math.abs(value)
   return sign * (absolute <= 16 / 512 ? absolute / 16 : absolute ** 1.8)
 }
 
+/**
+ * Encode a linear-light channel with the ProPhoto RGB transfer function.
+ */
 function linearToProphoto(value: number): number {
   const sign = Math.sign(value)
   const absolute = Math.abs(value)
   return sign * (absolute <= 1 / 512 ? absolute * 16 : absolute ** (1 / 1.8))
 }
 
+/**
+ * Decode a Rec. 2020 channel to linear light while preserving its sign.
+ */
 function rec2020ToLinear(value: number): number {
   const alpha = 1.09929682680944
   const beta = 0.018053968510807
@@ -629,6 +724,9 @@ function rec2020ToLinear(value: number): number {
   )
 }
 
+/**
+ * Encode a linear-light channel with the Rec. 2020 transfer function.
+ */
 function linearToRec2020(value: number): number {
   const alpha = 1.09929682680944
   const beta = 0.018053968510807
@@ -640,6 +738,9 @@ function linearToRec2020(value: number): number {
   )
 }
 
+/**
+ * Apply the piecewise XYZ-to-Lab coordinate transform.
+ */
 function labF(value: number): number {
   const delta = 6 / 29
   return value > delta ** 3
@@ -647,11 +748,17 @@ function labF(value: number): number {
     : value / (3 * delta ** 2) + 4 / 29
 }
 
+/**
+ * Apply the inverse Lab-to-XYZ coordinate transform.
+ */
 function labFInv(value: number): number {
   const delta = 6 / 29
   return value > delta ? value ** 3 : 3 * delta ** 2 * (value - 4 / 29)
 }
 
+/**
+ * Compute an HSL-derived RGB channel from a wrapped hue fraction.
+ */
 function hueToRgb(p: number, q: number, rawHue: number): number {
   const hue = ((rawHue % 1) + 1) % 1
   if (hue < 1 / 6) {
@@ -666,10 +773,16 @@ function hueToRgb(p: number, q: number, rawHue: number): number {
   return p
 }
 
+/**
+ * Constrain a number to the inclusive minimum and maximum bounds.
+ */
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(Math.max(value, minimum), maximum)
 }
 
+/**
+ * Round conversion noise to twelve decimal places.
+ */
 function cleanFloatingNoise(value: number): number {
   return Number(value.toFixed(12))
 }

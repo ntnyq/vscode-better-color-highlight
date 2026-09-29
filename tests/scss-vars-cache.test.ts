@@ -291,6 +291,9 @@ describe('scss variable dependency cache', () => {
   })
 })
 
+/**
+ * Create a test read budget that charges each distinct identity once.
+ */
 function createTestBudget(maximum: number) {
   const claimed = new Set<string>()
   return {

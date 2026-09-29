@@ -63,7 +63,9 @@ interface PickOptions<T extends QuickPickItem> {
   ) => Promise<boolean> | boolean
 }
 
-/** Show the ephemeral workspace palette until the user navigates or cancels. */
+/**
+ * Show the ephemeral workspace palette until the user navigates or cancels.
+ */
 export async function showWorkspacePaletteQuickPick(
   palette: WorkspacePaletteResult,
   onContrast: (
@@ -107,7 +109,9 @@ export async function showWorkspacePaletteQuickPick(
   }
 }
 
-/** Ask which contrast role a palette-button selection should occupy. */
+/**
+ * Ask which contrast role a palette-button selection should occupy.
+ */
 export async function selectContrastRole(): Promise<
   'background' | 'cancel' | 'foreground'
 > {
@@ -124,7 +128,9 @@ export async function selectContrastRole(): Promise<
   return outcome.item.label === 'Background' ? 'background' : 'foreground'
 }
 
-/** Select one color group for a contrast role. */
+/**
+ * Select one color group for a contrast role.
+ */
 export async function selectContrastColor(
   palette: WorkspacePaletteResult,
   role: 'Background' | 'Foreground',
@@ -157,7 +163,9 @@ export type ContrastResultAction =
   | 'foreground'
   | 'rerun'
 
-/** Display one WCAG comparison and return the requested next action. */
+/**
+ * Display one WCAG comparison and return the requested next action.
+ */
 export async function showContrastResult(
   background: ContrastColorSelection,
   foreground: ContrastColorSelection,
@@ -239,6 +247,9 @@ export async function showContrastResult(
   }
 }
 
+/**
+ * Show color occurrences with copy actions and navigation back to the palette.
+ */
 async function showOccurrenceQuickPick(
   group: WorkspaceColorGroup,
 ): Promise<'back' | 'cancel' | 'done'> {
@@ -278,6 +289,9 @@ async function showOccurrenceQuickPick(
   }
 }
 
+/**
+ * Reveal an occurrence only if its file and original source text still match.
+ */
 async function navigateToOccurrence(
   occurrence: WorkspaceColorOccurrence,
 ): Promise<boolean> {
@@ -314,6 +328,9 @@ async function navigateToOccurrence(
   }
 }
 
+/**
+ * Create a palette picker item with color formats and occurrence actions.
+ */
 function toPaletteItem(group: WorkspaceColorGroup): PaletteItem {
   return {
     buttons: [copyButton, contrastButton],
@@ -325,12 +342,18 @@ function toPaletteItem(group: WorkspaceColorGroup): PaletteItem {
   }
 }
 
+/**
+ * Describe the number of occurrences and distinct files for a color.
+ */
 function occurrenceDescription(group: WorkspaceColorGroup): string {
   const occurrences = group.occurrences.length
   const files = new Set(group.occurrences.map(item => item.uri)).size
   return `${occurrences} ${plural(occurrences, 'occurrence')} in ${files} ${plural(files, 'file')}`
 }
 
+/**
+ * Build the palette title with scanned, skipped, and truncated result counts.
+ */
 function paletteTitle(palette: WorkspacePaletteResult): string {
   const parts = [
     `${palette.scannedFileCount} ${plural(palette.scannedFileCount, 'file')}`,
@@ -347,10 +370,16 @@ function paletteTitle(palette: WorkspacePaletteResult): string {
   return `Workspace Palette — ${parts.join(' · ')}`
 }
 
+/**
+ * Choose the singular noun for one item and append s otherwise.
+ */
 function plural(count: number, singular: string): string {
   return count === 1 ? singular : `${singular}s`
 }
 
+/**
+ * Create a contrast threshold result row with pass or fail status.
+ */
 function resultRow(label: string, passed: boolean): QuickPickItem {
   return {
     description: passed ? 'Pass' : 'Fail',
@@ -359,6 +388,9 @@ function resultRow(label: string, passed: boolean): QuickPickItem {
   }
 }
 
+/**
+ * Show a quick pick and dispose its resources when an outcome is selected.
+ */
 function runQuickPick<T extends QuickPickItem>({
   buttons,
   items,

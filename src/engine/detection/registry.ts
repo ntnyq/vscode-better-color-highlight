@@ -80,7 +80,9 @@ function isJsonLanguage(languageId: string, filePath?: string): boolean {
   )
 }
 
-/** Check whether a language ID is YAML-like. */
+/**
+ * Check whether a language ID is YAML-like.
+ */
 function isYamlLanguage(languageId: string): boolean {
   return languageId === 'yaml' || languageId === 'yml'
 }

@@ -39,7 +39,9 @@ function isDartColorConstructorHex(
   return /Color\(\s*$/u.test(text.slice(Math.max(0, start - 16), start))
 }
 
-/** Whether a packed HEX literal belongs to a Compose Color constructor. */
+/**
+ * Whether a packed HEX literal belongs to a Compose Color constructor.
+ */
 function isComposeColorConstructorHex(
   text: string,
   start: number,

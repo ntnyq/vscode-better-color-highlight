@@ -97,6 +97,9 @@ export function getContrastColor(
   return whiteContrast >= blackContrast ? '#FFFFFF' : '#000000'
 }
 
+/**
+ * Linearize an sRGB byte-range channel, using the lookup table for integers.
+ */
 function channelToLinear(channel: number): number {
   const clamped = clamp(channel, 0, 255)
   if (Number.isInteger(clamped)) {
@@ -107,6 +110,9 @@ function channelToLinear(channel: number): number {
   return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4
 }
 
+/**
+ * Composite one foreground channel over a background using the output alpha.
+ */
 function compositeChannel(
   foreground: number,
   background: number,
@@ -121,6 +127,9 @@ function compositeChannel(
   )
 }
 
+/**
+ * Clamp RGB channels to byte bounds and alpha to zero through one.
+ */
 function clampRgba({ a, b, g, r }: RgbaColor): RgbaColor {
   return {
     r: clamp(r, 0, 255),
@@ -130,6 +139,9 @@ function clampRgba({ a, b, g, r }: RgbaColor): RgbaColor {
   }
 }
 
+/**
+ * Constrain a number to the inclusive minimum and maximum bounds.
+ */
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }

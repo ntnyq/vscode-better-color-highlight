@@ -7,6 +7,9 @@ import type {
 
 const red = { colorSpace: 'srgb', components: [1, 0, 0] }
 
+/**
+ * Create a token entry fixture with predictable definition and usage ranges.
+ */
 function entry(
   path: readonly string[],
   rangeStart: number,
@@ -20,6 +23,9 @@ function entry(
   }
 }
 
+/**
+ * Create a parsed token document fixture from its root and token entries.
+ */
 function document(
   root: unknown,
   tokens: readonly DesignTokenEntry[],
@@ -36,9 +42,9 @@ describe(resolveLocalDesignTokenColors, () => {
     ]
 
     expect(resolveLocalDesignTokenColors(document({}, tokens))).toStrictEqual([
-      { start: 0, end: 3, color: 'rgb(255, 0, 0)' },
-      { start: 10, end: 13, color: 'rgb(255, 0, 0)' },
-      { start: 20, end: 23, color: 'rgb(255, 0, 0)' },
+      { start: 0, end: 3, color: 'rgb(255, 0, 0)', editMode: 'read-only' },
+      { start: 10, end: 13, color: 'rgb(255, 0, 0)', editMode: 'read-only' },
+      { start: 20, end: 23, color: 'rgb(255, 0, 0)', editMode: 'read-only' },
     ])
   })
 
@@ -58,8 +64,8 @@ describe(resolveLocalDesignTokenColors, () => {
 
     expect(resolveLocalDesignTokenColors(document(root, tokens))).toStrictEqual(
       [
-        { start: 0, end: 3, color: 'rgb(255, 0, 0)' },
-        { start: 10, end: 13, color: 'rgb(255, 0, 0)' },
+        { start: 0, end: 3, color: 'rgb(255, 0, 0)', editMode: 'read-only' },
+        { start: 10, end: 13, color: 'rgb(255, 0, 0)', editMode: 'read-only' },
       ],
     )
   })
@@ -81,7 +87,7 @@ describe(resolveLocalDesignTokenColors, () => {
     ]
 
     expect(resolveLocalDesignTokenColors(document({}, tokens))).toStrictEqual([
-      { start: 0, end: 3, color: 'rgb(255, 0, 0)' },
+      { start: 0, end: 3, color: 'rgb(255, 0, 0)', editMode: 'read-only' },
     ])
   })
 })

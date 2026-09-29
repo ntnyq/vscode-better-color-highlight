@@ -69,7 +69,9 @@ const NON_COLOR_BACKGROUND_VALUES = new Set([
 const CSS_LENGTH_REGEX =
   /^[+-]?(?:\d+(?:\.\d+)?|\.\d+)(?:cap|ch|cm|dvb|dvh|dvi|dvw|em|ex|ic|in|lvb|lvh|lvi|lvw|lh|mm|pc|pt|px|q|rem|rlh|svb|svh|svi|svw|vb|vh|vi|vmax|vmin|vw)$/iu
 
-/** Resolve same-attribute Tailwind foreground/background utility pairs. */
+/**
+ * Resolve same-attribute Tailwind foreground/background utility pairs.
+ */
 export async function findTailwindContrastPairs(
   text: string,
   context: StrategyContext,
@@ -157,6 +159,10 @@ export async function findTailwindContrastPairs(
   return pairs
 }
 
+/**
+ * Take source-ordered utilities overlapping an attribute and advance the
+ * cursor.
+ */
 function takeAttributeUtilities(
   rawUtilities: readonly TailwindColorUtility[],
   initialIndex: number,
@@ -185,6 +191,9 @@ function takeAttributeUtilities(
   }
 }
 
+/**
+ * Group foreground and background utilities by variants within one attribute.
+ */
 function collectUtilityGroups(
   attribute: { readonly valueEnd: number; readonly valueStart: number },
   rawUtilities: readonly TailwindColorUtility[],
@@ -215,10 +224,16 @@ function collectUtilityGroups(
   return groups
 }
 
+/**
+ * Reject class text containing braces that may represent dynamic expressions.
+ */
 function isStaticRenderableClass(text: string): boolean {
   return !/[{}]/u.test(text)
 }
 
+/**
+ * Update a utility group's background color or image state in source order.
+ */
 function updateBackgroundGroup(
   group: UtilityGroup,
   utility: TailwindColorUtility,
@@ -237,6 +252,9 @@ function updateBackgroundGroup(
   }
 }
 
+/**
+ * Recognize text utilities that affect typography rather than color.
+ */
 function isKnownNonColorTextUtility(utility: TailwindColorUtility): boolean {
   if (utility.kind === 'arbitrary') {
     const value = normalizeArbitraryValue(utility.value)
@@ -255,6 +273,9 @@ function isKnownNonColorTextUtility(utility: TailwindColorUtility): boolean {
   )
 }
 
+/**
+ * Recognize background utilities for non-color properties.
+ */
 function isKnownNonColorBackgroundUtility(
   utility: TailwindColorUtility,
 ): boolean {
@@ -266,6 +287,9 @@ function isKnownNonColorBackgroundUtility(
   )
 }
 
+/**
+ * Check whether a background utility introduces an image or gradient.
+ */
 function isBackgroundImageUtility(utility: TailwindColorUtility): boolean {
   if (utility.kind === 'arbitrary') {
     const value = normalizeArbitraryValue(utility.value)
@@ -284,20 +308,32 @@ function isBackgroundImageUtility(utility: TailwindColorUtility): boolean {
   )
 }
 
+/**
+ * Check whether a background utility removes the background image.
+ */
 function isBackgroundImageReset(utility: TailwindColorUtility): boolean {
   return utility.kind === 'named'
     ? utility.value === 'none'
     : /^image:\s*none$/iu.test(normalizeArbitraryValue(utility.value))
 }
 
+/**
+ * Replace arbitrary-value underscores with spaces and trim the result.
+ */
 function normalizeArbitraryValue(value: string): string {
   return value.replaceAll('_', ' ').trim()
 }
 
+/**
+ * Create a lookup key from a utility's source range.
+ */
 function utilityKey(utility: TailwindColorUtility): string {
   return `${utility.start}:${utility.end}`
 }
 
+/**
+ * Attach original utility text and offsets to a resolved contrast color.
+ */
 function toContrastColor(
   text: string,
   resolved: ResolvedTailwindColorUtility,

@@ -30,7 +30,9 @@ export type DesignTokenLookup =
 const CURLY_REFERENCE_REGEX = /^\{(?<path>[^{}]+)\}$/u
 export const MAX_DESIGN_TOKEN_REFERENCE_DEPTH = 32
 
-/** Create an indexed token source shared by color and definition resolution. */
+/**
+ * Create an indexed token source shared by color and definition resolution.
+ */
 export function createDesignTokenSource(
   document: ParsedDesignTokenDocument,
   filePath = '',
@@ -48,7 +50,9 @@ export function createDesignTokenSource(
   }
 }
 
-/** Resolve all locally addressable color tokens in a parsed document. */
+/**
+ * Resolve all locally addressable color tokens in a parsed document.
+ */
 export function resolveLocalDesignTokenColors(
   document: ParsedDesignTokenDocument,
 ): ColorMatch[] {
@@ -67,6 +71,7 @@ export function resolveLocalDesignTokenColors(
         start: token.range.start,
         end: token.range.end,
         color,
+        editMode: 'read-only',
       })
     }
   }
@@ -74,7 +79,9 @@ export function resolveLocalDesignTokenColors(
   return matches
 }
 
-/** Resolve one token through references that remain in the current source. */
+/**
+ * Resolve one token through references that remain in the current source.
+ */
 export function resolveLocalDesignToken(
   token: DesignTokenEntry,
   source: DesignTokenSource,
@@ -125,7 +132,9 @@ export function resolveLocalDesignToken(
   }
 }
 
-/** Resolve one local pointer to either a token or a plain document value. */
+/**
+ * Resolve one local pointer to either a token or a plain document value.
+ */
 export function resolveLocalDesignTokenPointer(
   source: DesignTokenSource,
   pointer: readonly string[],
@@ -147,7 +156,9 @@ export function resolveLocalDesignTokenPointer(
   return value.found ? { kind: 'value', value: value.value } : null
 }
 
-/** Find a token using the source's shared semantic path index. */
+/**
+ * Find a token using the source's shared semantic path index.
+ */
 export function findDesignToken(
   source: DesignTokenSource,
   path: readonly string[],
@@ -161,7 +172,9 @@ export function findDesignToken(
   return token ? { status: 'found', token } : { status: 'ambiguous' }
 }
 
-/** Parse an exact complete-token curly reference. */
+/**
+ * Parse an exact complete-token curly reference.
+ */
 export function getDesignTokenCurlyReferencePath(
   value: unknown,
 ): string[] | null {
@@ -172,7 +185,9 @@ export function getDesignTokenCurlyReferencePath(
   return path ? path.split('.') : null
 }
 
-/** Parse an RFC 6901 pointer encoded as a URI fragment. */
+/**
+ * Parse an RFC 6901 pointer encoded as a URI fragment.
+ */
 export function parseDesignTokenPointer(reference: string): string[] | null {
   if (reference === '#') {
     return []
@@ -190,7 +205,9 @@ export function parseDesignTokenPointer(reference: string): string[] | null {
   }
 }
 
-/** Return the semantic token path addressed by a `$value` or `$ref` pointer. */
+/**
+ * Return the semantic token path addressed by a `$value` or `$ref` pointer.
+ */
 export function getDesignTokenPointerPath(
   pointer: readonly string[],
 ): readonly string[] | null {
@@ -201,7 +218,9 @@ export function getDesignTokenPointerPath(
   return path.at(-1) === '$root' ? path.slice(0, -1) : path
 }
 
-/** Navigate a plain document value with decoded pointer segments. */
+/**
+ * Navigate a plain document value with decoded pointer segments.
+ */
 export function resolveDesignTokenPointerValue(
   root: unknown,
   segments: readonly string[],
@@ -223,7 +242,9 @@ export function resolveDesignTokenPointerValue(
   return { found: true, value: current }
 }
 
-/** Apply an explicit alias type while rejecting known mismatches. */
+/**
+ * Apply an explicit alias type while rejecting known mismatches.
+ */
 export function mergeDesignTokenType(
   explicitType: string | undefined,
   resolved: ResolvedDesignToken | null,
@@ -237,7 +258,9 @@ export function mergeDesignTokenType(
   return { ...resolved, type: explicitType ?? resolved.type }
 }
 
-/** Create a cycle key that remains unique across source files. */
+/**
+ * Create a cycle key that remains unique across source files.
+ */
 export function createDesignTokenCycleKey(
   filePath: string,
   path: readonly string[],
@@ -245,10 +268,16 @@ export function createDesignTokenCycleKey(
   return `${filePath}\0${createPathKey(path)}`
 }
 
+/**
+ * Serialize token path segments into an unambiguous lookup key.
+ */
 function createPathKey(path: readonly string[]): string {
   return JSON.stringify(path)
 }
 
+/**
+ * Check whether a value is a non-null object other than an array.
+ */
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }

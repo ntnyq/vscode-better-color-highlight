@@ -1,4 +1,5 @@
 import {
+  effectScope,
   useVisibleTextEditors,
   useDocumentText,
   onDeactivate,
@@ -43,6 +44,9 @@ interface HighlightRunCancellation {
   readonly signal: CancellationSignal
 }
 
+/**
+ * Create a cancellable signal for one color highlight run.
+ */
 function createHighlightRunCancellation(): HighlightRunCancellation {
   let isCancellationRequested = false
 
@@ -58,6 +62,9 @@ function createHighlightRunCancellation(): HighlightRunCancellation {
   }
 }
 
+/**
+ * Log active detection failures and invalidate their completed-run signature.
+ */
 function handleHighlightRunError(
   error: unknown,
   cancellation: HighlightRunCancellation,
@@ -71,6 +78,9 @@ function handleHighlightRunError(
   return undefined
 }
 
+/**
+ * Clear a completed run's cancellation handle while preserving newer runs.
+ */
 function retainActiveCancellation(
   activeCancellation: HighlightRunCancellation | undefined,
   completedCancellation: HighlightRunCancellation,
@@ -80,6 +90,9 @@ function retainActiveCancellation(
     : activeCancellation
 }
 
+/**
+ * Log retained match and color counts when highlight results were truncated.
+ */
 function logHighlightTruncation(
   filePath: string,
   detectedMatchCount: number,
@@ -323,7 +336,10 @@ export function useColorHighlight(
         const cache = new DecorationTypeCache()
         const disposables: (() => void)[] = []
 
-        setupEditorTracking(editor, cache, disposables, dependencyRevision)
+        const scope = effectScope(true)
+        scope.run(() => {
+          setupEditorTracking(editor, cache, disposables, dependencyRevision)
+        })
 
         editorStates.set(key, {
           cache,
@@ -332,6 +348,7 @@ export function useColorHighlight(
             for (const fn of disposables) {
               fn()
             }
+            scope.stop()
           },
         })
       }

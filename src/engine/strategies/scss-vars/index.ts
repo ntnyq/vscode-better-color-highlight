@@ -17,6 +17,7 @@ import type {
   StrategyContext,
 } from '../../detection'
 import { resolveDirectColor } from '../shared/direct-color'
+import { resolveVariableColors } from '../shared/variable-colors'
 import {
   getCapturedVariableValue,
   resolveRangedVariableDefinition,
@@ -102,52 +103,6 @@ interface ScssFileContentCacheEntry {
 const scssFileContentCache = new Map<string, ScssFileContentCacheEntry>()
 
 /**
- * Resolve SCSS variable values to colors, following nested variable references.
- *
- * @param value - The raw SCSS variable value
- * @param varDefs - All visible SCSS variable definitions
- * @param seen - Variables already visited to avoid cycles
- * @returns The resolved rgb() color string, or null if no color is found
- */
-async function resolveVarValue(
-  value: string,
-  varDefs: Map<string, string>,
-  context?: StrategyContext,
-  seen = new Set<string>(),
-): Promise<string | null> {
-  const normalized = value.replaceAll(/!important\b/gu, '').trim()
-
-  const directColor = await resolveDirectColor(normalized, context)
-  if (directColor) {
-    return directColor
-  }
-
-  const refName = getExactScssVarAlias(normalized)
-  if (refName) {
-    if (seen.has(refName)) {
-      return null
-    }
-
-    const refValue = varDefs.get(refName)
-    if (!refValue) {
-      return null
-    }
-
-    const resolved = await resolveVarValue(
-      refValue,
-      varDefs,
-      context,
-      new Set([...seen, refName]),
-    )
-    if (resolved) {
-      return resolved
-    }
-  }
-
-  return null
-}
-
-/**
  * Parse a value that is exactly one SCSS variable alias.
  *
  * @param value - Normalized SCSS value
@@ -203,6 +158,9 @@ interface ScssResolveState {
   filesRead: number
 }
 
+/**
+ * Initialize SCSS dependency resolution state from the strategy context.
+ */
 function createScssResolveState(context?: StrategyContext): ScssResolveState {
   return {
     resolvingFiles: new Set(context?.filePath ? [context.filePath] : []),
@@ -665,6 +623,9 @@ async function collectForwardedScssVarDefs(
   return varDefs
 }
 
+/**
+ * Check whether two SCSS definitions identify the same file and source ranges.
+ */
 function isSameScssVarDefinition(
   left: RangedVariableDefinition,
   right: RangedVariableDefinition,
@@ -859,6 +820,9 @@ async function collectEntryScssVarDefs(
   return varDefs
 }
 
+/**
+ * Project ranged SCSS definitions into a map of raw values.
+ */
 function toRawScssVarDefs(
   definitions: ReadonlyMap<string, RangedVariableDefinition>,
 ): Map<string, string> {
@@ -871,6 +835,9 @@ interface ScssVarToken extends VariableUsage {
   readonly namespace?: string
 }
 
+/**
+ * Find a possibly namespaced SCSS variable reference at a document offset.
+ */
 function findScssVarTokenAtOffset(
   text: string,
   offset: number,
@@ -901,7 +868,10 @@ function findScssVarTokenAtOffset(
   return null
 }
 
-/** Resolve the SCSS variable reference at an offset to its final color declaration. */
+/**
+ * Resolve the SCSS variable reference at an offset to its final color
+ * declaration.
+ */
 export async function resolveScssVarDefinition(
   text: string,
   offset: number,
@@ -968,20 +938,15 @@ export async function findScssVars(
     resolveState,
   )
   const varDefs = toRawScssVarDefs(rangedVarDefs)
-  const varColors = new Map<string, string>() // name (without $) -> resolved color
+  const varColors = await resolveVariableColors(
+    varDefs,
+    getExactScssVarAlias,
+    value => resolveDirectColor(value, context),
+    context?.signal,
+  )
   const modules = canResolveScssAcrossFiles(context)
     ? await collectUsedScssModules(text, context, resolveState)
     : []
-
-  // Resolve variable values to colors
-  await Promise.all(
-    [...varDefs.entries()].map(async ([name, value]) => {
-      const color = await resolveVarValue(value, varDefs, context)
-      if (color) {
-        varColors.set(name, color)
-      }
-    }),
-  )
 
   const moduleColors = await resolveScssModuleColors(modules, context)
 
@@ -1032,25 +997,20 @@ async function resolveScssModuleColors(
 ): Promise<Map<string, Map<string, string>>> {
   const moduleColors = new Map<string, Map<string, string>>()
 
-  await Promise.all(
-    modules.map(async module => {
-      const colors = new Map<string, string>()
-
-      const rawVarDefs = toRawScssVarDefs(module.varDefs)
-      await Promise.all(
-        [...rawVarDefs.entries()].map(async ([name, value]) => {
-          const color = await resolveVarValue(value, rawVarDefs, context)
-          if (color) {
-            colors.set(name, color)
-          }
-        }),
-      )
-
-      if (colors.size > 0) {
-        moduleColors.set(module.namespace, colors)
-      }
-    }),
-  )
+  for (const module of modules) {
+    if (context?.signal?.isCancellationRequested) {
+      return new Map()
+    }
+    const colors = await resolveVariableColors(
+      toRawScssVarDefs(module.varDefs),
+      getExactScssVarAlias,
+      value => resolveDirectColor(value, context),
+      context?.signal,
+    )
+    if (colors.size > 0) {
+      moduleColors.set(module.namespace, colors)
+    }
+  }
 
   return moduleColors
 }

@@ -4,7 +4,9 @@ import type { ColorMatch } from '../detection'
 const COMPOSE_ARGB_HEX_REGEX =
   /(?<prefix>^|[^\w.])(?<source>Color\(\s*(?<hex>0x[a-f\d]{8})(?:u?l)?\s*\))/giu
 
-/** Detect statically packed ARGB colors in Jetpack Compose constructors. */
+/**
+ * Detect statically packed ARGB colors in Jetpack Compose constructors.
+ */
 export function findComposeArgbHexColors(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
 

@@ -20,14 +20,23 @@ export function findJsonDesignTokens(
     readonly resolveDesignTokensAcrossFiles?: false
   },
 ): ColorMatch[]
+/**
+ * Detect JSON token colors with optional trusted external reference resolution.
+ */
 export function findJsonDesignTokens(
   text: string,
   context: StrategyContext & { readonly resolveDesignTokensAcrossFiles: true },
 ): ColorMatch[] | Promise<ColorMatch[]>
+/**
+ * Detect JSON token colors according to the document's matching mode.
+ */
 export function findJsonDesignTokens(
   text: string,
   context?: StrategyContext,
 ): ColorMatch[] | Promise<ColorMatch[]>
+/**
+ * Collect JSON string and structured token colors, resolving enabled aliases.
+ */
 export function findJsonDesignTokens(
   text: string,
   context?: StrategyContext,
@@ -111,7 +120,9 @@ export function findJsonDesignTokens(
   return dedupeMatches(matches)
 }
 
-/** Return the root path only when trusted cross-file resolution is enabled. */
+/**
+ * Return the root path only when trusted cross-file resolution is enabled.
+ */
 function getExternalFilePath(context?: StrategyContext): string | null {
   return context?.resolveDesignTokensAcrossFiles &&
     context.workspaceIsTrusted &&

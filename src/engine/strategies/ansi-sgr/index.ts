@@ -6,7 +6,9 @@ const ANSI_SGR_REGEX =
   // oxlint-disable-next-line eslint/no-control-regex -- Actual ESC characters are a supported ANSI introducer.
   /(?:\\(?:x1b|u001b|u\{1b\}|033|e)|\u001B)\[(?<parameters>[\d:;]{1,128})m/giu
 
-/** Detect ANSI SGR color escape sequences in source text. */
+/**
+ * Detect ANSI SGR color escape sequences in source text.
+ */
 export function findAnsiSgrColors(
   text: string,
   context?: StrategyContext,
@@ -41,6 +43,9 @@ export function findAnsiSgrColors(
   return matches
 }
 
+/**
+ * Check whether preceding backslashes escape an ANSI source introducer.
+ */
 function isEscapedSourceIntroducer(text: string, start: number): boolean {
   if (text[start] !== '\\') {
     return false

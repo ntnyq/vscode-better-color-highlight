@@ -14,7 +14,9 @@ interface DartColorConstructorCandidate {
   readonly start: number
 }
 
-/** Find balanced Dart color constructor ranges with one structural scan. */
+/**
+ * Find balanced Dart color constructor ranges with one structural scan.
+ */
 export function findDartColorConstructorRanges(
   text: string,
 ): DartColorConstructorRange[] {
@@ -80,6 +82,9 @@ export function findDartColorConstructorRanges(
   })
 }
 
+/**
+ * Record candidate closing parentheses without applying Dart lexical scopes.
+ */
 function findUnscopedParenthesisEnds(
   text: string,
   candidates: ReadonlySet<number>,
@@ -103,7 +108,9 @@ function findUnscopedParenthesisEnds(
   }
 }
 
-/** Skip Dart whitespace and comments, including nested block comments. */
+/**
+ * Skip Dart whitespace and comments, including nested block comments.
+ */
 export function skipDartTrivia(text: string, start: number): number {
   let index = start
 
@@ -123,7 +130,9 @@ export function skipDartTrivia(text: string, start: number): number {
   return index
 }
 
-/** Remove Dart comments while preserving separation between adjacent tokens. */
+/**
+ * Remove Dart comments while preserving separation between adjacent tokens.
+ */
 export function stripDartComments(text: string): string {
   let result = ''
   let index = 0
@@ -143,6 +152,9 @@ export function stripDartComments(text: string): string {
   return result
 }
 
+/**
+ * Locate supported Dart Color constructor heads and opening parentheses.
+ */
 function findDartColorConstructorCandidates(
   text: string,
 ): DartColorConstructorCandidate[] {
@@ -166,6 +178,9 @@ function findDartColorConstructorCandidates(
   return candidates
 }
 
+/**
+ * Find the end of a Dart line comment or nested block comment.
+ */
 function findDartCommentEnd(text: string, start: number): number | null {
   if (text[start] !== '/') {
     return null
@@ -203,6 +218,9 @@ function findDartCommentEnd(text: string, start: number): number | null {
   return index
 }
 
+/**
+ * Find a Dart string's end, accounting for raw and triple-quoted literals.
+ */
 function findDartStringEnd(text: string, start: number): number | null {
   const quote = text[start]
   if (quote !== "'" && quote !== '"') {

@@ -302,7 +302,9 @@ const V3_COLOR_SCALES = {
   ],
 } as const
 
-/** Create an isolated copy of the exact legacy base palette. */
+/**
+ * Create an isolated copy of the exact legacy base palette.
+ */
 export function createTailwindV3Palette(): Map<string, string> {
   const palette = new Map<string, string>([
     ['black', '#000000'],

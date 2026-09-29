@@ -87,6 +87,9 @@ const testConfig = {
   workspacePaletteInclude: '**/*',
 } satisfies NestedScopedConfigs
 
+/**
+ * Create a URI fixture with scheme and local file-path handling.
+ */
 function uri(value: string): TestUri {
   const scheme = value.slice(0, value.indexOf(':'))
   return {
@@ -97,6 +100,9 @@ function uri(value: string): TestUri {
   }
 }
 
+/**
+ * Create a clean text document fixture for workspace palette scans.
+ */
 function document(
   value: TestUri,
   text = '#ff0000',
@@ -110,10 +116,17 @@ function document(
   } as unknown as Vscode.TextDocument
 }
 
+/**
+ * Create a cancellation token fixture that remains active.
+ */
 function activeToken(): Vscode.CancellationToken {
   return { isCancellationRequested: false } as Vscode.CancellationToken
 }
 
+/**
+ * Run a trusted workspace palette scan with test defaults and optional
+ * overrides.
+ */
 async function scan(overrides: Partial<ScanWorkspacePaletteOptions> = {}) {
   const { scanWorkspacePalette } =
     await import('../src/features/workspace-palette/scanner')

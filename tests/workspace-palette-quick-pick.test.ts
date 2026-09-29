@@ -240,6 +240,9 @@ const red = {
   },
 } satisfies WorkspaceColorGroup
 
+/**
+ * Create a palette group fixture with one occurrence and display formats.
+ */
 function colorGroup(
   color: string,
   hex: string,

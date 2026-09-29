@@ -18,6 +18,9 @@ const DEPENDENCY_FILE_PATH_REGEX =
 const GLOB_CHARACTER_REGEX = /[*?[\]{}]/u
 const DEPENDENCY_INVALIDATION_DEBOUNCE_MS = 100
 
+/**
+ * Check whether any configured feature resolves dependencies across files.
+ */
 function isCrossFileResolutionEnabled(): boolean {
   return (
     config.resolveCssVariablesAcrossFiles ||
@@ -27,6 +30,9 @@ function isCrossFileResolutionEnabled(): boolean {
   )
 }
 
+/**
+ * Check whether a dependency path is relevant to enabled resolution features.
+ */
 function isRelevantDependency(path: string): boolean {
   return (
     ((config.resolveCssVariablesAcrossFiles ||
@@ -78,10 +84,18 @@ export function useColorDependencyRevision(): Readonly<Ref<number>> {
   }
 
   const stopConfigWatch = watch(
-    isCrossFileResolutionEnabled,
-    enabled => {
+    () =>
+      JSON.stringify([
+        config.resolveCssVariablesAcrossFiles,
+        config.resolveScssVariablesAcrossFiles,
+        config.resolveDesignTokensAcrossFiles,
+        config.cssVariablePaths,
+        config.scssLoadPaths,
+        config.tailwindStylesheetPaths,
+      ]),
+    () => {
       disposeWatcher()
-      if (!enabled) {
+      if (!isCrossFileResolutionEnabled()) {
         return
       }
 
@@ -112,7 +126,9 @@ export function useColorDependencyRevision(): Readonly<Ref<number>> {
   return revision
 }
 
-/** Build bounded watcher patterns for configured absolute dependency roots. */
+/**
+ * Build bounded watcher patterns for configured absolute dependency roots.
+ */
 function getExternalWatcherPatterns(): RelativePattern[] {
   const sources: { path: string; isDirectory: boolean }[] = []
   if (config.resolveScssVariablesAcrossFiles) {
@@ -153,7 +169,9 @@ function getExternalWatcherPatterns(): RelativePattern[] {
   return patterns
 }
 
-/** Resolve one configured absolute source to a bounded relative pattern. */
+/**
+ * Resolve one configured absolute source to a bounded relative pattern.
+ */
 function getExternalWatcherPattern(
   value: string,
   isDirectory: boolean,
@@ -186,7 +204,9 @@ function getExternalWatcherPattern(
   return { basePath: normalized, pattern: COLOR_DEPENDENCY_GLOB }
 }
 
-/** Convert a local path or URI string to a VS Code URI. */
+/**
+ * Convert a local path or URI string to a VS Code URI.
+ */
 function toWatcherUri(value: string): Uri {
   const isUri =
     !/^[a-z]:[/\\]/iu.test(value) && /^[a-z][\d+.a-z-]*:/iu.test(value)

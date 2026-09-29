@@ -3,14 +3,18 @@ import { NAMED_COLORS } from '../../../shared/constants'
 import { findColorFunctions } from '../color-functions'
 import { findHexRGBA } from '../hex'
 
-/** Resolve one complete CSS color value using the extension's color parsers. */
+/**
+ * Resolve one complete CSS color value using the extension's color parsers.
+ */
 export function resolveTailwindColorValue(
   value: string,
 ): Promise<string | null> {
   return Promise.resolve(resolveTailwindColorValueImmediately(value))
 }
 
-/** Synchronous resolver for the static base-palette detector. */
+/**
+ * Synchronous resolver for the static base-palette detector.
+ */
 export function resolveTailwindColorValueImmediately(
   value: string,
 ): string | null {

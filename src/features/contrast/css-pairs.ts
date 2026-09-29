@@ -64,7 +64,9 @@ interface CssBlockFrame {
   segmentStart: number
 }
 
-/** Resolve deterministic CSS declaration pairs from one bounded source. */
+/**
+ * Resolve deterministic CSS declaration pairs from one bounded source.
+ */
 export async function findCssContrastPairs(
   text: string,
   context: StrategyContext,
@@ -153,6 +155,9 @@ export async function findCssContrastPairs(
   })
 }
 
+/**
+ * Project embedded styles into CSS while preserving original source offsets.
+ */
 function createEmbeddedCssProjection(
   text: string,
   markup: MarkupContexts,
@@ -190,6 +195,9 @@ function createEmbeddedCssProjection(
   return projection.join('')
 }
 
+/**
+ * Check that an inline style value has no host expressions or exposed braces.
+ */
 function isStaticAttributeValue(
   text: string,
   attribute: StaticAttribute,
@@ -243,6 +251,9 @@ function isStaticAttributeValue(
   return true
 }
 
+/**
+ * Copy a source range into a projection without shifting its offsets.
+ */
 function copyProjectionRange(
   text: string,
   projection: string[],
@@ -254,7 +265,9 @@ function copyProjectionRange(
   }
 }
 
-/** Collect quoted static attributes while excluding script and attribute decoys. */
+/**
+ * Collect quoted static attributes while excluding script and attribute decoys.
+ */
 function collectBlockCandidatePairs(
   text: string,
   start: number,
@@ -347,6 +360,9 @@ function collectBlockCandidatePairs(
   )
 }
 
+/**
+ * Split a CSS block into top-level declarations and collect a contrast pair.
+ */
 function collectDeclarationPair(
   text: string,
   start: number,
@@ -414,6 +430,9 @@ function collectDeclarationPair(
   return collectCandidatePairFromSegments(text, segments, contextKey)
 }
 
+/**
+ * Select cascading color candidates unless rendering-dependent rules intervene.
+ */
 function collectCandidatePairFromSegments(
   text: string,
   segments: readonly ContrastRange[],
@@ -450,7 +469,9 @@ function collectCandidatePairFromSegments(
     : null
 }
 
-/** Select the later candidate unless an existing important value wins. */
+/**
+ * Select the later candidate unless an existing important value wins.
+ */
 function selectCascadingCandidate(
   current: CssCandidate | undefined,
   candidate: CssCandidate,
@@ -462,6 +483,9 @@ function selectCascadingCandidate(
   return candidate
 }
 
+/**
+ * Parse a declaration and retain a ranged candidate for contrast properties.
+ */
 function parseDeclaration(
   text: string,
   start: number,
@@ -549,6 +573,10 @@ function parseDeclaration(
   }
 }
 
+/**
+ * Run applicable CSS color detectors once, tolerating failures and
+ * cancellation.
+ */
 async function runCssDetectorsOnce(
   text: string,
   context: StrategyContext,
@@ -616,6 +644,9 @@ async function runCssDetectorsOnce(
   return results.flat()
 }
 
+/**
+ * Mask comments for named-color detection while preserving UTF-16 offsets.
+ */
 function createNamedColorProjection(text: string): string {
   // oxlint-disable-next-line unicorn/prefer-spread -- Spread collapses UTF-16 surrogate pairs and shifts source offsets.
   const projection = text.split('')
@@ -659,6 +690,9 @@ function createNamedColorProjection(text: string): string {
   return projection.join('')
 }
 
+/**
+ * Find the next carriage return or newline, or return -1.
+ */
 function findLineEnd(text: string, start: number): number {
   for (let index = start; index < text.length; index++) {
     if (text[index] === '\n' || text[index] === '\r') {
@@ -668,6 +702,9 @@ function findLineEnd(text: string, start: number): number {
   return -1
 }
 
+/**
+ * Index distinct detected colors by their exact source ranges.
+ */
 function indexMatchesByRange(
   matches: readonly ColorMatch[],
 ): ReadonlyMap<string, ReadonlySet<string>> {
@@ -681,6 +718,9 @@ function indexMatchesByRange(
   return indexed
 }
 
+/**
+ * Resolve a candidate only when its exact range has one detected color.
+ */
 function resolveCandidate(
   text: string,
   candidate: CssCandidate,
@@ -700,6 +740,9 @@ function resolveCandidate(
     : null
 }
 
+/**
+ * Check whether both colors parse and produce a determinate contrast result.
+ */
 function isDeterminate(
   foreground: ResolvedContrastColor,
   background: ResolvedContrastColor,

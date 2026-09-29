@@ -30,6 +30,9 @@ type ContrastColorPairSelection =
   | { readonly kind: 'cancel' }
   | ({ readonly kind: 'selected' } & ContrastColorPair)
 
+/**
+ * Scan and display workspace colors with optional contrast selection actions.
+ */
 export async function showWorkspacePalette(): Promise<void> {
   const palette = await scanPalette()
   if (!palette) {
@@ -56,6 +59,9 @@ export async function showWorkspacePalette(): Promise<void> {
   })
 }
 
+/**
+ * Validate contrast command input before starting the selection workflow.
+ */
 export async function checkWorkspaceColorContrast(
   input: ContrastCommandInput = {},
 ): Promise<void> {
@@ -66,6 +72,9 @@ export async function checkWorkspaceColorContrast(
   await runWorkspaceColorContrast(input)
 }
 
+/**
+ * Collect missing color selections and display repeatable contrast results.
+ */
 async function runWorkspaceColorContrast(
   input: ContrastCommandInput,
 ): Promise<void> {
@@ -125,6 +134,9 @@ async function runWorkspaceColorContrast(
   }
 }
 
+/**
+ * Validate optional colors and palette data supplied to the contrast command.
+ */
 function isContrastCommandInput(value: unknown): value is ContrastCommandInput {
   return (
     isRecord(value) &&
@@ -136,6 +148,9 @@ function isContrastCommandInput(value: unknown): value is ContrastCommandInput {
   )
 }
 
+/**
+ * Validate a serialized color selection and its optional source occurrence.
+ */
 function isContrastColorSelection(
   value: unknown,
 ): value is ContrastColorSelection {
@@ -147,6 +162,9 @@ function isContrastColorSelection(
   )
 }
 
+/**
+ * Validate palette groups, scan counts, and truncation flags.
+ */
 function isWorkspacePaletteResult(
   value: unknown,
 ): value is WorkspacePaletteResult {
@@ -161,6 +179,9 @@ function isWorkspacePaletteResult(
   )
 }
 
+/**
+ * Validate a palette group's color, occurrences, and presentation strings.
+ */
 function isWorkspaceColorGroup(value: unknown): value is WorkspaceColorGroup {
   if (
     !isRecord(value) ||
@@ -182,6 +203,9 @@ function isWorkspaceColorGroup(value: unknown): value is WorkspaceColorGroup {
   )
 }
 
+/**
+ * Validate a serialized color occurrence and its ordered source offsets.
+ */
 function isWorkspaceColorOccurrence(
   value: unknown,
 ): value is WorkspaceColorOccurrence {
@@ -196,10 +220,16 @@ function isWorkspaceColorOccurrence(
   )
 }
 
+/**
+ * Check whether an unknown value is a nonnegative integer.
+ */
 function isNonNegativeInteger(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0
 }
 
+/**
+ * Prompt for missing background and foreground colors with back navigation.
+ */
 async function selectContrastColorPair(
   palette: WorkspacePaletteResult,
   background: ContrastColorSelection | undefined,
@@ -231,6 +261,9 @@ async function selectContrastColorPair(
   return { background, foreground, kind: 'selected' }
 }
 
+/**
+ * Scan workspace colors with cancellable progress and configuration warnings.
+ */
 async function scanPalette(): Promise<WorkspacePaletteResult | null> {
   const scanConfig = createWorkspacePaletteScanConfig(config)
   const workspaceIsTrusted = workspace.isTrusted

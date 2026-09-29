@@ -9,7 +9,9 @@ import {
   type TailwindColorUtility,
 } from './utility'
 
-/** Resolve a Tailwind color utility to its final workspace declaration. */
+/**
+ * Resolve a Tailwind color utility to its final workspace declaration.
+ */
 export async function resolveTailwindColorDefinition(
   text: string,
   offset: number,
@@ -43,6 +45,9 @@ export async function resolveTailwindColorDefinition(
   }
 }
 
+/**
+ * Find the Tailwind color utility containing a document offset.
+ */
 function findUtilityAtOffset(
   text: string,
   offset: number,
@@ -54,6 +59,9 @@ function findUtilityAtOffset(
   )
 }
 
+/**
+ * Extract a theme color name from a named or custom-property utility.
+ */
 function getThemeColorName(utility: TailwindColorUtility): string | null {
   if (utility.kind === 'named') {
     return utility.value
@@ -65,6 +73,9 @@ function getThemeColorName(utility: TailwindColorUtility): string | null {
     : null
 }
 
+/**
+ * Find the declaration name range corresponding to a resolved theme value.
+ */
 function findSourceNameRange(
   sources: readonly ParsedTailwindThemeSource[],
   target: TailwindRangedValue,
@@ -91,6 +102,9 @@ function findSourceNameRange(
   return null
 }
 
+/**
+ * Check whether two source ranges have identical boundaries.
+ */
 function sameRange(
   left: TailwindSourceRange,
   right: TailwindSourceRange,

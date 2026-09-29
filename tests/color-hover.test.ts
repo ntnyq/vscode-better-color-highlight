@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ColorDetector, ColorMatch } from '../src/engine/detection'
+import { getStrategies } from '../src/engine/detection/registry'
 import {
   buildColorHoverMarkdown,
   getColorHover,
 } from '../src/features/hover/color-hover'
 import type { NestedScopedConfigs } from '../src/meta'
+import { semanticColorFixtures } from './fixtures/semantic-colors'
 
 const defaultConfig: NestedScopedConfigs = {
   enable: true,
@@ -41,6 +43,30 @@ const defaultConfig: NestedScopedConfigs = {
 }
 
 describe(getColorHover, () => {
+  it.each(semanticColorFixtures)(
+    'only offers copy actions for semantic colors in $languageId',
+    async ({ text, languageId, source }) => {
+      const config = { ...defaultConfig, enableHover: true }
+      const filePath = `/tmp/semantic.${languageId}`
+      const hover = await getColorHover({
+        config,
+        text,
+        languageId,
+        filePath,
+        detectors: getStrategies(languageId, config, filePath),
+        offset: text.indexOf(source) + 1,
+      })
+      expect(hover).toMatchObject({
+        editMode: 'read-only',
+        originalText: source,
+      })
+      const markdown = buildColorHoverMarkdown(hover!)
+      expect(markdown).toContain('color-highlight.copyColorAsHex')
+      expect(markdown).not.toContain('color-highlight.replaceColor')
+      expect(markdown).not.toContain('color-highlight.adjustColorAlpha')
+    },
+  )
+
   it('passes Tailwind theme settings to detectors', async () => {
     const detector = vi.fn<ColorDetector>(() => [])
     const cancellationToken = { isCancellationRequested: false }

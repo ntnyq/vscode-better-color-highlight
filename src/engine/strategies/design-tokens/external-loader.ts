@@ -54,7 +54,9 @@ const SUPPORTED_EXTENSIONS = new Set([
 ])
 const documentCache = new Map<string, CachedDocument>()
 
-/** Resolve local and trusted relative external references for one document. */
+/**
+ * Resolve local and trusted relative external references for one document.
+ */
 export async function resolveDesignTokenColors(
   document: ParsedDesignTokenDocument,
   options: ResolveDesignTokenColorsOptions,
@@ -74,7 +76,9 @@ export async function resolveDesignTokenColors(
   if (options.signal?.isCancellationRequested) {
     return []
   }
-  const resolveToken = async (token: DesignTokenEntry) => {
+  const resolveToken = async (
+    token: DesignTokenEntry,
+  ): Promise<ColorMatch | null> => {
     if (options.signal?.isCancellationRequested) {
       return null
     }
@@ -91,7 +95,12 @@ export async function resolveDesignTokenColors(
     }
     const color = resolveDtcgColor(resolved.value)
     return color
-      ? { start: token.range.start, end: token.range.end, color }
+      ? {
+          start: token.range.start,
+          end: token.range.end,
+          color,
+          editMode: 'read-only',
+        }
       : null
   }
   const matches: ColorMatch[] = []
@@ -107,7 +116,9 @@ export async function resolveDesignTokenColors(
   return matches
 }
 
-/** Resolve a token through local and relative external references. */
+/**
+ * Resolve a token through local and relative external references.
+ */
 export async function resolveExternalDesignToken(
   token: DesignTokenEntry,
   source: DesignTokenSource,
@@ -187,7 +198,9 @@ export async function resolveExternalDesignToken(
   }
 }
 
-/** Parse and locate a local or relative external reference. */
+/**
+ * Parse and locate a local or relative external reference.
+ */
 function getReferenceTarget(
   source: DesignTokenSource,
   reference: string,
@@ -215,7 +228,9 @@ function getReferenceTarget(
   }
 }
 
-/** Load and cache one bounded supported external token document. */
+/**
+ * Load and cache one bounded supported external token document.
+ */
 export async function loadDesignTokenDocument(
   filePath: string,
   workspaceReadBudget?: WorkspaceReadBudget,
@@ -272,12 +287,18 @@ export async function loadDesignTokenDocument(
   }
 }
 
+/**
+ * Choose the YAML or JSON token parser from the file extension.
+ */
 function parseDesignTokenDocument(text: string, extension: string) {
   return extension === '.yaml' || extension === '.yml'
     ? parseYamlDesignTokenDocument(text)
     : parseJsonDesignTokenDocument(text)
 }
 
+/**
+ * Cache a token document and evict the oldest entry when the limit is exceeded.
+ */
 function cacheDesignTokenDocument(
   cacheKey: string,
   cached: CachedDocument,
@@ -292,6 +313,9 @@ function cacheDesignTokenDocument(
   }
 }
 
+/**
+ * Resolve an external pointer to a token or fall back to a raw document value.
+ */
 async function resolveExternalPointer(
   source: DesignTokenSource,
   pointer: readonly string[],

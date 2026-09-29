@@ -78,7 +78,9 @@ export class WorkspacePaletteScanConfigurationError extends Error {
   }
 }
 
-/** Scan a deterministic, bounded set of workspace documents for colors. */
+/**
+ * Scan a deterministic, bounded set of workspace documents for colors.
+ */
 export async function scanWorkspacePalette({
   cancellationToken,
   config,
@@ -232,6 +234,9 @@ export async function scanWorkspacePalette({
   })
 }
 
+/**
+ * Retain valid unique occurrences within per-file, color, and total limits.
+ */
 function retainFileOccurrences(
   matches: readonly ColorMatch[],
   text: string,
@@ -276,7 +281,9 @@ function retainFileOccurrences(
   }
 }
 
-/** Clone every scan-relevant setting into a plain immutable-by-ownership value. */
+/**
+ * Clone every scan-relevant setting into a plain immutable-by-ownership value.
+ */
 export function createWorkspacePaletteScanConfig(
   config: WorkspacePaletteScanConfig,
 ): WorkspacePaletteScanConfig {
@@ -295,6 +302,9 @@ export function createWorkspacePaletteScanConfig(
   }
 }
 
+/**
+ * Find bounded workspace files, returning null on cancellation.
+ */
 async function findWorkspaceUris(
   include: string,
   exclude: string,
@@ -322,6 +332,9 @@ async function findWorkspaceUris(
   }
 }
 
+/**
+ * Exclude oversized, binary-looking, or language-filtered documents from scans.
+ */
 function shouldSkipDocument(
   text: string,
   languageId: string,
@@ -335,6 +348,9 @@ function shouldSkipDocument(
   )
 }
 
+/**
+ * Compare strings by code-unit order for deterministic sorting.
+ */
 function compareCodeUnits(left: string, right: string): number {
   if (left < right) {
     return -1
@@ -345,6 +361,9 @@ function compareCodeUnits(left: string, right: string): number {
   return 0
 }
 
+/**
+ * Reject an empty workspace scan glob and return the original pattern.
+ */
 function validateGlob(value: string, name: 'exclude' | 'include'): string {
   if (value.trim().length === 0) {
     throw new WorkspacePaletteScanConfigurationError(
@@ -354,6 +373,9 @@ function validateGlob(value: string, name: 'exclude' | 'include'): string {
   return value
 }
 
+/**
+ * Check that a match is a nonempty integer range within the source text.
+ */
 function isValidMatchRange(
   start: number,
   end: number,

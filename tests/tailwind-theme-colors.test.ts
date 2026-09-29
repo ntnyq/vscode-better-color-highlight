@@ -5,6 +5,9 @@ import {
 } from '../src/engine/strategies/tailwind-theme'
 import { findTailwindColorUtilities } from '../src/engine/strategies/tailwind-theme/utility'
 
+/**
+ * Project parsed Tailwind utilities into readable source and value assertions.
+ */
 function ranges(text: string) {
   return findTailwindColorUtilities(text).map(utility => ({
     text: text.slice(utility.start, utility.end),
@@ -14,6 +17,9 @@ function ranges(text: string) {
   }))
 }
 
+/**
+ * Measure the fastest execution time across repeated samples.
+ */
 function measureFastestDuration(
   run: () => void,
   now = performance.now.bind(performance),
@@ -63,6 +69,7 @@ describe(findTailwindThemeColors, () => {
     expect(findTailwindThemeColors(text)).toStrictEqual(
       resolved.map(({ color, utility }) => ({
         color,
+        editMode: 'read-only',
         end: utility.end,
         start: utility.start,
       })),
@@ -73,8 +80,13 @@ describe(findTailwindThemeColors, () => {
     const result = findTailwindThemeColors('class="bg-red-500 text-sky-300"')
 
     expect(result).toStrictEqual([
-      { start: 7, end: 17, color: 'rgb(239, 68, 68)' },
-      { start: 18, end: 30, color: 'rgb(125, 211, 252)' },
+      { start: 7, end: 17, color: 'rgb(239, 68, 68)', editMode: 'read-only' },
+      {
+        start: 18,
+        end: 30,
+        color: 'rgb(125, 211, 252)',
+        editMode: 'read-only',
+      },
     ])
   })
 
@@ -85,7 +97,7 @@ describe(findTailwindThemeColors, () => {
     })
 
     expect(result).toStrictEqual([
-      { start: 0, end: 10, color: 'rgb(239, 68, 68)' },
+      { start: 0, end: 10, color: 'rgb(239, 68, 68)', editMode: 'read-only' },
     ])
   })
 
@@ -96,8 +108,13 @@ describe(findTailwindThemeColors, () => {
     })
 
     expect(result).toStrictEqual([
-      { start: 0, end: 10, color: 'rgb(251, 44, 54)' },
-      { start: 11, end: 23, color: 'rgb(121, 105, 123)' },
+      { start: 0, end: 10, color: 'rgb(251, 44, 54)', editMode: 'read-only' },
+      {
+        start: 11,
+        end: 23,
+        color: 'rgb(121, 105, 123)',
+        editMode: 'read-only',
+      },
     ])
   })
 
@@ -111,11 +128,13 @@ describe(findTailwindThemeColors, () => {
         start: 7,
         end: 33,
         color: 'rgba(255, 255, 255, 0.75)',
+        editMode: 'read-only',
       },
       {
         start: 34,
         end: 62,
         color: 'rgba(5, 150, 105, 0.31)',
+        editMode: 'read-only',
       },
     ])
   })
@@ -124,7 +143,12 @@ describe(findTailwindThemeColors, () => {
     const result = findTailwindThemeColors('class="bg-red-500/1"')
 
     expect(result).toStrictEqual([
-      { start: 7, end: 19, color: 'rgba(239, 68, 68, 0.01)' },
+      {
+        start: 7,
+        end: 19,
+        color: 'rgba(239, 68, 68, 0.01)',
+        editMode: 'read-only',
+      },
     ])
   })
 
@@ -134,9 +158,9 @@ describe(findTailwindThemeColors, () => {
     )
 
     expect(result).toStrictEqual([
-      { start: 7, end: 22, color: 'rgb(192, 132, 252)' },
-      { start: 23, end: 38, color: 'rgb(217, 70, 239)' },
-      { start: 39, end: 55, color: 'rgb(2, 6, 23)' },
+      { start: 7, end: 22, color: 'rgb(192, 132, 252)', editMode: 'read-only' },
+      { start: 23, end: 38, color: 'rgb(217, 70, 239)', editMode: 'read-only' },
+      { start: 39, end: 55, color: 'rgb(2, 6, 23)', editMode: 'read-only' },
     ])
   })
 
@@ -238,8 +262,8 @@ describe(findTailwindThemeColors, () => {
     expect(
       findTailwindThemeColors('bg-[color:#fff] text-[color:oklch(70%_0.2_40)]'),
     ).toStrictEqual([
-      { start: 0, end: 15, color: 'rgb(255, 255, 255)' },
-      { start: 16, end: 46, color: 'rgb(255, 103, 40)' },
+      { start: 0, end: 15, color: 'rgb(255, 255, 255)', editMode: 'read-only' },
+      { start: 16, end: 46, color: 'rgb(255, 103, 40)', editMode: 'read-only' },
     ])
   })
 
@@ -255,7 +279,12 @@ describe(findTailwindThemeColors, () => {
       },
     ])
     expect(findTailwindThemeColors(text)).toStrictEqual([
-      { start: 0, end: text.length, color: 'rgb(1, 2, 3)' },
+      {
+        start: 0,
+        end: text.length,
+        color: 'rgb(1, 2, 3)',
+        editMode: 'read-only',
+      },
     ])
   })
 
@@ -324,13 +353,18 @@ describe(findTailwindThemeColors, () => {
 
   it('multiplies slash opacity with the color existing alpha', () => {
     expect(findTailwindThemeColors('bg-[#ff000080]/50')).toStrictEqual([
-      { start: 0, end: 17, color: 'rgba(255, 0, 0, 0.251)' },
+      {
+        start: 0,
+        end: 17,
+        color: 'rgba(255, 0, 0, 0.251)',
+        editMode: 'read-only',
+      },
     ])
   })
 
   it('retains legacy matching inside CSS class selectors', () => {
     expect(findTailwindThemeColors('.bg-red-500:hover {}')).toStrictEqual([
-      { start: 1, end: 11, color: 'rgb(239, 68, 68)' },
+      { start: 1, end: 11, color: 'rgb(239, 68, 68)', editMode: 'read-only' },
     ])
   })
 
@@ -348,6 +382,7 @@ describe(findTailwindThemeColors, () => {
         start,
         end: start + classToken.length,
         color: 'rgb(239, 68, 68)',
+        editMode: 'read-only',
       },
     ])
   })
@@ -361,16 +396,19 @@ describe(findTailwindThemeColors, () => {
         start: text.indexOf('bg-red-500'),
         end: text.indexOf('bg-red-500') + 'bg-red-500'.length,
         color: 'rgb(239, 68, 68)',
+        editMode: 'read-only',
       },
       {
         start: text.indexOf('text-sky-300'),
         end: text.indexOf('text-sky-300') + 'text-sky-300'.length,
         color: 'rgb(125, 211, 252)',
+        editMode: 'read-only',
       },
       {
         start: text.indexOf('fill-blue-500'),
         end: text.indexOf('fill-blue-500') + 'fill-blue-500'.length,
         color: 'rgb(59, 130, 246)',
+        editMode: 'read-only',
       },
     ])
   })
@@ -418,6 +456,7 @@ describe(findTailwindThemeColors, () => {
         start: text.indexOf('bg-red-500'),
         end: text.indexOf('bg-red-500') + 'bg-red-500'.length,
         color: 'rgb(239, 68, 68)',
+        editMode: 'read-only',
       },
     ])
     expect(largeDuration / smallDuration).toBeLessThan(8)
@@ -467,6 +506,7 @@ describe(findTailwindThemeColors, () => {
           text.indexOf('tw:hover:bg-mauve-500!') +
           'tw:hover:bg-mauve-500!'.length,
         color: 'rgb(121, 105, 123)',
+        editMode: 'read-only',
       },
       {
         start: text.indexOf('fill-(--color-brand-muted)'),
@@ -474,6 +514,7 @@ describe(findTailwindThemeColors, () => {
           text.indexOf('fill-(--color-brand-muted)') +
           'fill-(--color-brand-muted)'.length,
         color: 'rgb(80, 215, 30)',
+        editMode: 'read-only',
       },
     ])
   })
@@ -505,7 +546,7 @@ describe(findTailwindThemeColors, () => {
     expect(sync).not.toBeInstanceOf(Promise)
     expect(asyncResult).toBeInstanceOf(Promise)
     await expect(asyncResult).resolves.toStrictEqual([
-      { start: 0, end: 10, color: 'rgb(239, 68, 68)' },
+      { start: 0, end: 10, color: 'rgb(239, 68, 68)', editMode: 'read-only' },
     ])
   })
 

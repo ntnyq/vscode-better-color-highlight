@@ -102,6 +102,9 @@ const config = {
   useARGB: false,
 }
 
+/**
+ * Create a versioned CSS document fixture for reactive diagnostic tests.
+ */
 function createDocument(uriValue = 'file:///colors.css', languageId = 'css') {
   const document = {
     getText: vi.fn<() => string>(
@@ -120,6 +123,9 @@ function createDocument(uriValue = 'file:///colors.css', languageId = 'css') {
 
 const documents: Vscode.TextDocument[] = []
 
+/**
+ * Capture an event handler and track its mocked disposable for assertions.
+ */
 function eventRegistration<T>(setHandler: (handler: EventHandler<T>) => void) {
   return (handler: EventHandler<T>) => {
     setHandler(handler)
@@ -229,11 +235,17 @@ const lowPair: ResolvedContrastPair = {
   variantKey: '',
 }
 
+/**
+ * Advance two microtask turns for pending diagnostic work.
+ */
 async function flush(): Promise<void> {
   await Promise.resolve()
   await Promise.resolve()
 }
 
+/**
+ * Re-evaluate registered watch sources and invoke their callbacks.
+ */
 function rerunWatches(): void {
   for (const watcher of watchers) {
     watcher.callback(watcher.source())

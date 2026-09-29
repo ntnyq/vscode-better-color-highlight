@@ -22,6 +22,7 @@
     "laba",
     "lcha",
     "naumovs",
+    "noembed",
     "npmrc",
     "ofetch",
     "oklab",
@@ -42,6 +43,8 @@
     "tsgo",
     "unrs",
     "Vitest",
+    "vmax",
+    "vmin",
     "WCAG"
   ],
   "emeraldwalk.runonsave": {

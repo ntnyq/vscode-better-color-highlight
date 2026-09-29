@@ -46,11 +46,17 @@ const baseContext = {
   workspaceIsTrusted: true,
 }
 
+/**
+ * Store theme source text and stat metadata in the test filesystem.
+ */
 function setFile(path: string, text: string) {
   texts.set(path, text)
   stats.set(path, { mtimeMs: 1, size: text.length })
 }
 
+/**
+ * Return the source range of the first matching fixture substring.
+ */
 function rangeOf(text: string, value: string) {
   const start = text.indexOf(value)
   return { start, end: start + value.length }

@@ -5,6 +5,9 @@ import {
   resolveCssVarMatches,
 } from '../src/engine/strategies/css-vars/resolver'
 
+/**
+ * Return the range of a requested substring occurrence in fixture text.
+ */
 function rangeOf(text: string, value: string, occurrence = 0) {
   let start = -1
   for (let index = 0; index <= occurrence; index++) {
@@ -13,6 +16,9 @@ function rangeOf(text: string, value: string, occurrence = 0) {
   return { start, end: start + value.length }
 }
 
+/**
+ * Build CSS definition options from local declarations and a trusted root.
+ */
 function optionsFor(text: string) {
   return {
     currentDeclarations: collectCssVarDeclarations(text, {

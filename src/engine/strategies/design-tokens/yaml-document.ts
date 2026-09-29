@@ -36,7 +36,9 @@ export function parseYamlDesignTokenDocument(
   }
 }
 
-/** Walk one token group or token object. */
+/**
+ * Walk one token group or token object.
+ */
 function walkMap(
   node: YAMLMap,
   path: readonly string[],
@@ -87,7 +89,9 @@ function walkMap(
   }
 }
 
-/** Choose the source expression highlighted for one token. */
+/**
+ * Choose the source expression highlighted for one token.
+ */
 function getTokenRange(
   valueNode: Node | null | undefined,
   referenceNode: Node | null | undefined,
@@ -111,7 +115,9 @@ function getTokenRange(
   return getNodeContentRange(valueNode, text)
 }
 
-/** Return a range excluding YAML scalar quote delimiters and comments. */
+/**
+ * Return a range excluding YAML scalar quote delimiters and comments.
+ */
 function getNodeContentRange(node: Node, text: string): DesignTokenRange {
   const [start, valueEnd] = node.range ?? [0, 0, 0]
   const first = text[start]
@@ -129,7 +135,9 @@ function getNodeContentRange(node: Node, text: string): DesignTokenRange {
   }
 }
 
-/** Read a string-valued map property. */
+/**
+ * Read a string-valued map property.
+ */
 function getStringProperty(node: YAMLMap, key: string): string | undefined {
   const valueNode = getPropertyValueNode(node, key)
   return valueNode && isScalar(valueNode)
@@ -137,7 +145,9 @@ function getStringProperty(node: YAMLMap, key: string): string | undefined {
     : undefined
 }
 
-/** Find a map property value node by key. */
+/**
+ * Find a map property value node by key.
+ */
 function getPropertyValueNode(
   node: YAMLMap,
   key: string,
@@ -148,12 +158,16 @@ function getPropertyValueNode(
     | undefined
 }
 
-/** Read a scalar pair key. */
+/**
+ * Read a scalar pair key.
+ */
 function getPairKey(pair: Pair): string | undefined {
   return isScalar(pair.key) ? getStringValue(pair.key.value) : undefined
 }
 
-/** Narrow an unknown scalar value to a string. */
+/**
+ * Narrow an unknown scalar value to a string.
+ */
 function getStringValue(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined
 }

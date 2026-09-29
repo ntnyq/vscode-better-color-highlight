@@ -101,6 +101,9 @@ vi.mock(
     }) as unknown as typeof LoggerModule,
 )
 
+/**
+ * Create a text document fixture with offset-based position conversion.
+ */
 function createDocument(
   uri = 'file:///workspace/source.css',
   text = '0123456789',

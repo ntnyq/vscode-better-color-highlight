@@ -75,6 +75,9 @@ const typedDocument = document as unknown as Pick<
   'positionAt' | 'uri'
 >
 
+/**
+ * Create a resolved contrast pair fixture with fixed source ranges.
+ */
 function pair(foreground: string, background: string): ResolvedContrastPair {
   return {
     background: {

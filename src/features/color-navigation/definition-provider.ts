@@ -12,7 +12,9 @@ import { config } from '../../extension/config'
 import { logger } from '../../shared/logger'
 import { resolveColorDefinition } from './resolve-color-definition'
 
-/** Provide a precise VS Code definition link for a color reference. */
+/**
+ * Provide a precise VS Code definition link for a color reference.
+ */
 export async function provideColorDefinition(
   document: TextDocument,
   position: Position,
@@ -67,6 +69,9 @@ export async function provideColorDefinition(
   }
 }
 
+/**
+ * Build definition resolution context from document, settings, and trust state.
+ */
 function createStrategyContext(
   document: TextDocument,
   signal: CancellationToken,
@@ -90,6 +95,9 @@ function createStrategyContext(
   }
 }
 
+/**
+ * Convert definition source offsets to a VS Code range.
+ */
 function toRange(document: TextDocument, range: ColorSourceRange): Range {
   return new Range(
     document.positionAt(range.start),
@@ -97,6 +105,9 @@ function toRange(document: TextDocument, range: ColorSourceRange): Range {
   )
 }
 
+/**
+ * Convert a URI string or local path, preserving Windows drive-path handling.
+ */
 function toUri(value: string): Uri {
   return !/^[a-z]:[/\\]/iu.test(value) && /^[a-z][\d+.a-z-]*:/iu.test(value)
     ? Uri.parse(value)

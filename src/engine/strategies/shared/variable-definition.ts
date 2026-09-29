@@ -21,7 +21,9 @@ export interface CapturedVariableValue {
   readonly valueRange: ColorSourceRange
 }
 
-/** Locate and trim a captured declaration value after its assignment delimiter. */
+/**
+ * Locate and trim a captured declaration value after its assignment delimiter.
+ */
 export function getCapturedVariableValue(
   match: RegExpMatchArray,
   rawValue: string,
@@ -38,7 +40,9 @@ export function getCapturedVariableValue(
   }
 }
 
-/** Resolve an alias chain and return its final color-valued declaration. */
+/**
+ * Resolve an alias chain and return its final color-valued declaration.
+ */
 export async function resolveRangedVariableDefinition(
   initialName: string,
   definitions: ReadonlyMap<string, RangedVariableDefinition>,
@@ -70,6 +74,9 @@ export async function resolveRangedVariableDefinition(
   return null
 }
 
+/**
+ * Map a variable reference and definition to source navigation ranges.
+ */
 export function toColorDefinitionTarget(
   usage: VariableUsage,
   definition: RangedVariableDefinition,

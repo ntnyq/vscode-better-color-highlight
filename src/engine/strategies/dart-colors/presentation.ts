@@ -1,12 +1,16 @@
 import type { RgbaColor } from '../../../shared/color/presentation'
 import { parseDartColorSource, type ParsedDartColorSource } from './parser'
 
-/** Check whether source text is a supported Dart color expression. */
+/**
+ * Check whether source text is a supported Dart color expression.
+ */
 export function isDartColorSource(text: string): boolean {
   return parseDartColorSource(text) !== null
 }
 
-/** Format a color using the editable Dart constructor style of the source. */
+/**
+ * Format a color using the editable Dart constructor style of the source.
+ */
 export function formatDartColor(
   color: RgbaColor,
   sourceText: string,
@@ -19,7 +23,9 @@ export function formatDartColor(
   return formatParsedDartColor(color, source)
 }
 
-/** Format an alpha adjustment while preserving source floating-point channels. */
+/**
+ * Format an alpha adjustment while preserving source floating-point channels.
+ */
 export function formatDartColorWithAlphaDelta(
   delta: number,
   sourceText: string,
@@ -35,6 +41,9 @@ export function formatDartColorWithAlphaDelta(
   )
 }
 
+/**
+ * Format a color in its parsed Dart constructor form, excluding material names.
+ */
 function formatParsedDartColor(
   color: RgbaColor,
   source: ParsedDartColorSource,
@@ -72,14 +81,23 @@ function formatParsedDartColor(
   }
 }
 
+/**
+ * Clamp and round a color channel to an integer byte.
+ */
 function toByte(value: number): number {
   return Math.round(Math.min(Math.max(value, 0), 255))
 }
 
+/**
+ * Serialize a byte as two hexadecimal digits.
+ */
 function toHexByte(value: number): string {
   return value.toString(16).padStart(2, '0')
 }
 
+/**
+ * Clamp a normalized channel and format it with limited floating-point noise.
+ */
 function formatNormalizedComponent(value: number): string {
   const normalized = Math.min(Math.max(value, 0), 1)
   return String(Number(normalized.toPrecision(15)))

@@ -5,6 +5,9 @@ import {
   resolveTailwindThemeColor,
 } from '../src/engine/strategies/tailwind-theme/resolver'
 
+/**
+ * Return the range of a requested substring occurrence in fixture text.
+ */
 function rangeOf(text: string, value: string, occurrence = 0) {
   let start = -1
   for (let index = 0; index <= occurrence; index++) {
@@ -13,6 +16,9 @@ function rangeOf(text: string, value: string, occurrence = 0) {
   return { start, end: start + value.length }
 }
 
+/**
+ * Resolve fixture stylesheets against the Tailwind v3 base palette.
+ */
 function resolve(...texts: string[]) {
   return resolveTailwindTheme(
     texts.map((text, index) =>

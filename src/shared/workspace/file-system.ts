@@ -131,7 +131,9 @@ export function getWorkspacePathIdentity(value: string): string {
   return value
 }
 
-/** Normalize local path separators, segments, and Windows drive casing. */
+/**
+ * Normalize local path separators, segments, and Windows drive casing.
+ */
 function normalizeLocalWorkspacePath(value: string): string {
   const normalized = value.replaceAll('\\', '/')
   const prefix = normalized.startsWith('/') ? '/' : ''

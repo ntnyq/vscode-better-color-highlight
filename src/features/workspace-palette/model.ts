@@ -12,6 +12,9 @@ interface MutableWorkspaceColorGroup {
   readonly presentations: ColorPresentations
 }
 
+/**
+ * Group unique valid occurrences by color and sort groups by frequency.
+ */
 export function groupWorkspaceColorOccurrences(
   occurrences: readonly WorkspaceColorOccurrence[],
   stats: WorkspaceScanStats,
@@ -61,6 +64,9 @@ export function groupWorkspaceColorOccurrences(
   }
 }
 
+/**
+ * Order occurrences by URI and then source offset.
+ */
 function compareOccurrences(
   left: WorkspaceColorOccurrence,
   right: WorkspaceColorOccurrence,
@@ -68,6 +74,9 @@ function compareOccurrences(
   return compareStrings(left.uri, right.uri) || left.start - right.start
 }
 
+/**
+ * Compare strings by code-unit order for deterministic sorting.
+ */
 function compareStrings(left: string, right: string): number {
   if (left < right) {
     return -1

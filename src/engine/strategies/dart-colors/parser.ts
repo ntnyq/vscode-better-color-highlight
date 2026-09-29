@@ -23,7 +23,9 @@ export interface ParsedDartColorSource {
   readonly kind: DartColorSourceKind
 }
 
-/** Parse one exact supported Dart color expression. */
+/**
+ * Parse one exact supported Dart color expression.
+ */
 export function parseDartColorSource(
   sourceText: string,
 ): ParsedDartColorSource | null {
@@ -38,7 +40,9 @@ export function parseDartColorSource(
   )
 }
 
-/** Whether a CSS named-color range belongs to a Flutter Material reference. */
+/**
+ * Whether a CSS named-color range belongs to a Flutter Material reference.
+ */
 export function isDartMaterialColorNameAt(
   text: string,
   start: number,
@@ -54,6 +58,9 @@ export function isDartMaterialColorNameAt(
   )
 }
 
+/**
+ * Parse a packed ARGB literal in a Dart Color constructor.
+ */
 function parseHexColor(source: string): ParsedDartColorSource | null {
   const match = source.match(DART_COLOR_HEX_REGEX)
   const hex = match?.groups?.hex
@@ -73,6 +80,9 @@ function parseHexColor(source: string): ParsedDartColorSource | null {
   }
 }
 
+/**
+ * Parse four byte literals from a Dart Color.fromARGB constructor.
+ */
 function parseFromArgbColor(source: string): ParsedDartColorSource | null {
   const parameters = parsePositionalParameters(source, 'Color.fromARGB')
   if (parameters?.length !== 4) {
@@ -92,6 +102,9 @@ function parseFromArgbColor(source: string): ParsedDartColorSource | null {
   }
 }
 
+/**
+ * Parse RGB bytes and normalized opacity from Color.fromRGBO.
+ */
 function parseFromRgboColor(source: string): ParsedDartColorSource | null {
   const parameters = parsePositionalParameters(source, 'Color.fromRGBO')
   if (parameters?.length !== 4) {
@@ -113,6 +126,9 @@ function parseFromRgboColor(source: string): ParsedDartColorSource | null {
   }
 }
 
+/**
+ * Parse normalized named Color.from channels in the supported sRGB space.
+ */
 function parseFromColor(source: string): ParsedDartColorSource | null {
   const parameters = parseParameters(source, 'Color.from')
   if (!parameters) {
@@ -159,6 +175,9 @@ function parseFromColor(source: string): ParsedDartColorSource | null {
   }
 }
 
+/**
+ * Resolve a supported Flutter material color reference from the palette.
+ */
 function parseMaterialColor(source: string): ParsedDartColorSource | null {
   const name = source.match(DART_MATERIAL_COLOR_REGEX)?.groups?.name
   const argb = name ? FLUTTER_MATERIAL_COLOR_ARGB.get(name) : undefined
@@ -178,6 +197,9 @@ function parseMaterialColor(source: string): ParsedDartColorSource | null {
   }
 }
 
+/**
+ * Read constructor parameters and reject named arguments.
+ */
 function parsePositionalParameters(
   source: string,
   constructorName: string,
@@ -189,6 +211,9 @@ function parsePositionalParameters(
   return parameters
 }
 
+/**
+ * Split constructor arguments after removing comments and a trailing comma.
+ */
 function parseParameters(
   source: string,
   constructorName: string,
@@ -216,6 +241,9 @@ function parseParameters(
   return parameters
 }
 
+/**
+ * Parse a Dart integer literal within the RGB byte range.
+ */
 function parseByteLiteral(source: string): number | null {
   if (!DART_INTEGER_LITERAL_REGEX.test(source)) {
     return null
@@ -227,6 +255,9 @@ function parseByteLiteral(source: string): number | null {
     : null
 }
 
+/**
+ * Read a required named parameter as a normalized channel literal.
+ */
 function parseNormalizedParameter(
   parameters: ReadonlyMap<string, string>,
   name: string,
@@ -235,6 +266,9 @@ function parseNormalizedParameter(
   return source === undefined ? null : parseNormalizedLiteral(source)
 }
 
+/**
+ * Parse a finite Dart numeric literal between zero and one.
+ */
 function parseNormalizedLiteral(source: string): number | null {
   if (!DART_NUMBER_LITERAL_REGEX.test(source)) {
     return null
@@ -246,6 +280,9 @@ function parseNormalizedLiteral(source: string): number | null {
     : null
 }
 
+/**
+ * Fill omitted alpha with full opacity when creating an RGBA color.
+ */
 function toRgbaColor(color: {
   readonly a?: number
   readonly b: number

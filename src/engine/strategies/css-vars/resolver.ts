@@ -402,6 +402,9 @@ export function selectCssVarDeclaration(
   }
 }
 
+/**
+ * Check whether a declaration has matching selector and at-rule contexts.
+ */
 function hasSameCssVarContext(
   declaration: CssVarDeclaration,
   context: CssVarSourceContext,
@@ -692,6 +695,9 @@ export function findCssVarUsages(text: string): CssVarUsage[] {
   )
 }
 
+/**
+ * Select outermost var() usages from references ordered by source position.
+ */
 function getOutermostCssVarUsages(
   usages: readonly CssVarUsage[],
 ): CssVarUsage[] {
@@ -709,6 +715,9 @@ function getOutermostCssVarUsages(
   return outermost
 }
 
+/**
+ * Find the innermost var() usage containing an offset in source order.
+ */
 function findInnermostCssVarUsage(
   usages: readonly CssVarUsage[],
   offset: number,

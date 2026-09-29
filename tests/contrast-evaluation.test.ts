@@ -5,6 +5,10 @@ import type { RgbaColor } from '../src/shared/color/presentation'
 const black = { r: 0, g: 0, b: 0, a: 1 } as const
 const white = { r: 255, g: 255, b: 255, a: 1 } as const
 
+/**
+ * Create an opaque gray fixture with the requested contrast ratio against
+ * black.
+ */
 function grayForRatio(ratio: number): RgbaColor {
   const linear = 0.05 * (ratio - 1)
   const srgb =

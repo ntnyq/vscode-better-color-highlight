@@ -120,8 +120,12 @@ describe('external design token references', () => {
       trustedContext('yaml', '/workspace/root.yaml'),
     )
 
-    expect(jsonMatches).toMatchObject([{ color: 'rgb(255, 0, 0)' }])
-    expect(yamlMatches).toMatchObject([{ color: 'rgb(0, 0, 255)' }])
+    expect(jsonMatches).toMatchObject([
+      { color: 'rgb(255, 0, 0)', editMode: 'read-only' },
+    ])
+    expect(yamlMatches).toMatchObject([
+      { color: 'rgb(0, 0, 255)', editMode: 'read-only' },
+    ])
   })
 
   it('loads JSON-formatted .tokens dependencies', async () => {
@@ -409,10 +413,16 @@ $value: { colorSpace: srgb, components: [1, 0, 0] }
   })
 })
 
+/**
+ * Serialize a color token containing a JSON reference.
+ */
 function createJsonReference(reference: string): string {
   return JSON.stringify({ $type: 'color', $ref: reference })
 }
 
+/**
+ * Create a trusted strategy context with external token resolution enabled.
+ */
 function trustedContext(languageId: string, filePath: string) {
   return {
     languageId,
@@ -422,14 +432,23 @@ function trustedContext(languageId: string, filePath: string) {
   }
 }
 
+/**
+ * Import the JSON token strategy after test mocks are installed.
+ */
 async function importJsonStrategy() {
   return await import('../src/engine/strategies/design-tokens/json-strategy')
 }
 
+/**
+ * Import the YAML token strategy after test mocks are installed.
+ */
 async function importYamlStrategy() {
   return await import('../src/engine/strategies/design-tokens/yaml-strategy')
 }
 
+/**
+ * Reset loaded modules, in-memory token files, and filesystem mock history.
+ */
 function resetFiles(): void {
   vi.resetModules()
   files.clear()
@@ -437,6 +456,9 @@ function resetFiles(): void {
   statFileMock.mockClear()
 }
 
+/**
+ * Store a token file fixture with controllable size and document version.
+ */
 function setFile(
   filePath: string,
   text: string,
@@ -451,6 +473,9 @@ function setFile(
   })
 }
 
+/**
+ * Create a test read budget that charges each distinct identity once.
+ */
 function createTestBudget(maximum: number) {
   const claimed = new Set<string>()
   return {

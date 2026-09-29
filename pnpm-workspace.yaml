@@ -6,7 +6,10 @@ allowBuilds:
   '@vscode/vsce-sign': true
   keytar: true
 
-minimumReleaseAge: 0
-
 patchedDependencies:
   vscode-ext-gen@1.6.0: patches/vscode-ext-gen@1.6.0.patch
+
+minimumReleaseAge: 0
+shellEmulator: true
+ignoreWorkspaceRootCheck: true
+pmOnFail: warn

@@ -15,7 +15,9 @@ const CSS_VAR_SHORTHAND_REGEX =
 
 type ShorthandSpace = 'hsl' | 'lab' | 'lch' | 'oklab' | 'oklch' | 'rgb'
 
-/** Detect balanced, statically resolvable CSS color functions. */
+/**
+ * Detect balanced, statically resolvable CSS color functions.
+ */
 export function findColorFunctions(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
 
@@ -38,7 +40,9 @@ export function findColorFunctions(text: string): ColorMatch[] {
   return arbitrateColorMatches(matches)
 }
 
-/** Resolve raw shorthand values such as "255 0 0" or "0 100% 50%". */
+/**
+ * Resolve raw shorthand values such as "255 0 0" or "0 100% 50%".
+ */
 export function resolveShorthandColor(
   value: string,
   hint?: string,
@@ -63,7 +67,9 @@ export function resolveShorthandColor(
   return space ? parseShorthandValue(normalized, space) : null
 }
 
-/** Parse a CSS custom-property channel shorthand. */
+/**
+ * Parse a CSS custom-property channel shorthand.
+ */
 export function parseShorthandValue(
   value: string,
   space: ShorthandSpace,
@@ -72,6 +78,9 @@ export function parseShorthandValue(
   return parsed ? formatCssColor(parsed) : null
 }
 
+/**
+ * Detect Hyprland rgba() functions containing packed hexadecimal channels.
+ */
 function findHyprlandRgbaHexColors(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
   for (const match of text.matchAll(HYPRLAND_RGBA_HEX_REGEX)) {
@@ -97,6 +106,9 @@ function findHyprlandRgbaHexColors(text: string): ColorMatch[] {
   return matches
 }
 
+/**
+ * Detect channel shorthand declarations whose property names identify a space.
+ */
 function findCssVariableShorthands(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
   for (const match of text.matchAll(CSS_VAR_SHORTHAND_REGEX)) {
@@ -111,11 +123,19 @@ function findCssVariableShorthands(text: string): ColorMatch[] {
       continue
     }
     const start = match.index ?? 0
-    matches.push({ start, end: start + match[0].length, color })
+    matches.push({
+      start,
+      end: start + match[0].length,
+      color,
+      editMode: 'read-only',
+    })
   }
   return matches
 }
 
+/**
+ * Infer a shorthand color space from a variable name suffix.
+ */
 function inferShorthandSpace(name?: string): ShorthandSpace | null {
   if (!name) {
     return null

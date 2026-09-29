@@ -1,7 +1,7 @@
 import { isString } from '@ntnyq/utils'
 import { env, window, workspace } from 'vscode'
 import { getStrategies } from '../../engine/detection/registry'
-import { getColorHover } from '../../features/hover/color-hover'
+import { getColorAtOffset } from '../../features/hover/color-hover'
 import {
   formatColorPresentation,
   type ColorPresentations,
@@ -44,7 +44,7 @@ async function getActiveEditorColorValue(
   }
 
   const document = editor.document
-  const hover = await getColorHover({
+  const hover = await getColorAtOffset({
     config,
     detectors: getStrategies(
       document.languageId,

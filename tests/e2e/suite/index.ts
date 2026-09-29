@@ -23,6 +23,9 @@ const CONFIG_SECTION = 'color-highlight'
 const CONFIG_WAIT_ATTEMPTS = 20
 const CONFIG_WAIT_INTERVAL_MS = 50
 
+/**
+ * Wait for a configuration value to match within the retry limit.
+ */
 async function waitForConfigValue<T>(key: string, expected: T) {
   for (let attempt = 0; attempt < CONFIG_WAIT_ATTEMPTS; attempt++) {
     const value = workspace.getConfiguration(CONFIG_SECTION).get<T>(key)
@@ -36,6 +39,9 @@ async function waitForConfigValue<T>(key: string, expected: T) {
   assert.equal(workspace.getConfiguration(CONFIG_SECTION).get(key), expected)
 }
 
+/**
+ * Run desktop smoke checks for commands, highlighting, and configuration.
+ */
 export async function run() {
   await activateExtension()
   await assertRequiredCommands()

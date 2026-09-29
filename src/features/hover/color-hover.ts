@@ -163,6 +163,18 @@ export interface ColorHoverOptions {
 export async function getColorHover(
   options: ColorHoverOptions,
 ): Promise<ColorHover | null> {
+  if (!options.config.enableHover) {
+    return null
+  }
+  return await getColorAtOffset(options)
+}
+
+/**
+ * Resolve color data for commands and hover independently of hover visibility.
+ */
+export async function getColorAtOffset(
+  options: ColorHoverOptions,
+): Promise<ColorHover | null> {
   const {
     cancellationToken,
     config,
@@ -181,7 +193,7 @@ export async function getColorHover(
     return null
   }
 
-  if (!config.enable || !config.enableHover) {
+  if (!config.enable) {
     return null
   }
 
@@ -255,6 +267,9 @@ export async function getColorHover(
   }
 }
 
+/**
+ * Cache completed hover matches, evicting oldest entries to respect the limit.
+ */
 function cacheCompletedMatches(
   matchCache: ColorHoverMatchCache,
   matchCacheKey: string,
@@ -355,12 +370,16 @@ function formatPresentationLine(
   return parts.join(' ')
 }
 
-/** Whether generic replacement and alpha controls are safe for this source. */
+/**
+ * Whether generic replacement and alpha controls are safe for this source.
+ */
 function canEditColor(hover: ColorHover): boolean {
   return hover.editMode !== 'read-only'
 }
 
-/** Whether generic CSS replacement syntax is valid for this source. */
+/**
+ * Whether generic CSS replacement syntax is valid for this source.
+ */
 function canReplaceColor(hover: ColorHover): boolean {
   return canEditColor(hover) && hover.editMode !== 'source'
 }

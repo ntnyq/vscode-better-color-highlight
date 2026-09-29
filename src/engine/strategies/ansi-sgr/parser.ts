@@ -10,7 +10,9 @@ interface ColorOperation {
   readonly role: ColorRole
 }
 
-/** Resolve the preview color represented by one SGR parameter list. */
+/**
+ * Resolve the preview color represented by one SGR parameter list.
+ */
 export function resolveAnsiSgrColor(
   parameters: string,
   palette?: AnsiPaletteOverrides,
@@ -70,6 +72,9 @@ export function resolveAnsiSgrColor(
   return background ?? foreground
 }
 
+/**
+ * Count parameters consumed by an extended SGR color operation.
+ */
 function getExtendedParameterCount(
   parameters: readonly string[],
   index: number,
@@ -88,6 +93,9 @@ function getExtendedParameterCount(
   return 1
 }
 
+/**
+ * Parse a colon-separated indexed or true-color SGR operation.
+ */
 function parseColonColorOperation(
   parameter: string,
   palette?: AnsiPaletteOverrides,
@@ -113,6 +121,9 @@ function parseColonColorOperation(
   return color ? { color, consumedParameterCount: 1, role } : null
 }
 
+/**
+ * Parse a semicolon-separated basic, indexed, or true-color SGR operation.
+ */
 function parseSemicolonColorOperation(
   parameters: readonly string[],
   index: number,
@@ -147,6 +158,9 @@ function parseSemicolonColorOperation(
   return color ? { color, consumedParameterCount: 5, role } : null
 }
 
+/**
+ * Resolve a basic SGR color code through the configured palette.
+ */
 function parseBasicColorOperation(
   value: number,
   palette?: AnsiPaletteOverrides,
@@ -165,6 +179,9 @@ function parseBasicColorOperation(
     : null
 }
 
+/**
+ * Map a basic SGR code to its palette index and foreground/background role.
+ */
 function resolveBasicColor(
   value: number,
 ): { readonly paletteIndex: number; readonly role: ColorRole } | null {
@@ -183,6 +200,9 @@ function resolveBasicColor(
   return null
 }
 
+/**
+ * Identify the foreground or background role of an extended SGR code.
+ */
 function getExtendedColorRole(value: number): ColorRole | null {
   if (value === 38) {
     return 'foreground'
@@ -193,6 +213,9 @@ function getExtendedColorRole(value: number): ColorRole | null {
   return null
 }
 
+/**
+ * Validate and return exactly three RGB byte channels.
+ */
 function toRgbChannels(values: readonly number[]): RgbChannels | null {
   if (values.length !== 3 || !values.every(isByte)) {
     return null
@@ -200,10 +223,16 @@ function toRgbChannels(values: readonly number[]): RgbChannels | null {
   return [values[0], values[1], values[2]]
 }
 
+/**
+ * Check whether a number is an integer in the byte range.
+ */
 function isByte(value: number): boolean {
   return Number.isInteger(value) && value >= 0 && value <= 255
 }
 
+/**
+ * Parse a required unsigned integer parameter, returning NaN if invalid.
+ */
 function parseRequiredParameter(value: string | undefined): number {
   return value && /^\d+$/u.test(value) ? Number(value) : Number.NaN
 }

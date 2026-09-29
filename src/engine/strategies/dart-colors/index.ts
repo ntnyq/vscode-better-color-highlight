@@ -10,7 +10,9 @@ const DART_MATERIAL_COLOR_REFERENCE_REGEX =
 const DART_COLOR_FROM_COMPONENT_NAMES = new Set(['blue', 'green', 'red'])
 const DART_COLOR_FROM_COMPONENT_REGEX = /\b(?:blue|green|red)\b/gu
 
-/** Detect supported Flutter and Dart color expressions. */
+/**
+ * Detect supported Flutter and Dart color expressions.
+ */
 export function findDartColors(text: string): ColorMatch[] {
   const matches = [
     ...findDartColorConstructors(text),
@@ -19,7 +21,9 @@ export function findDartColors(text: string): ColorMatch[] {
   return matches.sort((left, right) => left.start - right.start)
 }
 
-/** Whether a CSS named-color range is Dart color syntax, not a color value. */
+/**
+ * Whether a CSS named-color range is Dart color syntax, not a color value.
+ */
 export function isDartColorSyntaxNameAt(
   text: string,
   start: number,
@@ -33,7 +37,9 @@ export function isDartColorSyntaxNameAt(
   )
 }
 
-/** Find CSS named-color words used as `Color.from` component labels. */
+/**
+ * Find CSS named-color words used as `Color.from` component labels.
+ */
 export function findDartColorComponentNameStarts(
   text: string,
 ): ReadonlySet<number> {
@@ -67,6 +73,9 @@ export function findDartColorComponentNameStarts(
   return componentNameStarts
 }
 
+/**
+ * Detect editable Dart Color constructors with statically resolved channels.
+ */
 function findDartColorConstructors(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
 
@@ -94,6 +103,9 @@ function findDartColorConstructors(text: string): ColorMatch[] {
   return matches
 }
 
+/**
+ * Detect supported Flutter material colors as read-only matches.
+ */
 function findFlutterMaterialColors(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
 

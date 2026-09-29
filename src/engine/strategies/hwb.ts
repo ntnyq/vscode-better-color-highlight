@@ -3,7 +3,9 @@ import { formatCssColor, parseHwbColor } from './css-color/parser'
 
 const HWB_FUNCTION_REGEX = /(?<source>hwb\([^)]*\))/giu
 
-/** Detect modern CSS hwb() functions. */
+/**
+ * Detect modern CSS hwb() functions.
+ */
 export function findHwb(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
   for (const match of text.matchAll(HWB_FUNCTION_REGEX)) {

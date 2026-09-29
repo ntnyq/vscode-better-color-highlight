@@ -35,6 +35,7 @@ describe(findJsonDesignTokens, () => {
         start: text.indexOf(source),
         end: text.indexOf(source) + source.length,
         color: 'rgba(255, 0, 0, 0.5)',
+        editMode: 'read-only',
       },
     ])
   })
@@ -65,16 +66,19 @@ describe(findJsonDesignTokens, () => {
         start: text.indexOf(components),
         end: text.indexOf(components) + components.length,
         color: 'rgb(255, 0, 0)',
+        editMode: 'read-only',
       },
       {
         start: text.indexOf(curlyAlias),
         end: text.indexOf(curlyAlias) + curlyAlias.length,
         color: 'rgb(255, 0, 0)',
+        editMode: 'read-only',
       },
       {
         start: text.indexOf(pointer),
         end: text.indexOf(pointer) + pointer.length,
         color: 'rgb(255, 0, 0)',
+        editMode: 'read-only',
       },
     ])
   })

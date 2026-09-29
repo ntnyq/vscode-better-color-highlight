@@ -200,7 +200,9 @@ export function provideColorPresentations(
   )
 }
 
-/** Build one native color presentation that replaces the selected range. */
+/**
+ * Build one native color presentation that replaces the selected range.
+ */
 function createColorPresentation(
   value: string,
   range: Range,

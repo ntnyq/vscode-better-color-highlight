@@ -1,6 +1,7 @@
 import type { ColorDefinitionTarget } from '../definition/types'
 import type { ColorMatch, StrategyContext } from '../detection'
 import { resolveDirectColor } from './shared/direct-color'
+import { resolveVariableColors } from './shared/variable-colors'
 import {
   getCapturedVariableValue,
   resolveRangedVariableDefinition,
@@ -17,52 +18,6 @@ import type {
 const LESS_VAR_DEF_REGEX = /@(?<name>[-\w]+)\s*:\s*(?<value>[^;]+?)\s*;/gu
 
 /**
- * Resolve Less variable values to colors, following nested variable references.
- *
- * @param value - The raw Less variable value
- * @param varDefs - All Less variable definitions in the document
- * @param seen - Variables already visited to avoid cycles
- * @returns The resolved rgb() color string, or null if no color is found
- */
-async function resolveVarValue(
-  value: string,
-  varDefs: Map<string, string>,
-  context?: StrategyContext,
-  seen = new Set<string>(),
-): Promise<string | null> {
-  const normalized = value.replaceAll(/!important\b/gu, '').trim()
-
-  const directColor = await resolveDirectColor(normalized, context)
-  if (directColor) {
-    return directColor
-  }
-
-  const refName = getExactLessVarAlias(normalized)
-  if (refName) {
-    if (seen.has(refName)) {
-      return null
-    }
-
-    const refValue = varDefs.get(refName)
-    if (!refValue) {
-      return null
-    }
-
-    const resolved = await resolveVarValue(
-      refValue,
-      varDefs,
-      context,
-      new Set([...seen, refName]),
-    )
-    if (resolved) {
-      return resolved
-    }
-  }
-
-  return null
-}
-
-/**
  * Parse a value that is exactly one Less variable alias.
  *
  * @param value - Normalized Less value
@@ -73,6 +28,9 @@ function getExactLessVarAlias(value: string): string | null {
   return match?.groups?.name ?? null
 }
 
+/**
+ * Collect LESS variable definitions with their name and value ranges.
+ */
 function collectLessVarDefs(
   text: string,
   filePath: string,
@@ -105,6 +63,9 @@ function collectLessVarDefs(
   return definitions
 }
 
+/**
+ * Find a known LESS variable reference at an offset, excluding declarations.
+ */
 function findLessVarUsageAtOffset(
   text: string,
   offset: number,
@@ -132,6 +93,9 @@ function findLessVarUsageAtOffset(
   return null
 }
 
+/**
+ * Resolve a LESS reference to its color definition through local aliases.
+ */
 export async function resolveLessVarDefinition(
   text: string,
   offset: number,
@@ -170,16 +134,11 @@ export async function findLessVars(
   const varDefs = new Map(
     [...rangedVarDefs].map(([name, definition]) => [name, definition.value]),
   )
-  const varColors = new Map<string, string>() // name (without @) -> resolved color
-
-  // Resolve variable values to colors
-  await Promise.all(
-    [...varDefs.entries()].map(async ([name, value]) => {
-      const color = await resolveVarValue(value, varDefs, context)
-      if (color) {
-        varColors.set(name, color)
-      }
-    }),
+  const varColors = await resolveVariableColors(
+    varDefs,
+    getExactLessVarAlias,
+    value => resolveDirectColor(value, context),
+    context?.signal,
   )
 
   if (varColors.size === 0) {

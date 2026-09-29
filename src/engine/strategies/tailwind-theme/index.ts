@@ -23,12 +23,20 @@ export interface ResolvedTailwindColorUtility {
   readonly utility: TailwindColorUtility
 }
 
-/** Detect Tailwind color utilities from the current or configured theme. */
+/**
+ * Detect Tailwind color utilities from the current or configured theme.
+ */
 export function findTailwindThemeColors(text: string): ColorMatch[]
+/**
+ * Detect Tailwind utility colors with optional configured theme loading.
+ */
 export function findTailwindThemeColors(
   text: string,
   context: TailwindDetectorContext,
 ): ColorMatch[] | Promise<ColorMatch[]>
+/**
+ * Detect Tailwind utility colors with optional configured theme loading.
+ */
 export function findTailwindThemeColors(
   text: string,
   context?: TailwindDetectorContext,
@@ -39,13 +47,22 @@ export function findTailwindThemeColors(
     : toColorMatches(resolved)
 }
 
+/**
+ * Resolve Tailwind utility colors and retain their parsed source metadata.
+ */
 export function resolveTailwindColorUtilities(
   text: string,
 ): ResolvedTailwindColorUtility[]
+/**
+ * Resolve Tailwind utilities, loading configured sources when applicable.
+ */
 export function resolveTailwindColorUtilities(
   text: string,
   context?: TailwindDetectorContext,
 ): ResolvedTailwindColorUtility[] | Promise<ResolvedTailwindColorUtility[]>
+/**
+ * Resolve Tailwind utilities against a local or configured color theme.
+ */
 export function resolveTailwindColorUtilities(
   text: string,
   context?: TailwindDetectorContext,
@@ -62,6 +79,9 @@ export function resolveTailwindColorUtilities(
   return resolveUtilities(text, theme)
 }
 
+/**
+ * Load configured theme sources and resolve utilities unless cancelled.
+ */
 async function findWithConfiguredTheme(
   text: string,
   context: StrategyContext,
@@ -82,6 +102,9 @@ async function findWithConfiguredTheme(
   return resolveUtilities(text, theme)
 }
 
+/**
+ * Resolve utility colors and opacity modifiers, removing duplicate matches.
+ */
 function resolveUtilities(
   text: string,
   theme: TailwindColorTheme,
@@ -113,22 +136,32 @@ function resolveUtilities(
   return matches
 }
 
+/**
+ * Project resolved Tailwind utilities into detector color matches.
+ */
 function toColorMatches(
   resolved: readonly ResolvedTailwindColorUtility[],
 ): ColorMatch[] {
   return resolved.map(({ color, utility }) => ({
     color,
+    editMode: 'read-only',
     end: utility.end,
     start: utility.start,
   }))
 }
 
+/**
+ * Await resolved Tailwind utilities and project them into color matches.
+ */
 async function projectResolvedUtilities(
   resolved: Promise<readonly ResolvedTailwindColorUtility[]>,
 ): Promise<ColorMatch[]> {
   return toColorMatches(await resolved)
 }
 
+/**
+ * Resolve an arbitrary color or look up a named theme color for a utility.
+ */
 function resolveUtilityColor(
   utility: TailwindColorUtility,
   theme: TailwindColorTheme,
@@ -144,6 +177,9 @@ function resolveUtilityColor(
   return theme.colors.get(name)?.value ?? null
 }
 
+/**
+ * Fill detector context defaults and apply explicit Tailwind v4 signals.
+ */
 function normalizeContext(
   context: TailwindDetectorContext = {},
 ): StrategyContext {
@@ -156,6 +192,9 @@ function normalizeContext(
   }
 }
 
+/**
+ * Check whether trusted configured theme sources can be loaded.
+ */
 function shouldLoadConfiguredTheme(context: StrategyContext): boolean {
   return Boolean(
     context.workspaceIsTrusted &&
@@ -164,6 +203,9 @@ function shouldLoadConfiguredTheme(context: StrategyContext): boolean {
   )
 }
 
+/**
+ * Parse a static Tailwind opacity modifier and clamp it to zero through one.
+ */
 function parseOpacityModifier(value: string | undefined): number | undefined {
   if (value === undefined || value.startsWith('(')) {
     return undefined
@@ -190,6 +232,9 @@ function parseOpacityModifier(value: string | undefined): number | undefined {
     : undefined
 }
 
+/**
+ * Multiply a serialized RGB color's existing alpha by the utility opacity.
+ */
 function applyAlpha(color: string, alpha: number): string | null {
   const channels = color.match(
     /^rgba?\((?<red>\d+), (?<green>\d+), (?<blue>\d+)(?:, (?<alpha>[\d.]+))?\)$/u,

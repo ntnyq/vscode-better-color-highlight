@@ -4,7 +4,9 @@ import { provideColorDefinition } from './definition-provider'
 
 const COLOR_NAVIGATION_SELECTORS = [{ language: '*' }]
 
-/** Register contextual color-variable definition navigation. */
+/**
+ * Register contextual color-variable definition navigation.
+ */
 export function useColorNavigation(): void {
   const disposable = languages.registerDefinitionProvider(
     COLOR_NAVIGATION_SELECTORS,

@@ -454,6 +454,9 @@ export function walkCssCode(
   }
 }
 
+/**
+ * Snapshot a CSS declaration's selector and enclosing rule contexts.
+ */
 function createCssSourceContext(
   normalizedSelector: string,
   selectorContext: readonly string[],

@@ -4,7 +4,9 @@ export interface WorkspaceReadBudget {
   readonly tryClaim: (uri: string) => boolean
 }
 
-/** Create a shared bound for unique workspace dependency reads. */
+/**
+ * Create a shared bound for unique workspace dependency reads.
+ */
 export function createWorkspaceReadBudget(
   maxUniqueReads: number,
 ): WorkspaceReadBudget {

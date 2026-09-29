@@ -41,7 +41,9 @@ interface ThemeLoadState {
 
 const sourceTextCache = new Map<string, SourceCacheEntry>()
 
-/** Load the current document and configured, trusted Tailwind CSS sources. */
+/**
+ * Load the current document and configured, trusted Tailwind CSS sources.
+ */
 export async function loadTailwindThemeSources(
   text: string,
   context: StrategyContext,
@@ -78,6 +80,9 @@ export async function loadTailwindThemeSources(
   return sources
 }
 
+/**
+ * Load relative CSS directives from the current source and report cancellation.
+ */
 async function loadCurrentTailwindDirectives(
   state: ThemeLoadState,
   source: ParsedTailwindThemeSource,
@@ -98,6 +103,9 @@ async function loadCurrentTailwindDirectives(
   return context.signal?.isCancellationRequested === true
 }
 
+/**
+ * Load configured theme paths within file limits and report cancellation.
+ */
 async function loadConfiguredTailwindPaths(
   state: ThemeLoadState,
   baseFilePath: string,
@@ -128,6 +136,9 @@ async function loadConfiguredTailwindPaths(
   return context.signal?.isCancellationRequested === true
 }
 
+/**
+ * Visit a theme source and its dependencies within depth and read limits.
+ */
 async function visitTailwindThemeSource(
   state: ThemeLoadState,
   filePath: string,
@@ -179,6 +190,9 @@ async function visitTailwindThemeSource(
   }
 }
 
+/**
+ * Expand a configured file, directory, or glob into bounded CSS source paths.
+ */
 async function expandConfiguredPath(
   baseFilePath: string,
   configuredPath: string,
@@ -222,6 +236,9 @@ async function expandConfiguredPath(
   }
 }
 
+/**
+ * Split a configured glob into its workspace base path and search pattern.
+ */
 function resolveGlob(
   baseFilePath: string,
   configuredPath: string,
@@ -246,6 +263,9 @@ function resolveGlob(
       }
 }
 
+/**
+ * Resolve a relative CSS import specifier against its containing file.
+ */
 function resolveRelativeCssSpecifier(
   filePath: string,
   specifier: string,
@@ -259,6 +279,9 @@ function resolveRelativeCssSpecifier(
   return resolveWorkspacePath(filePath, specifier)
 }
 
+/**
+ * Read a bounded theme source, reusing cache entries with matching metadata.
+ */
 async function readCachedSource(
   filePath: string,
   workspaceReadBudget?: WorkspaceReadBudget,
@@ -310,10 +333,16 @@ async function readCachedSource(
   }
 }
 
+/**
+ * Check whether a workspace path has a CSS extension.
+ */
 function isCssPath(filePath: string): boolean {
   return extnameWorkspacePath(filePath).toLowerCase() === '.css'
 }
 
+/**
+ * Check whether the current document supports CSS theme directives.
+ */
 function supportsCurrentDocumentDirectives(context: StrategyContext): boolean {
   return (
     STYLE_LANGUAGES.has(context.languageId) ||
@@ -321,6 +350,9 @@ function supportsCurrentDocumentDirectives(context: StrategyContext): boolean {
   )
 }
 
+/**
+ * Check whether a path contains glob metacharacters.
+ */
 function isGlobPath(filePath: string): boolean {
   return GLOB_META_REGEX.test(filePath)
 }
