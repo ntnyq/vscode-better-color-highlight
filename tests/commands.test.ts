@@ -178,6 +178,32 @@ describe('useCommands', () => {
     configSnapshot.useARGB = false
   })
 
+  it.each([
+    ['0xFF0000', false, '0xFF0000E6'],
+    ['0Xff0000', false, '0Xff0000e6'],
+    ['0xFF0000', true, '0xE6FF0000'],
+  ])(
+    'preserves numeric source %s when adjusting alpha (ARGB %s)',
+    async (originalText, useARGB, expected) => {
+      vi.resetModules()
+      registeredCommands.clear()
+      edit.mockClear()
+      replace.mockClear()
+      configSnapshot.useARGB = useARGB
+      sourceText = originalText
+      const { useCommands } = await import('../src/extension/commands')
+      useCommands()
+      await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
+        delta: -0.1,
+        originalColor: 'rgb(255, 0, 0)',
+        originalText,
+        range: { start: 0, end: originalText.length },
+        uri: 'file:///tmp/example.css',
+      })
+      expect(replace).toHaveBeenCalledWith(expect.any(Object), expected)
+    },
+  )
+
   it('registers the workspace palette and contrast commands', async () => {
     vi.resetModules()
     registeredCommands.clear()

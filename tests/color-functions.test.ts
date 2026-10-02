@@ -2,6 +2,19 @@ import { describe, expect, it } from 'vitest'
 import { findColorFunctions } from '../src/engine/strategies/color-functions'
 
 describe(findColorFunctions, () => {
+  it.each(['1', '.', ' ', '--'])(
+    'bounds malformed shorthand scanning for repeated %j',
+    repeated => {
+      const text = `--brand-rgb: ${repeated.repeat(64_000)}x`
+      const timings = Array.from({ length: 3 }, () => {
+        const start = performance.now()
+        expect(findColorFunctions(text)).toStrictEqual([])
+        return performance.now() - start
+      })
+      expect(Math.min(...timings)).toBeLessThan(500)
+    },
+  )
+
   it('finds rgb() function', () => {
     const result = findColorFunctions('color: rgb(255, 0, 0);')
     expect(result).toHaveLength(1)

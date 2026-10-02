@@ -151,6 +151,29 @@ describe('document color provider', () => {
     loggerError.mockClear()
   })
 
+  it.each([
+    [false, '0xFF000080'],
+    [true, '0x80FF0000'],
+  ])(
+    'only offers numeric hex replacements for numeric source (ARGB %s)',
+    async (useARGB, expected) => {
+      configSnapshot.useARGB = useARGB
+      const { provideColorPresentations } =
+        await import('../src/features/color-provider/document-color-provider')
+      const range = { id: 'source-range' } as unknown as Vscode.Range
+      const numericDocument = {
+        ...document,
+        languageId: 'typescript',
+        getText: () => '0xFF0000',
+      }
+      const result = provideColorPresentations(
+        new TestColor(1, 0, 0, 0.5) as unknown as Vscode.Color,
+        { document: numericDocument, range },
+      )
+      expect(result.map(item => item.label)).toStrictEqual([expected])
+    },
+  )
+
   it.each(semanticColorFixtures)(
     'excludes semantic $languageId ranges from generic color picker edits',
     async ({ text, languageId }) => {

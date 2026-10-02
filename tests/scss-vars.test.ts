@@ -16,7 +16,10 @@ import {
   resolve,
 } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
-import { findScssVars } from '../src/engine/strategies/scss-vars'
+import {
+  findScssVars,
+  resolveScssVarDefinition,
+} from '../src/engine/strategies/scss-vars'
 import type * as WorkspaceFileSystem from '../src/shared/workspace/file-system'
 import { FIXTURE_SCSS } from './fixtures'
 
@@ -52,6 +55,126 @@ vi.mock(
 )
 
 describe(findScssVars, () => {
+  it('discards results cancelled during asynchronous color resolution', async () => {
+    const text = '$brand: red; .a { color: $brand; }'
+    const signal = { isCancellationRequested: false }
+    const context = { languageId: 'scss', signal }
+    const matches = findScssVars(text, context)
+    const target = resolveScssVarDefinition(
+      text,
+      text.lastIndexOf('$brand'),
+      context,
+    )
+    queueMicrotask(() => {
+      signal.isCancellationRequested = true
+    })
+    await expect(matches).resolves.toStrictEqual([])
+    await expect(target).resolves.toBeNull()
+  })
+
+  it('does not resolve aliases to future assignments', async () => {
+    await expect(
+      findScssVars('$alias: $brand; $brand: red; .a { color: $alias; }'),
+    ).resolves.toStrictEqual([])
+  })
+
+  it('keeps aliases of default values and null defaults consistent', async () => {
+    const text =
+      '$base: null; $brand: $base; $brand: red !default; $alias: $brand !default; .a { color: $alias; }'
+    const matches = await findScssVars(text)
+    expect(matches.at(-1)?.color).toBe('rgb(255, 0, 0)')
+  })
+
+  it('invalidates outer bindings changed by dynamic control flow', async () => {
+    const text =
+      '$brand: red; @if $condition { $brand: blue; } .a { color: $brand; }'
+    await expect(findScssVars(text)).resolves.toStrictEqual([])
+  })
+
+  it('bounds pathological scope nesting', async () => {
+    const text = `$brand: red; ${'.a {'.repeat(1000)} color: $brand; ${'}'.repeat(1000)}`
+    await expect(findScssVars(text)).resolves.toStrictEqual([])
+  })
+
+  it('keeps local assignments inside their lexical scope', async () => {
+    const text =
+      '$brand: #ff0000; .a { $brand: #0000ff; color: $brand; .nested { color: $brand; } } .b { color: $brand; }'
+    const matches = await findScssVars(text)
+    expect(matches.map(match => match.color)).toStrictEqual([
+      'rgb(0, 0, 255)',
+      'rgb(0, 0, 255)',
+      'rgb(255, 0, 0)',
+    ])
+  })
+
+  it('evaluates aliases at assignment time and references at their source position', async () => {
+    const text =
+      '$brand: red; $alias: $brand; .a { color: $brand; } $brand: blue; .b { color: $alias; background: $brand; }'
+    const matches = await findScssVars(text)
+    expect(matches.map(match => match.color)).toStrictEqual([
+      'rgb(255, 0, 0)',
+      'rgb(255, 0, 0)',
+      'rgb(255, 0, 0)',
+      'rgb(0, 0, 255)',
+    ])
+  })
+
+  it('does not resolve variables before their declaration or outside their scope', async () => {
+    const text = '.a { color: $brand; $brand: red; } .b { color: $brand; }'
+    await expect(findScssVars(text)).resolves.toStrictEqual([])
+  })
+
+  it.each([
+    ['$brand: red !default; .a { color: $brand; }', 'rgb(255, 0, 0)'],
+    [
+      '$brand: red; $brand: blue !default; .a { color: $brand; }',
+      'rgb(255, 0, 0)',
+    ],
+    [
+      '$brand: null; $brand: blue !default; .a { color: $brand; }',
+      'rgb(0, 0, 255)',
+    ],
+    [
+      '$brand: red; .a { $brand: blue !default; color: $brand; }',
+      'rgb(255, 0, 0)',
+    ],
+    [
+      '$brand: red; .a { $brand: blue !global; } .b { color: $brand; }',
+      'rgb(0, 0, 255)',
+    ],
+    [
+      '$brand: null; .a { $brand: blue !global !default; } .b { color: $brand; }',
+      'rgb(0, 0, 255)',
+    ],
+  ])('honors assignment flags in %s', async (text, color) => {
+    const matches = await findScssVars(text)
+    expect(matches.map(match => match.color)).toStrictEqual([color])
+  })
+
+  it('ignores assignments in comments, strings and deferred mixin bodies', async () => {
+    const text =
+      '$brand: red; /* $brand: blue; */ .a { content: "$brand: green;"; } @mixin example { $brand: blue !global; } .b { color: $brand; }'
+    const matches = await findScssVars(text)
+    expect(matches.map(match => match.color)).toStrictEqual(['rgb(255, 0, 0)'])
+  })
+
+  it('does not export selector-local variables from a module', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'better-color-scss-'))
+    await writeFile(
+      join(dir, '_tokens.scss'),
+      '$brand: red !default; .a { $brand: blue; $local: green; }',
+      'utf8',
+    )
+    const text =
+      '@use "tokens"; .b { color: tokens.$brand; background: tokens.$local; }'
+    const result = await findScssVars(text, {
+      languageId: 'scss',
+      filePath: join(dir, 'entry.scss'),
+      resolveScssVariablesAcrossFiles: true,
+    })
+    expect(result.map(match => match.color)).toStrictEqual(['rgb(255, 0, 0)'])
+  })
+
   it('keeps detector output on usages when the last definition wins', async () => {
     const text = '$brand: #111111;\n$brand: #222222;\na { color: $brand; }'
     const result = await findScssVars(text)

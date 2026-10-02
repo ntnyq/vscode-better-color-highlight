@@ -12,7 +12,7 @@ import {
 import { config } from '../config'
 import { replaceActiveEditorRange } from './editor-range'
 import { getAdjustColorAlphaPayload } from './payloads'
-import { getFormatForSourceText, preserveHexCase } from './source-format'
+import { getFormatForSourceText, preserveHexStyle } from './source-format'
 
 /**
  * Adjust a color alpha channel and replace the original source range.
@@ -61,7 +61,7 @@ export async function adjustColorAlpha(value: unknown) {
   const replacement = formatColorPresentation(presentations, format)
   const normalizedReplacement =
     format === 'hex'
-      ? preserveHexCase(replacement, payload.originalText)
+      ? preserveHexStyle(replacement, payload.originalText)
       : replacement
 
   await replaceActiveEditorRange(payload, normalizedReplacement)

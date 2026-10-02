@@ -301,6 +301,11 @@ complete Tailwind variant chain in one static `class` or `className` attribute.
 The foreground range is the diagnostic location and the background range is
 related information.
 
+Tailwind important modifiers take precedence. Conflicting utilities with equal
+priority are skipped because their order in the class attribute does not
+determine the CSS cascade. Classes with filters, opacity, or blending utilities
+are also skipped, including when those effects have variants.
+
 Extension-owned diagnostics offer these Quick Fixes: `Check these colors`,
 `Go to foreground color`, `Go to background color`, and
 `Disable contrast diagnostics`. Actions revalidate the document and exact
@@ -482,6 +487,8 @@ trailing v4 important modifiers, arbitrary colors such as `bg-[#50d71e]` and
 `text-[oklch(...)]`, and custom-property shorthand such as
 `bg-(--color-brand)`. Prefix variants such as `tw:hover:bg-red-600` and
 trailing important utilities such as `bg-red-500!` are also recognized.
+Numeric slash opacity is a percentage: `/0.5` means 0.5% opacity, while
+the arbitrary modifier `/[0.5]` means 50%.
 Incomplete dynamic template fragments, arbitrary expressions that are not a
 complete supported color, malformed utilities, and negative color utilities
 are ignored.
@@ -555,6 +562,12 @@ dependency files of up to 512 KiB, and external reads remain disabled in
 untrusted workspaces.
 
 ## Color navigation
+
+SCSS color variables follow lexical scope and declaration order. Aliases retain
+their value at assignment; `!default` only assigns unset or `null` variables,
+and `!global` targets the root scope. Highlighting and navigation use the same
+bindings. Mixin/function execution and dynamic control flow are not evaluated;
+bindings affected by uncertain control-flow assignments are skipped.
 
 Go to Definition and Peek Definition are enabled by default for color-valued
 references in CSS custom properties, SCSS variables, Less variables, Stylus

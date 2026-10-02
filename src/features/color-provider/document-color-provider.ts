@@ -17,6 +17,7 @@ import {
   formatColorForSource,
   resolveColorSourceKind,
 } from '../../engine/presentation/source-color'
+import { preserveHexStyle } from '../../extension/commands/source-format'
 import { config } from '../../extension/config'
 import {
   formatColorPresentation,
@@ -191,6 +192,15 @@ export function provideColorPresentations(
   const presentations = getColorPresentationsFromRgba(rgba, {
     useARGB: config.useARGB,
   })
+
+  if (/^0x[\da-f]{6}(?:[\da-f]{2})?$/iu.test(sourceText)) {
+    return [
+      createColorPresentation(
+        preserveHexStyle(presentations.hex, sourceText),
+        context.range,
+      ),
+    ]
+  }
 
   return PRESENTATION_FORMATS.map(format =>
     createColorPresentation(

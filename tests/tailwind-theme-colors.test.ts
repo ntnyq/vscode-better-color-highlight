@@ -51,6 +51,24 @@ describe(measureFastestDuration, () => {
 })
 
 describe(findTailwindThemeColors, () => {
+  it.each([
+    ['0.5', 0.005],
+    ['.5', 0.005],
+    ['1.0', 0.01],
+    ['50.5', 0.505],
+    ['[0.5]', 0.5],
+    ['[50.5%]', 0.505],
+  ])(
+    'interprets opacity /%s without conflating arbitrary values',
+    (modifier, alpha) => {
+      expect(
+        findTailwindThemeColors(`text-white/${modifier}`, {
+          tailwindColorMode: 'v4',
+        }),
+      ).toMatchObject([{ color: `rgba(255, 255, 255, ${alpha})` }])
+    },
+  )
+
   it('projects highlight matches from shared resolved utility metadata', () => {
     const text = 'dark:bg-black'
     const resolved = resolveTailwindColorUtilities(text)

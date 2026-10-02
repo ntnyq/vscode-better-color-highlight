@@ -1,7 +1,7 @@
 import { isDartColorSource } from '../../engine/strategies/dart-colors'
 import { replaceActiveEditorRange } from './editor-range'
 import { getReplaceColorPayload } from './payloads'
-import { preserveHexCase } from './source-format'
+import { preserveHexStyle } from './source-format'
 import type { CopyColorFormat } from './types'
 
 /**
@@ -24,7 +24,7 @@ export async function replaceColorValue(
 
   const replacement =
     format === 'hex'
-      ? preserveHexCase(payload.value, payload.originalText)
+      ? preserveHexStyle(payload.value, payload.originalText)
       : payload.value
 
   await replaceActiveEditorRange(payload, replacement)

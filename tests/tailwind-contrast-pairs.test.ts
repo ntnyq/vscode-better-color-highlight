@@ -10,8 +10,80 @@ function context(languageId: string): StrategyContext {
 }
 
 describe('tailwind contrast pairs', () => {
-  it('pairs final same-variant utilities in one static class attribute', async () => {
-    const text = `<div class="dark:bg-white dark:bg-black dark:text-red-500 dark:text-white">`
+  it.each([
+    'text-black text-white bg-white',
+    'text-white text-black bg-white',
+    '!text-black text-white! bg-white',
+    'bg-black bg-white text-white',
+    'bg-white bg-black text-white',
+    'bg-black text-white text-(--missing)',
+    'bg-black text-(--missing) text-white',
+  ])('rejects equally important conflicting utilities: %s', async classes => {
+    await expect(
+      findContrastPairs(`<div class="${classes}">`, context('html')),
+    ).resolves.toStrictEqual([])
+  })
+
+  it.each([
+    '!text-black text-white bg-white',
+    'text-white text-black! bg-white',
+    'text-black! text-white bg-white',
+    'text-white !text-black bg-white',
+  ])(
+    'honors important color utilities independently of source order: %s',
+    async classes => {
+      await expect(
+        findContrastPairs(`<div class="${classes}">`, context('html')),
+      ).resolves.toMatchObject([
+        {
+          foreground: { color: 'rgb(0, 0, 0)' },
+          background: { color: 'rgb(255, 255, 255)' },
+        },
+      ])
+    },
+  )
+
+  it('allows duplicates and an unambiguous important image reset', async () => {
+    await expect(
+      findContrastPairs(
+        '<div class="text-black text-black bg-white bg-[url(a.png)] !bg-none">',
+        context('html'),
+      ),
+    ).resolves.toHaveLength(1)
+  })
+
+  it.each([
+    'brightness-0',
+    'hover:brightness-0',
+    'tw:dark:!brightness-0',
+    'opacity-50',
+    'text-opacity-50',
+    'bg-opacity-50',
+    'filter-[brightness(0)]',
+    'filter-(--effect)',
+    'mix-blend-difference',
+    'bg-blend-multiply',
+    'backdrop-blur-sm',
+    'grayscale',
+    'invert',
+    'sepia',
+    'blur-sm',
+    'contrast-0',
+    'hue-rotate-90',
+    'bg-clip-text',
+    '[filter:brightness(0)]',
+    'hover:[opacity:0.5]',
+  ])('skips unmodeled rendering effects: %s', async effect => {
+    await expect(
+      findContrastPairs(
+        `<div class="text-black bg-white ${effect}">`,
+        context('html'),
+      ),
+    ).resolves.toStrictEqual([])
+  })
+
+  it('pairs unambiguous same-variant utilities in one static class attribute', async () => {
+    const text = `<div class="dark:bg-black dark:text-white">`
 
     const pairs = await findContrastPairs(text, context('html'))
 
@@ -169,19 +241,19 @@ describe('tailwind contrast pairs', () => {
     },
   )
 
-  it('lets bg-none clear active background-image state without clearing color', async () => {
+  it('does not infer background-image reset precedence from class order', async () => {
     await expect(
       findContrastPairs(
         '<div class="bg-[url(image.png)] bg-black bg-none text-white">',
         context('html'),
       ),
-    ).resolves.toHaveLength(1)
+    ).resolves.toStrictEqual([])
     await expect(
       findContrastPairs(
         '<div class="bg-black bg-[url(image.png)] bg-none text-white">',
         context('html'),
       ),
-    ).resolves.toHaveLength(1)
+    ).resolves.toStrictEqual([])
   })
 
   it.each([
@@ -208,7 +280,7 @@ describe('tailwind contrast pairs', () => {
           `<div class="bg-black ${utility} bg-none text-white">`,
           context('html'),
         ),
-      ).resolves.toHaveLength(1)
+      ).resolves.toStrictEqual([])
     },
   )
 
@@ -233,19 +305,19 @@ describe('tailwind contrast pairs', () => {
     ).resolves.toHaveLength(1)
   })
 
-  it('lets arbitrary image none reset background-image state', async () => {
+  it('rejects ambiguous arbitrary background-image resets', async () => {
     await expect(
       findContrastPairs(
         '<div class="bg-[url(image.png)] bg-black bg-[image:none] text-white">',
         context('html'),
       ),
-    ).resolves.toHaveLength(1)
+    ).resolves.toStrictEqual([])
     await expect(
       findContrastPairs(
         '<div class="bg-[url(image.png)] bg-black bg-[image:_none] text-white">',
         context('html'),
       ),
-    ).resolves.toHaveLength(1)
+    ).resolves.toStrictEqual([])
     await expect(
       findContrastPairs(
         '<div class="bg-black bg-[image:none] bg-[url(image.png)] text-white">',

@@ -14,9 +14,9 @@ import {
 import type { ResolvedContrastColor, ResolvedContrastPair } from './types'
 
 interface UtilityGroup {
-  background?: TailwindColorUtility
-  foreground?: TailwindColorUtility
-  hasBackgroundImage: boolean
+  readonly backgrounds: TailwindColorUtility[]
+  readonly foregrounds: TailwindColorUtility[]
+  readonly images: TailwindColorUtility[]
   readonly variants: readonly string[]
 }
 
@@ -123,14 +123,22 @@ export async function findTailwindContrastPairs(
       if (context.signal?.isCancellationRequested) {
         return []
       }
-      if (group.hasBackgroundImage || !group.background || !group.foreground) {
+      const backgroundUtility = selectUnambiguousUtility(group.backgrounds)
+      const foregroundUtility = selectUnambiguousUtility(group.foregrounds)
+      const imageUtility = selectUnambiguousUtility(group.images)
+      if (
+        !backgroundUtility ||
+        !foregroundUtility ||
+        imageUtility === null ||
+        (imageUtility && !isBackgroundImageReset(imageUtility))
+      ) {
         continue
       }
       const resolvedBackground = resolvedByRange.get(
-        utilityKey(group.background),
+        utilityKey(backgroundUtility),
       )
       const resolvedForeground = resolvedByRange.get(
-        utilityKey(group.foreground),
+        utilityKey(foregroundUtility),
       )
       if (!resolvedBackground || !resolvedForeground) {
         continue
@@ -209,15 +217,24 @@ function collectUtilityGroups(
       continue
     }
     const key = JSON.stringify(utility.variants)
-    const group = groups.get(key) ?? {
-      hasBackgroundImage: false,
+    const group: UtilityGroup = groups.get(key) ?? {
+      backgrounds: [],
+      foregrounds: [],
+      images: [],
       variants: utility.variants,
     }
     const isResolved = resolvedByRange.has(utilityKey(utility))
     if (utility.prefix === 'bg') {
-      updateBackgroundGroup(group, utility, isResolved)
+      if (
+        isBackgroundImageReset(utility) ||
+        isBackgroundImageUtility(utility)
+      ) {
+        group.images.push(utility)
+      } else if (isResolved || !isKnownNonColorBackgroundUtility(utility)) {
+        group.backgrounds.push(utility)
+      }
     } else if (isResolved || !isKnownNonColorTextUtility(utility)) {
-      group.foreground = utility
+      group.foregrounds.push(utility)
     }
     groups.set(key, group)
   }
@@ -225,31 +242,42 @@ function collectUtilityGroups(
 }
 
 /**
- * Reject class text containing braces that may represent dynamic expressions.
+ * Reject dynamic classes and rendering effects whose result is not modeled.
+ * Any variant can affect the rendered element, so invalidate the attribute.
  */
 function isStaticRenderableClass(text: string): boolean {
-  return !/[{}]/u.test(text)
+  return (
+    !/[{}]/u.test(text) &&
+    !text
+      .split(/\s+/u)
+      .some(token =>
+        /(?:^|:)!?-?(?:(?:opacity|text-opacity|bg-opacity|filter|backdrop|drop-shadow|blur|brightness|contrast|grayscale|hue-rotate|invert|saturate|sepia|mix-blend|bg-blend|mask)-|(?:filter|grayscale|invert|sepia|hidden|invisible|bg-clip-text)!?$|\[(?:-webkit-)?(?:filter|backdrop-filter|opacity|mix-blend-mode|background-blend-mode):)/u.test(
+          token,
+        ),
+      )
+  )
 }
 
 /**
- * Update a utility group's background color or image state in source order.
+ * Honor important utilities, but never infer stylesheet order from HTML order.
+ * Undefined means absent; null means conflicting candidates at equal priority.
  */
-function updateBackgroundGroup(
-  group: UtilityGroup,
-  utility: TailwindColorUtility,
-  isResolved: boolean,
-): void {
-  if (isBackgroundImageReset(utility)) {
-    group.hasBackgroundImage = false
-    return
-  }
-  if (isBackgroundImageUtility(utility)) {
-    group.hasBackgroundImage = true
-    return
-  }
-  if (isResolved || !isKnownNonColorBackgroundUtility(utility)) {
-    group.background = utility
-  }
+function selectUnambiguousUtility(
+  utilities: readonly TailwindColorUtility[],
+): TailwindColorUtility | null | undefined {
+  const important = utilities.some(utility => utility.important)
+  const candidates = utilities.filter(
+    utility => Boolean(utility.important) === important,
+  )
+  const first = candidates[0]
+  return candidates.every(
+    utility =>
+      utility.kind === first.kind &&
+      utility.value === first.value &&
+      utility.opacity === first.opacity,
+  )
+    ? first
+    : null
 }
 
 /**

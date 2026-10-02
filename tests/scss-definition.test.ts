@@ -72,6 +72,39 @@ describe('resolveScssVarDefinition', () => {
     statMock.mockClear()
   })
 
+  it('uses the same scoped bindings for navigation and highlighting', async () => {
+    const { resolveScssVarDefinition } =
+      await import('../src/engine/strategies/scss-vars')
+    const text =
+      '$brand: red !default; .a { $brand: blue; color: $brand; } .b { color: $brand; }'
+    const local = await resolveScssVarDefinition(
+      text,
+      text.indexOf('color: $brand') + 7,
+      context,
+    )
+    const global = await resolveScssVarDefinition(
+      text,
+      text.lastIndexOf('$brand'),
+      context,
+    )
+    expect(local?.targetSelectionRange.start).toBe(text.indexOf('$brand: blue'))
+    expect(global?.targetSelectionRange.start).toBe(0)
+    expect(global?.targetRange.end).toBe(text.indexOf(' !default'))
+  })
+
+  it('navigates frozen aliases to the original assignment', async () => {
+    const { resolveScssVarDefinition } =
+      await import('../src/engine/strategies/scss-vars')
+    const text =
+      '$brand: red; $alias: $brand; $brand: blue; .b { color: $alias; }'
+    const target = await resolveScssVarDefinition(
+      text,
+      text.lastIndexOf('$alias'),
+      context,
+    )
+    expect(target?.targetSelectionRange.start).toBe(0)
+  })
+
   it('resolves local direct values, aliases, last definitions, and excludes declarations', async () => {
     const { resolveScssVarDefinition } =
       await import('../src/engine/strategies/scss-vars')

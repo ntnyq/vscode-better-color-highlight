@@ -222,7 +222,7 @@ function parseOpacityModifier(value: string | undefined): number | undefined {
     numericValue = Number(normalized.slice(0, -1)) / 100
   } else {
     numericValue = Number(normalized)
-    if (!arbitrary && !normalized.includes('.')) {
+    if (!arbitrary) {
       numericValue /= 100
     }
   }

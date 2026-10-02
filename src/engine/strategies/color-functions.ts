@@ -11,7 +11,7 @@ const HYPRLAND_RGBA_HEX_REGEX =
   /(?<hyprlandRgba>rgba\(\s*(?<hex>[a-f\d]{6}(?:[a-f\d]{2})?)\s*\))/giu
 
 const CSS_VAR_SHORTHAND_REGEX =
-  /(?<propName>--[\w-]+-(?:rgb|hsl|lch|oklch|lab|oklab))\s*:\s*(?<value>[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?\s+[-+]?[\d.*]*\.?[\d]+(?:%|deg|grad|rad|turn)?(?:\s*\/\s*[-+]?[\d.*]*\.?[\d]+%?)?)\s*;/giu
+  /(?<![-\w])(?<propName>--[\w-]+)\s*:\s*(?<value>[^;{}]{1,256});/giu
 
 type ShorthandSpace = 'hsl' | 'lab' | 'lch' | 'oklab' | 'oklch' | 'rgb'
 
@@ -117,7 +117,11 @@ function findCssVariableShorthands(text: string): ColorMatch[] {
     if (!propertyName || !value) {
       continue
     }
-    const space = propertyName.split('-').pop() as ShorthandSpace
+    // Bound candidate lengths here; the CSS parser validates numeric syntax.
+    const space = inferShorthandSpace(propertyName)
+    if (!space) {
+      continue
+    }
     const color = parseShorthandValue(value, space)
     if (!color) {
       continue

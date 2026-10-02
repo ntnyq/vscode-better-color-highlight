@@ -86,7 +86,10 @@ describe('stylesheet variable chains', () => {
           `${prefix}v${index} ${delimiter} ${prefix}v${index - 1};`,
         )
       }
-      const text = `${definitions.toReversed().join('\n')}\na { color: ${prefix}v1200; }`
+      // Sass evaluates assignments immediately; forward aliases are invalid.
+      const orderedDefinitions =
+        languageId === 'scss' ? definitions : definitions.toReversed()
+      const text = `${orderedDefinitions.join('\n')}\na { color: ${prefix}v1200; }`
       const matches = await detector(text, { languageId })
       expect(matches.at(-1)).toMatchObject({
         start: text.lastIndexOf(`${prefix}v1200`),

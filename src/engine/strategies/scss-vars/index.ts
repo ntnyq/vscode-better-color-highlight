@@ -17,22 +17,12 @@ import type {
   StrategyContext,
 } from '../../detection'
 import { resolveDirectColor } from '../shared/direct-color'
-import { resolveVariableColors } from '../shared/variable-colors'
-import {
-  getCapturedVariableValue,
-  resolveRangedVariableDefinition,
-  toColorDefinitionTarget,
-} from '../shared/variable-definition'
+import { toColorDefinitionTarget } from '../shared/variable-definition'
 import type {
   RangedVariableDefinition,
   VariableUsage,
 } from '../shared/variable-definition'
-
-/**
- * Regex for SCSS variable definitions anywhere in a stylesheet:
- *   $my-color: #ff0000;
- */
-const SCSS_VAR_DEF_REGEX = /\$(?<name>[-\w]+)\s*:\s*(?<value>[^;]+?)\s*;/gu
+import { bindScssVariables } from './scope'
 
 /**
  * Regex for SCSS `@use` statements with optional namespace aliases.
@@ -101,17 +91,6 @@ interface ScssFileContentCacheEntry {
  * Process-wide cache for dependency file contents.
  */
 const scssFileContentCache = new Map<string, ScssFileContentCacheEntry>()
-
-/**
- * Parse a value that is exactly one SCSS variable alias.
- *
- * @param value - Normalized SCSS value
- * @returns Variable name without `$`, or null when value is composite
- */
-function getExactScssVarAlias(value: string): string | null {
-  const match = value.match(/^\$(?<name>[-\w]+)$/u)
-  return match?.groups?.name ?? null
-}
 
 /**
  * Resolved SCSS module metadata and exported variable definitions.
@@ -184,43 +163,6 @@ function getScssNamespace(specifier: string): string {
   const bareName = ext ? fileName.slice(0, -ext.length) : fileName
 
   return bareName.replace(/^_/u, '')
-}
-
-/**
- * Collect SCSS variable definitions from text.
- *
- * @param text - The SCSS source text to scan
- * @returns Map of variable names to raw values
- */
-function collectScssVarDefs(
-  text: string,
-  filePath: string,
-): Map<string, RangedVariableDefinition> {
-  const varDefs = new Map<string, RangedVariableDefinition>()
-
-  for (const m of text.matchAll(SCSS_VAR_DEF_REGEX)) {
-    const name = m.groups?.name
-    const rawValue = m.groups?.value
-    const value = rawValue?.trim()
-    if (!name || !rawValue || !value) {
-      continue
-    }
-
-    const matchStart = m.index ?? 0
-    const relativeNameStart = m[0].indexOf(`$${name}`)
-    const nameStart = matchStart + relativeNameStart
-    const delimiter = m[0].indexOf(':', relativeNameStart + name.length + 1)
-    const capturedValue = getCapturedVariableValue(m, rawValue, delimiter + 1)
-    varDefs.set(name, {
-      name,
-      value: capturedValue.value,
-      filePath,
-      nameRange: { start: nameStart, end: nameStart + name.length + 1 },
-      valueRange: capturedValue.valueRange,
-    })
-  }
-
-  return varDefs
 }
 
 /**
@@ -529,7 +471,7 @@ async function loadScssModule(
       return null
     }
 
-    const varDefs = collectScssVarDefs(text, filePath)
+    const varDefs = new Map<string, RangedVariableDefinition>()
     const importedVarDefs = await collectImportedScssVarDefs(
       text,
       { languageId: 'scss', filePath },
@@ -558,7 +500,7 @@ async function loadScssModule(
     return {
       filePath,
       namespace,
-      varDefs,
+      varDefs: bindScssVariables(text, filePath, varDefs).definitions,
     }
   } finally {
     state.resolvingFiles.delete(filePath)
@@ -792,43 +734,28 @@ async function collectUsedScssModules(
 }
 
 /**
- * Collect all variable definitions visible in the entry SCSS file.
- *
- * @param text - The entry SCSS source text
- * @param context - Optional strategy context controlling cross-file resolution
- * @returns Map of visible variable names to raw values
+ * Load dependency exports, then bind entry references using lexical scope and
+ * assignment order. Both highlighting and navigation consume these bindings.
  */
-async function collectEntryScssVarDefs(
-  text: string,
-  context?: StrategyContext,
-  state = createScssResolveState(context),
-): Promise<Map<string, RangedVariableDefinition>> {
-  const varDefs = collectScssVarDefs(text, context?.filePath ?? '')
-  if (!canResolveScssAcrossFiles(context)) {
-    return varDefs
+async function bindEntryScssVariables(text: string, context?: StrategyContext) {
+  const state = createScssResolveState(context)
+  const definitions = new Map<string, RangedVariableDefinition>()
+  if (canResolveScssAcrossFiles(context)) {
+    mergeMissingScssVarDefs(
+      definitions,
+      await collectImportedScssVarDefs(text, context, state),
+    )
+    mergeMissingScssVarDefs(
+      definitions,
+      await collectUsedStarScssVarDefs(text, context, state),
+    )
+    for (const module of await collectUsedScssModules(text, context, state)) {
+      for (const [name, definition] of module.varDefs) {
+        definitions.set(`${module.namespace}.${name}`, definition)
+      }
+    }
   }
-
-  mergeMissingScssVarDefs(
-    varDefs,
-    await collectImportedScssVarDefs(text, context, state),
-  )
-  mergeMissingScssVarDefs(
-    varDefs,
-    await collectUsedStarScssVarDefs(text, context, state),
-  )
-
-  return varDefs
-}
-
-/**
- * Project ranged SCSS definitions into a map of raw values.
- */
-function toRawScssVarDefs(
-  definitions: ReadonlyMap<string, RangedVariableDefinition>,
-): Map<string, string> {
-  return new Map(
-    [...definitions].map(([name, definition]) => [name, definition.value]),
-  )
+  return bindScssVariables(text, context?.filePath ?? '', definitions)
 }
 
 interface ScssVarToken extends VariableUsage {
@@ -882,231 +809,44 @@ export async function resolveScssVarDefinition(
     return null
   }
 
-  const state = createScssResolveState(context)
-  if (!usage.namespace) {
-    const entryDefinitions = await collectEntryScssVarDefs(text, context, state)
-    const definition = await resolveRangedVariableDefinition(
-      usage.name,
-      entryDefinitions,
-      getExactScssVarAlias,
-      async value => (await resolveDirectColor(value, context)) !== null,
-    )
-    return definition ? toColorDefinitionTarget(usage, definition) : null
-  }
-
-  if (!canResolveScssAcrossFiles(context)) {
+  const { usages } = await bindEntryScssVariables(text, context)
+  const bound = usages.find(
+    item => item.originRange.start === usage.originRange.start,
+  )
+  if (!bound || context?.signal?.isCancellationRequested) {
     return null
   }
-  await collectEntryScssVarDefs(text, context, state)
-  const modules = await collectUsedScssModules(text, context, state)
-  const targetModule = modules.find(
-    module => module.namespace === usage.namespace,
-  )
-  if (!targetModule) {
-    return null
-  }
-  const definition = await resolveRangedVariableDefinition(
-    usage.name,
-    targetModule.varDefs,
-    getExactScssVarAlias,
-    async value => (await resolveDirectColor(value, context)) !== null,
-  )
-  return definition ? toColorDefinitionTarget(usage, definition) : null
+  const color = await resolveDirectColor(bound.definition.value, context)
+  return color && !context?.signal?.isCancellationRequested
+    ? toColorDefinitionTarget(bound, bound.definition)
+    : null
 }
 
 /**
- * Detect SCSS variable colors.
- * Resolves variables from the current document and a limited dependency graph
- * for @use, @forward, and @import.
- *
- * Phase 1: Find all $var definitions and resolve their values.
- * Phase 2: Find all $var usages and map them to resolved colors.
- *
- * @param text - The document text to scan for SCSS variable colors
- * @param context - Optional strategy context with file path and resolver settings
- * @returns Array of color matches found in the text
+ * Detect SCSS variable colors using the binding visible at each reference.
  */
 export async function findScssVars(
   text: string,
   context?: StrategyContext,
 ): Promise<ColorMatch[]> {
-  const resolveState = createScssResolveState(context)
-  // Phase 1: Find variable definitions
-  const rangedVarDefs = await collectEntryScssVarDefs(
-    text,
-    context,
-    resolveState,
-  )
-  const varDefs = toRawScssVarDefs(rangedVarDefs)
-  const varColors = await resolveVariableColors(
-    varDefs,
-    getExactScssVarAlias,
-    value => resolveDirectColor(value, context),
-    context?.signal,
-  )
-  const modules = canResolveScssAcrossFiles(context)
-    ? await collectUsedScssModules(text, context, resolveState)
-    : []
-
-  const moduleColors = await resolveScssModuleColors(modules, context)
-
-  if (varColors.size === 0 && moduleColors.size === 0) {
-    return []
-  }
-
-  // Phase 2: Find $var usages
+  const { usages } = await bindEntryScssVariables(text, context)
+  const colors = new Map<RangedVariableDefinition, string | null>()
   const matches: ColorMatch[] = []
-  const matchableNames = [...varColors.keys()]
-  const usageRegex = buildScssVarUsageRegex(matchableNames)
-
-  if (usageRegex) {
-    for (const m of text.matchAll(usageRegex)) {
-      const prefix = m.groups?.prefix ?? ''
-      const fullMatch = m.groups?.full
-      const name = m.groups?.name
-      if (!fullMatch || !name) {
-        continue
-      }
-
-      const start = (m.index ?? 0) + prefix.length
-      const end = start + fullMatch.length
-
-      const color = varColors.get(name)
-      if (!color) {
-        continue
-      }
-
-      matches.push({ start, end, color })
-    }
-  }
-
-  matches.push(...findNamespacedScssVarUsages(text, moduleColors))
-
-  return matches
-}
-
-/**
- * Resolve loaded SCSS module variable definitions to colors.
- *
- * @param modules - Loaded SCSS modules with raw variable definitions
- * @returns Map of namespace to resolved variable color map
- */
-async function resolveScssModuleColors(
-  modules: ScssModule[],
-  context?: StrategyContext,
-): Promise<Map<string, Map<string, string>>> {
-  const moduleColors = new Map<string, Map<string, string>>()
-
-  for (const module of modules) {
+  for (const usage of usages) {
     if (context?.signal?.isCancellationRequested) {
-      return new Map()
+      return []
     }
-    const colors = await resolveVariableColors(
-      toRawScssVarDefs(module.varDefs),
-      getExactScssVarAlias,
-      value => resolveDirectColor(value, context),
-      context?.signal,
-    )
-    if (colors.size > 0) {
-      moduleColors.set(module.namespace, colors)
+    const { definition, originRange } = usage
+    if (!colors.has(definition)) {
+      colors.set(
+        definition,
+        await resolveDirectColor(definition.value, context),
+      )
     }
-  }
-
-  return moduleColors
-}
-
-/**
- * Find `namespace.$var` usages for resolved SCSS module colors.
- *
- * @param text - The SCSS source text to scan
- * @param moduleColors - Resolved module colors grouped by namespace
- * @returns Array of color matches for namespaced variable usages
- */
-function findNamespacedScssVarUsages(
-  text: string,
-  moduleColors: Map<string, Map<string, string>>,
-): ColorMatch[] {
-  const matches: ColorMatch[] = []
-
-  for (const [namespace, colors] of moduleColors) {
-    const usageRegex = buildNamespacedScssVarUsageRegex(namespace, [
-      ...colors.keys(),
-    ])
-    if (!usageRegex) {
-      continue
-    }
-
-    for (const m of text.matchAll(usageRegex)) {
-      const prefix = m.groups?.prefix ?? ''
-      const fullMatch = m.groups?.full
-      const name = m.groups?.name
-      if (!fullMatch || !name) {
-        continue
-      }
-
-      const color = colors.get(name)
-      if (!color) {
-        continue
-      }
-
-      const start = (m.index ?? 0) + prefix.length
-      const end = start + fullMatch.length
-
-      matches.push({ start, end, color })
+    const color = colors.get(definition)
+    if (color) {
+      matches.push({ start: originRange.start, end: originRange.end, color })
     }
   }
-
-  return matches
-}
-
-/**
- * Build a regex that matches SCSS $var usages for the given variable names.
- * Skips definitions ($varName:), hyphenated names ($varName-xxx),
- * and namespaced usages (namespace.$varName).
- *
- * @param varNames - Array of SCSS variable names without the $ prefix
- * @returns A RegExp matching $name usages, or null if no names provided
- */
-function buildScssVarUsageRegex(varNames: string[]): RegExp | null {
-  if (varNames.length === 0) {
-    return null
-  }
-  const names = varNames
-    .sort((a, b) => b.length - a.length)
-    .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`))
-    .join('|')
-  return new RegExp(
-    `(?<prefix>^|[^-\\w$.])(?<full>\\$(?<name>${names}))(?![-\\w])(?!(?:\\s*:))`,
-    'gmu',
-  )
-}
-
-/**
- * Build a regex that matches namespaced SCSS variable usages.
- *
- * @param namespace - The namespace before `.$`
- * @param varNames - Variable names exported by the namespace
- * @returns A RegExp matching namespaced variable usages, or null if no names are provided
- */
-function buildNamespacedScssVarUsageRegex(
-  namespace: string,
-  varNames: string[],
-): RegExp | null {
-  if (varNames.length === 0) {
-    return null
-  }
-
-  const escapedNamespace = namespace.replaceAll(
-    /[.*+?^${}()|[\]\\]/gu,
-    String.raw`\$&`,
-  )
-  const names = varNames
-    .sort((a, b) => b.length - a.length)
-    .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`))
-    .join('|')
-
-  return new RegExp(
-    `(?<prefix>^|[^-\\w$])(?<full>${escapedNamespace}\\.\\$(?<name>${names}))(?![-\\w])`,
-    'gmu',
-  )
+  return context?.signal?.isCancellationRequested ? [] : matches
 }

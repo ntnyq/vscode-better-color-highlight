@@ -43,6 +43,7 @@ export type TailwindColorUtilityKind = 'arbitrary' | 'named' | 'property'
 export interface TailwindColorUtility {
   readonly end: number
   readonly kind: TailwindColorUtilityKind
+  readonly important?: boolean
   readonly opacity?: string
   readonly prefix: (typeof COLOR_UTILITY_PREFIXES)[number]
   readonly start: number
@@ -225,7 +226,15 @@ function parseBody(
       continue
     }
     const parsed = parseValueAndOpacity(body.slice(marker.length))
-    return parsed ? { ...parsed, prefix } : null
+    return parsed
+      ? {
+          ...parsed,
+          prefix,
+          ...(hasLeadingImportant || hasTrailingImportant
+            ? { important: true }
+            : {}),
+        }
+      : null
   }
 
   return null
