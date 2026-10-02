@@ -1,4 +1,4 @@
-# vscode-better-color-highlight
+# 🎨 vscode-better-color-highlight
 
 [![GitHub release](https://img.shields.io/github/v/release/ntnyq/vscode-better-color-highlight?include_prereleases&label=Visual%20Studio%20Marketplace)](https://marketplace.visualstudio.com/items?itemName=ntnyq.vscode-better-color-highlight)
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ntnyq/vscode-better-color-highlight/ci.yml?branch=main)](https://github.com/ntnyq/vscode-better-color-highlight/actions/workflows/ci.yml)
@@ -7,7 +7,10 @@
 
 Highlight and preview colors in multiple formats across code, comments, and strings.
 
-## Commands
+## ⌨️ Commands
+
+<details>
+<summary>Available commands</summary>
 
 <!-- commands -->
 
@@ -29,7 +32,12 @@ Highlight and preview colors in multiple formats across code, comments, and stri
 
 <!-- commands -->
 
-## Configs
+</details>
+
+## ⚙️ Configs
+
+<details>
+<summary>Configuration reference and default values</summary>
 
 <!-- configs-list -->
 
@@ -215,7 +223,12 @@ Default: `false`
 
 <!-- configs-list -->
 
-## ANSI SGR escape colors
+</details>
+
+## 🖥️ ANSI SGR escape colors
+
+<details>
+<summary>Enable ANSI highlighting and customize the palette</summary>
 
 ANSI SGR color highlighting is opt-in. Enable it for source strings, scripts,
 fixtures, and captured output with:
@@ -253,7 +266,12 @@ copy-only in hover details: generic replacement, alpha adjustment, and VS Code's
 native color picker are disabled because replacing the escape sequence with a
 CSS color would corrupt its source syntax.
 
-## Workspace palette and color contrast
+</details>
+
+## 🎨 Workspace palette and color contrast
+
+<details>
+<summary>Workspace scans, palette actions, and contrast checks</summary>
 
 Run `color-highlight.showWorkspacePalette` to scan the workspace on demand and
 group every detected color by its canonical value. The scan uses
@@ -290,7 +308,12 @@ the unrounded value. A translucent foreground is composited over the selected
 opaque background in sRGB. A translucent background is indeterminate because
 its canvas color is unknown.
 
-### Contrast diagnostics
+</details>
+
+### 🔍 Contrast diagnostics
+
+<details>
+<summary>Supported diagnostics, Quick Fixes, and limitations</summary>
 
 `color-highlight.enableContrastDiagnostics` reports deterministic low-contrast
 pairs in open documents; the default is `false`. Diagnostics are warnings only
@@ -325,7 +348,9 @@ palette budget. Runtime access uses VS Code Workspace FS and document APIs, so
 the commands and diagnostics work in desktop VS Code, vscode.dev, github.dev,
 and virtual workspaces when their files are readable by VS Code.
 
-## Supported color formats
+</details>
+
+## 🌈 Supported color formats
 
 <!-- cSpell: disable-next-line -->
 
@@ -351,7 +376,10 @@ and virtual workspaces when their files are readable by VS Code.
 - [x] JSON / JSONC / `.tokens` Design Tokens：legacy color strings and DTCG structured colors
 - [x] YAML Design Tokens：DTCG structured colors
 
-### Language-aware packed colors
+### 📦 Language-aware packed colors
+
+<details>
+<summary>Alpha order and syntax-preserving edits</summary>
 
 Hex alpha order is inferred only from unambiguous source context. CSS and
 generic hex values keep alpha last, while Android resource XML, Jetpack
@@ -365,7 +393,12 @@ Complete constructor expressions own their editor range, so their nested hex
 literals are not highlighted or edited a second time. The global `useARGB`
 setting remains available as a compatibility override for generic hex input.
 
-### Native component colors
+</details>
+
+### 📱 Native component colors
+
+<details>
+<summary>Kotlin, Java, and Swift constructors and editing behavior</summary>
 
 Kotlin documents support Compose integer RGB(A) channels in 0–255 and
 floating-point RGB(A) channels in 0–1, with positional or named arguments.
@@ -391,7 +424,12 @@ Dynamic arguments, custom Compose color spaces, import aliases, asset colors,
 system colors, and resource-reference navigation are outside this subset.
 Each native call is bounded to 4,096 characters.
 
-### Static CSS color expressions
+</details>
+
+### 🧮 Static CSS color expressions
+
+<details>
+<summary>Color functions, interpolation, relative colors, and parser limits</summary>
 
 Modern CSS color functions accept the Color 4 `none` component. A missing
 component resolves to zero for a standalone preview and is carried through
@@ -430,12 +468,17 @@ independently. This is a bounded subset of
 [CSS Color 5](https://www.w3.org/TR/css-color-5/#relative-colors), including the
 draft `alpha()` syntax; it does not imply browser support for every form.
 
-## Tailwind CSS theme colors
+</details>
+
+## 🌬️ Tailwind CSS theme colors
 
 Tailwind color utilities use one of two bundled palettes. The legacy palette
 keeps existing Tailwind CSS v3 projects compatible, while the v4 palette comes
 from Tailwind's official `tailwindcss/colors` export and includes its published
 OKLCH values and color families.
+
+<details>
+<summary>Palette selection, custom themes, utility syntax, and navigation</summary>
 
 `color-highlight.tailwindColorMode` controls palette selection:
 
@@ -507,11 +550,20 @@ search the workspace beyond configured theme paths and their bounded relative
 dependencies. Workspace file access uses VS Code APIs so the same behavior is
 available in desktop, Web, and virtual workspaces when the files are readable.
 
+</details>
+
+## 🧩 CSS custom properties
+
 Cross-file CSS custom property resolution is conservative. It only runs when
 `color-highlight.resolveCssVariablesAcrossFiles` is enabled, reads sources from
 `color-highlight.cssVariablePaths`, and trusts declarations only from selectors
 listed in `color-highlight.cssVariableTrustedSelectors`. Ambiguous runtime
 cascade cases are skipped instead of guessed.
+
+## 🏷️ Design tokens
+
+<details>
+<summary>JSON and YAML token matching, DTCG colors, and cross-file references</summary>
 
 JSON, JSONC, and JSON-formatted `.tokens` design token matching is conservative
 by default. It highlights only `value` and `$value` string fields. To highlight
@@ -561,7 +613,12 @@ Only relative references are loaded, each resolution reads at most 64 unique
 dependency files of up to 512 KiB, and external reads remain disabled in
 untrusted workspaces.
 
-## Color navigation
+</details>
+
+## 🧭 Color navigation
+
+<details>
+<summary>Variable resolution, cross-file navigation, hovers, and the color picker</summary>
 
 SCSS color variables follow lexical scope and declaration order. Aliases retain
 their value at assignment; `!default` only assigns unset or `null` variables,
@@ -617,20 +674,25 @@ provided to VS Code's native color picker with HEX, RGB, HSL, and OKLCH
 replacement presentations. It is disabled by default so the native swatch does
 not appear alongside the extension's custom marker unless explicitly requested.
 
-## Design records
+</details>
+
+## 📝 Design records
 
 Completed architectural design records live in [`docs/design`](./docs/design/README.md).
 They preserve historical decisions and intentional non-goals; they are not a
 product roadmap or the authoritative description of current behavior.
 
-## Credits
+## 🙏 Credits
 
 This extension is implemented based on [naumovs/vscode-ext-color-highlight](https://github.com/naumovs/vscode-ext-color-highlight.git).
 Thanks to the original project and its contributors for the foundation of the VS Code color highlighting experience.
 
-## What is different
+## ✨ What is different
 
 Compared with the original Color Highlight extension, this project keeps the familiar `color-highlight.*` settings namespace while expanding parser coverage, reducing false positives, and modernizing the extension internals.
+
+<details>
+<summary>Feature and implementation differences</summary>
 
 - Modern TypeScript/ESM implementation with `reactive-vscode`, `tsdown`, `vitest`, `oxlint`, and `oxfmt`.
 - Explicit enable/disable commands: `color-highlight.enable` and `color-highlight.disable`.
@@ -649,9 +711,14 @@ Compared with the original Color Highlight extension, this project keeps the fam
 - DTCG structured color tokens, local aliases, and opt-in trusted JSON/JSONC/YAML cross-file references.
 - Broader test coverage, including parser regression tests and playground snapshots.
 
-## Migration from Color Highlight
+</details>
+
+## 🚀 Migration from Color Highlight
 
 Most settings from `naumovs.color-highlight` can be kept as-is because this extension intentionally keeps the same `color-highlight.*` configuration namespace for compatible options.
+
+<details>
+<summary>Setting migration reference and configuration examples</summary>
 
 | Original setting                               | In this extension                                          | Migration note                                                                                                                                                                 |
 | ---------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -709,11 +776,13 @@ If you want broader named-color matching outside style-language syntax, use:
 }
 ```
 
-## VS Code Web
+</details>
+
+## 🌐 VS Code Web
 
 This extension supports browser-based VS Code environments, including [vscode.dev](https://vscode.dev) and [github.dev](https://github.dev).
 Runtime file access uses the VS Code Workspace FS API, so SCSS dependency resolution can work with web and virtual workspace file systems when those files are readable by VS Code.
 
-## License
+## 📄 License
 
 [MIT](./LICENSE) License © 2026-PRESENT [ntnyq](https://github.com/ntnyq)

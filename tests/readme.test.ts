@@ -93,7 +93,7 @@ describe('readme generated config documentation', () => {
     )
     expect(scopedConfigs.defaults.matchAnsiEscapeCodes).toBe(false)
     expect(scopedConfigs.defaults.ansiPalette).toStrictEqual({})
-    expect(readme).toContain('## ANSI SGR escape colors')
+    expect(readme).toContain('## 🖥️ ANSI SGR escape colors')
     expect(readme).toContain('`38;5;N`')
     expect(readme).toContain('`38;2;R;G;B`')
     expect(readme).toContain('copy-only')
@@ -150,7 +150,7 @@ describe('readme generated config documentation', () => {
   it('documents the complete workspace palette contract', async () => {
     const readme = await readFile('README.md', 'utf8')
 
-    expect(readme).toContain('## Workspace palette and color contrast')
+    expect(readme).toContain('## 🎨 Workspace palette and color contrast')
     expect(readme).toContain('`color-highlight.showWorkspacePalette`')
     expect(readme).toContain('`color-highlight.checkColorContrast`')
     expect(readme).toContain('`"**/*"`')
@@ -322,7 +322,7 @@ describe('readme generated config documentation', () => {
     expect(scopedConfigs.defaults.tailwindColorMode).toBe('auto')
     expect(scopedConfigs.defaults.tailwindStylesheetPaths).toStrictEqual([])
 
-    expect(readme).toContain('## Tailwind CSS theme colors')
+    expect(readme).toContain('## 🌬️ Tailwind CSS theme colors')
     expect(readme).toContain('official `tailwindcss/colors` export')
     expect(readme).toContain('OKLCH')
     expect(readme).toMatch(
