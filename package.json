@@ -1,7 +1,7 @@
 {
   "name": "vscode-better-color-highlight",
   "displayName": "Better Color Highlight",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "description": "Highlight and preview colors in multiple formats across code, comments, and strings.",
   "categories": [
@@ -62,7 +62,7 @@
     "dev": "tsdown --watch",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "generate:meta": "vscode-ext-gen --output src/meta.ts --scope=color-highlight",
+    "generate:meta": "vscode-ext-gen --output src/meta.ts --scope=color-highlight && oxfmt README.md",
     "lint": "oxlint",
     "pack": "vsce package --no-dependencies",
     "prepare": "husky",
