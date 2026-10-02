@@ -17,13 +17,18 @@ Use `pnpm` for all package tasks.
 
 - `pnpm dev`: run `tsdown` in watch mode for local extension development.
 - `pnpm build`: bundle the extension into `dist/`.
-- `pnpm test`: run the Vitest unit and snapshot suite.
-- `pnpm test:e2e`: build, then run the VS Code extension-host smoke test.
+- `pnpm test`: run unit/snapshot tests and desktop/Web extension-host tests.
+- `pnpm test:unit`: run only the Vitest unit and snapshot suite.
+- `pnpm test:e2e`: build, then run Electron and Chromium extension-host tests.
+- `pnpm test:package`: package a VSIX, install it into a temporary profile,
+  and verify the shipped extension activates and highlights colors.
+- `pnpm bench`: run the detection performance baselines.
 - `pnpm lint`: run `oxlint`.
 - `pnpm format` / `pnpm format:check`: write or verify formatting with
   `oxfmt`.
-- `pnpm typecheck`: run TypeScript checks with `tsgo --noEmit`.
-- `pnpm pack`: create a `.vsix` package with `vsce`.
+- `pnpm typecheck`: run TypeScript checks with `tsc --noEmit`.
+- `pnpm run pack`: create a `.vsix` package with `vsce` (the `run` is required
+  to distinguish the script from pnpm's package-archive command).
 
 ## Coding Style & Naming Conventions
 
@@ -40,8 +45,10 @@ Vitest covers parser, utility, cache, and snapshot behavior. Add focused unit
 tests for new parsing rules or regression fixes, and update playground
 snapshots only when behavior intentionally changes. Use `tests/e2e/` for
 extension-host smoke coverage that needs real VS Code APIs. Run `pnpm test`
-before submitting; also run `pnpm test:e2e` for runtime, configuration, or
-activation changes.
+before submitting; it includes `pnpm test:e2e` for runtime, configuration, and
+activation coverage. Run `pnpm test:package` before a release or after changing
+the package contents. Benchmark measurements are informational, not CI timing
+thresholds.
 
 ## Commit & Pull Request Guidelines
 

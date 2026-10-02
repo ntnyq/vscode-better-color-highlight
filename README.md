@@ -332,11 +332,14 @@ and virtual workspaces when their files are readable by VS Code.
 - [x] `oklab()` / `oklch()`（modern whitespace/slash syntax）
 - [x] `color()`：`srgb` `srgb-linear` `display-p3` `display-p3-linear` `a98-rgb` `prophoto-rgb` `rec2020` `xyz`
 - [x] Static `color-mix()`：predefined interpolation spaces, percentages, premultiplied alpha, hue methods, and nested colors
+- [x] Static relative CSS colors：`rgb(from red r g b / .5)`, `oklch(from var(--brand) l calc(c * .9) h)`, and `alpha(from red / .5)`
 - [x] Named color（`red` `rebeccapurple`）
 - [x] CSS / SCSS / Less / Stylus variables
 - [x] Extra expressions：bare RGB / HSL triplets、`--color-rgb: 255 0 0` shorthands
 - [x] Tailwind theme color utilities：`bg-red-500` `text-sky-300` `hover:border-white/75`
 - [x] Android / Jetpack Compose：resource `#ARGB` / `#AARRGGBB`、`Color(0xAARRGGBB)`
+- [x] Kotlin/Java static components：Compose `Color(...)`, `Color.hsl(...)`, `Color.hsv(...)`; Android `Color.rgb(...)`, `Color.argb(...)`, and HEX `Color.parseColor(...)`
+- [x] SwiftUI/UIKit：static RGB, grayscale, HSB, and explicit sRGB/linear sRGB/Display P3 constructors
 - [x] Flutter/Dart：`Color(0xffRRGGBB)`、`Color.fromARGB(a, r, g, b)`、`Color.fromRGBO(r, g, b, o)`、`Color.from(...)`、`Colors.deepPurple`
 - [x] Hyprland：`rgba(rrggbb)`、`rgba(rrggbbaa)`
 - [x] ANSI SGR escape colors：basic, bright, indexed, and truecolor forms
@@ -347,15 +350,41 @@ and virtual workspaces when their files are readable by VS Code.
 
 Hex alpha order is inferred only from unambiguous source context. CSS and
 generic hex values keep alpha last, while Android resource XML, Jetpack
-Compose, and Dart packed colors use alpha first. Android detection is limited
+Compose, and Dart packed colors use alpha first. Android XML detection is limited
 to XML files under Android `res/color`, `res/drawable`, `res/mipmap`, and
-`res/values` directories; Compose detection is limited to complete Kotlin
+`res/values` directories; Compose packed detection is limited to complete Kotlin
 `Color(0xAARRGGBB)` expressions.
 
 The color picker and alpha commands preserve the original language syntax.
 Complete constructor expressions own their editor range, so their nested hex
 literals are not highlighted or edited a second time. The global `useARGB`
 setting remains available as a compatibility override for generic hex input.
+
+### Native component colors
+
+Kotlin documents support Compose integer RGB(A) channels in 0–255 and
+floating-point RGB(A) channels in 0–1, with positional or named arguments.
+Float literals must use `f`/`F` consistently. `Color.hsl(...)` and
+`Color.hsv(...)` take hue in degrees and normalized saturation/lightness/value.
+Kotlin and Java also support Android `Color.rgb(...)`, `Color.argb(...)`, and
+`Color.parseColor("#RRGGBB")` / `Color.parseColor("#AARRGGBB")`. Recognized
+fully qualified framework names are accepted. Packed constructors retain
+their original integer suffix when edited.
+
+Swift documents support `Color(red:green:blue:opacity:)`,
+`Color(white:opacity:)`, `Color(hue:saturation:brightness:opacity:)`, and their
+static `UIColor` counterparts with required `alpha:`. Explicit SwiftUI
+`.sRGB`, `.sRGBLinear`, and `.displayP3` RGB/grayscale spaces and UIKit
+`displayP3Red:` are supported. Components are limited to 0–1; Swift hue is a
+fraction of a turn. Omitted Compose alpha and SwiftUI opacity default to 1.
+
+Picker and alpha edits retain argument labels, float suffixes, and comments
+where possible. Android `rgb` becomes `argb` when adding alpha; grayscale
+Swift initializers become RGB if the selected color is no longer gray.
+Detection is textual and scoped to language IDs, not import/type resolution.
+Dynamic arguments, custom Compose color spaces, import aliases, asset colors,
+system colors, and resource-reference navigation are outside this subset.
+Each native call is bounded to 4,096 characters.
 
 ### Static CSS color expressions
 
@@ -372,10 +401,29 @@ mixtures. It supports all predefined Color 4 interpolation spaces, the
 percentages, and premultiplied alpha. Intermediate wide-gamut channels retain
 floating-point precision until the final editor preview is produced.
 
-Runtime-dependent operands such as `var()`, `currentColor`, `calc()`, custom
-color profiles, and environment-dependent color functions are intentionally
-left unresolved. Their statically detectable nested colors may still be
-highlighted independently.
+Relative `rgb`, `hsl`, `hwb`, Lab/LCH, OKLab/OKLCH, and `color()` expressions
+convert their origin into the target space before reading channel identifiers.
+Omitted alpha inherits the origin's alpha. `alpha(from <color> / <alpha>)`
+changes transparency while retaining the origin space. The supported `calc()`
+subset includes channel identifiers, finite numeric/percentage/angle literals,
+parentheses, and `+`, `-`, `*`, `/` with compatible units. Division by zero,
+mixed-unit sums, and other math functions are skipped. Binary `+` and `-`
+require surrounding whitespace.
+
+In CSS, SCSS, and Less, deterministic custom properties can supply origins,
+channels, and arithmetic operands. Existing selector/at-rule ambiguity rules,
+cross-file opt-in settings, and workspace trust gates apply. Variable expansion
+retains source precision, with limits of 16 dependency levels, 1,024 expansion
+steps, and 65,536 expanded characters. Color expressions retain their 32-level
+nesting limit; arithmetic additionally allows at most 256 tokens and 4,096
+characters. Complete resolved expressions take priority over inner matches.
+
+Runtime-dependent values such as `currentColor`, ambiguous or cyclic variables,
+custom color profiles, and environment-dependent color functions remain
+unresolved. Their statically detectable nested colors may still be highlighted
+independently. This is a bounded subset of
+[CSS Color 5](https://www.w3.org/TR/css-color-5/#relative-colors), including the
+draft `alpha()` syntax; it does not imply browser support for every form.
 
 ## Tailwind CSS theme colors
 

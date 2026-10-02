@@ -49,7 +49,8 @@
   "publisher": "ntnyq",
   "files": [
     "LICENSE",
-    "dist/*",
+    "dist/index.js",
+    "dist/index.cjs",
     "res/*"
   ],
   "type": "module",
@@ -74,6 +75,7 @@
     "test:e2e": "pnpm build && run-s test:e2e:electron test:e2e:web",
     "test:e2e:electron": "node tests/e2e/run.ts",
     "test:e2e:web": "vscode-test-web --browser=chromium --quality=stable --extensionDevelopmentPath=. --extensionTestsPath=dist/web-test.cjs",
+    "test:package": "node tests/e2e/package.ts",
     "test:unit": "vitest",
     "typecheck": "tsc --noEmit",
     "vscode:prepublish": "pnpm run build"

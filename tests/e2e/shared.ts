@@ -83,6 +83,32 @@ export async function assertInMemoryCssHighlighting(): Promise<void> {
 }
 
 /**
+ * Verify relative expressions, variable expansion, and overlap arbitration in
+ * the real desktop/Web decoration pipeline.
+ */
+export async function assertRelativeColorHighlighting(): Promise<void> {
+  const document = await workspace.openTextDocument({
+    content:
+      ':root { --brand: #ff0000; } .sample { color: rgb(from var(--brand) calc(r / 2) g b); background: alpha(from blue / .5); border-color: hwb(from red calc(h + 120) w b); }',
+    language: 'css',
+  })
+  await window.showTextDocument(document)
+  const state = await waitForHighlightState(document.uri.toString(), 4)
+  assertEqual(
+    JSON.stringify([...state.colors].sort()),
+    JSON.stringify(
+      [
+        'rgb(255, 0, 0)',
+        'rgb(128, 0, 0)',
+        'rgba(0, 0, 255, 0.5)',
+        'rgb(0, 255, 0)',
+      ].sort(),
+    ),
+    'Expected complete relative-color expressions',
+  )
+}
+
+/**
  * Enable ANSI matching temporarily and verify object-config palette handling.
  */
 export async function assertInMemoryAnsiHighlighting(): Promise<void> {

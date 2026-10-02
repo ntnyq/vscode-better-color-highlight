@@ -3,6 +3,7 @@ import {
   getStrategies,
   shouldProcessLanguage,
 } from '../src/engine/detection/registry'
+import { findAndroidColors } from '../src/engine/strategies/android-colors'
 import { findAnsiSgrColors } from '../src/engine/strategies/ansi-sgr'
 import { findColorFunctions } from '../src/engine/strategies/color-functions'
 import { findComposeArgbHexColors } from '../src/engine/strategies/compose-colors'
@@ -13,6 +14,7 @@ import { findHslNoFunction } from '../src/engine/strategies/hsl-no-fn'
 import { findHwb } from '../src/engine/strategies/hwb'
 import { findNamedColors } from '../src/engine/strategies/named-colors'
 import { findRgbNoFunction } from '../src/engine/strategies/rgb-no-fn'
+import { findSwiftColors } from '../src/engine/strategies/swift-colors'
 import { findTailwindThemeColors } from '../src/engine/strategies/tailwind-theme'
 import type { NestedScopedConfigs } from '../src/meta'
 
@@ -51,6 +53,18 @@ const defaultConfig: NestedScopedConfigs = {
 }
 
 describe(getStrategies, () => {
+  it('registers native detectors only for their language contexts', () => {
+    expect(getStrategies('kotlin', defaultConfig)).toContain(findAndroidColors)
+    expect(getStrategies('java', defaultConfig)).toContain(findAndroidColors)
+    expect(getStrategies('swift', defaultConfig)).toContain(findSwiftColors)
+    expect(getStrategies('typescript', defaultConfig)).not.toContain(
+      findAndroidColors,
+    )
+    expect(getStrategies('typescript', defaultConfig)).not.toContain(
+      findSwiftColors,
+    )
+  })
+
   it('includes hex, color functions, and hwb for all languages', () => {
     const strategies = getStrategies('typescript', defaultConfig)
     expect(strategies).toContain(findHexRGBA)

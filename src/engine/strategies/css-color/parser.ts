@@ -1,5 +1,6 @@
 import { hexToRgb, rgbString } from '../../../shared/color'
 import { NAMED_COLORS } from '../../../shared/constants'
+import { parseRelativeColor } from './relative'
 import {
   convertCssColor,
   createCssColor,
@@ -53,10 +54,12 @@ const MIX_PERCENTAGE_PREFIX_REGEX = new RegExp(
   'iu',
 )
 const SUPPORTED_COLOR_FUNCTIONS: ReadonlySet<string> = new Set([
+  'alpha',
   'color',
   'color-mix',
   'hsl',
   'hsla',
+  'hwb',
   'lab',
   'lch',
   'oklab',
@@ -152,6 +155,9 @@ function getFunctionHead(
     start--
   }
   const name = text.slice(start, openIndex)
+  if (/[.$]/u.test(text[start - 1] ?? '')) {
+    return undefined
+  }
   return /^[a-z][\w-]*$/iu.test(name)
     ? { name: name.toLowerCase(), start }
     : undefined
@@ -194,6 +200,12 @@ function parseCssColorExpressionAtDepth(
     return null
   }
 
+  if (/^from\s/iu.test(envelope.args.trim())) {
+    return parseRelativeColor(envelope.name, envelope.args, origin =>
+      parseCssColorExpressionAtDepth(origin, depth + 1),
+    )
+  }
+
   switch (envelope.name) {
     case 'rgb':
     case 'rgba': {
@@ -229,7 +241,7 @@ function parseCssColorExpressionAtDepth(
  */
 export function parseHwbColor(source: string): CssColorValue | null {
   const envelope = parseFunctionEnvelope(source.trim())
-  return envelope?.name === 'hwb' ? parseHwbArguments(envelope.args) : null
+  return envelope?.name === 'hwb' ? parseCssColorExpression(source) : null
 }
 
 /**

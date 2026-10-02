@@ -15,6 +15,7 @@ import {
   assertInMemoryCssHighlighting,
   assertInMemoryContrastDiagnostic,
   assertRequiredCommands,
+  assertRelativeColorHighlighting,
   waitForHighlightState,
 } from '../shared.ts'
 
@@ -46,6 +47,7 @@ export async function run() {
   await activateExtension()
   await assertRequiredCommands()
   await assertInMemoryCssHighlighting()
+  await assertRelativeColorHighlighting()
   await assertInMemoryAnsiHighlighting()
   await assertInMemoryContrastDiagnostic()
 

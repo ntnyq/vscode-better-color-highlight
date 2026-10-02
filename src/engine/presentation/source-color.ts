@@ -1,11 +1,13 @@
 import { hexARGBToRgb } from '../../shared/color'
 import type { RgbaColor } from '../../shared/color/presentation'
 import type { ColorSourceKind } from '../detection'
+import { parseAndroidColor } from '../strategies/android-colors'
 import {
   formatDartColor,
   formatDartColorWithAlphaDelta,
   isDartColorSource,
 } from '../strategies/dart-colors'
+import { parseSwiftColor } from '../strategies/swift-colors'
 import { isAndroidResourceXml } from './source-context'
 
 const ANDROID_XML_HEX_REGEX = /^#[a-f\d]{3,4}(?:[a-f\d]{2}){0,2}$/iu
@@ -21,6 +23,8 @@ const COLOR_SOURCE_KINDS: ReadonlySet<ColorSourceKind> = new Set([
   'android-xml-hex',
   'compose-argb-hex',
   'dart',
+  'android-color',
+  'swift-color',
 ])
 
 /**
@@ -47,6 +51,16 @@ export function resolveColorSourceKind({
 
   if (languageId === 'kotlin' && COMPOSE_ARGB_HEX_REGEX.test(sourceText)) {
     return 'compose-argb-hex'
+  }
+
+  if (
+    (languageId === 'kotlin' || languageId === 'java') &&
+    parseAndroidColor(sourceText, languageId)
+  ) {
+    return 'android-color'
+  }
+  if (languageId === 'swift' && parseSwiftColor(sourceText)) {
+    return 'swift-color'
   }
 
   if (
@@ -80,6 +94,12 @@ export function formatColorForSource(
   sourceKind: ColorSourceKind,
 ): string | null {
   switch (sourceKind) {
+    case 'android-color': {
+      return parseAndroidColor(sourceText)?.format(color) ?? null
+    }
+    case 'swift-color': {
+      return parseSwiftColor(sourceText)?.format(color) ?? null
+    }
     case 'android-xml-hex': {
       return formatAndroidXmlHex(color, sourceText)
     }
@@ -102,6 +122,19 @@ export function formatColorForSourceWithAlphaDelta(
 ): string | null {
   if (sourceKind === 'dart') {
     return formatDartColorWithAlphaDelta(delta, sourceText)
+  }
+
+  if (sourceKind === 'android-color' || sourceKind === 'swift-color') {
+    const parsed =
+      sourceKind === 'android-color'
+        ? parseAndroidColor(sourceText)
+        : parseSwiftColor(sourceText)
+    return (
+      parsed?.format({
+        ...parsed.color,
+        a: Math.min(1, Math.max(0, parsed.color.a + delta)),
+      }) ?? null
+    )
   }
 
   const color = parsePackedArgbSource(sourceText, sourceKind)
@@ -153,7 +186,7 @@ function formatAndroidXmlHex(color: RgbaColor, sourceText: string): string {
 function formatComposeArgbHex(color: RgbaColor, sourceText: string): string {
   const sourceHex = sourceText.match(COMPOSE_ARGB_HEX_REGEX)?.groups?.hex ?? ''
   const hex = formatArgbHex(color, '0x', true, sourceHex)
-  return `Color(${hex})`
+  return sourceText.replace(sourceHex, hex)
 }
 
 /**

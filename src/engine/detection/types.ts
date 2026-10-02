@@ -35,7 +35,12 @@ export interface ColorMatch {
 export type ColorEditMode = 'generic' | 'source' | 'read-only'
 
 /** Source syntaxes that require language-aware presentation behavior. */
-export type ColorSourceKind = 'android-xml-hex' | 'compose-argb-hex' | 'dart'
+export type ColorSourceKind =
+  | 'android-xml-hex'
+  | 'compose-argb-hex'
+  | 'dart'
+  | 'android-color'
+  | 'swift-color'
 
 /** Optional concrete RGB overrides for the base ANSI color palette. */
 export interface AnsiPaletteOverrides {

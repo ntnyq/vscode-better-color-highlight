@@ -1,0 +1,153 @@
+{
+  "file": "relative-colors.css",
+  "languageId": "css",
+  "strategyNames": [
+    "findHexRGBA",
+    "findColorFunctions",
+    "findHwb",
+    "findTailwindThemeColors",
+    "findNamedColors",
+    "findRgbNoFunction",
+    "findHslNoFunction",
+    "findCssVars",
+    "findAnsiSgrColors"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 2,
+      "column": 12,
+      "text": "oklch(65% 0.2 30 / 0.8)",
+      "range": [
+        19,
+        42
+      ],
+      "color": "rgba(240, 80, 61, 0.8)",
+      "render": {
+        "backgroundColor": "rgb(240, 80, 61)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(240, 80, 61)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 4,
+      "column": 13,
+      "text": "oklch(from var(--brand) l calc(c * var(--factor)) h)",
+      "range": [
+        73,
+        125
+      ],
+      "color": "rgba(232, 90, 72, 0.8)",
+      "render": {
+        "backgroundColor": "rgb(232, 90, 72)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(232, 90, 72)"
+      }
+    },
+    {
+      "index": 2,
+      "line": 8,
+      "column": 10,
+      "text": "rgb(from red r g b / 50%)",
+      "range": [
+        149,
+        174
+      ],
+      "color": "rgba(255, 0, 0, 0.5)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 3,
+      "line": 9,
+      "column": 15,
+      "text": "hsl(from red calc(h + 120) s l)",
+      "range": [
+        190,
+        221
+      ],
+      "color": "rgb(0, 255, 0)",
+      "render": {
+        "backgroundColor": "rgb(0, 255, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 255, 0)"
+      }
+    },
+    {
+      "index": 4,
+      "line": 10,
+      "column": 17,
+      "text": "hwb(from rgb(255 0 0) calc(h + 240) w b)",
+      "range": [
+        239,
+        279
+      ],
+      "color": "rgb(0, 0, 255)",
+      "render": {
+        "backgroundColor": "rgb(0, 0, 255)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 0, 255)"
+      }
+    },
+    {
+      "index": 5,
+      "line": 11,
+      "column": 18,
+      "text": "color(from var(--brand) display-p3 r g b)",
+      "range": [
+        298,
+        339
+      ],
+      "color": "rgba(240, 80, 61, 0.8)",
+      "render": {
+        "backgroundColor": "rgb(240, 80, 61)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(240, 80, 61)"
+      }
+    },
+    {
+      "index": 6,
+      "line": 12,
+      "column": 26,
+      "text": "alpha(from var(--softer) / calc(alpha * 0.5))",
+      "range": [
+        366,
+        411
+      ],
+      "color": "rgba(232, 90, 72, 0.4)",
+      "render": {
+        "backgroundColor": "rgb(232, 90, 72)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(232, 90, 72)"
+      }
+    },
+    {
+      "index": 7,
+      "line": 13,
+      "column": 23,
+      "text": "color-mix(in srgb, var(--brand), white)",
+      "range": [
+        435,
+        474
+      ],
+      "color": "rgba(249, 177, 169, 0.9)",
+      "render": {
+        "backgroundColor": "rgb(249, 177, 169)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(249, 177, 169)"
+      }
+    }
+  ]
+}

@@ -99,8 +99,11 @@ export function getHueChannelIndex(space: CssColorSpace): number | null {
 export function convertCssColor(
   color: CssColorValue,
   targetSpace: CssColorSpace,
+  options: { readonly preservePowerless?: boolean } = {},
 ): CssColorValue {
-  const sourceMissing = getEffectiveMissing(color)
+  const sourceMissing = options.preservePowerless
+    ? color.missing
+    : getEffectiveMissing(color)
   if (color.space === targetSpace) {
     return { ...color, missing: sourceMissing }
   }
@@ -111,9 +114,11 @@ export function convertCssColor(
     targetSpace,
     sourceMissing,
   )
-  const targetPowerless = getPowerlessComponents(targetSpace, channels)
-  for (let index = 0; index < 3; index++) {
-    missing[index] ||= targetPowerless[index]
+  if (!options.preservePowerless) {
+    const targetPowerless = getPowerlessComponents(targetSpace, channels)
+    for (let index = 0; index < 3; index++) {
+      missing[index] ||= targetPowerless[index]
+    }
   }
 
   return {

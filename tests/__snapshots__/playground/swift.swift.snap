@@ -1,0 +1,170 @@
+{
+  "file": "swift.swift",
+  "languageId": "swift",
+  "strategyNames": [
+    "findHexRGBA",
+    "findColorFunctions",
+    "findHwb",
+    "findTailwindThemeColors",
+    "findNamedColors",
+    "findRgbNoFunction",
+    "findHslNoFunction",
+    "findSwiftColors",
+    "findAnsiSgrColors"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 4,
+      "column": 14,
+      "text": "Color(red: 1, green: 0, blue: 0)",
+      "range": [
+        42,
+        74
+      ],
+      "color": "rgb(255, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 5,
+      "column": 19,
+      "text": "Color(.sRGB, red: 1, green: 0, blue: 0, opacity: 0.5)",
+      "range": [
+        93,
+        146
+      ],
+      "color": "rgba(255, 0, 0, 0.5)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 2,
+      "line": 6,
+      "column": 14,
+      "text": "Color(.sRGBLinear, red: 0.5, green: 0.5, blue: 0.5)",
+      "range": [
+        160,
+        211
+      ],
+      "color": "rgb(188, 188, 188)",
+      "render": {
+        "backgroundColor": "rgb(188, 188, 188)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(188, 188, 188)"
+      }
+    },
+    {
+      "index": 3,
+      "line": 7,
+      "column": 12,
+      "text": "Color(.displayP3, red: 1, green: 0, blue: 0)",
+      "range": [
+        223,
+        267
+      ],
+      "color": "rgb(255, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 4,
+      "line": 8,
+      "column": 5,
+      "text": "gray",
+      "range": [
+        272,
+        276
+      ],
+      "color": "rgb(128, 128, 128)",
+      "render": {
+        "backgroundColor": "rgb(128, 128, 128)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(128, 128, 128)"
+      }
+    },
+    {
+      "index": 5,
+      "line": 8,
+      "column": 12,
+      "text": "Color(white: 0.5)",
+      "range": [
+        279,
+        296
+      ],
+      "color": "rgb(128, 128, 128)",
+      "render": {
+        "backgroundColor": "rgb(128, 128, 128)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(128, 128, 128)"
+      }
+    },
+    {
+      "index": 6,
+      "line": 9,
+      "column": 11,
+      "text": "Color(hue: 0.5, saturation: 1, brightness: 1)",
+      "range": [
+        307,
+        352
+      ],
+      "color": "rgb(0, 255, 255)",
+      "render": {
+        "backgroundColor": "rgb(0, 255, 255)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 255, 255)"
+      }
+    },
+    {
+      "index": 7,
+      "line": 10,
+      "column": 10,
+      "text": "UIColor(red: 1, green: 0, blue: 0, alpha: 0.5)",
+      "range": [
+        362,
+        408
+      ],
+      "color": "rgba(255, 0, 0, 0.5)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 8,
+      "line": 11,
+      "column": 14,
+      "text": "UIKit.UIColor(white: 0.5, alpha: 1)",
+      "range": [
+        422,
+        457
+      ],
+      "color": "rgb(128, 128, 128)",
+      "render": {
+        "backgroundColor": "rgb(128, 128, 128)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(128, 128, 128)"
+      }
+    }
+  ]
+}

@@ -1,17 +1,17 @@
 import type { ColorMatch } from '../detection'
-import { formatCssColor, parseHwbColor } from './css-color/parser'
-
-const HWB_FUNCTION_REGEX = /(?<source>hwb\([^)]*\))/giu
+import {
+  formatCssColor,
+  parseHwbColor,
+  scanCssColorFunctions,
+} from './css-color/parser'
 
 /**
  * Detect modern CSS hwb() functions.
  */
 export function findHwb(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
-  for (const match of text.matchAll(HWB_FUNCTION_REGEX)) {
-    const source = match.groups?.source
-    const start = match.index ?? 0
-    if (!source || (start > 0 && /[-\w]/u.test(text[start - 1]))) {
+  for (const { name, source, start, end } of scanCssColorFunctions(text)) {
+    if (name !== 'hwb') {
       continue
     }
     const parsed = parseHwbColor(source)
@@ -20,7 +20,7 @@ export function findHwb(text: string): ColorMatch[] {
     }
     matches.push({
       start,
-      end: start + source.length,
+      end,
       color: formatCssColor(parsed),
     })
   }

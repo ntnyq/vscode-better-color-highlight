@@ -1,0 +1,188 @@
+{
+  "file": "android.kt",
+  "languageId": "kotlin",
+  "strategyNames": [
+    "findHexRGBA",
+    "findColorFunctions",
+    "findHwb",
+    "findTailwindThemeColors",
+    "findNamedColors",
+    "findRgbNoFunction",
+    "findHslNoFunction",
+    "findComposeArgbHexColors",
+    "findAndroidColors",
+    "findAnsiSgrColors"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 2,
+      "column": 14,
+      "text": "Color(0x80FF0000UL)",
+      "range": [
+        86,
+        105
+      ],
+      "color": "rgba(255, 0, 0, 0.502)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 3,
+      "column": 14,
+      "text": "Color(255, 0, 0)",
+      "range": [
+        119,
+        135
+      ],
+      "color": "rgb(255, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 2,
+      "line": 4,
+      "column": 19,
+      "text": "Color(red = 1f, green = 0f, blue = 0f, alpha = .5f)",
+      "range": [
+        154,
+        205
+      ],
+      "color": "rgba(255, 0, 0, 0.5)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 3,
+      "line": 5,
+      "column": 11,
+      "text": "Color.hsl(120f, 1f, .5f)",
+      "range": [
+        216,
+        240
+      ],
+      "color": "rgb(0, 255, 0)",
+      "render": {
+        "backgroundColor": "rgb(0, 255, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 255, 0)"
+      }
+    },
+    {
+      "index": 4,
+      "line": 6,
+      "column": 18,
+      "text": "Color.hsv(240f, 1f, 1f, .5f)",
+      "range": [
+        258,
+        286
+      ],
+      "color": "rgba(0, 0, 255, 0.5)",
+      "render": {
+        "backgroundColor": "rgb(0, 0, 255)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 0, 255)"
+      }
+    },
+    {
+      "index": 5,
+      "line": 7,
+      "column": 17,
+      "text": "android.graphics.Color.argb(128, 255, 0, 0)",
+      "range": [
+        303,
+        346
+      ],
+      "color": "rgba(255, 0, 0, 0.502)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 6,
+      "line": 8,
+      "column": 14,
+      "text": "android.graphics.Color.parseColor(\"#80336699\")",
+      "range": [
+        360,
+        406
+      ],
+      "color": "rgba(51, 102, 153, 0.502)",
+      "render": {
+        "backgroundColor": "rgb(51, 102, 153)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(51, 102, 153)"
+      }
+    },
+    {
+      "index": 7,
+      "line": 11,
+      "column": 21,
+      "text": "red",
+      "range": [
+        505,
+        508
+      ],
+      "color": "rgb(255, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 8,
+      "line": 11,
+      "column": 36,
+      "text": "green",
+      "range": [
+        520,
+        525
+      ],
+      "color": "rgb(0, 128, 0)",
+      "render": {
+        "backgroundColor": "rgb(0, 128, 0)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 128, 0)"
+      }
+    },
+    {
+      "index": 9,
+      "line": 11,
+      "column": 48,
+      "text": "blue",
+      "range": [
+        532,
+        536
+      ],
+      "color": "rgb(0, 0, 255)",
+      "render": {
+        "backgroundColor": "rgb(0, 0, 255)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 0, 255)"
+      }
+    }
+  ]
+}

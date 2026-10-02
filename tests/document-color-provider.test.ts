@@ -425,6 +425,40 @@ describe('document color provider', () => {
     ).toStrictEqual(['Color(0x80FF0000)'])
   })
 
+  it.each([
+    ['kotlin', 'Color(255, 0, 0)', 'Color(255, 0, 0, 128)'],
+    ['java', 'Color.rgb(255, 0, 0)', 'Color.argb(128, 255, 0, 0)'],
+    [
+      'swift',
+      'Color(red: 1, green: 0, blue: 0)',
+      'Color(red: 1, green: 0, blue: 0, opacity: 0.5)',
+    ],
+    [
+      'swift',
+      'UIColor(red: 1, green: 0, blue: 0, alpha: 1)',
+      'UIColor(red: 1, green: 0, blue: 0, alpha: 0.5)',
+    ],
+  ])(
+    'preserves native %s picker syntax',
+    async (languageId, source, expected) => {
+      const { provideColorPresentations } =
+        await import('../src/features/color-provider/document-color-provider')
+      const range = { id: 'source-range' } as unknown as Vscode.Range
+      const nativeDocument = {
+        ...document,
+        getText: () => source,
+        languageId,
+      } as unknown as Vscode.TextDocument
+      const result = provideColorPresentations(
+        new TestColor(1, 0, 0, 0.5) as unknown as Vscode.Color,
+        { document: nativeDocument, range },
+      )
+      expect(result.map(presentation => presentation.label)).toStrictEqual([
+        expected,
+      ])
+    },
+  )
+
   it('preserves floating-point channels in Dart picker presentations', async () => {
     const { provideColorPresentations } =
       await import('../src/features/color-provider/document-color-provider')

@@ -1,0 +1,85 @@
+{
+  "file": "android.java",
+  "languageId": "java",
+  "strategyNames": [
+    "findHexRGBA",
+    "findColorFunctions",
+    "findHwb",
+    "findTailwindThemeColors",
+    "findNamedColors",
+    "findRgbNoFunction",
+    "findHslNoFunction",
+    "findAndroidColors",
+    "findAnsiSgrColors"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 2,
+      "column": 16,
+      "text": "Color.rgb(255, 0, 0)",
+      "range": [
+        31,
+        51
+      ],
+      "color": "rgb(255, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 3,
+      "column": 21,
+      "text": "Color.argb(128, 255, 0, 0)",
+      "range": [
+        73,
+        99
+      ],
+      "color": "rgba(255, 0, 0, 0.502)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 2,
+      "line": 4,
+      "column": 18,
+      "text": "android.graphics.Color.rgb(0f, 1f, 0f)",
+      "range": [
+        118,
+        156
+      ],
+      "color": "rgb(0, 255, 0)",
+      "render": {
+        "backgroundColor": "rgb(0, 255, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 255, 0)"
+      }
+    },
+    {
+      "index": 3,
+      "line": 5,
+      "column": 16,
+      "text": "Color.parseColor(\"#80336699\")",
+      "range": [
+        173,
+        202
+      ],
+      "color": "rgba(51, 102, 153, 0.502)",
+      "render": {
+        "backgroundColor": "rgb(51, 102, 153)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(51, 102, 153)"
+      }
+    }
+  ]
+}

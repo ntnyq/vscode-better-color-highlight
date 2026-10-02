@@ -1,0 +1,19 @@
+:root {
+  --brand: oklch(65% 0.2 30 / 0.8);
+  --factor: 0.9;
+  --softer: oklch(from var(--brand) l calc(c * var(--factor)) h);
+}
+
+.sample {
+  color: rgb(from red r g b / 50%);
+  background: hsl(from red calc(h + 120) s l);
+  border-color: hwb(from rgb(255 0 0) calc(h + 240) w b);
+  outline-color: color(from var(--brand) display-p3 r g b);
+  text-decoration-color: alpha(from var(--softer) / calc(alpha * 0.5));
+  box-shadow: 0 0 2px color-mix(in srgb, var(--brand), white);
+}
+
+.dynamic {
+  color: rgb(from currentColor r g b);
+  background: rgb(from var(--missing) r g b);
+}

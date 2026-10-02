@@ -607,6 +607,35 @@ describe('useCommands', () => {
     )
   })
 
+  it.each([
+    ['android-color', 'Color(1f, 0f, 0f)', 'Color(1f, 0f, 0f, 0.5f)'],
+    [
+      'swift-color',
+      'Color(red: 1, green: 0, blue: 0)',
+      'Color(red: 1, green: 0, blue: 0, opacity: 0.5)',
+    ],
+  ])(
+    'adjusts alpha using %s source metadata',
+    async (sourceKind, original, expected) => {
+      vi.resetModules()
+      registeredCommands.clear()
+      edit.mockClear()
+      replace.mockClear()
+      sourceText = original
+      const { useCommands } = await import('../src/extension/commands')
+      useCommands()
+      await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
+        delta: -0.5,
+        originalColor: 'rgb(255, 0, 0)',
+        originalText: sourceText,
+        range: { start: 0, end: sourceText.length },
+        sourceKind,
+        uri: 'file:///tmp/example.css',
+      })
+      expect(replace).toHaveBeenCalledWith(expect.any(Object), expected)
+    },
+  )
+
   it('preserves modern Dart constructor syntax when adjusting alpha', async () => {
     vi.resetModules()
     registeredCommands.clear()

@@ -490,7 +490,7 @@ describe(findCssVars, () => {
     expect(result.every(match => match.color === 'rgb(255, 0, 0)')).toBe(true)
   })
 
-  it('skips nested variables inside composite declaration values', async () => {
+  it('resolves complete static expressions in custom property values', async () => {
     const text = `
       :root {
         --base-red: #ff0000;
@@ -500,7 +500,115 @@ describe(findCssVars, () => {
     `
     const result = await findCssVars(text)
 
-    expect(result).toStrictEqual([])
+    expect(
+      result.map(match => [text.slice(match.start, match.end), match.color]),
+    ).toStrictEqual([
+      ['color-mix(in srgb, var(--base-red), white)', 'rgb(255, 128, 128)'],
+      ['var(--mixed-red)', 'rgb(255, 128, 128)'],
+    ])
+  })
+
+  it('resolves relative origins, scalar variables, fallbacks, and aliases', async () => {
+    const text =
+      ':root { --brand: #ff000080; --factor: .5; --alias: var(--brand); --derived: rgb(from var(--alias) calc(r * var(--factor)) g b); } .x { color: var(--derived); background: alpha(from var(--absent, blue) / .25); }'
+    const result = await findCssVars(text)
+    const relativeStart = text.indexOf('rgb(from')
+    const aliasStart = text.indexOf('var(--derived)')
+    const alphaStart = text.indexOf('alpha(from')
+    expect(result).toStrictEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          color: 'rgba(128, 0, 0, 0.502)',
+          start: relativeStart,
+        }),
+        expect.objectContaining({
+          color: 'rgba(128, 0, 0, 0.502)',
+          start: aliasStart,
+        }),
+        expect.objectContaining({
+          color: 'rgba(0, 0, 255, 0.25)',
+          start: alphaStart,
+        }),
+      ]),
+    )
+  })
+
+  it('keeps wide-gamut origin values until relative channel evaluation', async () => {
+    const text =
+      ':root { --brand: color(display-p3 1.2 0 0); } .x { color: color(from var(--brand) display-p3 calc(r / 2) g b); }'
+    const result = await findCssVars(text)
+    expect(
+      result.find(match => match.start === text.indexOf('color(from'))?.color,
+    ).toBe('rgb(168, 0, 0)')
+  })
+
+  it.each([
+    '.a { --brand: red; } .b { --brand: blue; } .x { color: rgb(from var(--brand, lime) r g b); }',
+    ':root { --brand: var(--brand); } .x { color: rgb(from var(--brand) r g b); }',
+    ':root { --brand: currentColor; } .x { color: rgb(from var(--brand) r g b); }',
+  ])('skips non-deterministic relative expressions: %s', async text => {
+    const result = await findCssVars(text)
+    expect(result.some(match => match.start === text.indexOf('rgb(from'))).toBe(
+      false,
+    )
+  })
+
+  it('uses the expression selector when choosing variable origins', async () => {
+    const text =
+      '.a { --brand: red; color: rgb(from var(--brand) r g b); } .b { --brand: blue; color: rgb(from var(--brand) r g b); }'
+    const result = await findCssVars(text)
+    expect(
+      result
+        .filter(match =>
+          text.slice(match.start, match.end).startsWith('rgb(from'),
+        )
+        .map(match => match.color),
+    ).toStrictEqual(['rgb(255, 0, 0)', 'rgb(0, 0, 255)'])
+  })
+
+  it('bounds branching variable expansion and long alias chains', async () => {
+    const declarations = Array.from(
+      { length: 30 },
+      (_, index) => `--v${index}: var(--v${index + 1}) var(--v${index + 1});`,
+    ).join(' ')
+    const text = `:root { ${declarations} --v30: red; } .x { color: rgb(from var(--v0) r g b); }`
+    const result = await findCssVars(text)
+    expect(result.some(match => match.start === text.indexOf('rgb(from'))).toBe(
+      false,
+    )
+  })
+
+  it('uses configured external origins only when cross-file access is enabled and trusted', async () => {
+    const source = ':root { --brand: #ff0000; }'
+    const declarations = collectCssVarDeclarations(source, {
+      filePath: '/workspace/theme.css',
+      trustedSelectors: [':root'],
+    })
+    loadCssVarSourceDeclarationsMock.mockResolvedValue(declarations)
+    const text = '.x { color: rgb(from var(--brand) r g b / .5); }'
+    const context = {
+      languageId: 'css',
+      filePath: '/workspace/app.css',
+      resolveCssVariablesAcrossFiles: true,
+      workspaceIsTrusted: true,
+      cssVariablePaths: ['theme.css'],
+    }
+    await expect(findCssVars(text, context)).resolves.toContainEqual(
+      expect.objectContaining({
+        start: text.indexOf('rgb(from'),
+        color: 'rgba(255, 0, 0, 0.5)',
+      }),
+    )
+    await expect(
+      findCssVars(text, { ...context, workspaceIsTrusted: false }),
+    ).resolves.toStrictEqual([])
+    await expect(
+      findCssVars(text, {
+        ...context,
+        resolveCssVariablesAcrossFiles: false,
+      }),
+    ).resolves.toStrictEqual([])
+    expect(loadCssVarSourceDeclarationsMock).toHaveBeenCalledTimes(1)
   })
 
   it('skips direct color tokens inside composite declaration values', async () => {

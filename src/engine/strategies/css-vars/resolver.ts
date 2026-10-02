@@ -4,6 +4,11 @@ import type {
 } from '../../definition/types'
 import type { ColorMatch, StrategyContext } from '../../detection'
 import { resolveShorthandColor } from '../color-functions'
+import {
+  formatCssColor,
+  parseCssColorExpression,
+  scanCssColorFunctions,
+} from '../css-color/parser'
 import { resolveDirectColor } from '../shared/direct-color'
 import { walkCssCode } from './parser'
 import type { CssSourceContext, CssVarDeclaration } from './parser'
@@ -73,6 +78,35 @@ export async function resolveCssVarMatches(
   const matches: ColorMatch[] = []
 
   const usages = findCssVarUsages(text)
+  for (const candidate of scanCssColorFunctions(text)) {
+    const usage = usages.find(
+      reference =>
+        reference.originRange.start >= candidate.start &&
+        reference.originRange.end <= candidate.end,
+    )
+    if (!usage) {
+      continue
+    }
+    const expanded = expandCssColorVariables(
+      candidate.source,
+      usage,
+      options,
+      new Set(),
+      0,
+      { remaining: 1024 },
+    )
+    const parsed =
+      expanded.status === 'resolved'
+        ? parseCssColorExpression(expanded.value)
+        : null
+    if (parsed) {
+      matches.push({
+        start: candidate.start,
+        end: candidate.end,
+        color: formatCssColor(parsed),
+      })
+    }
+  }
   for (const usage of getOutermostCssVarUsages(usages)) {
     if (isSkippedCssCustomPropertyValueUsage(text, usage)) {
       continue
@@ -296,7 +330,21 @@ async function resolveCssVarValue(
   if (varUsages.length > 0) {
     const usage = getExactCssVarAlias(normalized, varUsages)
     if (!usage) {
-      return { status: 'missing' }
+      const expanded = expandCssColorVariables(
+        normalized,
+        context,
+        options,
+        seen,
+        depth,
+        { remaining: 1024 },
+      )
+      const parsed =
+        expanded.status === 'resolved'
+          ? parseCssColorExpression(expanded.value)
+          : null
+      return parsed
+        ? { status: 'resolved', color: formatCssColor(parsed) }
+        : { status: expanded.status === 'ambiguous' ? 'ambiguous' : 'missing' }
     }
 
     return await resolveCssVarUsage(
@@ -329,6 +377,71 @@ async function resolveCssVarValue(
   }
 
   return { status: 'missing' }
+}
+
+type ExpandedCssValue =
+  | { readonly status: 'resolved'; readonly value: string }
+  | { readonly status: 'invalid' | 'ambiguous' }
+
+/**
+ * Substitute deterministic custom-property tokens before parsing an expression.
+ * Keep original color spaces and numeric precision, with independent recursion,
+ * expansion-count, and output-length bounds for branching variable graphs.
+ */
+function expandCssColorVariables(
+  value: string,
+  context: CssVarSourceContext | undefined,
+  options: ResolveCssVarMatchOptions,
+  seen: ReadonlySet<string>,
+  depth: number,
+  budget: { remaining: number },
+): ExpandedCssValue {
+  if (
+    depth > MAX_RESOLUTION_DEPTH ||
+    value.length > 65_536 ||
+    --budget.remaining < 0
+  ) {
+    return { status: 'invalid' }
+  }
+  let result = value
+  const usages = getOutermostCssVarUsages(findCssVarUsages(value))
+  for (const usage of usages.toReversed()) {
+    if (seen.has(usage.name)) {
+      return { status: 'invalid' }
+    }
+    const candidate = selectCssVarDeclaration(usage.name, options, context)
+    if (candidate.status === 'ambiguous') {
+      return { status: 'ambiguous' }
+    }
+    const nextSeen = new Set(seen)
+    nextSeen.add(usage.name)
+    const source =
+      candidate.status === 'found'
+        ? candidate.declaration.value
+        : usage.fallback
+    if (source === undefined) {
+      return { status: 'invalid' }
+    }
+    const expanded = expandCssColorVariables(
+      source,
+      candidate.status === 'found' ? candidate.declaration : context,
+      options,
+      nextSeen,
+      depth + 1,
+      budget,
+    )
+    if (expanded.status !== 'resolved') {
+      return expanded
+    }
+    result =
+      result.slice(0, usage.originRange.start) +
+      expanded.value +
+      result.slice(usage.originRange.end)
+    if (result.length > 65_536) {
+      return { status: 'invalid' }
+    }
+  }
+  return { status: 'resolved', value: result }
 }
 
 /**

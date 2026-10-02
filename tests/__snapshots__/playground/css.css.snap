@@ -2549,18 +2549,18 @@
     {
       "index": 149,
       "line": 422,
-      "column": 62,
-      "text": "white",
+      "column": 25,
+      "text": "color-mix(in srgb, var(--named-red), white)",
       "range": [
-        9435,
-        9440
+        9398,
+        9441
       ],
-      "color": "rgb(255, 255, 255)",
+      "color": "rgb(255, 128, 128)",
       "render": {
-        "backgroundColor": "rgb(255, 255, 255)",
+        "backgroundColor": "rgb(255, 128, 128)",
         "color": "#000000",
         "border": null,
-        "overviewRulerColor": "rgb(255, 255, 255)"
+        "overviewRulerColor": "rgb(255, 128, 128)"
       }
     },
     {

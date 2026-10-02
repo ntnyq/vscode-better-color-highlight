@@ -145,7 +145,7 @@ Sources:
 
 ## Delivery Status
 
-The first two delivery units are now implemented:
+Updated: 2026-10-02. The following bounded delivery units are implemented:
 
 1. Source-aware presentation metadata, overlap arbitration, and contextual
    Android XML, Compose, and Dart packed-color handling.
@@ -153,5 +153,21 @@ The first two delivery units are now implemented:
    function validation, high-precision color-space conversion, and statically
    resolvable `color-mix()` expressions.
 
-The remaining items are still research proposals rather than release
-commitments.
+3. Kotlin Compose numeric RGB(A), HSL/HSV factories, and Kotlin/Java Android
+   RGB/ARGB and HEX `parseColor` calls, with source-preserving presentations.
+4. Relative CSS colors across the supported spaces, bounded typed `calc()`
+   arithmetic, deterministic custom-property substitution, and `alpha()`.
+5. SwiftUI/UIKit static RGB, HSB, grayscale, and explicit RGB color spaces,
+   selected by the user for this delivery. Unity remains a research candidate.
+
+Regression fixtures cover language boundaries, invalid syntax, source edits,
+missing components, variable ambiguity/cycles, and nesting limits. Performance
+baselines now include nested expressions, malformed input, long variable chains,
+and native constructors. Desktop/Web smoke tests cover relative expressions;
+`pnpm test:package` checks an isolated VSIX installation and activation.
+
+The findings above describe the August research baseline; statements about
+then-missing support are historical. Current supported syntax and limits are in
+the README. Android resource navigation, Unity, dynamic system/asset colors,
+custom Compose spaces, and additional CSS math functions remain candidates or
+explicit deferrals. They are not release commitments.

@@ -6,6 +6,8 @@ import {
   findAnsiSgrColors,
   findColorFunctions,
   findComposeArgbHexColors,
+  findAndroidColors,
+  findSwiftColors,
   findHwb,
   findJsonDesignTokens,
   findNamedColors,
@@ -206,6 +208,14 @@ export function getStrategies(
 
   if (languageId === 'kotlin') {
     strategies.push(findComposeArgbHexColors)
+  }
+
+  if (languageId === 'kotlin' || languageId === 'java') {
+    strategies.push(findAndroidColors)
+  }
+
+  if (languageId === 'swift') {
+    strategies.push(findSwiftColors)
   }
 
   if (config.matchAnsiEscapeCodes) {
