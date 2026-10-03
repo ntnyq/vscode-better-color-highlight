@@ -1,0 +1,95 @@
+import { describe, expect, it } from 'vitest'
+import { findHexRGBA, findHexARGB } from '../../../src/engine/strategies/hex'
+
+describe(findHexRGBA, () => {
+  it('finds 6-digit hex colors', () => {
+    const result = findHexRGBA('color: #ff0000;')
+    expect(result).toStrictEqual([
+      { start: 7, end: 14, color: 'rgb(255, 0, 0)' },
+    ])
+  })
+
+  it('finds 3-digit hex colors', () => {
+    const result = findHexRGBA('color: #f00;')
+    expect(result).toStrictEqual([
+      { start: 7, end: 11, color: 'rgb(255, 0, 0)' },
+    ])
+  })
+
+  it('finds hex colors at the start of the text', () => {
+    const result = findHexRGBA('#ff0000;')
+    expect(result).toStrictEqual([
+      { start: 0, end: 7, color: 'rgb(255, 0, 0)' },
+    ])
+  })
+
+  it('finds 8-digit hex colors with alpha (RGBA)', () => {
+    const result = findHexRGBA('color: #ff000080;')
+    expect(result).toHaveLength(1)
+    expect(result[0].color).toContain('rgba')
+  })
+
+  it('skips hex preceded by word character', () => {
+    const result = findHexRGBA('font0xff0000')
+    expect(result).toStrictEqual([])
+  })
+
+  it('finds multiple hex colors', () => {
+    const result = findHexRGBA('color: #ff0000; bg: #0000ff;')
+    expect(result).toHaveLength(2)
+  })
+
+  it('skips short 0x-prefixed numeric hex values', () => {
+    const result = findHexRGBA('values: 0xf00 0xff00 #f00 #ff00;')
+    expect(result).toStrictEqual([
+      { start: 21, end: 25, color: 'rgb(255, 0, 0)' },
+      { start: 26, end: 31, color: 'rgba(255, 255, 0, 0)' },
+    ])
+  })
+
+  it('uses Android alpha-first semantics only in Android resource XML', () => {
+    expect(
+      findHexRGBA('#80ff0000', {
+        filePath: 'file:///app/src/main/res/values/colors.xml',
+        languageId: 'xml',
+      }),
+    ).toStrictEqual([
+      {
+        start: 0,
+        end: 9,
+        color: 'rgba(255, 0, 0, 0.502)',
+        editMode: 'source',
+        sourceKind: 'android-xml-hex',
+      },
+    ])
+
+    expect(
+      findHexRGBA('#80ff0000', {
+        filePath: 'file:///workspace/example.xml',
+        languageId: 'xml',
+      }),
+    ).toStrictEqual([{ start: 0, end: 9, color: 'rgba(128, 255, 0, 0)' }])
+  })
+})
+
+describe(findHexARGB, () => {
+  it('parses 8-digit hex as ARGB', () => {
+    const result = findHexARGB('color: #80ff0000;')
+    expect(result).toHaveLength(1)
+    expect(result[0].color).toContain('rgba')
+  })
+
+  it('parses 6-digit hex normally (no alpha to swap)', () => {
+    const result = findHexARGB('color: #ff0000;')
+    expect(result).toStrictEqual([
+      { start: 7, end: 14, color: 'rgb(255, 0, 0)' },
+    ])
+  })
+
+  it('finds ARGB hex colors at the start of the text', () => {
+    const result = findHexARGB('#80ff0000;')
+    expect(result).toStrictEqual([
+      { start: 0, end: 9, color: 'rgba(255, 0, 0, 0.502)' },
+    ])
+  })
+})

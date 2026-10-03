@@ -41,6 +41,14 @@ strategy files by syntax, for example `hex.ts`, `scss-vars.ts`, or
 
 ## Testing Guidelines
 
+Organize module tests by their source owner under `tests/engine/`,
+`tests/extension/`, `tests/features/`, and `tests/shared/`. Group related
+strategy suites by syntax family and feature suites by capability.
+Cross-module lifecycle and playground snapshot tests live in
+`tests/integration/`, with snapshots in its `__snapshots__/` directory.
+Repository configuration, documentation, and release workflow checks live in
+`tests/tooling/`. Reusable fixtures remain in `tests/fixtures/`.
+
 Vitest covers parser, utility, cache, and snapshot behavior. Add focused unit
 tests for new parsing rules or regression fixes, and update playground
 snapshots only when behavior intentionally changes. Use `tests/e2e/` for

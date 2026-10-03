@@ -1,0 +1,212 @@
+import { access, readdir, readFile, stat } from 'node:fs/promises'
+import {
+  basename,
+  dirname,
+  extname,
+  isAbsolute,
+  join,
+  resolve,
+} from 'node:path'
+import { describe, expect, it, vi } from 'vitest'
+import type { ColorMatch } from '../../src/engine/detection'
+import { arbitrateColorMatches } from '../../src/engine/detection/color-match'
+import { getStrategies } from '../../src/engine/detection/registry'
+import { buildDecorationOptions } from '../../src/features/highlight/decorations/marker-types'
+import type { NestedScopedConfigs } from '../../src/meta'
+import type * as WorkspaceFileSystem from '../../src/shared/workspace/file-system'
+
+vi.mock(
+  import('../../src/shared/workspace/file-system'),
+  () =>
+    ({
+      basenameWorkspacePath: basename,
+      dirnameWorkspacePath: dirname,
+      extnameWorkspacePath: extname,
+      isAbsoluteWorkspacePath: isAbsolute,
+      joinWorkspacePath: join,
+      readWorkspaceFile: (filePath: string) => readFile(filePath, 'utf8'),
+      resolveWorkspacePath: (baseFilePath: string, value: string) =>
+        isAbsolute(value) ? value : resolve(dirname(baseFilePath), value),
+      statWorkspaceFile: async (filePath: string) => {
+        const fileStat = await stat(filePath)
+
+        return {
+          mtimeMs: fileStat.mtimeMs,
+          size: fileStat.size,
+        }
+      },
+      workspacePathExists: async (filePath: string) => {
+        try {
+          await access(filePath)
+          return true
+        } catch {
+          return false
+        }
+      },
+    }) as unknown as Partial<typeof WorkspaceFileSystem>,
+)
+
+const PLAYGROUND_DIR = join(process.cwd(), 'playground')
+const SNAPSHOT_DIR = join(import.meta.dirname, '__snapshots__', 'playground')
+
+const EXTENSION_LANGUAGE_MAP = new Map<string, string>([
+  ['.css', 'css'],
+  ['.scss', 'scss'],
+  ['.less', 'less'],
+  ['.styl', 'stylus'],
+  ['.json', 'json'],
+  ['.jsonc', 'jsonc'],
+  ['.yaml', 'yaml'],
+  ['.yml', 'yaml'],
+  ['.html', 'html'],
+  ['.ts', 'typescript'],
+  ['.dart', 'dart'],
+  ['.kt', 'kotlin'],
+  ['.java', 'java'],
+  ['.swift', 'swift'],
+])
+
+const snapshotConfig: NestedScopedConfigs = {
+  enable: true,
+  enableColorPicker: false,
+  enableContrastDiagnostics: false,
+  enableColorNavigation: true,
+  languages: ['*'],
+  matchWords: true,
+  namedColorMatchMode: 'context',
+  tailwindColorMode: 'auto',
+  tailwindStylesheetPaths: [],
+  enableHover: false,
+  resolveScssVariablesAcrossFiles: true,
+  scssLoadPaths: [],
+  resolveCssVariablesAcrossFiles: false,
+  cssVariablePaths: [],
+  cssVariableTrustedSelectors: [':root', 'html', 'body', ':host'],
+  maxFileSize: 1_000_000,
+  workspacePaletteInclude: '**/*',
+  workspacePaletteExclude:
+    '{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}',
+  designTokenJsonMode: 'token-values',
+  resolveDesignTokensAcrossFiles: false,
+  useARGB: false,
+  matchAnsiEscapeCodes: true,
+  ansiPalette: {},
+  matchRgbWithNoFunction: true,
+  rgbWithNoFunctionLanguages: ['*'],
+  matchHslWithNoFunction: true,
+  hslWithNoFunctionLanguages: ['*'],
+  markerType: 'background',
+  markRuler: true,
+  debug: false,
+}
+
+/**
+ * Map a playground file extension to a language, defaulting to plaintext.
+ */
+function getLanguageId(fileName: string): string {
+  return EXTENSION_LANGUAGE_MAP.get(extname(fileName)) ?? 'plaintext'
+}
+
+/**
+ * Resolve the stored snapshot path for a playground file.
+ */
+function getSnapshotPath(fileName: string): string {
+  return join(SNAPSHOT_DIR, `${fileName}.snap`)
+}
+
+/**
+ * Convert a source offset into one-based snapshot line and column values.
+ */
+function getLineColumn(text: string, offset: number) {
+  const before = text.slice(0, offset)
+  const lines = before.split('\n')
+  return {
+    line: lines.length,
+    column: (lines.at(-1)?.length ?? 0) + 1,
+  }
+}
+
+/**
+ * Arbitrate duplicate and overlapping matches into source order for snapshots.
+ */
+function dedupeAndSortMatches(matches: ColorMatch[]) {
+  return arbitrateColorMatches(matches)
+}
+
+/**
+ * Detect playground colors and serialize their source positions and
+ * decorations.
+ */
+async function collectFileSnapshot(fileName: string) {
+  const filePath = join(PLAYGROUND_DIR, fileName)
+  const text = await readFile(filePath, 'utf8')
+  const languageId = getLanguageId(fileName)
+  const strategies = getStrategies(languageId, snapshotConfig)
+
+  const results = await Promise.all(
+    strategies.map(strategy =>
+      strategy(text, {
+        languageId,
+        filePath,
+        ansiPalette: snapshotConfig.ansiPalette,
+        tailwindColorMode: snapshotConfig.tailwindColorMode,
+        tailwindStylesheetPaths: snapshotConfig.tailwindStylesheetPaths,
+        workspaceIsTrusted: true,
+        namedColorMatchMode: snapshotConfig.namedColorMatchMode,
+        resolveScssVariablesAcrossFiles:
+          snapshotConfig.resolveScssVariablesAcrossFiles,
+        scssLoadPaths: snapshotConfig.scssLoadPaths,
+        designTokenJsonMode: snapshotConfig.designTokenJsonMode,
+      }),
+    ),
+  )
+
+  const matches = dedupeAndSortMatches(results.flat())
+
+  return {
+    file: fileName,
+    languageId,
+    strategyNames: strategies.map(strategy => strategy.name || 'anonymous'),
+    matches: matches.map((match, index) => {
+      const location = getLineColumn(text, match.start)
+      const render = buildDecorationOptions(
+        snapshotConfig.markerType,
+        match.color,
+        snapshotConfig.markRuler,
+      )
+
+      return {
+        index,
+        line: location.line,
+        column: location.column,
+        text: text.slice(match.start, match.end),
+        range: [match.start, match.end],
+        color: match.color,
+        render: {
+          backgroundColor: render.backgroundColor ?? null,
+          color: render.color ?? null,
+          border: render.border ?? null,
+          overviewRulerColor: render.overviewRulerColor ?? null,
+        },
+      }
+    }),
+  }
+}
+
+describe('playground color snapshots', () => {
+  it('matches and renders colors for every playground sample file', async () => {
+    const entries = await readdir(PLAYGROUND_DIR, { withFileTypes: true })
+    const files = entries
+      .filter(entry => entry.isFile())
+      .map(entry => entry.name)
+      .filter(name => name !== 'package.json')
+      .sort((a, b) => a.localeCompare(b))
+
+    for (const fileName of files) {
+      const snapshot = await collectFileSnapshot(fileName)
+      await expect(JSON.stringify(snapshot, null, 2)).toMatchFileSnapshot(
+        getSnapshotPath(fileName),
+      )
+    }
+  })
+})

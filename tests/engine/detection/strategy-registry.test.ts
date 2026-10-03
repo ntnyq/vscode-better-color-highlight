@@ -1,0 +1,241 @@
+import { describe, expect, it } from 'vitest'
+import {
+  getStrategies,
+  shouldProcessLanguage,
+} from '../../../src/engine/detection/registry'
+import { findAndroidColors } from '../../../src/engine/strategies/android-colors'
+import { findAnsiSgrColors } from '../../../src/engine/strategies/ansi-sgr'
+import { findColorFunctions } from '../../../src/engine/strategies/color-functions'
+import { findComposeArgbHexColors } from '../../../src/engine/strategies/compose-colors'
+import { findJsonDesignTokens } from '../../../src/engine/strategies/design-tokens/json-strategy'
+import { findYamlDesignTokens } from '../../../src/engine/strategies/design-tokens/yaml-strategy'
+import { findHexRGBA, findHexARGB } from '../../../src/engine/strategies/hex'
+import { findHslNoFunction } from '../../../src/engine/strategies/hsl-no-fn'
+import { findHwb } from '../../../src/engine/strategies/hwb'
+import { findNamedColors } from '../../../src/engine/strategies/named-colors'
+import { findRgbNoFunction } from '../../../src/engine/strategies/rgb-no-fn'
+import { findSwiftColors } from '../../../src/engine/strategies/swift-colors'
+import { findTailwindThemeColors } from '../../../src/engine/strategies/tailwind-theme'
+import type { NestedScopedConfigs } from '../../../src/meta'
+
+const defaultConfig: NestedScopedConfigs = {
+  ansiPalette: {},
+  enable: true,
+  enableColorPicker: false,
+  enableContrastDiagnostics: false,
+  enableColorNavigation: true,
+  languages: ['*'],
+  matchWords: false,
+  namedColorMatchMode: 'context',
+  tailwindColorMode: 'auto',
+  tailwindStylesheetPaths: [],
+  enableHover: false,
+  resolveScssVariablesAcrossFiles: false,
+  scssLoadPaths: [],
+  resolveCssVariablesAcrossFiles: false,
+  cssVariablePaths: [],
+  cssVariableTrustedSelectors: [':root', 'html', 'body', ':host'],
+  maxFileSize: 1_000_000,
+  workspacePaletteInclude: '**/*',
+  workspacePaletteExclude:
+    '{**/.git/**,**/node_modules/**,**/dist/**,**/build/**,**/coverage/**}',
+  designTokenJsonMode: 'token-values',
+  resolveDesignTokensAcrossFiles: false,
+  useARGB: false,
+  matchRgbWithNoFunction: false,
+  rgbWithNoFunctionLanguages: ['*'],
+  matchHslWithNoFunction: false,
+  matchAnsiEscapeCodes: false,
+  hslWithNoFunctionLanguages: ['*'],
+  markerType: 'background',
+  markRuler: true,
+  debug: false,
+}
+
+describe(getStrategies, () => {
+  it('registers native detectors only for their language contexts', () => {
+    expect(getStrategies('kotlin', defaultConfig)).toContain(findAndroidColors)
+    expect(getStrategies('java', defaultConfig)).toContain(findAndroidColors)
+    expect(getStrategies('swift', defaultConfig)).toContain(findSwiftColors)
+    expect(getStrategies('typescript', defaultConfig)).not.toContain(
+      findAndroidColors,
+    )
+    expect(getStrategies('typescript', defaultConfig)).not.toContain(
+      findSwiftColors,
+    )
+  })
+
+  it('includes hex, color functions, and hwb for all languages', () => {
+    const strategies = getStrategies('typescript', defaultConfig)
+    expect(strategies).toContain(findHexRGBA)
+    expect(strategies).toContain(findColorFunctions)
+    expect(strategies).toContain(findHwb)
+  })
+
+  it('includes Tailwind theme colors for non-JSON languages', () => {
+    const strategies = getStrategies('typescriptreact', defaultConfig)
+
+    expect(strategies).toContain(findTailwindThemeColors)
+  })
+
+  it('includes ANSI SGR detection for every language when enabled', () => {
+    const config = { ...defaultConfig, matchAnsiEscapeCodes: true }
+
+    for (const languageId of ['typescript', 'json', 'yaml']) {
+      expect(getStrategies(languageId, config)).toContain(findAnsiSgrColors)
+    }
+  })
+
+  it('does not include ANSI SGR detection by default', () => {
+    expect(getStrategies('typescript', defaultConfig)).not.toContain(
+      findAnsiSgrColors,
+    )
+  })
+
+  it('uses ARGB mode when configured', () => {
+    const config = { ...defaultConfig, useARGB: true }
+    const strategies = getStrategies('typescript', config)
+    expect(strategies).toContain(findHexARGB)
+    expect(strategies).not.toContain(findHexRGBA)
+  })
+
+  it('adds Compose packed-color detection only for Kotlin documents', () => {
+    expect(getStrategies('kotlin', defaultConfig)).toContain(
+      findComposeArgbHexColors,
+    )
+    expect(getStrategies('java', defaultConfig)).not.toContain(
+      findComposeArgbHexColors,
+    )
+  })
+
+  it('includes named colors for CSS languages', () => {
+    const strategies = getStrategies('css', defaultConfig)
+    expect(strategies).toContain(findNamedColors)
+  })
+
+  it('excludes named colors when named color mode is never', () => {
+    const config = { ...defaultConfig, namedColorMatchMode: 'never' as const }
+    const strategies = getStrategies('css', config)
+
+    expect(strategies).not.toContain(findNamedColors)
+  })
+
+  it('includes named colors when matchWords is true', () => {
+    const config = { ...defaultConfig, matchWords: true }
+    const strategies = getStrategies('typescript', config)
+    expect(strategies).toContain(findNamedColors)
+  })
+
+  it('excludes named colors for non-CSS languages when matchWords is false', () => {
+    const strategies = getStrategies('typescript', defaultConfig)
+    expect(strategies).not.toContain(findNamedColors)
+  })
+
+  it('uses JSON design token strategy for json documents', () => {
+    const strategies = getStrategies('json', defaultConfig)
+
+    expect(strategies).toContain(findJsonDesignTokens)
+    expect(strategies).not.toContain(findHexRGBA)
+    expect(strategies).not.toContain(findColorFunctions)
+    expect(strategies).not.toContain(findHwb)
+    expect(strategies).not.toContain(findTailwindThemeColors)
+  })
+
+  it('uses JSON design token strategy for jsonc documents', () => {
+    const strategies = getStrategies('jsonc', defaultConfig)
+
+    expect(strategies).toContain(findJsonDesignTokens)
+    expect(strategies).not.toContain(findHexRGBA)
+    expect(strategies).not.toContain(findColorFunctions)
+    expect(strategies).not.toContain(findHwb)
+  })
+
+  it('highlights plaintext .tokens documents with the JSON strategy', async () => {
+    const strategies = getStrategies(
+      'plaintext',
+      defaultConfig,
+      'file:///workspace/theme.tokens',
+    )
+
+    expect(strategies).toStrictEqual([findJsonDesignTokens])
+    await expect(
+      Promise.resolve(
+        strategies[0](
+          '{"brand":{"$type":"color","$value":{"colorSpace":"srgb","components":[1,0,0]}}}',
+          {
+            languageId: 'plaintext',
+            filePath: 'file:///workspace/theme.tokens',
+          },
+        ),
+      ),
+    ).resolves.toMatchObject([{ color: 'rgb(255, 0, 0)' }])
+  })
+
+  it('uses only the design token strategy for yaml documents', () => {
+    for (const languageId of ['yaml', 'yml']) {
+      const strategies = getStrategies(languageId, defaultConfig)
+
+      expect(strategies).toStrictEqual([findYamlDesignTokens])
+    }
+  })
+
+  it('skips YAML design tokens when design token detection is disabled', () => {
+    const strategies = getStrategies('yaml', {
+      ...defaultConfig,
+      designTokenJsonMode: 'off',
+    })
+
+    expect(strategies).toStrictEqual([])
+  })
+
+  it('skips JSON design token strategy when disabled', () => {
+    const strategies = getStrategies('json', {
+      ...defaultConfig,
+      designTokenJsonMode: 'off',
+    })
+
+    expect(strategies).not.toContain(findJsonDesignTokens)
+    expect(strategies).not.toContain(findHexRGBA)
+    expect(strategies).not.toContain(findColorFunctions)
+    expect(strategies).not.toContain(findHwb)
+  })
+
+  it('excludes bare RGB and HSL strategies for json documents', () => {
+    const strategies = getStrategies('json', {
+      ...defaultConfig,
+      matchRgbWithNoFunction: true,
+      matchHslWithNoFunction: true,
+    })
+
+    expect(strategies).not.toContain(findRgbNoFunction)
+    expect(strategies).not.toContain(findHslNoFunction)
+  })
+
+  it('excludes bare RGB and HSL strategies for jsonc documents', () => {
+    const strategies = getStrategies('jsonc', {
+      ...defaultConfig,
+      matchRgbWithNoFunction: true,
+      matchHslWithNoFunction: true,
+    })
+
+    expect(strategies).not.toContain(findRgbNoFunction)
+    expect(strategies).not.toContain(findHslNoFunction)
+  })
+})
+
+describe(shouldProcessLanguage, () => {
+  it('matches all languages with "*"', () => {
+    expect(shouldProcessLanguage('css', ['*'])).toBe(true)
+    expect(shouldProcessLanguage('typescript', ['*'])).toBe(true)
+  })
+
+  it('excludes languages with "!" prefix', () => {
+    expect(shouldProcessLanguage('css', ['*', '!css'])).toBe(false)
+    expect(shouldProcessLanguage('typescript', ['*', '!css'])).toBe(true)
+  })
+
+  it('matches specific languages', () => {
+    expect(shouldProcessLanguage('css', ['css', 'scss'])).toBe(true)
+    expect(shouldProcessLanguage('typescript', ['css', 'scss'])).toBe(false)
+  })
+})

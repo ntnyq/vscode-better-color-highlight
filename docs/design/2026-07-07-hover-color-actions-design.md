@@ -225,8 +225,8 @@ Add or update Vitest coverage for:
 Run the focused tests while implementing:
 
 ```bash
-rtk pnpm test tests/color-hover.test.ts
-rtk pnpm test tests/commands.test.ts
+rtk pnpm test tests/features/hover/color-hover.test.ts
+rtk pnpm test tests/extension/commands.test.ts
 ```
 
 Before finishing implementation, run the local gate:
