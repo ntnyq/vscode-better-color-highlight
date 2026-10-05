@@ -88,13 +88,13 @@ export async function assertInMemoryCssHighlighting(): Promise<void> {
 }
 
 /**
- * Verify relative expressions, variable expansion, and overlap arbitration in
- * the real desktop/Web decoration pipeline.
+ * Verify relative expressions, nested math, variable expansion, and overlap
+ * arbitration in the real desktop/Web decoration pipeline.
  */
 export async function assertRelativeColorHighlighting(): Promise<void> {
   const document = await workspace.openTextDocument({
     content:
-      ':root { --brand: #ff0000; } .sample { color: rgb(from var(--brand) calc(r / 2) g b); background: alpha(from blue / .5); border-color: hwb(from red calc(h + 120) w b); }',
+      ':root { --brand: #ff0000; --cap: 128; --opacity: .5; } .sample { color: rgb(from var(--brand) min(calc(r / 2), var(--cap)) max(g, 0) b); background: alpha(from blue / clamp(0, var(--opacity), 1)); border-color: hwb(from red calc(h + max(60, 120)) w b); }',
     language: 'css',
   })
   await window.showTextDocument(document)
@@ -110,6 +110,55 @@ export async function assertRelativeColorHighlighting(): Promise<void> {
       ].sort(),
     ),
     'Expected complete relative-color expressions',
+  )
+}
+
+/**
+ * Verify absolute math, legacy commas, variable substitution, and nested
+ * color operands through the real desktop, Web, and packaged runtime.
+ */
+export async function assertAbsoluteColorHighlighting(): Promise<void> {
+  const document = await workspace.openTextDocument({
+    content: `
+:root {
+  --red: 255;
+  --opacity: .5;
+  --green: rgb(calc(0) max(0, 255) min(0, 1));
+}
+.sample {
+  color: rgb(min(var(--red), 200) calc(0) 0 / clamp(0, var(--opacity), 1));
+  background: rgba(calc(100%), min(0%, 10%), max(0%, -10%), 1);
+  border-color: hsl(calc(.25turn) clamp(0%, 100%, 100%) min(50%, 80%));
+  outline-color: color(srgb calc(0) min(0, 1) clamp(0, 1, 1));
+  box-shadow: 0 0 1px color-mix(in srgb, var(--green) 50%, rgb(calc(255) 0 0));
+  accent-color: alpha(from rgb(calc(255) 0 0) / calc(.5 + .25));
+  invalid-unit: rgb(calc(1px) 0 0);
+  invalid-division: rgb(calc(1 / 0) 0 0);
+  invalid-lab-conversion: lab(50% calc(1e308) 0);
+  invalid-oklab-conversion: oklab(50% calc(1e308) 0);
+  caret-color: #123456;
+}
+`,
+    language: 'css',
+  })
+  await window.showTextDocument(document)
+  const state = await waitForHighlightState(document.uri.toString(), 8)
+  assertEqual(state.colorCount, 8, 'Expected eight absolute math colors')
+  assertEqual(
+    JSON.stringify([...state.colors].sort()),
+    JSON.stringify(
+      [
+        'rgb(0, 255, 0)',
+        'rgba(200, 0, 0, 0.5)',
+        'rgb(255, 0, 0)',
+        'rgb(128, 255, 0)',
+        'rgb(0, 0, 255)',
+        'rgb(128, 128, 0)',
+        'rgba(255, 0, 0, 0.75)',
+        'rgb(18, 52, 86)',
+      ].sort(),
+    ),
+    'Expected complete absolute-color expressions and no invalid math',
   )
 }
 

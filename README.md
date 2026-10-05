@@ -363,6 +363,7 @@ and virtual workspaces when their files are readable by VS Code.
 - [x] `color()`：`srgb` `srgb-linear` `display-p3` `display-p3-linear` `a98-rgb` `prophoto-rgb` `rec2020` `xyz`
 - [x] Static `color-mix()`：predefined interpolation spaces, percentages, premultiplied alpha, hue methods, and nested colors
 - [x] Static relative CSS colors：`rgb(from red r g b / .5)`, `oklch(from var(--brand) l calc(c * .9) h)`, and `alpha(from red / .5)`
+- [x] Static CSS math in absolute/relative color channels and alpha：nested `calc()`, `min()`, `max()`, and `clamp()`
 - [x] Named color（`red` `rebeccapurple`）
 - [x] CSS / SCSS / Less / Stylus variables
 - [x] Extra expressions：bare RGB / HSL triplets、`--color-rgb: 255 0 0` shorthands
@@ -370,6 +371,7 @@ and virtual workspaces when their files are readable by VS Code.
 - [x] Android / Jetpack Compose：resource `#ARGB` / `#AARRGGBB`、`Color(0xAARRGGBB)`
 - [x] Kotlin/Java static components：Compose `Color(...)`, `Color.hsl(...)`, `Color.hsv(...)`; Android `Color.rgb(...)`, `Color.argb(...)`, and HEX `Color.parseColor(...)`
 - [x] SwiftUI/UIKit：static RGB, grayscale, HSB, and explicit sRGB/linear sRGB/Display P3 constructors
+- [x] Unity C#：static `new UnityEngine.Color(r, g, b[, a])` and `new UnityEngine.Color32(r, g, b, a)` constructors
 - [x] Flutter/Dart：`Color(0xffRRGGBB)`、`Color.fromARGB(a, r, g, b)`、`Color.fromRGBO(r, g, b, o)`、`Color.from(...)`、`Colors.deepPurple`
 - [x] Hyprland：`rgba(rrggbb)`、`rgba(rrggbbaa)`
 - [x] ANSI SGR escape colors：basic, bright, indexed, and truecolor forms
@@ -427,6 +429,39 @@ Each native call is bounded to 4,096 characters.
 
 </details>
 
+### 🎮 Unity C# colors
+
+<details>
+<summary>Qualified constructors, numeric channels, and source-preserving edits</summary>
+
+C# documents support `new UnityEngine.Color(r, g, b[, a])` with normalized
+0–1 channels and `new UnityEngine.Color32(r, g, b, a)` with integer 0–255
+channels. `global::UnityEngine` qualification is also accepted. Omitted
+`Color` alpha defaults to 1; `Color32` requires all four channels.
+
+```csharp
+var tint = new UnityEngine.Color(1f, .5f, 0, .75F);
+var overlay = new UnityEngine.Color32(r: 255, g: 128, b: 0, a: 192);
+```
+
+`Color` accepts decimal integer literals or `f`/`F` float literals, including
+scientific notation. Internal digit separators such as `0.5_0f` and `2_55`
+are supported. Unsuffixed fractional literals are C# doubles and are skipped.
+`Color32` accepts decimal integer literals only. Positional arguments,
+colon labels `r`/`g`/`b`/`a`, and comments within arguments are supported.
+Picker and alpha edits retain the constructor, qualifier, labels, comments,
+and float suffix case; editing an integer `Color` channel into a fraction adds
+the required float suffix. Adding transparency to a three-channel `Color`
+adds its alpha argument.
+
+Only complete, qualified constructor expressions of at most 4,096 characters
+are recognized. Bare `Color` / `Color32`, even with `using UnityEngine`,
+aliases, other namespaces, target-typed `new`, dynamic expressions, casts,
+HDR/out-of-range components, and named or system colors are skipped. Detection
+does not resolve C# types or infer Unity project color-space settings.
+
+</details>
+
 ### 🧮 Static CSS color expressions
 
 <details>
@@ -448,19 +483,55 @@ floating-point precision until the final editor preview is produced.
 Relative `rgb`, `hsl`, `hwb`, Lab/LCH, OKLab/OKLCH, and `color()` expressions
 convert their origin into the target space before reading channel identifiers.
 Omitted alpha inherits the origin's alpha. `alpha(from <color> / <alpha>)`
-changes transparency while retaining the origin space. The supported `calc()`
-subset includes channel identifiers, finite numeric/percentage/angle literals,
-parentheses, and `+`, `-`, `*`, `/` with compatible units. Division by zero,
-mixed-unit sums, and other math functions are skipped. Binary `+` and `-`
-require surrounding whitespace.
+changes transparency while retaining the origin space. These forms support
+`calc()`, `min()`, `max()`, and `clamp()` with channel identifiers, finite
+numeric/percentage/angle literals, parentheses, and `+`, `-`, `*`, `/` with
+compatible units. The functions can nest, and comparison arguments can contain
+arithmetic directly: `min(c * .9, .2)` or `calc(max(r, 20) / 2)`.
+
+`min()` and `max()` accept one or more comma-separated arguments; `clamp()`
+accepts exactly three and favors the lower bound when bounds conflict. Either
+bound can be `none` to leave that side unlimited. Comparison arguments must
+have the same type; angle units are converted to degrees. Channel identifiers
+are numbers, so use `min(alpha, .5)`, not `min(alpha, 50%)`. Binary `+` and `-`
+require surrounding whitespace. Division by zero, non-finite literals or
+intermediate results, mixed-unit sums/comparisons, and other math functions
+are skipped. This follows the supported finite subset of
+[CSS comparison functions](https://www.w3.org/TR/css-values-4/#comp-func).
+
+Absolute RGB, HSL, HWB, Lab/LCH, OKLab/OKLCH, and `color()` channels and alpha
+also accept this math subset, including legal legacy RGB/HSL comma forms:
+
+```css
+rgb(min(255, 128) 0 0 / calc(1 / 2))
+hsl(calc(60 + 60), min(100%, 80%), 50%)
+oklch(clamp(.2, .65, .8) .2 30)
+color-mix(in srgb, rgb(max(128, 64) 0 0), blue)
+```
+
+Separators inside nested math stay within their channel. Each result must match
+the channel's numeric, percentage, or angle type; percentage scales and missing
+components follow the color function. Legacy RGB channels must all resolve to
+numbers or all to percentages, and legacy HSL saturation/lightness require
+percentages. `none` color components are available only in modern syntax;
+`none` clamp bounds remain available in either syntax. Channel identifiers such
+as `r`, `l`, and `alpha` require a relative origin. Picker and alpha edits replace
+the complete resolved expression with a static color. Math in `color-mix()`
+weights, `round()`, `mod()`, and `rem()` remains unsupported.
+
+Absolute RGB and Lab-family channels apply their specified bounds before
+mixing or deriving relative colors; `color()` retains out-of-gamut values.
+See [the absolute math design](docs/design/2026-10-05-css-absolute-math.md) for
+channel scales and evaluation boundaries.
 
 In CSS, SCSS, and Less, deterministic custom properties can supply origins,
 channels, and arithmetic operands. Existing selector/at-rule ambiguity rules,
 cross-file opt-in settings, and workspace trust gates apply. Variable expansion
 retains source precision, with limits of 16 dependency levels, 1,024 expansion
 steps, and 65,536 expanded characters. Color expressions retain their 32-level
-nesting limit; arithmetic additionally allows at most 256 tokens and 4,096
-characters. Complete resolved expressions take priority over inner matches.
+nesting limit; each math component additionally allows at most 32 nested
+levels, 256 tokens, and 4,096 characters. Complete resolved expressions take
+priority over inner matches.
 
 Runtime-dependent values such as `currentColor`, ambiguous or cyclic variables,
 custom color profiles, and environment-dependent color functions remain

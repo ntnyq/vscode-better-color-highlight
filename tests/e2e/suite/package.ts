@@ -1,5 +1,6 @@
 import {
   activateExtension,
+  assertAbsoluteColorHighlighting,
   assertInMemoryCssHighlighting,
   assertRelativeColorHighlighting,
   assertRequiredCommands,
@@ -13,4 +14,5 @@ export async function run(): Promise<void> {
   await assertRequiredCommands()
   await assertInMemoryCssHighlighting()
   await assertRelativeColorHighlighting()
+  await assertAbsoluteColorHighlighting()
 }
