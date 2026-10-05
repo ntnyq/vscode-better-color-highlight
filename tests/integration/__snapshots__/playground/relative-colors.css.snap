@@ -148,6 +148,91 @@
         "border": null,
         "overviewRulerColor": "rgb(249, 177, 169)"
       }
+    },
+    {
+      "index": 8,
+      "line": 22,
+      "column": 10,
+      "text": "oklch(\n    from var(--brand) clamp(0.2, l, 0.8) min(c * var(--factor), 0.15) h\n  )",
+      "range": [
+        595,
+        677
+      ],
+      "color": "rgba(219, 102, 86, 0.8)",
+      "render": {
+        "backgroundColor": "rgb(219, 102, 86)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(219, 102, 86)"
+      }
+    },
+    {
+      "index": 9,
+      "line": 25,
+      "column": 15,
+      "text": "alpha(from red / min(alpha, 0.5))",
+      "range": [
+        693,
+        726
+      ],
+      "color": "rgba(255, 0, 0, 0.5)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 10,
+      "line": 26,
+      "column": 17,
+      "text": "rgb(from red calc(min(r, 200) / 2) max(g, 20) b)",
+      "range": [
+        744,
+        792
+      ],
+      "color": "rgb(100, 20, 0)",
+      "render": {
+        "backgroundColor": "rgb(100, 20, 0)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(100, 20, 0)"
+      }
+    },
+    {
+      "index": 11,
+      "line": 27,
+      "column": 18,
+      "text": "hsl(from red min(0.5turn, 120deg) s l)",
+      "range": [
+        811,
+        849
+      ],
+      "color": "rgb(0, 255, 0)",
+      "render": {
+        "backgroundColor": "rgb(0, 255, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 255, 0)"
+      }
+    },
+    {
+      "index": 12,
+      "line": 28,
+      "column": 26,
+      "text": "alpha(\n    from var(--softer) / clamp(none, alpha * 0.5, 0.6)\n  )",
+      "range": [
+        876,
+        941
+      ],
+      "color": "rgba(232, 90, 72, 0.4)",
+      "render": {
+        "backgroundColor": "rgb(232, 90, 72)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(232, 90, 72)"
+      }
     }
   ]
 }

@@ -564,13 +564,12 @@ function linearSrgbToOklab([red, green, blue]: ColorChannels): ColorChannels {
 }
 
 /**
- * Convert HSL channels to normalized sRGB with bounded saturation and
- * lightness.
+ * Convert HSL channels to sRGB while retaining extended saturation and lightness.
  */
 function hslToSrgb([hue, saturation, lightness]: ColorChannels): ColorChannels {
   const h = normalizeHue(hue) / 360
-  const s = clamp(saturation, 0, 1)
-  const l = clamp(lightness, 0, 1)
+  const s = Math.max(saturation, 0)
+  const l = lightness
   if (s === 0) {
     return [l, l, l]
   }
@@ -611,10 +610,13 @@ function srgbToHsl([red, green, blue]: ColorChannels): ColorChannels {
  * Convert HWB channels to sRGB, normalizing excessive whiteness and blackness.
  */
 function hwbToSrgb([hue, whiteness, blackness]: ColorChannels): ColorChannels {
-  const white = clamp(whiteness, 0, 1)
-  const black = clamp(blackness, 0, 1)
+  const white = Math.max(whiteness, 0)
+  const black = Math.max(blackness, 0)
   if (white + black >= 1) {
-    const gray = white / (white + black)
+    // Scaling first preserves the ratio even when their finite sum overflows.
+    const maximum = Math.max(white, black)
+    const scaledWhite = white / maximum
+    const gray = scaledWhite / (scaledWhite + black / maximum)
     return [gray, gray, gray]
   }
 
@@ -776,13 +778,6 @@ function hueToRgb(p: number, q: number, rawHue: number): number {
     return p + (q - p) * (2 / 3 - hue) * 6
   }
   return p
-}
-
-/**
- * Constrain a number to the inclusive minimum and maximum bounds.
- */
-function clamp(value: number, minimum: number, maximum: number): number {
-  return Math.min(Math.max(value, minimum), maximum)
 }
 
 /**

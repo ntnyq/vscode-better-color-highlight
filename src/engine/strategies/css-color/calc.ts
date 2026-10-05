@@ -5,7 +5,7 @@ export interface CalculatedComponent {
 
 /**
  * Evaluate bounded arithmetic with typed values, without executing source code.
- * Unsupported functions, mixed-unit sums, and non-finite results are rejected.
+ * Unsupported functions, inconsistent units, and non-finite values are rejected.
  */
 export function evaluateColorCalc(
   source: string,
@@ -15,7 +15,7 @@ export function evaluateColorCalc(
     return null
   }
   if (
-    !/^calc\(/iu.test(source) &&
+    !/^(?:calc|min|max|clamp)\(/iu.test(source) &&
     !/^(?:[a-z]+|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?(?:%|deg|grad|rad|turn)?)$/iu.test(
       source,
     )
@@ -46,18 +46,31 @@ export function evaluateColorCalc(
       }
       const value = atom(depth + 1)
       return value
-        ? { ...value, value: value.value * (token === '-' ? -1 : 1) }
+        ? createCalculatedComponent(
+            value.value * (token === '-' ? -1 : 1),
+            value.unit,
+          )
         : null
     }
-    if (token === '(' || token === 'calc') {
+    if (token === '(') {
+      const value = sum(depth + 1)
+      return tokens[index++] === ')' ? value : null
+    }
+    if (
+      token === 'calc' ||
+      token === 'min' ||
+      token === 'max' ||
+      token === 'clamp'
+    ) {
       if (
-        token === 'calc' &&
-        tokenMatches[index]?.index !== tokenMatches[index - 1].index + 4
+        tokenMatches[index]?.index !==
+          tokenMatches[index - 1].index + token.length ||
+        tokens[index++] !== '('
       ) {
         return null
       }
-      if (token === 'calc' && tokens[index++] !== '(') {
-        return null
+      if (token !== 'calc') {
+        return comparison(token, depth + 1)
       }
       const value = sum(depth + 1)
       return tokens[index++] === ')' ? value : null
@@ -67,7 +80,7 @@ export function evaluateColorCalc(
     }
     const channel = channels.get(token)
     if (channel !== undefined) {
-      return { value: channel, unit: 'number' }
+      return createCalculatedComponent(channel, 'number')
     }
     const match = token.match(
       /^(?<value>(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?)(?<unit>%|deg|grad|rad|turn)?$/u,
@@ -78,17 +91,72 @@ export function evaluateColorCalc(
     const value = Number(match.groups.value)
     const unit = match.groups.unit
     if (unit === '%') {
-      return { value, unit: 'percentage' }
+      return createCalculatedComponent(value, 'percentage')
     }
     if (unit) {
-      return {
-        value:
-          value *
+      return createCalculatedComponent(
+        value *
           ({ turn: 360, grad: 0.9, rad: 180 / Math.PI, deg: 1 }[unit] ?? 1),
-        unit: 'angle',
-      }
+        'angle',
+      )
     }
-    return { value, unit: 'number' }
+    return createCalculatedComponent(value, 'number')
+  }
+  function comparison(
+    name: 'min' | 'max' | 'clamp',
+    depth: number,
+  ): CalculatedComponent | null {
+    // Null represents an unbounded clamp side, never an invalid calculation.
+    const args: (CalculatedComponent | null)[] = []
+    do {
+      if (
+        name === 'clamp' &&
+        (args.length === 0 || args.length === 2) &&
+        tokens[index]?.toLowerCase() === 'none'
+      ) {
+        args.push(null)
+        index++
+      } else {
+        const value = sum(depth)
+        if (!value) {
+          return null
+        }
+        args.push(value)
+      }
+      if (tokens[index] !== ',') {
+        break
+      }
+      index++
+    } while (index < tokens.length)
+    if (tokens[index++] !== ')') {
+      return null
+    }
+    const values = args.filter(value => value !== null)
+    const first = values[0]
+    if (!first || values.some(value => value.unit !== first.unit)) {
+      return null
+    }
+    if (name === 'clamp') {
+      if (args.length !== 3) {
+        return null
+      }
+      const [minimum, preferred, maximum] = args
+      if (!preferred) {
+        return null
+      }
+      let value = preferred.value
+      if (maximum) {
+        value = Math.min(value, maximum.value)
+      }
+      if (minimum) {
+        value = Math.max(value, minimum.value)
+      }
+      return { value, unit: preferred.unit }
+    }
+    return {
+      value: Math[name](...values.map(value => value.value)),
+      unit: first.unit,
+    }
   }
   function product(depth: number): CalculatedComponent | null {
     let left = atom(depth)
@@ -102,15 +170,15 @@ export function evaluateColorCalc(
         if (left.unit !== 'number' && right.unit !== 'number') {
           return null
         }
-        left = {
-          value: left.value * right.value,
-          unit: left.unit === 'number' ? right.unit : left.unit,
-        }
+        left = createCalculatedComponent(
+          left.value * right.value,
+          left.unit === 'number' ? right.unit : left.unit,
+        )
       } else {
         if (right.value === 0 || right.unit !== 'number') {
           return null
         }
-        left = { value: left.value / right.value, unit: left.unit }
+        left = createCalculatedComponent(left.value / right.value, left.unit)
       }
     }
     return left
@@ -130,10 +198,10 @@ export function evaluateColorCalc(
       if (!right || left.unit !== right.unit) {
         return null
       }
-      left = {
-        value: left.value + right.value * (operator === '-' ? -1 : 1),
-        unit: left.unit,
-      }
+      left = createCalculatedComponent(
+        left.value + right.value * (operator === '-' ? -1 : 1),
+        left.unit,
+      )
     }
     return left
   }
@@ -141,4 +209,14 @@ export function evaluateColorCalc(
   return index === tokens.length && result && Number.isFinite(result.value)
     ? result
     : null
+}
+
+/**
+ * Reject overflow before a comparison or later operation can hide it.
+ */
+function createCalculatedComponent(
+  value: number,
+  unit: CalculatedComponent['unit'],
+): CalculatedComponent | null {
+  return Number.isFinite(value) ? { value, unit } : null
 }

@@ -543,6 +543,189 @@ describe(findCssVars, () => {
   })
 
   it.each([
+    [
+      '--channel: calc(64 + 64); --opacity: 50%;',
+      'rgb(var(--channel) max(16, 32) clamp(0, 64, 255) / var(--opacity))',
+      'rgba(128, 32, 64, 0.5)',
+    ],
+    [
+      '--arguments: 25%, 50%; --bounds: none, .5, 1;',
+      'rgb(max(var(--arguments)) 0 0 / clamp(var(--bounds)))',
+      'rgba(128, 0, 0, 0.5)',
+    ],
+    [
+      '--hue: .5turn; --saturation: 100%;',
+      'hsl(min(var(--hue), 200grad) var(--saturation) calc(25% + 25%))',
+      'rgb(0, 255, 255)',
+    ],
+    [
+      '--factor: .5;',
+      'color(srgb calc(1 * var(--factor)) 0 0)',
+      'rgb(128, 0, 0)',
+    ],
+    [
+      '--channel: 128;',
+      'color-mix(in srgb, rgb(min(var(--channel), 255) 0 0), white)',
+      'rgb(192, 128, 128)',
+    ],
+    [
+      '--channel: 64;',
+      'rgb(from rgb(calc(var(--channel) * 2) 0 0) calc(r / 2) g b)',
+      'rgb(64, 0, 0)',
+    ],
+    [
+      '--channel: 256;',
+      'color-mix(in srgb, rgb(calc(var(--channel) * 2) 0 0), black)',
+      'rgb(128, 0, 0)',
+    ],
+    [
+      '--channel: 256;',
+      'rgb(from rgb(calc(var(--channel) * 2) 0 0) calc(r / 2) g b)',
+      'rgb(128, 0, 0)',
+    ],
+    [
+      '--unused: 1;',
+      'rgb(min(var(--missing, 128), 255) 0 0)',
+      'rgb(128, 0, 0)',
+    ],
+  ])(
+    'resolves absolute math variables with the complete original range: %s',
+    async (declarations, expression, color) => {
+      const prefix = `:root { ${declarations} } /* 🎨 */ .x { color: `
+      const text = `${prefix}${expression}; }`
+      const result = await findCssVars(text)
+
+      expect(
+        result.filter(match => match.start === prefix.length),
+      ).toStrictEqual([
+        {
+          start: prefix.length,
+          end: prefix.length + expression.length,
+          color,
+        },
+      ])
+    },
+  )
+
+  it('resolves aliases of absolute math colors without shortening ranges', async () => {
+    const expression = 'rgb(calc(var(--channel) * 2) 0 0 / min(1, .5))'
+    const text = `:root { --channel: 64; --derived: ${expression}; } .x { color: var(--derived); }`
+    const start = text.indexOf(expression)
+    const aliasStart = text.indexOf('var(--derived)')
+
+    await expect(findCssVars(text)).resolves.toStrictEqual([
+      {
+        start,
+        end: start + expression.length,
+        color: 'rgba(128, 0, 0, 0.5)',
+      },
+      {
+        start: aliasStart,
+        end: aliasStart + 'var(--derived)'.length,
+        color: 'rgba(128, 0, 0, 0.5)',
+      },
+    ])
+  })
+
+  it.each([
+    '.a { --cap: 20; } .b { --cap: 100; } .x { color: rgb(min(var(--cap, 128), 255) 0 0); }',
+    ':root { --cap: var(--cap, 128); } .x { color: rgb(min(var(--cap), 255) 0 0); }',
+    ':root { --cap: currentColor; } .x { color: rgb(min(var(--cap), 255) 0 0); }',
+    ':root { --cap: 50%; } .x { color: rgb(min(var(--cap), 128) 0 0); }',
+    ':root { --cap: 1px; } .x { color: rgb(calc(var(--cap) * 2) 0 0); }',
+    ':root { --weight: 50%; } .x { color: color-mix(in srgb, red calc(var(--weight)), blue); }',
+  ])('rejects unresolved or unsupported absolute math: %s', async text => {
+    await expect(findCssVars(text)).resolves.toStrictEqual([])
+  })
+
+  it.each([
+    [
+      '--origin: red; --channel: min(r, 128);',
+      'rgb(from var(--origin) var(--channel) g b)',
+      'rgb(128, 0, 0)',
+    ],
+    [
+      '--arguments: r / 2, 100; --bounds: 0, alpha / 2, 1;',
+      'rgb(from red max(var(--arguments)) g b / clamp(var(--bounds)))',
+      'rgba(128, 0, 0, 0.5)',
+    ],
+    [
+      '--origin: rgb(from red min(r, 128) g b); --upper: none;',
+      'rgb(from var(--origin) clamp(0, r * 2, var(--upper)) g b)',
+      'rgb(255, 0, 0)',
+    ],
+    [
+      '--percentage: 50%; --angle: .5turn;',
+      'hsl(from red min(var(--angle), 200grad) max(var(--percentage), 100%) l)',
+      'rgb(0, 255, 255)',
+    ],
+    [
+      '--factor: .5;',
+      'rgb(from var(--absent, red) min(r, calc(r * var(--factor))) g b)',
+      'rgb(128, 0, 0)',
+    ],
+  ])(
+    'substitutes comparison functions and arguments while retaining source ranges: %s',
+    async (declarations, expression, color) => {
+      const text = `:root { ${declarations} } .x { color: ${expression}; }`
+      const start = text.indexOf(expression)
+      const result = await findCssVars(text)
+      expect(result.filter(match => match.start === start)).toStrictEqual([
+        { start, end: start + expression.length, color },
+      ])
+    },
+  )
+
+  it('resolves aliases of relative comparisons with the complete outer range', async () => {
+    const expression =
+      'rgb(from var(--origin) clamp(0, min(r, 128), 255) g b / max(alpha, .5))'
+    const text = `:root { --origin: red; --derived: ${expression}; } .x { color: var(--derived); }`
+    const start = text.indexOf(expression)
+    const aliasStart = text.indexOf('var(--derived)')
+
+    await expect(findCssVars(text)).resolves.toStrictEqual([
+      {
+        start,
+        end: start + expression.length,
+        color: 'rgb(128, 0, 0)',
+      },
+      {
+        start: aliasStart,
+        end: aliasStart + 'var(--derived)'.length,
+        color: 'rgb(128, 0, 0)',
+      },
+    ])
+  })
+
+  it.each([
+    '.a { --cap: 20; } .b { --cap: 100; } .x { color: rgb(from red min(r, var(--cap, 128)) g b); }',
+    ':root { --cap: var(--other); --other: var(--cap, 128); } .x { color: rgb(from red min(r, var(--cap)) g b); }',
+    ':root { --cap: var(--cap, 128); } .x { color: rgb(from red clamp(0, r, var(--cap, 255)) g b); }',
+    ':root { --cap: 50%; } .x { color: rgb(from red min(r, var(--cap)) g b); }',
+    ':root { --bounds: 0, r; } .x { color: rgb(from red clamp(var(--bounds)) g b); }',
+  ])(
+    'rejects ambiguous, cyclic, or invalid comparison variables: %s',
+    async text => {
+      await expect(findCssVars(text)).resolves.toStrictEqual([])
+    },
+  )
+
+  it('recovers after variable expansion exceeds comparison token limits', async () => {
+    const expression = 'rgb(from red min(r, var(--arguments)) g b)'
+    const valid = 'rgb(from red min(r, var(--cap)) g b)'
+    const text = `:root { --arguments: 0${', 0'.repeat(130)}; --cap: 128; } .x { color: ${expression}; background: ${valid}; }`
+    const start = text.indexOf(valid)
+
+    await expect(findCssVars(text)).resolves.toStrictEqual([
+      {
+        start,
+        end: start + valid.length,
+        color: 'rgb(128, 0, 0)',
+      },
+    ])
+  })
+
+  it.each([
     '.a { --brand: red; } .b { --brand: blue; } .x { color: rgb(from var(--brand, lime) r g b); }',
     ':root { --brand: var(--brand); } .x { color: rgb(from var(--brand) r g b); }',
     ':root { --brand: currentColor; } .x { color: rgb(from var(--brand) r g b); }',

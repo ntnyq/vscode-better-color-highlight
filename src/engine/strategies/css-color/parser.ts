@@ -1,5 +1,6 @@
 import { hexToRgb, rgbString } from '../../../shared/color'
 import { NAMED_COLORS } from '../../../shared/constants'
+import { evaluateColorCalc, type CalculatedComponent } from './calc'
 import { parseRelativeColor } from './relative'
 import {
   convertCssColor,
@@ -37,14 +38,17 @@ interface ParsedComponent {
   readonly value: number
 }
 
+interface ParsedNumericComponent extends ParsedComponent {
+  readonly unit: CalculatedComponent['unit']
+}
+
 const NUMBER_SOURCE = String.raw`[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?`
 const MAX_COLOR_EXPRESSION_DEPTH = 32
-const PERCENTAGE_REGEX = new RegExp(`^(?<value>${NUMBER_SOURCE})%$`, 'iu')
-const ANGLE_REGEX = new RegExp(
-  `^(?<value>${NUMBER_SOURCE})(?<unit>deg|grad|rad|turn)?$`,
+const COMPONENT_REGEX = new RegExp(
+  `^(?<value>${NUMBER_SOURCE})(?<unit>%|deg|grad|rad|turn)?$`,
   'iu',
 )
-const NUMBER_REGEX = new RegExp(`^${NUMBER_SOURCE}$`, 'iu')
+const NO_CHANNEL_KEYWORDS: ReadonlyMap<string, number> = new Map()
 const MIX_PERCENTAGE_SUFFIX_REGEX = new RegExp(
   `^(?<color>.+)\\s+(?<percentage>${NUMBER_SOURCE}%)$`,
   'iu',
@@ -167,7 +171,17 @@ function getFunctionHead(
  * Parse one complete static CSS color expression.
  */
 export function parseCssColorExpression(source: string): CssColorValue | null {
-  return parseCssColorExpressionAtDepth(source, 0)
+  const color = parseCssColorExpressionAtDepth(source, 0)
+  if (!color) {
+    return null
+  }
+  // Finite channels can still overflow during color-space conversion. Check
+  // the final preview without clamping the original channels used by callers.
+  const preview = convertCssColor(color, 'srgb')
+  return Number.isFinite(preview.alpha) &&
+    preview.channels.every(channel => Number.isFinite(channel))
+    ? color
+    : null
 }
 
 /**
@@ -355,8 +369,9 @@ function parseColorKeyword(source: string): CssColorValue | null {
  * Parse modern or legacy RGB function arguments.
  */
 function parseRgbFunction(args: string): CssColorValue | null {
-  if (args.includes(',')) {
-    return parseLegacyRgb(args)
+  const parts = splitTopLevel(args, ',')
+  if (parts.length > 1) {
+    return parseLegacyRgb(parts)
   }
 
   const parsed = parseModernArguments(args)
@@ -370,45 +385,41 @@ function parseRgbFunction(args: string): CssColorValue | null {
 /**
  * Parse comma-separated RGB arguments with consistent channel units.
  */
-function parseLegacyRgb(args: string): CssColorValue | null {
-  if (args.includes('/')) {
-    return null
-  }
-  const parts = args.split(',').map(part => part.trim())
+function parseLegacyRgb(parts: readonly string[]): CssColorValue | null {
   if (parts.length !== 3 && parts.length !== 4) {
     return null
   }
 
-  const percentageChannels = parts
+  const components = parts
     .slice(0, 3)
-    .map(part => parsePercentage(part, false))
-  const numberChannels = parts.slice(0, 3).map(part => parseNumber(part, false))
-  let channels: (ParsedComponent | null)[] | null = null
-  if (percentageChannels.every(Boolean)) {
-    channels = percentageChannels
-  } else if (numberChannels.every(Boolean)) {
-    channels = numberChannels.map(component =>
-      component
-        ? { missing: component.missing, value: component.value / 255 }
-        : null,
-    )
-  }
-  if (!channels || channels.some(component => !component)) {
+    .map(part => parseNumericComponent(part.trim(), false))
+  const unit = components[0]?.unit
+  if (
+    (unit !== 'number' && unit !== 'percentage') ||
+    components.some(component => !component || component.unit !== unit)
+  ) {
     return null
   }
-
-  const alpha = parts[3] ? parseAlpha(parts[3], false) : defaultAlpha()
-  return alpha
-    ? createColorFromComponents('srgb', channels as ParsedComponent[], alpha)
-    : null
+  const channels = components.map(component =>
+    component
+      ? {
+          missing: false,
+          value: clamp(component.value / (unit === 'number' ? 255 : 100), 0, 1),
+        }
+      : null,
+  )
+  const alpha =
+    parts.length === 4 ? parseAlpha(parts[3].trim(), false) : defaultAlpha()
+  return alpha ? createColorFromComponents('srgb', channels, alpha) : null
 }
 
 /**
  * Parse modern or legacy HSL function arguments.
  */
 function parseHslFunction(args: string): CssColorValue | null {
-  if (args.includes(',')) {
-    return parseLegacyHsl(args)
+  const parts = splitTopLevel(args, ',')
+  if (parts.length > 1) {
+    return parseLegacyHsl(parts)
   }
   const parsed = parseModernArguments(args)
   if (!parsed) {
@@ -416,7 +427,7 @@ function parseHslFunction(args: string): CssColorValue | null {
   }
   const channels = [
     parseAngle(parsed.channels[0]),
-    parsePercentLikeComponent(parsed.channels[1]),
+    clampComponent(parsePercentLikeComponent(parsed.channels[1]), 0),
     parsePercentLikeComponent(parsed.channels[2]),
   ]
   return createColorFromComponents('hsl', channels, parsed.alpha)
@@ -425,20 +436,17 @@ function parseHslFunction(args: string): CssColorValue | null {
 /**
  * Parse comma-separated HSL arguments with percentage saturation and lightness.
  */
-function parseLegacyHsl(args: string): CssColorValue | null {
-  if (args.includes('/')) {
-    return null
-  }
-  const parts = args.split(',').map(part => part.trim())
+function parseLegacyHsl(parts: readonly string[]): CssColorValue | null {
   if (parts.length !== 3 && parts.length !== 4) {
     return null
   }
   const channels = [
-    parseAngle(parts[0], false),
-    parsePercentage(parts[1], false),
-    parsePercentage(parts[2], false),
+    parseAngle(parts[0].trim(), false),
+    clampComponent(parsePercentage(parts[1].trim(), false), 0),
+    parsePercentage(parts[2].trim(), false),
   ]
-  const alpha = parts[3] ? parseAlpha(parts[3], false) : defaultAlpha()
+  const alpha =
+    parts.length === 4 ? parseAlpha(parts[3].trim(), false) : defaultAlpha()
   return alpha ? createColorFromComponents('hsl', channels, alpha) : null
 }
 
@@ -446,9 +454,6 @@ function parseLegacyHsl(args: string): CssColorValue | null {
  * Parse modern HWB arguments with optional alpha.
  */
 function parseHwbArguments(args: string): CssColorValue | null {
-  if (args.includes(',')) {
-    return null
-  }
   const parsed = parseModernArguments(args)
   if (!parsed) {
     return null
@@ -468,9 +473,6 @@ function parseLabLikeFunction(
   space: 'lab' | 'lch' | 'oklab' | 'oklch',
   args: string,
 ): CssColorValue | null {
-  if (args.includes(',')) {
-    return null
-  }
   const parsed = parseModernArguments(args)
   if (!parsed) {
     return null
@@ -481,7 +483,13 @@ function parseLabLikeFunction(
       return parseAngle(channel)
     }
     const percentageScale = getLabPercentageScale(space, index)
-    return parseNumberOrPercentage(channel, percentageScale)
+    const component = parseNumberOrPercentage(channel, percentageScale)
+    if (index === 0) {
+      return clampComponent(component, 0, percentageScale)
+    }
+    return space === 'lch' || space === 'oklch'
+      ? clampComponent(component, 0)
+      : component
   })
   return createColorFromComponents(space, channels, parsed.alpha)
 }
@@ -509,9 +517,6 @@ function getLabPercentageScale(
  * Parse color() arguments in a supported explicit color space.
  */
 function parseColorSpaceFunction(args: string): CssColorValue | null {
-  if (args.includes(',')) {
-    return null
-  }
   const normalizedArgs = args.trim()
   const firstWhitespace = normalizedArgs.search(/\s/u)
   if (firstWhitespace === -1) {
@@ -550,7 +555,7 @@ function parseModernArguments(args: string): {
   if (slashParts.length > 2) {
     return null
   }
-  const channels = slashParts[0].trim().split(/\s+/u)
+  const channels = splitTopLevel(slashParts[0], 'whitespace')
   if (channels.length !== 3) {
     return null
   }
@@ -574,51 +579,61 @@ function parseModernArguments(args: string): {
  * Parse an RGB number or percentage into a normalized component.
  */
 function parseRgbComponent(source: string): ParsedComponent | null {
-  const percentage = parsePercentage(source)
-  if (percentage) {
-    return percentage
-  }
-  const number = parseNumber(source)
-  return number ? { ...number, value: number.value / 255 } : null
+  const component = parseNumericComponent(source)
+  return component && component.unit !== 'angle'
+    ? {
+        missing: component.missing,
+        value: clamp(
+          component.value / (component.unit === 'percentage' ? 100 : 255),
+          0,
+          1,
+        ),
+      }
+    : null
 }
 
 /**
  * Parse a hue angle into degrees while preserving allowed missing values.
  */
 function parseAngle(source: string, allowNone = true): ParsedComponent | null {
-  if (allowNone && source.toLowerCase() === 'none') {
-    return { missing: true, value: 0 }
-  }
-  const match = source.match(ANGLE_REGEX)
-  if (!match?.groups) {
-    return null
-  }
-  const value = Number(match.groups.value)
-  switch (match.groups.unit?.toLowerCase()) {
-    case 'grad': {
-      return { missing: false, value: (value * 360) / 400 }
-    }
-    case 'rad': {
-      return { missing: false, value: (value * 180) / Math.PI }
-    }
-    case 'turn': {
-      return { missing: false, value: value * 360 }
-    }
-    default: {
-      return { missing: false, value }
-    }
-  }
+  const component = parseNumericComponent(source, allowNone)
+  return component && component.unit !== 'percentage'
+    ? { missing: component.missing, value: normalizeHue(component.value) }
+    : null
 }
 
 /**
- * Parse a numeric component or an allowed none keyword.
+ * Parse literals directly and evaluate static math without relative keywords.
  */
-function parseNumber(source: string, allowNone = true): ParsedComponent | null {
+function parseNumericComponent(
+  source: string,
+  allowNone = true,
+): ParsedNumericComponent | null {
   if (allowNone && source.toLowerCase() === 'none') {
-    return { missing: true, value: 0 }
+    return { missing: true, unit: 'number', value: 0 }
   }
-  return NUMBER_REGEX.test(source)
-    ? { missing: false, value: Number(source) }
+  const match = source.match(COMPONENT_REGEX)
+  if (!match?.groups) {
+    const calculated = evaluateColorCalc(source, NO_CHANNEL_KEYWORDS)
+    return calculated ? { ...calculated, missing: false } : null
+  }
+  let value = Number(match.groups.value)
+  const unit = match.groups.unit?.toLowerCase()
+  if (unit && unit !== '%') {
+    value *= { turn: 360, grad: 0.9, rad: 180 / Math.PI, deg: 1 }[unit] ?? 1
+  }
+  let componentUnit: CalculatedComponent['unit'] = 'number'
+  if (unit === '%') {
+    componentUnit = 'percentage'
+  } else if (unit) {
+    componentUnit = 'angle'
+  }
+  return Number.isFinite(value)
+    ? {
+        missing: false,
+        unit: componentUnit,
+        value,
+      }
     : null
 }
 
@@ -629,12 +644,9 @@ function parsePercentage(
   source: string,
   allowNone = true,
 ): ParsedComponent | null {
-  if (allowNone && source.toLowerCase() === 'none') {
-    return { missing: true, value: 0 }
-  }
-  const match = source.match(PERCENTAGE_REGEX)
-  return match?.groups
-    ? { missing: false, value: Number(match.groups.value) / 100 }
+  const component = parseNumericComponent(source, allowNone)
+  return component && (component.missing || component.unit === 'percentage')
+    ? { missing: component.missing, value: component.value / 100 }
     : null
 }
 
@@ -644,24 +656,27 @@ function parsePercentage(
 function parseNumberOrPercentage(
   source: string,
   percentageScale: number,
+  allowNone = true,
 ): ParsedComponent | null {
-  const percentage = parsePercentage(source)
-  if (percentage) {
-    return { ...percentage, value: percentage.value * percentageScale }
+  const component = parseNumericComponent(source, allowNone)
+  if (!component || component.unit === 'angle') {
+    return null
   }
-  return parseNumber(source)
+  const value =
+    component.unit === 'percentage'
+      ? component.value * (percentageScale / 100)
+      : component.value
+  return Number.isFinite(value) ? { missing: component.missing, value } : null
 }
 
 /**
  * Normalize a percentage-like component expressed as a number or percentage.
  */
 function parsePercentLikeComponent(source: string): ParsedComponent | null {
-  const percentage = parsePercentage(source)
-  if (percentage) {
-    return percentage
-  }
-  const number = parseNumber(source)
-  return number ? { ...number, value: number.value / 100 } : null
+  const component = parseNumericComponent(source)
+  return component && component.unit !== 'angle'
+    ? { missing: component.missing, value: component.value / 100 }
+    : null
 }
 
 /**
@@ -671,12 +686,20 @@ function parseAlpha(
   source: string,
   allowNone: boolean,
 ): ParsedComponent | null {
-  const percentage = parsePercentage(source, allowNone)
-  if (percentage) {
-    return { ...percentage, value: clamp(percentage.value, 0, 1) }
-  }
-  const number = parseNumber(source, allowNone)
-  return number ? { ...number, value: clamp(number.value, 0, 1) } : null
+  return clampComponent(parseNumberOrPercentage(source, 1, allowNone), 0, 1)
+}
+
+/**
+ * Apply an absolute channel's parse-time bounds without losing missing flags.
+ */
+function clampComponent(
+  component: ParsedComponent | null,
+  minimum: number,
+  maximum = Number.POSITIVE_INFINITY,
+): ParsedComponent | null {
+  return component
+    ? { ...component, value: clamp(component.value, minimum, maximum) }
+    : null
 }
 
 /**
@@ -955,7 +978,10 @@ function fixupHues(
 /**
  * Split CSS arguments outside parentheses and quoted strings.
  */
-function splitTopLevel(source: string, separator: ',' | '/'): string[] {
+function splitTopLevel(
+  source: string,
+  separator: ',' | '/' | 'whitespace',
+): string[] {
   const parts: string[] = []
   let depth = 0
   let quote: '"' | "'" | null = null
@@ -980,12 +1006,21 @@ function splitTopLevel(source: string, separator: ',' | '/'): string[] {
       depth++
     } else if (character === ')') {
       depth--
-    } else if (character === separator && depth === 0) {
-      parts.push(source.slice(partStart, index))
+    } else if (
+      depth === 0 &&
+      (separator === 'whitespace'
+        ? /\s/u.test(character)
+        : character === separator)
+    ) {
+      if (separator !== 'whitespace' || index > partStart) {
+        parts.push(source.slice(partStart, index))
+      }
       partStart = index + 1
     }
   }
-  parts.push(source.slice(partStart))
+  if (separator !== 'whitespace' || partStart < source.length) {
+    parts.push(source.slice(partStart))
+  }
   return parts
 }
 

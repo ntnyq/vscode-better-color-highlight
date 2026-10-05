@@ -1,0 +1,31 @@
+:root {
+  --channel: 128;
+  --opacity: 0.5;
+  --absolute-brand: rgb(calc(var(--channel) * 2) 0 0 / min(var(--opacity), 1));
+}
+
+.absolute-math {
+  color: rgb(calc(64 + 64) max(16, 32) clamp(0, 64, 255));
+  background: hsl(min(0.5turn, 200deg) max(50%, 100%) calc(25% + 25%));
+  border-color: hwb(calc(120deg + 120deg) min(0%, 20%) max(0%, 0%));
+  outline-color: lab(clamp(0%, 60%, 100%) calc(20 - 10) max(-20, -10));
+  text-decoration-color: lch(max(50%, 60%) min(40, 30) calc(20deg + 10deg));
+  box-shadow: 0 0 2px oklab(calc(0.5 + 0.1) min(0.2, 0.1) max(-0.1, 0));
+  caret-color: oklch(clamp(0, 0.6, 1) calc(0.2 / 2) min(0.5turn, 30deg));
+  column-rule-color: color(display-p3 calc(1 / 2) 0 0 / clamp(0, 0.5, 1));
+}
+
+.composed-math {
+  color: var(--absolute-brand);
+  background: rgb(0, calc(128 * 2), min(0, 20));
+  border-color: color-mix(in srgb, rgb(calc(256 * 2) 0 0), black);
+  outline-color: rgb(from rgb(calc(256 * 2) 0 0) calc(r / 2) g b);
+}
+
+.unsupported-math {
+  color: rgb(calc(128 + 50%) 0 0);
+  background: rgb(calc(1px + 2px) 0 0);
+  border-color: rgb(calc(1 / 0) 0 0);
+  outline-color: color-mix(in srgb, red calc(25% + 25%), blue);
+  text-decoration-color: rgb(calc(var(--missing) * 2) 0 0);
+}

@@ -17,3 +17,15 @@
   color: rgb(from currentColor r g b);
   background: rgb(from var(--missing) r g b);
 }
+
+.math {
+  color: oklch(
+    from var(--brand) clamp(0.2, l, 0.8) min(c * var(--factor), 0.15) h
+  );
+  background: alpha(from red / min(alpha, 0.5));
+  border-color: rgb(from red calc(min(r, 200) / 2) max(g, 20) b);
+  outline-color: hsl(from red min(0.5turn, 120deg) s l);
+  text-decoration-color: alpha(
+    from var(--softer) / clamp(none, alpha * 0.5, 0.6)
+  );
+}

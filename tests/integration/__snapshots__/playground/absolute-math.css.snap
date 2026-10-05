@@ -1,0 +1,272 @@
+{
+  "file": "absolute-math.css",
+  "languageId": "css",
+  "strategyNames": [
+    "findHexRGBA",
+    "findColorFunctions",
+    "findHwb",
+    "findTailwindThemeColors",
+    "findNamedColors",
+    "findRgbNoFunction",
+    "findHslNoFunction",
+    "findCssVars",
+    "findAnsiSgrColors"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 4,
+      "column": 21,
+      "text": "rgb(calc(var(--channel) * 2) 0 0 / min(var(--opacity), 1))",
+      "range": [
+        64,
+        122
+      ],
+      "color": "rgba(255, 0, 0, 0.5)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 8,
+      "column": 10,
+      "text": "rgb(calc(64 + 64) max(16, 32) clamp(0, 64, 255))",
+      "range": [
+        153,
+        201
+      ],
+      "color": "rgb(128, 32, 64)",
+      "render": {
+        "backgroundColor": "rgb(128, 32, 64)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(128, 32, 64)"
+      }
+    },
+    {
+      "index": 2,
+      "line": 9,
+      "column": 15,
+      "text": "hsl(min(0.5turn, 200deg) max(50%, 100%) calc(25% + 25%))",
+      "range": [
+        217,
+        273
+      ],
+      "color": "rgb(0, 255, 255)",
+      "render": {
+        "backgroundColor": "rgb(0, 255, 255)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 255, 255)"
+      }
+    },
+    {
+      "index": 3,
+      "line": 10,
+      "column": 17,
+      "text": "hwb(calc(120deg + 120deg) min(0%, 20%) max(0%, 0%))",
+      "range": [
+        291,
+        342
+      ],
+      "color": "rgb(0, 0, 255)",
+      "render": {
+        "backgroundColor": "rgb(0, 0, 255)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 0, 255)"
+      }
+    },
+    {
+      "index": 4,
+      "line": 11,
+      "column": 18,
+      "text": "lab(clamp(0%, 60%, 100%) calc(20 - 10) max(-20, -10))",
+      "range": [
+        361,
+        414
+      ],
+      "color": "rgb(156, 139, 162)",
+      "render": {
+        "backgroundColor": "rgb(156, 139, 162)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(156, 139, 162)"
+      }
+    },
+    {
+      "index": 5,
+      "line": 12,
+      "column": 26,
+      "text": "lch(max(50%, 60%) min(40, 30) calc(20deg + 10deg))",
+      "range": [
+        441,
+        491
+      ],
+      "color": "rgb(193, 127, 120)",
+      "render": {
+        "backgroundColor": "rgb(193, 127, 120)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(193, 127, 120)"
+      }
+    },
+    {
+      "index": 6,
+      "line": 13,
+      "column": 23,
+      "text": "oklab(calc(0.5 + 0.1) min(0.2, 0.1) max(-0.1, 0))",
+      "range": [
+        515,
+        564
+      ],
+      "color": "rgb(177, 102, 126)",
+      "render": {
+        "backgroundColor": "rgb(177, 102, 126)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(177, 102, 126)"
+      }
+    },
+    {
+      "index": 7,
+      "line": 14,
+      "column": 16,
+      "text": "oklch(clamp(0, 0.6, 1) calc(0.2 / 2) min(0.5turn, 30deg))",
+      "range": [
+        581,
+        638
+      ],
+      "color": "rgb(180, 104, 92)",
+      "render": {
+        "backgroundColor": "rgb(180, 104, 92)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(180, 104, 92)"
+      }
+    },
+    {
+      "index": 8,
+      "line": 15,
+      "column": 22,
+      "text": "color(display-p3 calc(1 / 2) 0 0 / clamp(0, 0.5, 1))",
+      "range": [
+        661,
+        713
+      ],
+      "color": "rgba(140, 0, 0, 0.5)",
+      "render": {
+        "backgroundColor": "rgb(140, 0, 0)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(140, 0, 0)"
+      }
+    },
+    {
+      "index": 9,
+      "line": 19,
+      "column": 10,
+      "text": "var(--absolute-brand)",
+      "range": [
+        744,
+        765
+      ],
+      "color": "rgba(255, 0, 0, 0.5)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 10,
+      "line": 20,
+      "column": 15,
+      "text": "rgb(0, calc(128 * 2), min(0, 20))",
+      "range": [
+        781,
+        814
+      ],
+      "color": "rgb(0, 255, 0)",
+      "render": {
+        "backgroundColor": "rgb(0, 255, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 255, 0)"
+      }
+    },
+    {
+      "index": 11,
+      "line": 21,
+      "column": 17,
+      "text": "color-mix(in srgb, rgb(calc(256 * 2) 0 0), black)",
+      "range": [
+        832,
+        881
+      ],
+      "color": "rgb(128, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(128, 0, 0)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(128, 0, 0)"
+      }
+    },
+    {
+      "index": 12,
+      "line": 22,
+      "column": 18,
+      "text": "rgb(from rgb(calc(256 * 2) 0 0) calc(r / 2) g b)",
+      "range": [
+        900,
+        948
+      ],
+      "color": "rgb(128, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(128, 0, 0)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(128, 0, 0)"
+      }
+    },
+    {
+      "index": 13,
+      "line": 29,
+      "column": 37,
+      "text": "red",
+      "range": [
+        1122,
+        1125
+      ],
+      "color": "rgb(255, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 14,
+      "line": 29,
+      "column": 58,
+      "text": "blue",
+      "range": [
+        1143,
+        1147
+      ],
+      "color": "rgb(0, 0, 255)",
+      "render": {
+        "backgroundColor": "rgb(0, 0, 255)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 0, 255)"
+      }
+    }
+  ]
+}
