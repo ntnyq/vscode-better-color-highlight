@@ -88,7 +88,7 @@
     "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "@types/node": "^26.6.4",
+    "@types/node": "^26.6.5",
     "@types/vscode": "^1.140.0",
     "@vscode/test-electron": "^3.1.0",
     "@vscode/test-web": "^0.0.81",
@@ -98,11 +98,11 @@
     "husky": "^9.1.7",
     "nano-staged": "^1.0.2",
     "npm-run-all2": "^9.0.3",
-    "oxfmt": "^0.71.0",
-    "oxlint": "^1.86.0",
-    "tsdown": "^0.23.0",
+    "oxfmt": "^0.73.0",
+    "oxlint": "^1.88.0",
+    "tsdown": "^0.23.1",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.3",
+    "vitest": "^5.0.4",
     "vscode-ext-gen": "^1.6.0"
   },
   "nano-staged": {
@@ -465,7 +465,7 @@
   "engines": {
     "vscode": "^1.140.0"
   },
-  "packageManager": "pnpm@12.8.1",
+  "packageManager": "pnpm@12.11.2",
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": true,

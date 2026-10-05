@@ -2,11 +2,62 @@ import { describe, expect, it } from 'vitest'
 import {
   formatColorForSource,
   formatColorForSourceWithAlphaDelta,
+  isColorSourceKind,
   isArgbSourceKind,
   resolveColorSourceKind,
 } from '../../../src/engine/presentation/source-color'
 
 describe('source color presentation', () => {
+  it.each([
+    'rgb(calc(64 + 64) max(16, 32) clamp(0, 64, 255) / min(.5, 1))',
+    'hsl(min(.5turn, 200deg) max(50%, 100%) calc(25% + 25%))',
+    'color(display-p3 calc(1 / 2) 0 0 / clamp(0, .5, 1))',
+    'rgb(from red min(r, 128) max(g, 0) clamp(0, calc(b + 64), 255))',
+    'alpha(from red / clamp(0, min(alpha, .5), 1))',
+  ])(
+    'keeps CSS math expressions eligible for generic edits: %s',
+    sourceText => {
+      expect(
+        resolveColorSourceKind({ languageId: 'css', sourceText }),
+      ).toBeUndefined()
+    },
+  )
+
+  it('validates Unity command metadata and requires C# constructor syntax', () => {
+    const sourceText = 'new UnityEngine.Color(1f, 0f, 0f)'
+    expect(isColorSourceKind('unity-color')).toBe(true)
+    expect(isArgbSourceKind('unity-color')).toBe(false)
+    expect(resolveColorSourceKind({ languageId: 'csharp', sourceText })).toBe(
+      'unity-color',
+    )
+    expect(
+      resolveColorSourceKind({ languageId: 'typescript', sourceText }),
+    ).toBeUndefined()
+    expect(
+      resolveColorSourceKind({
+        languageId: 'csharp',
+        sourceText: 'new Color(1f, 0f, 0f)',
+      }),
+    ).toBeUndefined()
+  })
+
+  it('adjusts Unity alpha from source precision while retaining RGB tokens', () => {
+    expect(
+      formatColorForSourceWithAlphaDelta(
+        -0.1,
+        'new UnityEngine.Color(0.123456789f, 0F, 1, 0.52345f)',
+        'unity-color',
+      ),
+    ).toBe('new UnityEngine.Color(0.123456789f, 0F, 1, 0.42345f)')
+    expect(
+      formatColorForSourceWithAlphaDelta(
+        0.1,
+        'new UnityEngine.Color32(64, 128, 192, 128)',
+        'unity-color',
+      ),
+    ).toBe('new UnityEngine.Color32(64, 128, 192, 154)')
+  })
+
   it('formats Android XML colors in alpha-first byte order', () => {
     expect(
       formatColorForSource(

@@ -464,6 +464,131 @@ describe('useCommands', () => {
     expect(replace).toHaveBeenCalledWith(expect.any(Object), 'rgb(255, 0, 0)')
   })
 
+  it.each([
+    'rgb(calc(64 + 64) max(16, 32) clamp(0, 64, 255))',
+    'rgb(from red min(r, 128) max(g, 32) clamp(0, calc(b + 64), 255))',
+  ])(
+    'replaces a full CSS math expression from a hover action: %s',
+    async originalText => {
+      vi.resetModules()
+      registeredCommands.clear()
+      replace.mockClear()
+      const prefix = '/* 🎨 */ .box { color: '
+      sourceText = `${prefix}${originalText}; }`
+      const { useCommands } = await import('../../src/extension/commands')
+      useCommands()
+
+      const payload = {
+        originalText,
+        range: {
+          start: prefix.length,
+          end: prefix.length + originalText.length,
+        },
+        uri: 'file:///tmp/example.css',
+        value: '#802040',
+      }
+      await registeredCommands.get('color-highlight.replaceColorAsHex')?.(
+        payload,
+      )
+
+      expect(replace).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          start: expect.objectContaining({ offset: prefix.length }),
+          end: expect.objectContaining({
+            offset: prefix.length + originalText.length,
+          }),
+        }),
+        '#802040',
+      )
+
+      sourceText = `${prefix}#802040; }`
+      replace.mockClear()
+      await registeredCommands.get('color-highlight.replaceColorAsHex')?.(
+        payload,
+      )
+      expect(replace).not.toHaveBeenCalled()
+    },
+  )
+
+  it.each([
+    {
+      originalText:
+        'rgb(calc(64 + 64) max(16, 32) clamp(0, 64, 255) / min(.5, 1))',
+      originalColor: 'rgba(128, 32, 64, 0.5)',
+      expected: 'rgba(128, 32, 64, 0.4)',
+    },
+    {
+      originalText:
+        'hsl(calc(120 + 60) max(50%, 100%) min(50%, 75%) / calc(1 / 2))',
+      originalColor: 'rgba(0, 255, 255, 0.5)',
+      expected: 'hsl(180 100% 50% / 0.4)',
+    },
+    {
+      originalText: 'color(srgb calc(1 / 2) 0 0 / clamp(0, .5, 1))',
+      originalColor: 'rgba(128, 0, 0, 0.5)',
+      expected: 'rgba(128, 0, 0, 0.4)',
+    },
+    {
+      originalText:
+        'rgb(from red min(r, 128) max(g, 32) clamp(0, calc(b + 64), 255) / .5)',
+      originalColor: 'rgba(128, 32, 64, 0.5)',
+      expected: 'rgba(128, 32, 64, 0.4)',
+    },
+    {
+      originalText: 'alpha(from red / clamp(0, min(alpha, .5), 1))',
+      originalColor: 'rgba(255, 0, 0, 0.5)',
+      expected: 'rgba(255, 0, 0, 0.4)',
+    },
+    {
+      originalText:
+        'hsl(from red clamp(0, h, 360) max(s, 100) min(l, 50) / .5)',
+      originalColor: 'rgba(255, 0, 0, 0.5)',
+      expected: 'hsl(0 100% 50% / 0.4)',
+    },
+  ])(
+    'replaces the complete CSS math expression when adjusting alpha: $originalText',
+    async ({ originalText, originalColor, expected }) => {
+      vi.resetModules()
+      registeredCommands.clear()
+      replace.mockClear()
+      const prefix = '/* 🎨 */ .box { color: '
+      sourceText = `${prefix}${originalText}; }`
+      const { useCommands } = await import('../../src/extension/commands')
+      useCommands()
+      const payload = {
+        delta: -0.1,
+        originalColor,
+        originalText,
+        range: {
+          start: prefix.length,
+          end: prefix.length + originalText.length,
+        },
+        uri: 'file:///tmp/example.css',
+      }
+
+      await registeredCommands.get('color-highlight.adjustColorAlpha')?.(
+        payload,
+      )
+
+      expect(replace).toHaveBeenCalledExactlyOnceWith(
+        expect.objectContaining({
+          start: expect.objectContaining({ offset: prefix.length }),
+          end: expect.objectContaining({
+            offset: prefix.length + originalText.length,
+          }),
+        }),
+        expected,
+      )
+
+      sourceText = `${prefix}${expected}; }`
+      replace.mockClear()
+      await registeredCommands.get('color-highlight.adjustColorAlpha')?.(
+        payload,
+      )
+      expect(replace).not.toHaveBeenCalled()
+    },
+  )
+
   it('does not replace a range from a different document', async () => {
     vi.resetModules()
     registeredCommands.clear()
@@ -565,6 +690,24 @@ describe('useCommands', () => {
     expect(replace).toHaveBeenCalledWith(expect.any(Object), '#ff0000e6')
   })
 
+  it('does not replace a Unity constructor with generic CSS syntax', async () => {
+    vi.resetModules()
+    registeredCommands.clear()
+    edit.mockClear()
+    replace.mockClear()
+    sourceText = 'new UnityEngine.Color(1f, 0f, 0f)'
+    const { useCommands } = await import('../../src/extension/commands')
+    useCommands()
+    await registeredCommands.get('color-highlight.replaceColorAsHex')?.({
+      originalText: sourceText,
+      range: { start: 0, end: sourceText.length },
+      sourceKind: 'unity-color',
+      uri: 'file:///tmp/example.css',
+      value: '#ff0000',
+    })
+    expect(replace).not.toHaveBeenCalled()
+  })
+
   it('preserves ARGB byte order when adjusting hex alpha', async () => {
     vi.resetModules()
     registeredCommands.clear()
@@ -635,6 +778,16 @@ describe('useCommands', () => {
 
   it.each([
     ['android-color', 'Color(1f, 0f, 0f)', 'Color(1f, 0f, 0f, 0.5f)'],
+    [
+      'unity-color',
+      'new UnityEngine.Color(1f, 0F, 0f)',
+      'new UnityEngine.Color(1f, 0F, 0f, 0.5f)',
+    ],
+    [
+      'unity-color',
+      'new UnityEngine.Color32(255, 0, 0, 255)',
+      'new UnityEngine.Color32(255, 0, 0, 128)',
+    ],
     [
       'swift-color',
       'Color(red: 1, green: 0, blue: 0)',

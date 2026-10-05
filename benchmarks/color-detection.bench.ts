@@ -7,6 +7,7 @@ import { resolveCssVarMatches } from '../src/engine/strategies/css-vars/resolver
 import { findHexRGBA } from '../src/engine/strategies/hex'
 import { findSwiftColors } from '../src/engine/strategies/swift-colors'
 import { findTailwindThemeColors } from '../src/engine/strategies/tailwind-theme'
+import { findUnityColors } from '../src/engine/strategies/unity-colors'
 
 const literalCss = Array.from(
   { length: 400 },
@@ -39,12 +40,44 @@ const declarations = collectCssVarDeclarations(variableCss, {
 
 const nestedExpression = `${'rgb(from '.repeat(24)}color-mix(in srgb, red, blue)${' calc(r * .9) g b)'.repeat(24)}`
 const malformedExpression = `${'rgb(from '.repeat(10_000)}red`
+const comparisonColors = Array.from(
+  { length: 400 },
+  (_, index) =>
+    `.math-${index} { color: oklch(from oklch(.65 .2 30 / .8) clamp(.2, l, .8) min(c * .9, .15) calc(h + max(15, 30))); background: alpha(from red / min(alpha, clamp(0, .5, 1))); }`,
+).join('\n')
+const oversizedComparison = `min(${'1,'.repeat(130)}1)`
+const deepComparison = `${'min('.repeat(40)}r${', 1)'.repeat(40)}`
+const longComparison = `max(${' '.repeat(4096)}r, 0)`
+const malformedComparisons = Array.from(
+  { length: 100 },
+  () =>
+    `rgb(from red ${oversizedComparison} g b); rgb(from red ${deepComparison} g b); rgb(from red ${longComparison} g b);`,
+).join('\n')
+const unclosedComparisons = `rgb(from red ${'min('.repeat(10_000)}r; alpha(from blue / max(.2, .5))`
+const absoluteMathColors = Array.from(
+  { length: 400 },
+  (_, index) =>
+    `.absolute-${index} { color: rgb(min(255, 128) calc(32 * 2) 0 / clamp(0, .5, 1)); background: hsl(calc(60 + 60), min(100%, 80%), 50%, calc(1 / 2)); border-color: color-mix(in srgb, color(srgb max(.2, .5) 0 0), oklch(clamp(.2, .65, .8) .2 30)); }`,
+).join('\n')
+const malformedAbsoluteMath = Array.from(
+  { length: 100 },
+  () =>
+    `rgb(${oversizedComparison} 0 0); hsl(${'min('.repeat(40)}60${', 1)'.repeat(40)} 100% 50%); color(srgb max(${' '.repeat(4096)}.5, 0) 0 0);`,
+).join('\n')
+const unclosedAbsoluteMath = `rgb(${'min('.repeat(10_000)}1; rgb(max(64, 128) 0 0 / .5)`
+const excessAbsoluteArguments = `rgb(${'1 '.repeat(10_000)}); hsl(${'1%,'.repeat(10_000)}); rgb(min(64, 128) 0 0)`
 const longChain = `:root { ${Array.from({ length: 200 }, (_, index) => `--v${index}: var(--v${index + 1});`).join(' ')} --v200: red; } .x { color: rgb(from var(--v0) r g b); }`
 const chainDeclarations = collectCssVarDeclarations(longChain, {
   trustedSelectors: [':root'],
 })
 const nativeColors =
   'Color(1f, 0f, 0f, .5f); Color(red: 1, green: 0, blue: 0);'.repeat(400)
+const unityColors = Array.from(
+  { length: 400 },
+  (_, index) =>
+    `var tint${index} = new UnityEngine.Color(.15f, .4f, .9f, .75F);\nvar overlay${index} = new UnityEngine.Color32(r: ${index % 256}, g: 128, b: 224, a: 192);`,
+).join('\n')
+const malformedUnityColors = `${'new UnityEngine.Color('.repeat(10_000)}0f`
 
 const androidResources = `<resources>${Array.from({ length: 500 }, (_, index) => `<color name="brand_${index}">#80ff0000</color><item type="color" name="alias_${index}">@color/brand_${index}</item>`).join('\n')}</resources>`
 const malformedAndroidResource = `<resources><${'color'.repeat(20_000)}`
@@ -96,6 +129,76 @@ describe('color detection', () => {
     ).run()
   })
 
+  test('CSS comparison math expressions', async ({ bench }) => {
+    await bench(
+      'CSS comparison math expressions',
+      { writeResult: '.benchmarks/css-comparison-math-expressions.json' },
+      () => {
+        findColorFunctions(comparisonColors)
+      },
+    ).run()
+  })
+
+  test('bounded malformed CSS comparison math', async ({ bench }) => {
+    await bench(
+      'bounded malformed CSS comparison math',
+      { writeResult: '.benchmarks/bounded-malformed-css-comparison-math.json' },
+      () => {
+        findColorFunctions(malformedComparisons)
+      },
+    ).run()
+  })
+
+  test('unclosed CSS comparison math', async ({ bench }) => {
+    await bench(
+      'unclosed CSS comparison math',
+      { writeResult: '.benchmarks/unclosed-css-comparison-math.json' },
+      () => {
+        findColorFunctions(unclosedComparisons)
+      },
+    ).run()
+  })
+
+  test('absolute CSS math expressions', async ({ bench }) => {
+    await bench(
+      'absolute CSS math expressions',
+      { writeResult: '.benchmarks/absolute-css-math-expressions.json' },
+      () => {
+        findColorFunctions(absoluteMathColors)
+      },
+    ).run()
+  })
+
+  test('bounded malformed absolute CSS math', async ({ bench }) => {
+    await bench(
+      'bounded malformed absolute CSS math',
+      { writeResult: '.benchmarks/bounded-malformed-absolute-css-math.json' },
+      () => {
+        findColorFunctions(malformedAbsoluteMath)
+      },
+    ).run()
+  })
+
+  test('unclosed absolute CSS math', async ({ bench }) => {
+    await bench(
+      'unclosed absolute CSS math',
+      { writeResult: '.benchmarks/unclosed-absolute-css-math.json' },
+      () => {
+        findColorFunctions(unclosedAbsoluteMath)
+      },
+    ).run()
+  })
+
+  test('excess absolute CSS math arguments', async ({ bench }) => {
+    await bench(
+      'excess absolute CSS math arguments',
+      { writeResult: '.benchmarks/excess-absolute-css-math-arguments.json' },
+      () => {
+        findColorFunctions(excessAbsoluteArguments)
+      },
+    ).run()
+  })
+
   test('bounded long variable chains', async ({ bench }) => {
     await bench(
       'bounded long variable chains',
@@ -119,6 +222,27 @@ describe('color detection', () => {
       },
     ).run()
   })
+
+  test('Unity component constructors', async ({ bench }) => {
+    await bench(
+      'Unity component constructors',
+      { writeResult: '.benchmarks/unity-component-constructors.json' },
+      () => {
+        findUnityColors(unityColors)
+      },
+    ).run()
+  })
+
+  test('unclosed Unity constructors', async ({ bench }) => {
+    await bench(
+      'unclosed Unity constructors',
+      { writeResult: '.benchmarks/unclosed-unity-constructors.json' },
+      () => {
+        findUnityColors(malformedUnityColors)
+      },
+    ).run()
+  })
+
   test('direct CSS literals', async ({ bench }) => {
     await bench(
       'direct CSS literals',

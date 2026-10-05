@@ -145,7 +145,7 @@ Sources:
 
 ## Delivery Status
 
-Updated: 2026-10-02. The following bounded delivery units are implemented:
+Updated: 2026-10-05. The following bounded delivery units are implemented:
 
 1. Source-aware presentation metadata, overlap arbitration, and contextual
    Android XML, Compose, and Dart packed-color handling.
@@ -158,16 +158,31 @@ Updated: 2026-10-02. The following bounded delivery units are implemented:
 4. Relative CSS colors across the supported spaces, bounded typed `calc()`
    arithmetic, deterministic custom-property substitution, and `alpha()`.
 5. SwiftUI/UIKit static RGB, HSB, grayscale, and explicit RGB color spaces,
-   selected by the user for this delivery. Unity remains a research candidate.
+   with source-preserving presentations.
+6. Android XML resource navigation through unique unqualified local aliases,
+   with bounded trusted-workspace reads and freshness checks.
+7. C# static `new UnityEngine.Color(r, g, b[, a])` normalized channels and
+   `new UnityEngine.Color32(r, g, b, a)` byte channels, with optional
+   `global::` qualification, source-preserving picker/alpha edits, and strict
+   numeric validation. Bare names remain deferred because textual import
+   checks cannot resolve local types or aliases safely.
+8. Static `min()`, `max()`, and `clamp()` in relative colors and `alpha()`,
+   nested with `calc()`, with typed finite arithmetic, optional `none` bounds,
+   deterministic variable substitution, and complete-expression editing.
+9. Static `calc()`, `min()`, `max()`, and `clamp()` in absolute CSS color
+   channels and alpha, including legal legacy RGB/HSL forms, nested
+   interpolation operands, and deterministic custom-property substitution.
 
 Regression fixtures cover language boundaries, invalid syntax, source edits,
 missing components, variable ambiguity/cycles, and nesting limits. Performance
 baselines now include nested expressions, malformed input, long variable chains,
-and native constructors. Desktop/Web smoke tests cover relative expressions;
+and native/Unity constructors. Desktop/Web smoke tests cover absolute/relative
+expressions, Android resource navigation, and Unity constructors;
 `pnpm test:package` checks an isolated VSIX installation and activation.
 
 The findings above describe the August research baseline; statements about
 then-missing support are historical. Current supported syntax and limits are in
-the README. Android resource navigation, Unity, dynamic system/asset colors,
-custom Compose spaces, and additional CSS math functions remain candidates or
-explicit deferrals. They are not release commitments.
+the README. Bare Unity constructor names, dynamic system/asset colors, custom
+Compose spaces, math in `color-mix()` weights, and CSS math functions beyond
+`calc()`/`min()`/`max()`/`clamp()` remain candidates or explicit deferrals.
+They are not release commitments.

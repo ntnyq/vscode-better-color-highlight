@@ -37,3 +37,59 @@ parser only; they exclude filesystem I/O and definition-provider overhead.
 
 The earlier eight fixtures were not rerun during this stage. These measurements
 are informational, with no timing thresholds in CI.
+
+## Unity constructors, 2026-10-05
+
+Measured on the same macOS arm64 machine with Node 24.21.0, user-managed pnpm
+12.9.1, and `pnpm bench -t "Unity"`. These fixtures run the Unity detector
+without VS Code provider, decoration, or filesystem overhead.
+
+| Fixture                                  | Median (ms) | p99 (ms) |
+| ---------------------------------------- | ----------: | -------: |
+| 400 Color and 400 Color32 constructors   |       2.073 |    2.908 |
+| 10,000 unclosed Unity constructor starts |       2.043 |    2.354 |
+
+Unity's literal-only scanner stops at an unquoted, uncommented nested opening
+parenthesis and continues finding later candidates. The same malformed fixture
+measured 293.367 ms median before that change; both measurements were taken on
+this machine during this stage. Other native detectors retain their existing
+nested-call scanning. Earlier CSS, Android, and native baselines were not rerun.
+
+## CSS comparison math, 2026-10-05
+
+Measured on the same macOS arm64 machine with Node 24.21.0, user-managed pnpm
+12.9.1, and `pnpm bench -t "CSS comparison math"`. These fixtures measure
+`findColorFunctions`, including scanning and expression evaluation, without
+VS Code provider, decoration, or filesystem overhead.
+
+| Fixture                                                           | Median (ms) | p99 (ms) |
+| ----------------------------------------------------------------- | ----------: | -------: |
+| 400 rules, each with nested relative-color and alpha math         |       7.762 |   17.219 |
+| 300 rejected expressions exceeding token, depth, or length limits |      12.602 |   15.813 |
+| 10,000 unclosed `min()` starts followed by valid alpha math       |       1.579 |    2.454 |
+
+The normal fixture contains 800 complete expressions using `min()`, `max()`,
+`clamp()`, and `calc()`. The malformed fixture contains 100 examples of each
+resource limit. Correctness tests separately verify rejection and recovery
+of valid colors after malformed expressions. Earlier fixtures were not rerun;
+these measurements are informational and do not impose CI timing thresholds.
+
+## Absolute CSS math, 2026-10-05
+
+Measured on the same macOS arm64 machine with Node 24.21.0, user-managed pnpm
+12.9.1, and `pnpm bench -t 'absolute CSS math|direct CSS literals'`. These
+fixtures measure the detector, including balanced scanning, evaluation, and
+overlap arbitration, without VS Code provider or filesystem overhead.
+
+| Fixture                                                                    | Median (ms) | p99 (ms) |
+| -------------------------------------------------------------------------- | ----------: | -------: |
+| 400 rules, each with modern RGB, legacy HSL, and a math color mix          |      12.942 |   21.240 |
+| 300 rejected absolute expressions exceeding token, depth, or length limits |      11.857 |   17.351 |
+| 10,000 unclosed `min()` starts followed by valid absolute math             |       1.575 |    2.813 |
+| 10,000 space arguments plus 10,000 comma arguments, then valid math        |       1.235 |    1.704 |
+| 400 CSS rules, two direct literals per rule                                |       1.214 |    2.475 |
+
+The normal fixture contains 1,200 complete outer expressions and exercises
+nested math in mix operands. The direct-literal fixture was rerun as a reference
+for ordinary parsing. Earlier measurements remain historical; other fixtures
+were not rerun in this stage. No timing thresholds are imposed in CI.

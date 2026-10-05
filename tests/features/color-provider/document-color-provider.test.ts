@@ -249,6 +249,112 @@ describe('document color provider', () => {
     expect(result[0].color).toStrictEqual(new TestColor(1, 0, 0, 0.502))
   })
 
+  it.each([
+    {
+      source:
+        'rgb(min(var(--cap), 255) max(16, 32) calc(128 / 2) / clamp(0, var(--opacity), 1))',
+      expected: new TestColor(128 / 255, 32 / 255, 64 / 255, 0.5),
+    },
+    {
+      source: 'color(srgb calc(var(--cap) / 256) 0 0 / min(var(--opacity), 1))',
+      expected: new TestColor(128 / 255, 0, 0, 0.5),
+    },
+    {
+      source: 'color-mix(in srgb, rgb(calc(var(--cap) * 4) 0 0), black)',
+      expected: new TestColor(128 / 255, 0, 0, 1),
+    },
+    {
+      source: 'rgb(from rgb(calc(var(--cap) * 4) 0 0) calc(r / 2) g b)',
+      expected: new TestColor(128 / 255, 0, 0, 1),
+    },
+    {
+      source:
+        'rgb(from var(--brand) min(r, var(--cap)) max(g, 32) clamp(0, calc(b + 64), 255) / clamp(0, var(--opacity), 1))',
+      expected: new TestColor(128 / 255, 32 / 255, 64 / 255, 0.5),
+    },
+    {
+      source: 'alpha(from var(--brand) / max(.25, min(alpha, var(--opacity))))',
+      expected: new TestColor(1, 0, 0, 0.5),
+    },
+  ])(
+    'returns the complete math expression after resolving CSS variables: $source',
+    async ({ source, expected }) => {
+      configSnapshot.enableColorPicker = true
+      const { provideDocumentColors } =
+        await import('../../../src/features/color-provider/document-color-provider')
+      const prefix =
+        ':root { --brand: #ff0000; --cap: 128; --opacity: .5; }\n/* 🎨 */\n.sample { color: '
+      const text = `${prefix}${source}; }`
+      const sourceDocument = {
+        ...document,
+        getText: () => text,
+        languageId: 'css',
+      }
+
+      const colors = await provideDocumentColors(sourceDocument, activeToken)
+
+      expect(colors).toHaveLength(2)
+      expect(colors[1].range).toStrictEqual(
+        new TestRange(
+          { offset: prefix.length },
+          { offset: prefix.length + source.length },
+        ),
+      )
+      expect(colors[1].color).toStrictEqual(expected)
+    },
+  )
+
+  it.each([
+    'rgb(calc(64 + 64) max(16, 32) clamp(0, 64, 255) / min(.5, 1))',
+    'hsl(min(.5turn, 200deg) max(50%, 100%) calc(25% + 25%))',
+    'color(display-p3 calc(1 / 2) 0 0 / clamp(0, .5, 1))',
+    'color-mix(in srgb, rgb(calc(128 * 2) 0 0), blue)',
+    'rgb(from rgb(calc(64 * 2) 0 0) calc(r / 2) g b)',
+    'rgb(from red min(r, 128) max(g, 32) clamp(0, calc(b + 64), 255))',
+    'alpha(from red / clamp(0, min(alpha, .5), 1))',
+  ])(
+    'replaces the complete math expression in picker edits: %s',
+    async source => {
+      configSnapshot.enableColorPicker = true
+      const { provideDocumentColors, provideColorPresentations } =
+        await import('../../../src/features/color-provider/document-color-provider')
+      const prefix = '/* 🎨 */ .sample { color: '
+      const text = `${prefix}${source}; }`
+      const sourceDocument = {
+        ...document,
+        getText: () => text,
+        languageId: 'css',
+      }
+      const colors = await provideDocumentColors(sourceDocument, activeToken)
+      expect(colors).toHaveLength(1)
+      const range = colors[0].range
+      expect(range).toStrictEqual(
+        new TestRange(
+          { offset: prefix.length },
+          { offset: prefix.length + source.length },
+        ),
+      )
+
+      const presentations = provideColorPresentations(
+        new TestColor(0, 1, 0, 0.5),
+        {
+          document: { ...sourceDocument, getText: () => source },
+          range,
+        },
+      )
+
+      expect(presentations.map(item => item.label)).toStrictEqual([
+        '#00ff0080',
+        'rgba(0, 255, 0, 0.5)',
+        'hsl(120 100% 50% / 0.5)',
+        'oklch(86.6% 0.295 142.5 / 0.5)',
+      ])
+      expect(replace.mock.calls).toStrictEqual(
+        presentations.map(item => [range, item.label]),
+      )
+    },
+  )
+
   it('passes Tailwind theme settings to native color detectors', async () => {
     configSnapshot.enableColorPicker = true
     configSnapshot.ansiPalette = { red: '#ff0000' }
@@ -274,6 +380,58 @@ describe('document color provider', () => {
       }),
     )
     strategies.mockRestore()
+  })
+
+  it('returns complete Unity constructor ranges only in C# documents', async () => {
+    configSnapshot.enableColorPicker = true
+    const { provideDocumentColors } =
+      await import('../../../src/features/color-provider/document-color-provider')
+    const prefix = '// 🎨\nvar tint = '
+    const source = 'new UnityEngine.Color(1f, /* #ff0000 */ 0f, 0f, 0.5f)'
+    const text = `${prefix}${source};`
+    const nativeDocument = {
+      ...document,
+      getText: () => text,
+      languageId: 'csharp',
+    }
+    const colors = await provideDocumentColors(nativeDocument, activeToken)
+    expect(colors).toHaveLength(1)
+    expect(colors[0].range).toStrictEqual(
+      new TestRange(
+        { offset: prefix.length },
+        { offset: prefix.length + source.length },
+      ),
+    )
+    expect(colors[0].color).toStrictEqual(new TestColor(1, 0, 0, 0.5))
+    const otherLanguageColors = await provideDocumentColors(
+      { ...nativeDocument, languageId: 'typescript' },
+      activeToken,
+    )
+    expect(otherLanguageColors).toHaveLength(1)
+    expect(otherLanguageColors[0].range).toStrictEqual(
+      new TestRange(
+        { offset: text.indexOf('#ff0000') },
+        { offset: text.indexOf('#ff0000') + 7 },
+      ),
+    )
+  })
+
+  it('keeps fractional Unity picker channels and writes valid C# floats', async () => {
+    const { provideColorPresentations } =
+      await import('../../../src/features/color-provider/document-color-provider')
+    const range = { id: 'source-range' } as unknown as Vscode.Range
+    const nativeDocument = {
+      ...document,
+      getText: () => 'new UnityEngine.Color(1, 0, 0)',
+      languageId: 'csharp',
+    }
+    const presentations = provideColorPresentations(
+      new TestColor(0.12345, 0.23456, 0.34567, 0.45678),
+      { document: nativeDocument, range },
+    )
+    expect(presentations.map(presentation => presentation.label)).toStrictEqual(
+      ['new UnityEngine.Color(0.12345f, 0.23456f, 0.34567f, 0.45678f)'],
+    )
   })
 
   it('deduplicates matches and skips unsupported resolved colors', async () => {
@@ -450,6 +608,16 @@ describe('document color provider', () => {
 
   it.each([
     ['kotlin', 'Color(255, 0, 0)', 'Color(255, 0, 0, 128)'],
+    [
+      'csharp',
+      'new UnityEngine.Color(1f, 0F, 0f)',
+      'new UnityEngine.Color(1f, 0F, 0f, 0.5f)',
+    ],
+    [
+      'csharp',
+      'new UnityEngine.Color32(r: 255, /* brand */ g: 0, b: 0, a: 255)',
+      'new UnityEngine.Color32(r: 255, /* brand */ g: 0, b: 0, a: 128)',
+    ],
     ['java', 'Color.rgb(255, 0, 0)', 'Color.argb(128, 255, 0, 0)'],
     [
       'swift',
