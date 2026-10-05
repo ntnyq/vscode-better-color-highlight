@@ -1,5 +1,6 @@
 import { describe, test } from 'vitest'
 import { findAndroidColors } from '../src/engine/strategies/android-colors'
+import { parseAndroidResourceDocument } from '../src/engine/strategies/android-resources/parser'
 import { findColorFunctions } from '../src/engine/strategies/color-functions'
 import { collectCssVarDeclarations } from '../src/engine/strategies/css-vars/parser'
 import { resolveCssVarMatches } from '../src/engine/strategies/css-vars/resolver'
@@ -45,7 +46,33 @@ const chainDeclarations = collectCssVarDeclarations(longChain, {
 const nativeColors =
   'Color(1f, 0f, 0f, .5f); Color(red: 1, green: 0, blue: 0);'.repeat(400)
 
+const androidResources = `<resources>${Array.from({ length: 500 }, (_, index) => `<color name="brand_${index}">#80ff0000</color><item type="color" name="alias_${index}">@color/brand_${index}</item>`).join('\n')}</resources>`
+const malformedAndroidResource = `<resources><${'color'.repeat(20_000)}`
+
 describe('color detection', () => {
+  test('android resource declarations and aliases', async ({ bench }) => {
+    await bench(
+      'android resource declarations and aliases',
+      {
+        writeResult:
+          '.benchmarks/android-resource-declarations-and-aliases.json',
+      },
+      () => {
+        parseAndroidResourceDocument(androidResources, true)
+      },
+    ).run()
+  })
+
+  test('unclosed android resource tags', async ({ bench }) => {
+    await bench(
+      'unclosed android resource tags',
+      { writeResult: '.benchmarks/unclosed-android-resource-tags.json' },
+      () => {
+        parseAndroidResourceDocument(malformedAndroidResource, true)
+      },
+    ).run()
+  })
+
   test('nested relative colors and interpolation', async ({ bench }) => {
     await bench(
       'nested relative colors and interpolation',

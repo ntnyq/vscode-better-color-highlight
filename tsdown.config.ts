@@ -30,6 +30,8 @@ export default defineConfig({
   },
   format: ['esm', 'cjs'],
   minify: !isDev(),
+  // The Web extension host exposes vscode through its CommonJS loader.
+  outputOptions: { dynamicImportInCjs: false },
   platform: 'neutral',
   shims: true,
   sourcemap: isDev(),

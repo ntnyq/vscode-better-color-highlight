@@ -196,10 +196,16 @@ export function parseAndroidColor(
         )
       }
       if (method === 'rgb' && next.a < 1) {
-        const suffix = isFloat ? 'f' : ''
-        const channel = (value: number) =>
-          formatNativeNumber(isFloat ? value : Math.round(value), suffix)
-        return `${call.name.replace(/rgb$/u, 'argb')}(${channel(next.a * scale)}, ${channel(nextValues.red)}, ${channel(nextValues.green)}, ${channel(nextValues.blue)})`
+        const alphaArgument = formatNativeNumber(
+          isFloat ? next.a : Math.round(next.a * scale),
+          call.args[0].value,
+        )
+        // Insert alpha before the original argument text so comments stay
+        // attached to their channels and existing numeric suffixes survive.
+        return rewriteStaticArguments(call, replacements).replace(
+          /\.rgb(?<opening>\s*\()/u,
+          `.argb$<opening>${alphaArgument}, `,
+        )
       }
       const append =
         !args.has('alpha') && next.a < 1

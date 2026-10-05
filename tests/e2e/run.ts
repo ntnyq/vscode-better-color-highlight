@@ -10,7 +10,10 @@ const userDataDir = await mkdtemp(
 
 try {
   await runTests({
-    extensionDevelopmentPath: rootDir,
+    extensionDevelopmentPath: [
+      rootDir,
+      resolve(rootDir, 'tests/fixtures/native-languages'),
+    ],
     extensionTestsPath: resolve(rootDir, 'tests/e2e/suite/index.ts'),
     launchArgs: [
       resolve(rootDir, 'playground'),

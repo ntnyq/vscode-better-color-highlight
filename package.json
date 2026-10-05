@@ -74,7 +74,7 @@
     "test": "run-p test:unit test:e2e",
     "test:e2e": "pnpm build && run-s test:e2e:electron test:e2e:web",
     "test:e2e:electron": "node tests/e2e/run.ts",
-    "test:e2e:web": "vscode-test-web --browser=chromium --quality=stable --extensionDevelopmentPath=. --extensionTestsPath=dist/web-test.cjs",
+    "test:e2e:web": "vscode-test-web --browser=chromium --quality=stable --extensionDevelopmentPath=. --extensionTestsPath=dist/web-test.cjs --extensionPath=tests/fixtures/native-languages playground",
     "test:package": "node tests/e2e/package.ts",
     "test:unit": "vitest",
     "typecheck": "tsc --noEmit",

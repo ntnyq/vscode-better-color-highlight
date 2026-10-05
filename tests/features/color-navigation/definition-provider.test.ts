@@ -367,4 +367,56 @@ describe('provideColorDefinition', () => {
     ).resolves.toBeUndefined()
     expect(loggerError).toHaveBeenCalledTimes(2)
   })
+
+  it.each(['resolve', 'open'])(
+    'discards navigation when the source changes during %s',
+    async phase => {
+      const { provideColorDefinition } =
+        await import('../../../src/features/color-navigation/definition-provider')
+      let version = 1
+      const document = createDocument()
+      Object.defineProperty(document, 'version', { get: () => version })
+      resolveColorDefinition.mockImplementationOnce(() => {
+        if (phase === 'resolve') {
+          version++
+        }
+        return Promise.resolve({
+          originRange: { start: 2, end: 5 },
+          targetFilePath: 'file:///workspace/res/values/colors.xml',
+          targetRange: { start: 1, end: 7 },
+          targetSelectionRange: { start: 1, end: 4 },
+        })
+      })
+      openTextDocument.mockImplementationOnce(() => {
+        version++
+        return Promise.resolve(createDocument())
+      })
+      await expect(
+        provideColorDefinition(document, { offset: 3 } as never, activeToken),
+      ).resolves.toBeUndefined()
+      expect(openTextDocument).toHaveBeenCalledTimes(phase === 'open' ? 1 : 0)
+    },
+  )
+
+  it('discards a target whose text changed after resource indexing', async () => {
+    const { provideColorDefinition } =
+      await import('../../../src/features/color-navigation/definition-provider')
+    resolveColorDefinition.mockResolvedValueOnce({
+      originRange: { start: 2, end: 5 },
+      targetFilePath: 'file:///workspace/res/values/colors.xml',
+      targetRange: { start: 1, end: 7 },
+      targetSelectionRange: { start: 1, end: 4 },
+      targetText: 'original text',
+    })
+    openTextDocument.mockResolvedValueOnce(
+      createDocument('file:///workspace/res/values/colors.xml', 'changed text'),
+    )
+    await expect(
+      provideColorDefinition(
+        createDocument(),
+        { offset: 3 } as never,
+        activeToken,
+      ),
+    ).resolves.toBeUndefined()
+  })
 })

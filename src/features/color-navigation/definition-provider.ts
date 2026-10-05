@@ -30,6 +30,7 @@ export async function provideColorDefinition(
   }
 
   const text = document.getText()
+  const version = document.version
   if (config.maxFileSize > 0 && text.length > config.maxFileSize) {
     return
   }
@@ -40,7 +41,12 @@ export async function provideColorDefinition(
       document.offsetAt(position),
       createStrategyContext(document, cancellationToken),
     )
-    if (!target || cancellationToken.isCancellationRequested) {
+    if (
+      !target ||
+      cancellationToken.isCancellationRequested ||
+      document.isClosed ||
+      document.version !== version
+    ) {
       return
     }
 
@@ -49,7 +55,14 @@ export async function provideColorDefinition(
       targetUri.toString() === document.uri.toString()
         ? document
         : await workspace.openTextDocument(targetUri)
-    if (cancellationToken.isCancellationRequested) {
+    if (
+      cancellationToken.isCancellationRequested ||
+      document.isClosed ||
+      document.version !== version ||
+      targetDocument.isClosed ||
+      (target.targetText !== undefined &&
+        targetDocument.getText() !== target.targetText)
+    ) {
       return
     }
 

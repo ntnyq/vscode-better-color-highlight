@@ -1,4 +1,12 @@
 /**
+ * A provider's directory entry without following symbolic links.
+ */
+export interface WorkspaceDirectoryEntry {
+  readonly name: string
+  readonly kind: 'file' | 'directory' | 'unknown'
+}
+
+/**
  * Workspace file metadata used by the SCSS resolver cache.
  */
 export interface WorkspaceFileStat {

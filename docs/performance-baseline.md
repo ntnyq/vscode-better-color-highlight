@@ -23,3 +23,17 @@ when comparing runs; timings vary with scheduling and runtime warmup.
 
 Parsing bounds are also covered by correctness tests, including malformed
 native calls, cyclic/branching variables, nesting, and arithmetic token limits.
+
+## Android resource parsing, 2026-10-05
+
+Measured on the same macOS arm64 machine with Node 24.21.0, user-managed pnpm
+12.9.1, and `pnpm bench -t "android resource"`. These fixtures measure the XML
+parser only; they exclude filesystem I/O and definition-provider overhead.
+
+| Fixture                                    | Median (ms) | p99 (ms) |
+| ------------------------------------------ | ----------: | -------: |
+| 500 color declarations and 500 aliases     |       0.722 |    0.912 |
+| Unclosed tag with an 80,000-character name |       0.279 |    0.308 |
+
+The earlier eight fixtures were not rerun during this stage. These measurements
+are informational, with no timing thresholds in CI.

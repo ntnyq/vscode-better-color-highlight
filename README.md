@@ -421,7 +421,8 @@ where possible. Android `rgb` becomes `argb` when adding alpha; grayscale
 Swift initializers become RGB if the selected color is no longer gray.
 Detection is textual and scoped to language IDs, not import/type resolution.
 Dynamic arguments, custom Compose color spaces, import aliases, asset colors,
-system colors, and resource-reference navigation are outside this subset.
+system colors are outside this editing subset. XML `@color/name` navigation is
+described in [Color navigation](#-color-navigation).
 Each native call is bounded to 4,096 characters.
 
 </details>
@@ -629,7 +630,8 @@ bindings affected by uncertain control-flow assignments are skipped.
 Go to Definition and Peek Definition are enabled by default for color-valued
 references in CSS custom properties, SCSS variables, Less variables, Stylus
 variables, and DTCG aliases or `$ref` values in JSON, JSONC, `.tokens`, YAML,
-and YML.
+and YML. Android resource XML also supports `@color/name` navigation in trusted
+workspaces.
 References that are missing, cyclic, malformed, or do not ultimately resolve to
 a supported color do not produce a definition.
 
@@ -639,8 +641,8 @@ declaration from another context only when there is one conservative choice.
 When multiple selector or at-rule contexts could win at runtime, navigation is
 omitted instead of guessing.
 
-Cross-file navigation follows the same opt-in and workspace-trust gates as
-cross-file highlighting:
+Stylesheet and design-token navigation follow the same opt-in and
+workspace-trust gates as cross-file highlighting:
 
 - CSS sources require `color-highlight.resolveCssVariablesAcrossFiles`, are
   read from `color-highlight.cssVariablePaths`, and must use a selector in
@@ -655,6 +657,25 @@ cross-file highlighting:
   JSONC, JSON-formatted `.tokens`, YAML, or YML dependencies, reads at most 64
   unique dependency files, resolves at most 32 reference steps, and limits each
   external dependency to 512 KiB.
+
+Android navigation derives its scope from the current XML file's enclosing
+`res` directory. Complete `@color/name` attribute and text values follow
+`<color>` and `<item type="color">` aliases in `res/values/*.xml` to the
+terminal static hexadecimal declaration. It does not merge modules, Gradle
+source sets, or package resources. Names with duplicate declarations,
+`values-*` alternatives, or `color`/`color-*` state-list files are skipped,
+including when they occur in the middle of an alias chain. Cycles, theme
+attributes, data-binding expressions, comments, and tooling attributes do not
+produce a target. Java/Kotlin `R.color` references and reference highlighting
+are outside this navigation feature.
+
+Each Android navigation request enumerates at most 64 resource directories and
+64 XML files, checks at most 4,096 entries per directory, limits source files to
+512 KiB, and follows at most 64 declarations. It uses open editor contents and
+rebuilds the index on each request, so edits and resource-file changes take
+effect immediately on the next navigation. Unsupported or incomplete indexes
+return no result. See [the Android navigation design](docs/design/2026-10-05-android-resource-navigation.md)
+for the parsing and resource-selection boundaries.
 
 All cross-file reads are disabled in untrusted workspaces. To turn off Go to
 Definition and Peek Definition while keeping color highlighting enabled, use:

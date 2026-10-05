@@ -1,5 +1,9 @@
 import { isString } from '@ntnyq/utils'
-import type { WorkspaceFileStat, WorkspacePathParts } from './types'
+import type {
+  WorkspaceDirectoryEntry,
+  WorkspaceFileStat,
+  WorkspacePathParts,
+} from './types'
 
 export interface WorkspaceFindFilesPattern {
   readonly basePath: string
@@ -325,6 +329,26 @@ export async function findWorkspaceFiles(
   const uris = await workspace.findFiles(globPattern, undefined, maxResults)
 
   return uris.map(uri => (uri.scheme === 'file' ? uri.fsPath : uri.toString()))
+}
+
+/**
+ * List a directory through the filesystem provider, independent of search
+ * indexes and exclusions. Symbolic links remain unknown to bounded loaders.
+ */
+export async function readWorkspaceDirectory(
+  filePath: string,
+): Promise<WorkspaceDirectoryEntry[]> {
+  const { FileType, workspace } = await import('vscode')
+  const entries = await workspace.fs.readDirectory(await toUri(filePath))
+  return entries.map(([name, type]) => {
+    if (type === FileType.File) {
+      return { name, kind: 'file' }
+    }
+    if (type === FileType.Directory) {
+      return { name, kind: 'directory' }
+    }
+    return { name, kind: 'unknown' }
+  })
 }
 
 /**

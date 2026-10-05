@@ -8,4 +8,8 @@ export interface ColorDefinitionTarget {
   readonly targetFilePath: string
   readonly targetRange: ColorSourceRange
   readonly targetSelectionRange: ColorSourceRange
+  /**
+   * Optional source snapshot to validate after opening an asynchronous target.
+   */
+  readonly targetText?: string
 }

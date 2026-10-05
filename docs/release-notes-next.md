@@ -1,135 +1,69 @@
-# v0.8.0 release notes
+# Next release notes
 
-Status: prepared for manual release, not published. The package and generated
-extension metadata are versioned as 0.8.0. See [manual release steps](#manual-release).
+Status: unreleased changes after [v0.8.0](releases/v0.8.0.md). The package and
+generated extension metadata remain at 0.8.0 until the next version is chosen.
 
-## User-facing changes since 0.7.0
+## User-facing fixes
 
-- Complete CSS Color 4 missing-component and linear Display P3 handling, with
-  high-precision static `color-mix()` interpolation and complete-range matching.
-- Add relative CSS color functions, bounded `calc()` arithmetic, deterministic
-  custom-property substitution, and draft `alpha()` support.
-- Recognize Android XML and Compose packed alpha-first colors; preserve source
-  syntax through picker and alpha edits.
-- Add Kotlin Compose numeric RGB(A), HSL, and HSV colors plus Kotlin/Java
-  Android RGB, ARGB, and HEX string factories.
-- Add SwiftUI/UIKit static RGB, grayscale, HSB, and explicit RGB color spaces.
-- Improve edit-range validation, alpha precision, and dependency tracking so
-  stale commands and asynchronous results cannot rewrite newer source text.
+- Discard hover matches when a document closes, including results that finish
+  later, so reopening an untitled document with a reused URI/version cannot
+  expose an earlier document's color range or edit commands.
+- Preserve comments, whitespace, and numeric suffix case when native Android
+  `Color.rgb()` gains an alpha channel and becomes `Color.argb()`.
+- Fix lazy workspace API loading in the Web bundle by compiling external
+  dynamic imports to the extension host's CommonJS loader.
 
-## Review fixes included
+## New features
 
-- Bound CSS custom-property shorthand candidates to prevent excessive regular
-  expression backtracking on malformed input.
-- Preserve numeric `0x` / `0X` prefixes and letter case in picker, replacement,
-  and alpha edits.
-- Honor Tailwind important utilities and skip equal-priority conflicts instead
-  of inferring CSS precedence from class order.
-- Interpret numeric Tailwind slash opacity as a percentage: `/0.5` is 0.5%,
-  while `/[0.5]` is 50%.
-- Resolve SCSS variables by lexical scope and declaration order, retaining alias
-  values at assignment and sharing bindings between highlighting and navigation.
-- Honor SCSS `!default` and `!global` assignment flags; skip bindings affected
-  by uncertain control flow.
-- Skip Tailwind contrast diagnostics for unsupported opacity, filters, blending,
-  and other rendering effects, including variant utilities.
+- Add Go to Definition and Peek Definition for static Android XML
+  `@color/name` references and aliases in the same `res` directory. Skip
+  duplicate, qualified, cyclic, missing, and state-list resources. Use bounded
+  filesystem reads in trusted workspaces and reflect unsaved resource edits
+  on the next request. See [the design](design/2026-10-05-android-resource-navigation.md).
+- Discard asynchronous definition results when the source changes or closes,
+  and validate the Android target snapshot before returning its ranges.
 
-## Release preparation
+## Development and validation
 
-- `pnpm generate:meta` formats the generated README configuration section so
-  `pnpm release:build` leaves formatting checks passing.
-- `pnpm test` includes unit/snapshot tests and desktop/Web smoke tests.
-- `pnpm test:package` builds a VSIX, installs it in a temporary VS Code profile,
-  checks both runtime entries, and exercises the installed distribution.
-- The VSIX includes only production `dist/index.js` and `dist/index.cjs`
-  bundles; test bundles are excluded.
-- `pnpm bench` covers literals, Tailwind, nested expressions, malformed input,
-  variable resolution, long variable chains, and native constructors. Timings
-  are informational; no machine-dependent CI threshold is imposed.
-  Recorded fixture measurements are in [the performance baseline](performance-baseline.md).
+- Archive the published v0.8.0 release record and verify the Marketplace and
+  GitHub publication states independently.
+- Add desktop and Chromium Web extension-host coverage for Compose, Android
+  XML/Java/Kotlin, SwiftUI, and UIKit color editing. Exercise native picker
+  presentations, alpha actions from real hover links, complete expression
+  ranges, preservation of labels/suffixes/comments, and rejection of stale
+  commands after source edits.
+- Register Kotlin through a test-only language extension that is excluded from
+  the production VSIX.
+- Add Android resource parser/resolver regressions and desktop/Web definition
+  provider coverage, including cross-file aliases, exact UTF-16 ranges,
+  unsaved edits, qualifier changes, cycles, and navigation configuration.
+- Add resource XML and malformed-tag parsing benchmarks; measurements are
+  recorded in [the performance baseline](performance-baseline.md).
 
-## Validation on 2026-10-02
+## Validation on 2026-10-05
 
-Revalidated version 0.8.0 with both implementation commits (`49c665e` and
-`05249bb`) included, using Node 24.21.0 and pnpm 12.8.1 on macOS arm64.
+Validated on macOS arm64 with Node 24.21.0, user-managed pnpm 12.9.1, and
+VS Code 1.140.0:
 
-- `pnpm install --frozen-lockfile`: passed without lockfile changes.
-- `pnpm release:build`, `pnpm format:check`, `pnpm lint`, and `pnpm typecheck`:
-  passed; package and generated metadata versions both equal 0.8.0.
-- `pnpm test`: all 73 files and 1,317 unit/snapshot tests passed, together with
-  desktop and Chromium Web extension-host smoke checks on VS Code 1.140.0.
-- `pnpm test:package`: the 0.8.0 VSIX passed isolated installation, runtime-entry
-  checks, activation, commands, and literal/relative color highlighting.
-- `pnpm run pack --out vscode-better-color-highlight-0.8.0.vsix`: produced the
-  manual-release artifact. Archive inspection confirmed the 0.8.0 manifests,
-  both production runtime entries, and the expected eight files. Test bundles,
-  source files, and development dependencies are excluded. Package inputs and
-  runtime hashes match the successful installation-test build.
+- Formatting, lint, and TypeScript checks passed.
+- `pnpm test` passed all 75 files and 1,386 unit/snapshot tests, plus desktop
+  and Chromium Web extension-host checks with 11 native editing fixtures each
+  and Android resource-navigation scenarios on local and virtual filesystems.
+- `pnpm test:package` passed isolated VSIX installation, runtime-entry checks,
+  activation, commands, and color highlighting. The VSIX contains eight files;
+  test bundles and the Kotlin language fixture are excluded.
 
-The earlier eight-fixture benchmark run is recorded in
-[the performance baseline](performance-baseline.md); it was not rerun during
-this release preparation.
+## Next release checks
 
-Prepared artifact: `vscode-better-color-highlight-0.8.0.vsix` (228,163 bytes).
+Run `pnpm release:check`, the full `pnpm test`, and `pnpm test:package` before
+publication. `pnpm release:check` alone covers formatting, lint, types, and
+unit tests; it does not run the desktop/Web or installed-package checks.
 
-SHA-256:
+Choose the next version once, regenerate metadata with `pnpm release:build`,
+and repeat the full checks against the final versioned package. `pnpm release`
+and `pnpm release:version` both invoke a version bump, so do not use them to
+publish an already-versioned VSIX. Confirm the Marketplace version and the
+separate GitHub tag/release after publication, then archive these notes.
 
-```text
-d2632de86e5b1bd51e3da4c2c628d616220cadf5f56087431f387f8342446606
-```
-
-See the README for static subsets and explicit exclusions. Unity and Android
-resource-reference navigation are deferred. No release has been published by
-this implementation task.
-
-## Manual release
-
-The version bump is already applied. Use the prepared VSIX for this release;
-`pnpm release` and `pnpm release:version` would invoke another version bump.
-Publishing requires Marketplace credentials for the `ntnyq` publisher (the
-existing `vsce` login or `VSCE_PAT`).
-
-1. Review and commit `package.json`, `src/meta.ts`, and this document:
-
-   ```sh
-   git add package.json src/meta.ts docs/release-notes-next.md
-   git commit -m "chore: prepare v0.8.0 release"
-   ```
-
-2. Publish the prepared package from the repository root:
-
-   ```sh
-   pnpm exec vsce publish --packagePath vscode-better-color-highlight-0.8.0.vsix
-   ```
-
-   The same VSIX can be uploaded manually through the Marketplace publisher
-   management page. If release inputs change, rerun the checks below and rebuild
-   the VSIX before publishing.
-
-3. After Marketplace publication succeeds, tag the release commit and push the
-   branch and tag:
-
-   ```sh
-   git tag v0.8.0
-   git push origin main
-   git push origin v0.8.0
-   ```
-
-   The tag triggers `.github/workflows/release.yml`, which creates GitHub release
-   notes with `changelogithub`. That workflow does not publish to Marketplace.
-
-To repeat the local release checks and rebuild the package:
-
-```sh
-pnpm install --frozen-lockfile
-pnpm release:build
-pnpm format:check
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm test:package
-pnpm run pack --out vscode-better-color-highlight-0.8.0.vsix
-```
-
-`pnpm release:check` currently covers formatting, lint, types, and unit tests;
-the full `pnpm test` and `pnpm test:package` checks above are also required.
+Android resource-reference navigation (P2) is implemented. Unity colors and
+additional static CSS math functions remain candidates for a future phase.

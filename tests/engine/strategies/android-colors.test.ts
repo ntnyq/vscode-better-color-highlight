@@ -136,4 +136,29 @@ describe('android static colors', () => {
       ),
     ).toBe('Color( 0x80FF0000UL )')
   })
+
+  it.each([
+    [
+      'Color.rgb(255, /* green */ 0, 0 // blue\n)',
+      'Color.argb(128, 0, /* green */ 255, 0 // blue\n)',
+    ],
+    [
+      'android.graphics.Color.rgb (/* red */ 1F, 0F, 0F)',
+      'android.graphics.Color.argb (0.5F, /* red */ 0F, 1F, 0F)',
+    ],
+  ])('preserves source syntax when adding alpha to %s', (source, expected) => {
+    const replacement = parseAndroidColor(source, 'java')?.format({
+      r: 0,
+      g: 255,
+      b: 0,
+      a: 0.5,
+    })
+    expect(replacement).toBe(expected)
+    expect(parseAndroidColor(replacement ?? '', 'java')?.color).toStrictEqual({
+      r: 0,
+      g: 255,
+      b: 0,
+      a: source.includes('1F') ? 0.5 : 128 / 255,
+    })
+  })
 })

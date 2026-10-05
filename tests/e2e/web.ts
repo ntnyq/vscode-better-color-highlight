@@ -1,3 +1,5 @@
+import { assertAndroidResourceNavigation } from './android-resource-navigation.ts'
+import { assertNativeColorEditing } from './native-color-editing.ts'
 import {
   activateExtension,
   assertInMemoryAnsiHighlighting,
@@ -18,4 +20,6 @@ export async function run() {
   await assertRelativeColorHighlighting()
   await assertInMemoryAnsiHighlighting()
   await assertInMemoryContrastDiagnostic()
+  await assertNativeColorEditing()
+  await assertAndroidResourceNavigation()
 }

@@ -20,7 +20,13 @@ import {
 export function useColorHover(
   dependencyRevision: Readonly<Ref<number>> = ref(0),
 ) {
-  const matchCache: ColorHoverMatchCache = new Map()
+  let matchCache: ColorHoverMatchCache = new Map()
+  const closeDisposable = workspace.onDidCloseTextDocument(() => {
+    // Reopened documents can reuse both URI and version. Replace the cache so
+    // pending requests for closed documents cannot repopulate the active map.
+    matchCache.clear()
+    matchCache = new Map()
+  })
   const disposable = languages.registerHoverProvider('*', {
     async provideHover(document, position, cancellationToken) {
       if (!config.enable || !config.enableHover) {
@@ -81,6 +87,7 @@ export function useColorHover(
 
   onDeactivate(() => {
     matchCache.clear()
+    closeDisposable.dispose()
     disposable.dispose()
   })
 }

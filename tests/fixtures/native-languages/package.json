@@ -1,0 +1,19 @@
+{
+  "name": "better-color-highlight-test-languages",
+  "displayName": "Better Color Highlight Test Languages",
+  "description": "Language declarations used only by extension-host tests.",
+  "publisher": "ntnyq",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "vscode": "^1.140.0"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "kotlin",
+        "extensions": [".kt"]
+      }
+    ]
+  }
+}

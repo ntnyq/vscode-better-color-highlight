@@ -22,6 +22,11 @@ const REQUIRED_COMMANDS = [
   'color-highlight.copyColorAsRgb',
   'color-highlight.copyColorAsHsl',
   'color-highlight.copyColorAsOklch',
+  'color-highlight.replaceColorAsHex',
+  'color-highlight.replaceColorAsRgb',
+  'color-highlight.replaceColorAsHsl',
+  'color-highlight.replaceColorAsOklch',
+  'color-highlight.adjustColorAlpha',
   'color-highlight.showWorkspacePalette',
   'color-highlight.checkColorContrast',
 ] as const
@@ -253,7 +258,10 @@ export async function waitForHighlightState(
 /**
  * Wait for a configuration value to match structurally within the retry limit.
  */
-async function waitForConfigValue<T>(key: string, expected: T): Promise<void> {
+export async function waitForConfigValue<T>(
+  key: string,
+  expected: T,
+): Promise<void> {
   for (let attempt = 0; attempt < DIAGNOSTIC_WAIT_ATTEMPTS; attempt++) {
     const value = workspace.getConfiguration(CONFIG_SECTION).get<T>(key)
     if (JSON.stringify(value) === JSON.stringify(expected)) {
@@ -296,7 +304,10 @@ async function waitForDiagnostics(uri: Uri, expectedCount: number) {
  * @param value - Value that must be truthy
  * @param message - Failure message
  */
-function assertCondition(value: unknown, message: string): asserts value {
+export function assertCondition(
+  value: unknown,
+  message: string,
+): asserts value {
   if (!value) {
     throw new Error(message)
   }
@@ -309,7 +320,7 @@ function assertCondition(value: unknown, message: string): asserts value {
  * @param expected - Required value
  * @param message - Failure message
  */
-function assertEqual<T>(actual: T, expected: T, message: string): void {
+export function assertEqual<T>(actual: T, expected: T, message: string): void {
   if (actual !== expected) {
     throw new Error(
       `${message}; expected ${JSON.stringify(expected)}, received ${JSON.stringify(actual)}`,

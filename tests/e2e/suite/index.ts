@@ -9,6 +9,8 @@ import {
   window,
   workspace,
 } from 'vscode'
+import { assertAndroidResourceNavigation } from '../android-resource-navigation.ts'
+import { assertNativeColorEditing } from '../native-color-editing.ts'
 import {
   activateExtension,
   assertInMemoryAnsiHighlighting,
@@ -50,6 +52,8 @@ export async function run() {
   await assertRelativeColorHighlighting()
   await assertInMemoryAnsiHighlighting()
   await assertInMemoryContrastDiagnostic()
+  await assertNativeColorEditing()
+  await assertAndroidResourceNavigation()
 
   const extension = extensions.getExtension(EXTENSION_ID)
   assert.ok(extension, `Expected ${EXTENSION_ID} to be installed`)

@@ -1,5 +1,6 @@
 import type { ColorDefinitionTarget } from '../../engine/definition/types'
 import type { StrategyContext } from '../../engine/detection'
+import { resolveAndroidColorDefinition } from '../../engine/strategies/android-resources/definition'
 import { resolveCssVarDefinition } from '../../engine/strategies/css-vars'
 import { collectCssVarDeclarations } from '../../engine/strategies/css-vars/parser'
 import { loadCssVarSourceDeclarations } from '../../engine/strategies/css-vars/sources'
@@ -25,6 +26,16 @@ export async function resolveColorDefinition(
   context: StrategyContext,
 ): Promise<ColorDefinitionTarget | null> {
   try {
+    if (context.languageId === 'xml') {
+      const androidTarget = await resolveAndroidColorDefinition(
+        text,
+        offset,
+        context,
+      )
+      if (androidTarget) {
+        return androidTarget
+      }
+    }
     if (!isStructuredTokenLanguage(context.languageId, context.filePath)) {
       const tailwindTarget = await resolveTailwindColorDefinition(
         text,

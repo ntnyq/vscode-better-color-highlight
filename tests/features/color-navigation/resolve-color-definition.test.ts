@@ -1,9 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
+import type * as AndroidDefinitionModule from '../../../src/engine/strategies/android-resources/definition'
 import type * as CssSourcesModule from '../../../src/engine/strategies/css-vars/sources'
 import type * as TailwindDefinitionModule from '../../../src/engine/strategies/tailwind-theme/definition'
 import type * as LoggerModule from '../../../src/shared/logger'
 
 const loggerError = vi.fn<(message: unknown) => void>()
+const resolveAndroidColorDefinition = vi.fn<
+  typeof AndroidDefinitionModule.resolveAndroidColorDefinition
+>(() => Promise.resolve(null))
 const loadCssVarSourceDeclarations = vi.fn<
   typeof CssSourcesModule.loadCssVarSourceDeclarations
 >(() => Promise.resolve([]))
@@ -27,6 +31,10 @@ vi.mock(
     resolveTailwindColorDefinition,
   }),
 )
+vi.mock(
+  import('../../../src/engine/strategies/android-resources/definition'),
+  () => ({ resolveAndroidColorDefinition }),
+)
 
 const baseContext = {
   languageId: 'css',
@@ -44,7 +52,36 @@ const baseContext = {
 }
 
 describe('resolveColorDefinition', () => {
+  it('dispatches XML resource navigation without Tailwind discovery', async () => {
+    resolveTailwindColorDefinition.mockClear()
+    const { resolveColorDefinition } =
+      await import('../../../src/features/color-navigation/resolve-color-definition')
+    const context = {
+      ...baseContext,
+      languageId: 'xml',
+      filePath: 'file:///workspace/res/layout/main.xml',
+    }
+    const text = '<View background="@color/brand"/>'
+    const target = {
+      originRange: { start: 18, end: 30 },
+      targetFilePath: 'file:///workspace/res/values/colors.xml',
+      targetRange: { start: 11, end: 43 },
+      targetSelectionRange: { start: 24, end: 29 },
+    }
+    resolveAndroidColorDefinition.mockResolvedValueOnce(target)
+    await expect(
+      resolveColorDefinition(text, 20, context),
+    ).resolves.toStrictEqual(target)
+    expect(resolveAndroidColorDefinition).toHaveBeenCalledWith(
+      text,
+      20,
+      context,
+    )
+    expect(resolveTailwindColorDefinition).not.toHaveBeenCalled()
+  })
+
   it.each([
+    'xml',
     'html',
     'javascript',
     'javascriptreact',

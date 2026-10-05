@@ -7,6 +7,7 @@ import {
   isAbsoluteWorkspacePath,
   joinWorkspacePath,
   readWorkspaceFile,
+  readWorkspaceDirectory,
   resolveWorkspacePath,
   statWorkspaceFile,
 } from '../../../src/shared/workspace/file-system'
@@ -26,12 +27,20 @@ vi.mock(
   import('vscode'),
   () =>
     ({
+      FileType: { File: 1, Directory: 2 },
       Uri: {
         file: () => fileUri,
         parse: () => fileUri,
       },
       workspace: {
         fs: {
+          readDirectory: vi
+            .fn<() => Promise<[string, number][]>>()
+            .mockResolvedValue([
+              ['values', 2],
+              ['colors.xml', 1],
+              ['linked', 66],
+            ]),
           readFile: vi
             .fn<() => Promise<Uint8Array>>()
             .mockResolvedValue(new TextEncoder().encode('disk text')),
@@ -45,6 +54,16 @@ vi.mock(
 )
 
 describe('workspace file system path helpers', () => {
+  it('enumerates provider entries without following symbolic links', async () => {
+    await expect(
+      readWorkspaceDirectory('/workspace/res'),
+    ).resolves.toStrictEqual([
+      { name: 'values', kind: 'directory' },
+      { name: 'colors.xml', kind: 'file' },
+      { name: 'linked', kind: 'unknown' },
+    ])
+  })
+
   it('treats Windows drive paths as local paths instead of URI schemes', () => {
     const filePath = String.raw`C:\repo\src\entry.scss`
 
