@@ -41,6 +41,7 @@ export type ColorSourceKind =
   | 'dart'
   | 'android-color'
   | 'swift-color'
+  | 'unity-color'
 
 /** Optional concrete RGB overrides for the base ANSI color palette. */
 export interface AnsiPaletteOverrides {

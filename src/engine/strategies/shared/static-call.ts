@@ -19,12 +19,23 @@ export interface NativeColor {
   readonly format: (color: RgbaColor) => string
 }
 
+interface StaticCallScanOptions {
+  /**
+   * Disable for literal-only calls to stop invalid nested candidates early.
+   */
+  readonly allowNesting?: boolean
+}
+
 const MAX_CALL_LENGTH = 4096
 
 /**
  * Scan bounded calls; quotes and comments cannot prematurely close a call.
  */
-export function scanStaticCalls(text: string, head: RegExp) {
+export function scanStaticCalls(
+  text: string,
+  head: RegExp,
+  options: StaticCallScanOptions = {},
+) {
   const calls: { source: string; start: number; end: number }[] = []
   for (const match of text.matchAll(head)) {
     const start = match.index
@@ -57,6 +68,9 @@ export function scanStaticCalls(text: string, head: RegExp) {
         }
         index += close + 2
       } else if (char === '(') {
+        if (options.allowNesting === false) {
+          break
+        }
         depth++
       } else if (char === ')' && --depth === 0) {
         calls.push({

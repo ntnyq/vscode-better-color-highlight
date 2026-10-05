@@ -8,6 +8,7 @@ import {
   isDartColorSource,
 } from '../strategies/dart-colors'
 import { parseSwiftColor } from '../strategies/swift-colors'
+import { parseUnityColor } from '../strategies/unity-colors'
 import { isAndroidResourceXml } from './source-context'
 
 const ANDROID_XML_HEX_REGEX = /^#[a-f\d]{3,4}(?:[a-f\d]{2}){0,2}$/iu
@@ -25,6 +26,7 @@ const COLOR_SOURCE_KINDS: ReadonlySet<ColorSourceKind> = new Set([
   'dart',
   'android-color',
   'swift-color',
+  'unity-color',
 ])
 
 /**
@@ -61,6 +63,9 @@ export function resolveColorSourceKind({
   }
   if (languageId === 'swift' && parseSwiftColor(sourceText)) {
     return 'swift-color'
+  }
+  if (languageId === 'csharp' && parseUnityColor(sourceText)) {
+    return 'unity-color'
   }
 
   if (
@@ -100,6 +105,9 @@ export function formatColorForSource(
     case 'swift-color': {
       return parseSwiftColor(sourceText)?.format(color) ?? null
     }
+    case 'unity-color': {
+      return parseUnityColor(sourceText)?.format(color) ?? null
+    }
     case 'android-xml-hex': {
       return formatAndroidXmlHex(color, sourceText)
     }
@@ -124,11 +132,17 @@ export function formatColorForSourceWithAlphaDelta(
     return formatDartColorWithAlphaDelta(delta, sourceText)
   }
 
-  if (sourceKind === 'android-color' || sourceKind === 'swift-color') {
-    const parsed =
-      sourceKind === 'android-color'
-        ? parseAndroidColor(sourceText)
-        : parseSwiftColor(sourceText)
+  if (
+    sourceKind === 'android-color' ||
+    sourceKind === 'swift-color' ||
+    sourceKind === 'unity-color'
+  ) {
+    const parsers = {
+      'android-color': parseAndroidColor,
+      'swift-color': parseSwiftColor,
+      'unity-color': parseUnityColor,
+    }
+    const parsed = parsers[sourceKind](sourceText)
     return (
       parsed?.format({
         ...parsed.color,

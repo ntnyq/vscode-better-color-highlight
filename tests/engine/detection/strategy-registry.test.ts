@@ -16,6 +16,7 @@ import { findNamedColors } from '../../../src/engine/strategies/named-colors'
 import { findRgbNoFunction } from '../../../src/engine/strategies/rgb-no-fn'
 import { findSwiftColors } from '../../../src/engine/strategies/swift-colors'
 import { findTailwindThemeColors } from '../../../src/engine/strategies/tailwind-theme'
+import { findUnityColors } from '../../../src/engine/strategies/unity-colors'
 import type { NestedScopedConfigs } from '../../../src/meta'
 
 const defaultConfig: NestedScopedConfigs = {
@@ -57,6 +58,10 @@ describe(getStrategies, () => {
     expect(getStrategies('kotlin', defaultConfig)).toContain(findAndroidColors)
     expect(getStrategies('java', defaultConfig)).toContain(findAndroidColors)
     expect(getStrategies('swift', defaultConfig)).toContain(findSwiftColors)
+    expect(getStrategies('csharp', defaultConfig)).toContain(findUnityColors)
+    expect(getStrategies('typescript', defaultConfig)).not.toContain(
+      findUnityColors,
+    )
     expect(getStrategies('typescript', defaultConfig)).not.toContain(
       findAndroidColors,
     )

@@ -1,0 +1,204 @@
+{
+  "file": "unity.cs",
+  "languageId": "csharp",
+  "strategyNames": [
+    "findHexRGBA",
+    "findColorFunctions",
+    "findHwb",
+    "findTailwindThemeColors",
+    "findNamedColors",
+    "findRgbNoFunction",
+    "findHslNoFunction",
+    "findUnityColors",
+    "findAnsiSgrColors"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 5,
+      "column": 14,
+      "text": "new UnityEngine.Color(1f, .5f, 0)",
+      "range": [
+        157,
+        190
+      ],
+      "color": "rgb(255, 128, 0)",
+      "render": {
+        "backgroundColor": "rgb(255, 128, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 128, 0)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 6,
+      "column": 19,
+      "text": "new UnityEngine.Color(.2F, .4F, .6F, .5F)",
+      "range": [
+        210,
+        251
+      ],
+      "color": "rgba(51, 102, 153, 0.5)",
+      "render": {
+        "backgroundColor": "rgb(51, 102, 153)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(51, 102, 153)"
+      }
+    },
+    {
+      "index": 2,
+      "line": 7,
+      "column": 13,
+      "text": "new UnityEngine.Color32(255, 128, 0, 192)",
+      "range": [
+        265,
+        306
+      ],
+      "color": "rgba(255, 128, 0, 0.753)",
+      "render": {
+        "backgroundColor": "rgb(255, 128, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 128, 0)"
+      }
+    },
+    {
+      "index": 3,
+      "line": 8,
+      "column": 13,
+      "text": "new UnityEngine.Color(b: 1f, r: .25f, g: 0f, a: .75f)",
+      "range": [
+        320,
+        373
+      ],
+      "color": "rgba(64, 0, 255, 0.75)",
+      "render": {
+        "backgroundColor": "rgb(64, 0, 255)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(64, 0, 255)"
+      }
+    },
+    {
+      "index": 4,
+      "line": 9,
+      "column": 14,
+      "text": "new global::UnityEngine.Color32(r: 32, g: 64, b: 128, a: 255)",
+      "range": [
+        388,
+        449
+      ],
+      "color": "rgb(32, 64, 128)",
+      "render": {
+        "backgroundColor": "rgb(32, 64, 128)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(32, 64, 128)"
+      }
+    },
+    {
+      "index": 5,
+      "line": 10,
+      "column": 18,
+      "text": "new UnityEngine.Color(1e-1f, 2e-1F, 3e-1f)",
+      "range": [
+        468,
+        510
+      ],
+      "color": "rgb(26, 51, 77)",
+      "render": {
+        "backgroundColor": "rgb(26, 51, 77)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(26, 51, 77)"
+      }
+    },
+    {
+      "index": 6,
+      "line": 11,
+      "column": 17,
+      "text": "new UnityEngine.Color(\n    r: 1f /* keep warm channel */,\n    g: .5f,\n    b: 0f,\n    a: .75f // keep opacity note\n)",
+      "range": [
+        528,
+        643
+      ],
+      "color": "rgba(255, 128, 0, 0.75)",
+      "render": {
+        "backgroundColor": "rgb(255, 128, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 128, 0)"
+      }
+    },
+    {
+      "index": 7,
+      "line": 30,
+      "column": 32,
+      "text": "red",
+      "range": [
+        1242,
+        1245
+      ],
+      "color": "rgb(255, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 8,
+      "line": 36,
+      "column": 43,
+      "text": "red",
+      "range": [
+        1541,
+        1544
+      ],
+      "color": "rgb(255, 0, 0)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 9,
+      "line": 36,
+      "column": 52,
+      "text": "green",
+      "range": [
+        1550,
+        1555
+      ],
+      "color": "rgb(0, 128, 0)",
+      "render": {
+        "backgroundColor": "rgb(0, 128, 0)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 128, 0)"
+      }
+    },
+    {
+      "index": 10,
+      "line": 36,
+      "column": 63,
+      "text": "blue",
+      "range": [
+        1561,
+        1565
+      ],
+      "color": "rgb(0, 0, 255)",
+      "render": {
+        "backgroundColor": "rgb(0, 0, 255)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 0, 255)"
+      }
+    }
+  ]
+}

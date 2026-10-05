@@ -8,6 +8,7 @@ import {
   findComposeArgbHexColors,
   findAndroidColors,
   findSwiftColors,
+  findUnityColors,
   findHwb,
   findJsonDesignTokens,
   findNamedColors,
@@ -216,6 +217,10 @@ export function getStrategies(
 
   if (languageId === 'swift') {
     strategies.push(findSwiftColors)
+  }
+
+  if (languageId === 'csharp') {
+    strategies.push(findUnityColors)
   }
 
   if (config.matchAnsiEscapeCodes) {
