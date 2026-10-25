@@ -1,0 +1,15 @@
+:root {
+  --weight: 50%;
+  --channel: 127.5;
+}
+
+.stepped-math {
+  color: rgb(round(var(--channel)) mod(-10, 5) rem(21, 5));
+  background: color-mix(in srgb, red round(var(--weight), 10%), blue);
+  border-color: rgb(from red round(r / 2) mod(g + 32, 256) rem(b + 64, 255));
+  outline-color: hsl(mod(-240deg, 1turn), round(99%, 10%), 50%);
+  accent-color: alpha(from red / round(alpha / 3, 0.1));
+  caret-color: color-mix(in srgb, red calc(120%), blue);
+  invalid-step: rgb(round(128, 0) 0 0);
+  invalid-unit: color-mix(in srgb, red calc(50), blue);
+}

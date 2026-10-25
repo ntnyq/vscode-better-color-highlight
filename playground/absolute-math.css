@@ -20,12 +20,12 @@
   background: rgb(0, calc(128 * 2), min(0, 20));
   border-color: color-mix(in srgb, rgb(calc(256 * 2) 0 0), black);
   outline-color: rgb(from rgb(calc(256 * 2) 0 0) calc(r / 2) g b);
+  text-decoration-color: color-mix(in srgb, red calc(25% + 25%), blue);
 }
 
 .unsupported-math {
   color: rgb(calc(128 + 50%) 0 0);
   background: rgb(calc(1px + 2px) 0 0);
   border-color: rgb(calc(1 / 0) 0 0);
-  outline-color: color-mix(in srgb, red calc(25% + 25%), blue);
   text-decoration-color: rgb(calc(var(--missing) * 2) 0 0);
 }

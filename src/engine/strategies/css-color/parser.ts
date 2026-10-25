@@ -49,14 +49,6 @@ const COMPONENT_REGEX = new RegExp(
   'iu',
 )
 const NO_CHANNEL_KEYWORDS: ReadonlyMap<string, number> = new Map()
-const MIX_PERCENTAGE_SUFFIX_REGEX = new RegExp(
-  `^(?<color>.+)\\s+(?<percentage>${NUMBER_SOURCE}%)$`,
-  'iu',
-)
-const MIX_PERCENTAGE_PREFIX_REGEX = new RegExp(
-  `^(?<percentage>${NUMBER_SOURCE}%)\\s+(?<color>.+)$`,
-  'iu',
-)
 const SUPPORTED_COLOR_FUNCTIONS: ReadonlySet<string> = new Set([
   'alpha',
   'color',
@@ -816,11 +808,20 @@ function parseInterpolationMethod(source: string): {
  * Parse a mix color with an optional leading or trailing percentage.
  */
 function parseMixItem(source: string, depth: number): MixItem | null {
-  const suffix = source.match(MIX_PERCENTAGE_SUFFIX_REGEX)
-  const prefix = source.match(MIX_PERCENTAGE_PREFIX_REGEX)
-  const match = suffix ?? prefix
-  const colorSource = match?.groups?.color?.trim() ?? source
-  const percentageSource = match?.groups?.percentage
+  const parts = splitTopLevel(source, 'whitespace')
+  if (parts.length === 0 || parts.length > 2) {
+    return null
+  }
+  let colorSource = parts[0]
+  let percentageSource: string | undefined
+  if (parts.length === 2) {
+    if (parsePercentage(parts[0], false)) {
+      percentageSource = parts[0]
+      colorSource = parts[1]
+    } else {
+      percentageSource = parts[1]
+    }
+  }
   const color = parseCssColorExpressionAtDepth(colorSource, depth)
   if (!color) {
     return null
@@ -830,10 +831,16 @@ function parseMixItem(source: string, depth: number): MixItem | null {
     return { color }
   }
   const percentage = parsePercentage(percentageSource, false)?.value
-  if (percentage === undefined || percentage < 0 || percentage > 1) {
+  if (
+    percentage === undefined ||
+    (COMPONENT_REGEX.test(percentageSource) &&
+      (percentage < 0 || percentage > 1))
+  ) {
     return null
   }
-  return { color, percentage: percentage * 100 }
+  // Numeric functions clamp at the outer percentage boundary; literals must
+  // already lie within the grammar's [0, 100] range.
+  return { color, percentage: clamp(percentage, 0, 1) * 100 }
 }
 
 /**

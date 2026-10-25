@@ -15,7 +15,7 @@ export function evaluateColorCalc(
     return null
   }
   if (
-    !/^(?:calc|min|max|clamp)\(/iu.test(source) &&
+    !/^(?:calc|min|max|clamp|round|mod|rem)\(/iu.test(source) &&
     !/^(?:[a-z]+|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?(?:%|deg|grad|rad|turn)?)$/iu.test(
       source,
     )
@@ -24,7 +24,7 @@ export function evaluateColorCalc(
   }
   const tokenMatches = [
     ...source.matchAll(
-      /(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?(?:%|deg|grad|rad|turn)?|[a-z]+|[^\s]/giu,
+      /(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?(?:%|deg|grad|rad|turn)?|[a-z]+(?:-[a-z]+)*|[^\s]/giu,
     ),
   ]
   const tokens = tokenMatches.map(match => match[0])
@@ -60,7 +60,10 @@ export function evaluateColorCalc(
       token === 'calc' ||
       token === 'min' ||
       token === 'max' ||
-      token === 'clamp'
+      token === 'clamp' ||
+      token === 'round' ||
+      token === 'mod' ||
+      token === 'rem'
     ) {
       if (
         tokenMatches[index]?.index !==
@@ -68,6 +71,9 @@ export function evaluateColorCalc(
         tokens[index++] !== '('
       ) {
         return null
+      }
+      if (token === 'round' || token === 'mod' || token === 'rem') {
+        return stepped(token, depth + 1)
       }
       if (token !== 'calc') {
         return comparison(token, depth + 1)
@@ -101,6 +107,80 @@ export function evaluateColorCalc(
       )
     }
     return createCalculatedComponent(value, 'number')
+  }
+  function stepped(
+    name: 'round' | 'mod' | 'rem',
+    depth: number,
+  ): CalculatedComponent | null {
+    let strategy = 'nearest'
+    if (
+      name === 'round' &&
+      /^(?:nearest|up|down|to-zero)$/iu.test(tokens[index] ?? '')
+    ) {
+      strategy = tokens[index++].toLowerCase()
+      if (tokens[index++] !== ',') {
+        return null
+      }
+    }
+    const value = sum(depth)
+    if (!value) {
+      return null
+    }
+    let step: CalculatedComponent | null = { value: 1, unit: 'number' }
+    if (tokens[index] === ',') {
+      index++
+      step = sum(depth)
+    } else if (name !== 'round' || value.unit !== 'number') {
+      return null
+    }
+    if (
+      tokens[index++] !== ')' ||
+      !step ||
+      step.unit !== value.unit ||
+      step.value === 0
+    ) {
+      return null
+    }
+    const remainder = value.value % step.value
+    if (name === 'rem') {
+      return createCalculatedComponent(remainder, value.unit)
+    }
+    if (name === 'mod') {
+      if (remainder === 0) {
+        return createCalculatedComponent(step.value < 0 ? -0 : 0, value.unit)
+      }
+      return createCalculatedComponent(
+        Math.sign(remainder) === Math.sign(step.value)
+          ? remainder
+          : remainder + step.value,
+        value.unit,
+      )
+    }
+    // Exact multiples retain their original value, including signed zero.
+    if (remainder === 0) {
+      return value
+    }
+    const interval = Math.abs(step.value)
+    const quotient = value.value / interval
+    let rounded: number
+    switch (strategy) {
+      case 'up': {
+        rounded = Math.ceil(quotient)
+        break
+      }
+      case 'down': {
+        rounded = Math.floor(quotient)
+        break
+      }
+      case 'to-zero': {
+        rounded = Math.trunc(quotient)
+        break
+      }
+      default: {
+        rounded = Math.round(quotient)
+      }
+    }
+    return createCalculatedComponent(rounded * interval, value.unit)
   }
   function comparison(
     name: 'min' | 'max' | 'clamp',

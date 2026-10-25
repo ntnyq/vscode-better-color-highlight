@@ -264,6 +264,15 @@ describe('document color provider', () => {
       expected: new TestColor(128 / 255, 0, 0, 1),
     },
     {
+      source:
+        'color-mix(in srgb, var(--brand) calc(var(--opacity) * 100%), blue)',
+      expected: new TestColor(128 / 255, 0, 128 / 255, 1),
+    },
+    {
+      source: 'rgb(round(var(--cap)) mod(-10, 5) rem(21, 5))',
+      expected: new TestColor(128 / 255, 0, 1 / 255, 1),
+    },
+    {
       source: 'rgb(from rgb(calc(var(--cap) * 4) 0 0) calc(r / 2) g b)',
       expected: new TestColor(128 / 255, 0, 0, 1),
     },
@@ -309,6 +318,8 @@ describe('document color provider', () => {
     'hsl(min(.5turn, 200deg) max(50%, 100%) calc(25% + 25%))',
     'color(display-p3 calc(1 / 2) 0 0 / clamp(0, .5, 1))',
     'color-mix(in srgb, rgb(calc(128 * 2) 0 0), blue)',
+    'color-mix(in srgb, red round(45%, 10%), blue)',
+    'rgb(round(127.5) mod(-10, 5) rem(21, 5))',
     'rgb(from rgb(calc(64 * 2) 0 0) calc(r / 2) g b)',
     'rgb(from red min(r, 128) max(g, 32) clamp(0, calc(b + 64), 255))',
     'alpha(from red / clamp(0, min(alpha, .5), 1))',

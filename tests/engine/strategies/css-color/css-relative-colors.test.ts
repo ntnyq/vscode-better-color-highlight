@@ -144,7 +144,7 @@ describe('static relative CSS colors', () => {
     'clamp(0%, r, 100%)',
     'min(10deg, 20deg)',
     'min(r, bogus)',
-    'max(r, round(20))',
+    'max(r, round(20, 0))',
     'min(r, var(--cap))',
     'min(r, 1 / 0)',
     'min(r, 1e999)',

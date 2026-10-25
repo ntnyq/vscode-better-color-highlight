@@ -588,6 +588,16 @@ describe(findCssVars, () => {
       'rgb(min(var(--missing, 128), 255) 0 0)',
       'rgb(128, 0, 0)',
     ],
+    [
+      '--weight: 50%;',
+      'color-mix(in srgb, red calc(var(--weight)), blue)',
+      'rgb(128, 0, 128)',
+    ],
+    [
+      '--channel: 127.5; --step: 10%;',
+      'rgb(round(var(--channel)) mod(-10, 5) rem(21, 5) / round(49%, var(--step)))',
+      'rgba(128, 0, 1, 0.5)',
+    ],
   ])(
     'resolves absolute math variables with the complete original range: %s',
     async (declarations, expression, color) => {
@@ -633,7 +643,7 @@ describe(findCssVars, () => {
     ':root { --cap: currentColor; } .x { color: rgb(min(var(--cap), 255) 0 0); }',
     ':root { --cap: 50%; } .x { color: rgb(min(var(--cap), 128) 0 0); }',
     ':root { --cap: 1px; } .x { color: rgb(calc(var(--cap) * 2) 0 0); }',
-    ':root { --weight: 50%; } .x { color: color-mix(in srgb, red calc(var(--weight)), blue); }',
+    ':root { --weight: 50; } .x { color: color-mix(in srgb, red calc(var(--weight)), blue); }',
   ])('rejects unresolved or unsupported absolute math: %s', async text => {
     await expect(findCssVars(text)).resolves.toStrictEqual([])
   })

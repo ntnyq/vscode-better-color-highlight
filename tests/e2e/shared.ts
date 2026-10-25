@@ -123,6 +123,7 @@ export async function assertAbsoluteColorHighlighting(): Promise<void> {
 :root {
   --red: 255;
   --opacity: .5;
+  --weight: 50%;
   --green: rgb(calc(0) max(0, 255) min(0, 1));
 }
 .sample {
@@ -132,8 +133,13 @@ export async function assertAbsoluteColorHighlighting(): Promise<void> {
   outline-color: color(srgb calc(0) min(0, 1) clamp(0, 1, 1));
   box-shadow: 0 0 1px color-mix(in srgb, var(--green) 50%, rgb(calc(255) 0 0));
   accent-color: alpha(from rgb(calc(255) 0 0) / calc(.5 + .25));
+  stepped-color: rgb(round(127.5) mod(-10, 5) rem(21, 5));
+  mixed-weight: color-mix(in srgb, red round(var(--weight), 10%), blue);
+  relative-step: rgb(from red round(r / 2) mod(g + 32, 256) rem(b + 64, 255));
   invalid-unit: rgb(calc(1px) 0 0);
   invalid-division: rgb(calc(1 / 0) 0 0);
+  invalid-step: rgb(round(128, 0) 0 0);
+  invalid-weight: color-mix(in srgb, red calc(50), blue);
   invalid-lab-conversion: lab(50% calc(1e308) 0);
   invalid-oklab-conversion: oklab(50% calc(1e308) 0);
   caret-color: #123456;
@@ -142,8 +148,9 @@ export async function assertAbsoluteColorHighlighting(): Promise<void> {
     language: 'css',
   })
   await window.showTextDocument(document)
-  const state = await waitForHighlightState(document.uri.toString(), 8)
-  assertEqual(state.colorCount, 8, 'Expected eight absolute math colors')
+  // Invalid weights leave the two independently detectable named colors.
+  const state = await waitForHighlightState(document.uri.toString(), 13)
+  assertEqual(state.colorCount, 11, 'Expected eleven CSS math colors')
   assertEqual(
     JSON.stringify([...state.colors].sort()),
     JSON.stringify(
@@ -155,6 +162,9 @@ export async function assertAbsoluteColorHighlighting(): Promise<void> {
         'rgb(0, 0, 255)',
         'rgb(128, 128, 0)',
         'rgba(255, 0, 0, 0.75)',
+        'rgb(128, 0, 1)',
+        'rgb(128, 0, 128)',
+        'rgb(128, 32, 64)',
         'rgb(18, 52, 86)',
       ].sort(),
     ),

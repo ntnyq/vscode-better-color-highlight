@@ -236,36 +236,19 @@
     },
     {
       "index": 13,
-      "line": 29,
-      "column": 37,
-      "text": "red",
+      "line": 23,
+      "column": 26,
+      "text": "color-mix(in srgb, red calc(25% + 25%), blue)",
       "range": [
-        1122,
-        1125
+        975,
+        1020
       ],
-      "color": "rgb(255, 0, 0)",
+      "color": "rgb(128, 0, 128)",
       "render": {
-        "backgroundColor": "rgb(255, 0, 0)",
-        "color": "#000000",
-        "border": null,
-        "overviewRulerColor": "rgb(255, 0, 0)"
-      }
-    },
-    {
-      "index": 14,
-      "line": 29,
-      "column": 58,
-      "text": "blue",
-      "range": [
-        1143,
-        1147
-      ],
-      "color": "rgb(0, 0, 255)",
-      "render": {
-        "backgroundColor": "rgb(0, 0, 255)",
+        "backgroundColor": "rgb(128, 0, 128)",
         "color": "#FFFFFF",
         "border": null,
-        "overviewRulerColor": "rgb(0, 0, 255)"
+        "overviewRulerColor": "rgb(128, 0, 128)"
       }
     }
   ]

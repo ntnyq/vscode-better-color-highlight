@@ -393,7 +393,7 @@ describe('static absolute CSS color calculations', () => {
     'rgb(calc(var(--r)) 0 0)',
     'rgb(calc(env(red)) 0 0)',
     'rgb(sin(0) 0 0)',
-    'rgb(round(1) 0 0)',
+    'rgb(round(1, 0) 0 0)',
     'rgb(calc(1px) 0 0)',
     'rgb(calc("10") 0 0)',
     'rgb(calc([10]) 0 0)',

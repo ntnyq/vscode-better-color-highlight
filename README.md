@@ -363,7 +363,7 @@ and virtual workspaces when their files are readable by VS Code.
 - [x] `color()`：`srgb` `srgb-linear` `display-p3` `display-p3-linear` `a98-rgb` `prophoto-rgb` `rec2020` `xyz`
 - [x] Static `color-mix()`：predefined interpolation spaces, percentages, premultiplied alpha, hue methods, and nested colors
 - [x] Static relative CSS colors：`rgb(from red r g b / .5)`, `oklch(from var(--brand) l calc(c * .9) h)`, and `alpha(from red / .5)`
-- [x] Static CSS math in absolute/relative color channels and alpha：nested `calc()`, `min()`, `max()`, and `clamp()`
+- [x] Static CSS math in absolute/relative color channels, alpha, and mix weights：nested `calc()`, `min()`, `max()`, `clamp()`, `round()`, `mod()`, and `rem()`
 - [x] Named color（`red` `rebeccapurple`）
 - [x] CSS / SCSS / Less / Stylus variables
 - [x] Extra expressions：bare RGB / HSL triplets、`--color-rgb: 255 0 0` shorthands
@@ -484,7 +484,7 @@ Relative `rgb`, `hsl`, `hwb`, Lab/LCH, OKLab/OKLCH, and `color()` expressions
 convert their origin into the target space before reading channel identifiers.
 Omitted alpha inherits the origin's alpha. `alpha(from <color> / <alpha>)`
 changes transparency while retaining the origin space. These forms support
-`calc()`, `min()`, `max()`, and `clamp()` with channel identifiers, finite
+`calc()`, `min()`, `max()`, `clamp()`, `round()`, `mod()`, and `rem()` with channel identifiers, finite
 numeric/percentage/angle literals, parentheses, and `+`, `-`, `*`, `/` with
 compatible units. The functions can nest, and comparison arguments can contain
 arithmetic directly: `min(c * .9, .2)` or `calc(max(r, 20) / 2)`.
@@ -498,6 +498,13 @@ require surrounding whitespace. Division by zero, non-finite literals or
 intermediate results, mixed-unit sums/comparisons, and other math functions
 are skipped. This follows the supported finite subset of
 [CSS comparison functions](https://www.w3.org/TR/css-values-4/#comp-func).
+
+`round()` accepts `nearest` (default), `up`, `down`, and `to-zero` strategies;
+ties round toward positive infinity. Its step may be omitted only for numbers,
+where it defaults to 1. `mod()` and `rem()` require two arguments of the same
+type: non-zero results follow the divisor's sign for `mod()` and the dividend's
+sign for `rem()`. Zero steps and non-finite calculations are skipped. These
+functions follow the finite subset of [CSS stepped-value functions](https://www.w3.org/TR/css-values-4/#round-func).
 
 Absolute RGB, HSL, HWB, Lab/LCH, OKLab/OKLCH, and `color()` channels and alpha
 also accept this math subset, including legal legacy RGB/HSL comma forms:
@@ -516,8 +523,14 @@ numbers or all to percentages, and legacy HSL saturation/lightness require
 percentages. `none` color components are available only in modern syntax;
 `none` clamp bounds remain available in either syntax. Channel identifiers such
 as `r`, `l`, and `alpha` require a relative origin. Picker and alpha edits replace
-the complete resolved expression with a static color. Math in `color-mix()`
-weights, `round()`, `mod()`, and `rem()` remains unsupported.
+the complete resolved expression with a static color.
+
+`color-mix()` weights accept the same math subset and must resolve to
+percentages, for example `color-mix(in srgb, red calc(25% + 25%), blue)`.
+Weights may precede or follow their color. Finite calculated weights clamp to
+0–100% after the complete calculation; literal weights outside that range are
+invalid. Omitted weights, normalization, and alpha scaling retain their usual
+behavior. See [the stepped math design](docs/design/2026-10-25-css-stepped-math.md).
 
 Absolute RGB and Lab-family channels apply their specified bounds before
 mixing or deriving relative colors; `color()` retains out-of-gamut values.

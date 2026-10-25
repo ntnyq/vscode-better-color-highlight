@@ -66,6 +66,17 @@ const malformedAbsoluteMath = Array.from(
 ).join('\n')
 const unclosedAbsoluteMath = `rgb(${'min('.repeat(10_000)}1; rgb(max(64, 128) 0 0 / .5)`
 const excessAbsoluteArguments = `rgb(${'1 '.repeat(10_000)}); hsl(${'1%,'.repeat(10_000)}); rgb(min(64, 128) 0 0)`
+const steppedMathColors = Array.from(
+  { length: 400 },
+  (_, index) =>
+    `.stepped-${index} { color: rgb(round(127.5) mod(-10, 5) rem(21, 5)); background: color-mix(in srgb, red round(49%, 10%), blue calc(50%)); }`,
+).join('\n')
+const malformedSteppedMath = Array.from(
+  { length: 100 },
+  () =>
+    `rgb(round(1, 0) 0 0); color-mix(in srgb, red ${oversizedComparison}, blue); rgb(${'round('.repeat(40)}1${', 2)'.repeat(40)} 0 0);`,
+).join('\n')
+const unclosedSteppedMath = `color-mix(in srgb, red ${'round('.repeat(10_000)}1; rgb(round(127.5) 0 0)`
 const longChain = `:root { ${Array.from({ length: 200 }, (_, index) => `--v${index}: var(--v${index + 1});`).join(' ')} --v200: red; } .x { color: rgb(from var(--v0) r g b); }`
 const chainDeclarations = collectCssVarDeclarations(longChain, {
   trustedSelectors: [':root'],
@@ -83,6 +94,51 @@ const androidResources = `<resources>${Array.from({ length: 500 }, (_, index) =>
 const malformedAndroidResource = `<resources><${'color'.repeat(20_000)}`
 
 describe('color detection', () => {
+  test('stepped CSS math and mix weights', async ({ bench }) => {
+    await bench(
+      'stepped CSS math and mix weights',
+      { writeResult: '.benchmarks/stepped-css-math-and-mix-weights.json' },
+      () => {
+        findColorFunctions(steppedMathColors)
+      },
+    ).run()
+  })
+
+  test('bounded malformed stepped CSS math', async ({ bench }) => {
+    await bench(
+      'bounded malformed stepped CSS math',
+      { writeResult: '.benchmarks/bounded-malformed-stepped-css-math.json' },
+      () => {
+        findColorFunctions(malformedSteppedMath)
+      },
+    ).run()
+  })
+
+  test('unclosed stepped CSS math', async ({ bench }) => {
+    await bench(
+      'unclosed stepped CSS math',
+      { writeResult: '.benchmarks/unclosed-stepped-css-math.json' },
+      () => {
+        findColorFunctions(unclosedSteppedMath)
+      },
+    ).run()
+  })
+
+  test('external CSS custom property resolution', async ({ bench }) => {
+    await bench(
+      'external CSS custom property resolution',
+      {
+        writeResult: '.benchmarks/external-css-custom-property-resolution.json',
+      },
+      async () => {
+        await resolveCssVarMatches(variableUsages, {
+          currentDeclarations: [],
+          externalDeclarations: declarations,
+        })
+      },
+    ).run()
+  })
+
   test('android resource declarations and aliases', async ({ bench }) => {
     await bench(
       'android resource declarations and aliases',
