@@ -11,6 +11,9 @@ version is chosen.
   signed zero, extreme finite values, intermediate precision, and shared limits.
 - Run desktop smoke tests on Ubuntu and Windows against VS Code 1.140.0 and
   stable; retain Ubuntu Web and installed-VSIX checks.
+- Run every native/CSS math picker and hover-alpha editing fixture with both
+  LF and CRLF. Normalize fixture text, expected edits, and UTF-16 offsets to
+  the selected document line ending rather than assuming LF on Windows.
 - Add read-only public release verification for GitHub release/tag/manifest,
   Marketplace validation, and the exact downloaded VSIX SHA-256. Missing public
   data remains pending; a manual workflow retains machine-readable evidence.
@@ -26,8 +29,8 @@ version is chosen.
 
 - Formatting, lint, types, 83 unit/snapshot files with 2,080 tests, stable
   Electron/Chromium Web hosts, and installed-VSIX activation checks passed.
-- The shared desktop suite also passed locally with VS Code 1.140.0. Windows
-  and Ubuntu matrix execution remains to be confirmed by CI.
+- The shared desktop suite also passed locally with VS Code 1.140.0. CI tracks
+  both versions on Windows and Ubuntu.
 - All 40 benchmark fixtures passed; measurements are recorded in the
   [quality follow-up baseline](performance-baseline.md#quality-follow-up-baseline-2026-10-25).
 - The read-only verifier returned `verified` for the archived v0.9.0 commit and

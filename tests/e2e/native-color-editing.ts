@@ -1,6 +1,7 @@
 import {
   Color,
   ConfigurationTarget,
+  EndOfLine,
   Range,
   Uri,
   WorkspaceEdit,
@@ -280,7 +281,9 @@ export async function assertNativeColorEditing(): Promise<void> {
     }
 
     for (const fixture of NATIVE_COLOR_FIXTURES) {
-      await assertNativeColorFixture(fixture)
+      for (const endOfLine of [EndOfLine.LF, EndOfLine.CRLF]) {
+        await assertNativeColorFixture(fixture, endOfLine)
+      }
     }
   } finally {
     for (const { key, globalValue, effectiveValue } of previousSettings) {
@@ -294,8 +297,23 @@ export async function assertNativeColorEditing(): Promise<void> {
  * Check exact source ranges, supported edits, and stale hover actions.
  */
 async function assertNativeColorFixture(
-  fixture: NativeColorFixture,
+  sourceFixture: NativeColorFixture,
+  endOfLine: EndOfLine,
 ): Promise<void> {
+  const newline = endOfLine === EndOfLine.CRLF ? '\r\n' : '\n'
+  const normalizeLineEndings = (source: string) =>
+    source.replaceAll(/\r?\n/gu, newline)
+  const fixture: NativeColorFixture = {
+    ...sourceFixture,
+    name: `${sourceFixture.name} (${endOfLine === EndOfLine.CRLF ? 'CRLF' : 'LF'})`,
+    source: normalizeLineEndings(sourceFixture.source),
+    afterPicker: normalizeLineEndings(sourceFixture.afterPicker),
+    afterAlpha: normalizeLineEndings(sourceFixture.afterAlpha),
+    afterSourceAlpha:
+      sourceFixture.afterSourceAlpha === undefined
+        ? undefined
+        : normalizeLineEndings(sourceFixture.afterSourceAlpha),
+  }
   const isXml = fixture.languageId === 'xml'
   let declaration = 'val'
   if (fixture.languageId === 'swift') {
@@ -305,10 +323,14 @@ async function assertNativeColorFixture(
   } else if (fixture.languageId === 'csharp') {
     declaration = 'var'
   }
-  const prefix = isXml
-    ? '<resources>\n  <!-- 前置 🎨 -->\n  <color name="brand">'
-    : `// 前置 🎨\n${declaration} brand = `
-  const suffix = isXml ? '</color>\n</resources>\n' : '; // keep this suffix\n'
+  const prefix = normalizeLineEndings(
+    isXml
+      ? '<resources>\n  <!-- 前置 🎨 -->\n  <color name="brand">'
+      : `// 前置 🎨\n${declaration} brand = `,
+  )
+  const suffix = normalizeLineEndings(
+    isXml ? '</color>\n</resources>\n' : '; // keep this suffix\n',
+  )
   // The Android resolver needs a resource path; an untitled URI stays editable
   // in the browser without depending on local disk or a filesystem mock.
   const document = isXml
@@ -323,6 +345,12 @@ async function assertNativeColorFixture(
   const editor = await window.showTextDocument(document)
 
   try {
+    await editor.edit(builder => builder.setEndOfLine(endOfLine))
+    assertEqual(
+      document.eol,
+      endOfLine,
+      `${fixture.name}: document line ending`,
+    )
     assertEqual(document.languageId, fixture.languageId, fixture.name)
     assertCondition(
       await editor.edit(builder => {
