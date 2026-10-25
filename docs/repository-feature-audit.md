@@ -1,250 +1,79 @@
 # Repository Feature Audit
 
-Date: 2026-07-17
+Date: 2026-10-25. Scope: the v0.9.0 preparation tree.
 
-## Executive Summary
+## Current contract
 
-The repository's documented user-facing feature set is implemented. The audit
-found all 13 public commands and all 28 public settings declared in generated
-metadata (`src/meta.ts:15-28`, `src/meta.ts:104-132`), registered or consumed by
-runtime code, and covered by focused tests or the playground snapshot suite.
-No documented feature was found to exist only as prose with no implementation.
+`package.json` declares 13 public commands and 30 public settings. Generated
+`src/meta.ts`, the README configuration table, runtime registration, and tests
+describe the same extension contract. This replaces the July audit's counts
+and stale line references; Git history retains that historical audit.
 
-Two superficially unfinished-looking signals remain, but neither is a real
-missing feature:
+The extension's documented features are implemented. Support is intentionally
+static and bounded: unresolved runtime values, ambiguous scopes/cascades,
+untrusted cross-file access, and expressions exceeding resource limits are
+skipped. A design record's historical non-goals do not create backlog promises.
 
-1. Five `TODO`/`FIXME` comments occur in `playground/index.ts:148-150` and
-   `playground/css.css:354-355`. Their surrounding headings explicitly say that
-   colors in comments should be highlighted (`playground/index.ts:144-150`,
-   `playground/css.css:353-355`), and the expected matches are committed in the
-   corresponding snapshots. They are test fixtures, not engineering tasks.
-2. Design documents have explicit **Non-Goals** sections. These are deliberate
-   product boundaries, not promises for future implementation.
+## Implementation and verification map
 
-After the audit, completed implementation plans were removed and the design
-records were moved to `docs/design/`. Each retained record now identifies its
-implementation date and commit and states that it is historical, not a
-roadmap.
+| Capability                                                                                                                   | Runtime owner                                                                                   | Verification                                                                              |
+| ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| HEX, CSS named/function colors, missing components, wide gamut, interpolation, relative colors, alpha, and typed static math | `src/engine/strategies/css-color/`, `color-functions.ts`, `hex.ts`, `named-colors.ts`, `hwb.ts` | `tests/engine/strategies/css-color/`, playground snapshots                                |
+| `calc`, comparison and stepped math in channels/alpha and calculated mix percentages                                         | `src/engine/strategies/css-color/calc.ts`, `parser.ts`, `relative.ts`                           | evaluator/parser tests, CSS-variable/provider tests, shared desktop/Web/VSIX smoke checks |
+| CSS/SCSS/Less/Stylus variables with conservative scope and cross-file resolution                                             | `src/engine/strategies/css-vars/`, `scss-vars/`, `less-vars.ts`, `stylus-vars.ts`               | corresponding strategy/resolver/cache/definition suites                                   |
+| Tailwind v3/v4 palettes, CSS-first themes, utilities, opacity and contextual navigation                                      | `src/engine/strategies/tailwind-theme/`                                                         | Tailwind strategy suites and playground snapshots                                         |
+| JSON/JSONC/JSON-formatted `.tokens` and YAML design-token colors and aliases                                                 | `src/engine/strategies/design-tokens/`                                                          | design-token parser/resolver/navigation suites                                            |
+| ANSI SGR colors and configurable base palette                                                                                | `src/engine/strategies/ansi-sgr/`                                                               | ANSI parser/palette tests and desktop/Web smoke checks                                    |
+| Dart/Flutter, Compose, Android, SwiftUI/UIKit and qualified Unity constructors                                               | native strategies under `src/engine/strategies/`                                                | native parser/presentation tests, desktop/Web picker and hover-alpha editing fixtures     |
+| Android XML resource-reference definition navigation                                                                         | `src/engine/strategies/android-resources/`                                                      | parser/resolver tests and desktop/Web local/virtual-filesystem navigation scenarios       |
+| Decorations, ruler markers, hover, copying, conversion, alpha editing and native picker                                      | `src/features/highlight/`, `hover/`, `color-provider/`, `src/extension/commands/`               | focused lifecycle/provider/command tests, real-host editing and installed VSIX            |
+| CSS/SCSS/Less/Stylus/token/Tailwind/Android definition navigation                                                            | `src/features/color-navigation/`                                                                | definition suites, stale-result/target checks, real-host Android scenarios                |
+| Explicit cancellable workspace palette and contrast comparison                                                               | `src/features/workspace-palette/`, `contrast/`                                                  | scanner/model/Quick Pick/contrast tests                                                   |
+| Opt-in deterministic contrast diagnostics and quick fixes                                                                    | `src/features/contrast/`                                                                        | pair/diagnostic/code-action/lifecycle suites and real-host checks                         |
+| Desktop/Web, virtual and untrusted workspaces                                                                                | runtime bundle entries and `src/shared/workspace/`                                              | shared desktop/Web tests, Workspace FS tests, package manifest/runtime-entry checks       |
 
-Fresh verification for this audit ran the repository-local Vitest binary:
-**63 test files and 890 tests passed**. The repository-local type checker,
-linter, formatter check, and build also passed. The Electron/Web extension-host
-suites were inspected but not rerun.
+The navigation dispatcher and provider preserve source freshness and trust
+gates. Android navigation stays within one `res` root and declines duplicate,
+qualified, cyclic, missing, or state-list definitions. Unity remains limited
+to qualified literal constructors. These boundaries are documented behavior.
 
-## Scope and Method
+## Commands and settings
 
-The audit used only tracked, first-party repository material:
+`src/extension/commands/index.ts` registers enable/disable; four copy commands;
+four replace commands; alpha adjustment; workspace palette; and contrast
+comparison. Command tests and extension-host checks cover registration and
+actions, including stale-edit rejection.
 
-- public documentation: `README.md` and `docs/design/**`;
-- extension contract: `package.json` and generated `src/meta.ts`;
-- implementation: `src/**`;
-- verification evidence: `tests/**`, `benchmarks/**`, `playground/**`, and
-  `.github/workflows/**`.
+The 30 settings cover feature switches, language/matching policies, Tailwind
+sources, variable/token resolution, workspace scan filters, size limits,
+ARGB/ANSI interpretation, marker styles, and debug logging. Compared with the
+July audit, ANSI matching and palette overrides account for the two additional
+settings. `tests/tooling/readme.test.ts` checks documentation/metadata contracts.
 
-The comparison followed each promise from documentation or extension metadata
-to its runtime registration/implementation and then to focused tests or an
-intentional playground snapshot. Generated `.vscode-test` runtime data and
-dependency lockfile text were not treated as product documentation. There is no
-tracked `CHANGELOG`, standalone roadmap, or GitHub issue/pull-request template
-in the repository; `.github/` contains Renovate configuration and workflows
-only.
+## Delivery checks
 
-Status meanings used below:
+`pnpm release:check` now runs formatting, lint, types, the full `pnpm test`
+(unit/snapshot plus Electron/Chromium Web), and `pnpm test:package`. The release
+upload entry runs these checks against the current version before publishing.
+Version preparation regenerates metadata without creating commits, tags, or
+pushes. See [the release workflow](releasing.md).
 
-- **Implemented**: runtime path exists and is registered/wired.
-- **Implemented, bounded by design**: implementation intentionally declines
-  ambiguous, unsafe, dynamic, or over-limit cases documented by the feature.
-- **Documentation state only**: a checklist or wording issue that does not
-  represent missing runtime behavior.
+The current validation totals and environment are recorded in
+[the v0.9.0 preparation notes](release-notes-next.md). Performance measurements
+are informational and live in [the baseline](performance-baseline.md).
 
-## Public Feature Promises
+## Remaining scope
 
-### Highlighting and supported color syntax
+No documented feature was found to exist only in prose. Playground TODO/FIXME
+color examples remain intentional fixtures, not engineering tasks. Design
+records are indexed in [the design directory](design/README.md), including the
+October Android, Unity, absolute/comparison math, and stepped-math work.
 
-| Documented promise                                                                                                                                                                        | Implementation evidence                                                                                                                                                                                                                                                                                           | Verification evidence                                                                                                                                                                                                                                             | Status                         |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| Highlight colors in code, comments, and strings (`README.md:8`)                                                                                                                           | The highlight pipeline scans complete document text, chooses strategies, groups results, and applies decorations (`src/features/highlight/use-color-highlight.ts:281-444`).                                                                                                                                       | Comment fixtures are intentionally included at `playground/index.ts:144-150` and `playground/css.css:353-359`; all playground files are snapshot-tested at `tests/integration/playground-snapshot.test.ts:188-202`.                                               | Implemented                    |
-| Enable/disable, language include/exclude patterns, maximum file size, debouncing, stale-result rejection, and debug logging (`README.md:36-46`, `README.md:126-130`, `README.md:198-202`) | Language pattern semantics are implemented in `src/engine/detection/registry.ts:47-64`; size, language, enable, stale-result, and debug gates are in `src/features/highlight/use-color-highlight.ts:290-448`.                                                                                                     | The extension-host scenario asserts real in-memory CSS highlighting at `tests/e2e/shared.ts:62-83`; focused lifecycle/config coverage is in `tests/features/highlight/use-color-highlight.test.ts`.                                                               | Implemented                    |
-| Hex forms, including RGBA/ARGB mode, while rejecting short numeric `0xabc`/`0xabcd` false positives (`README.md:156-160`, `README.md:277`, `README.md:485`)                               | Both byte orders and the short-`0x` guard are implemented in `src/engine/strategies/hex.ts:9-20` and `src/engine/strategies/hex.ts:49-135`.                                                                                                                                                                       | `tests/engine/strategies/hex.test.ts:5-65` covers short/long forms, RGBA, ARGB, and the false-positive guard.                                                                                                                                                     | Implemented                    |
-| `rgb()`/`rgba()`, `hsl()`/`hsla()`, Lab/LCH, OKLab/OKLCH, slash alpha, and CSS `color()` spaces (`README.md:278-283`)                                                                     | The supported function and color-space expressions are declared and converted in `src/engine/strategies/color-functions.ts:14-44` and `src/engine/strategies/color-functions.ts:120-194`.                                                                                                                         | `tests/engine/strategies/color-functions.test.ts:5-163` covers the documented families, whitespace syntax, percentages, and slash alpha.                                                                                                                          | Implemented                    |
-| `hwb()` (`README.md:280`)                                                                                                                                                                 | Comma and whitespace forms, angle units, and alpha are parsed in `src/engine/strategies/hwb.ts:4-55`.                                                                                                                                                                                                             | `tests/engine/strategies/hwb.test.ts:5-37`.                                                                                                                                                                                                                       | Implemented                    |
-| Named CSS colors with contextual/always/never matching (`README.md:48-58`, `README.md:284`, `README.md:489`)                                                                              | Registration gates are in `src/engine/detection/registry.ts:149-156`; syntax-aware filtering is in `src/engine/strategies/named-colors.ts`.                                                                                                                                                                       | `tests/engine/strategies/named-colors.test.ts:5-115` covers names, selectors, at-rules, variables, and permissive mode.                                                                                                                                           | Implemented, bounded by design |
-| CSS custom properties and SCSS/Less/Stylus variables (`README.md:285`)                                                                                                                    | Language-specific strategy dispatch is in `src/engine/detection/registry.ts:176-190`; implementations live in `src/engine/strategies/css-vars/`, `src/engine/strategies/scss-vars/index.ts`, `src/engine/strategies/less-vars.ts`, and `src/engine/strategies/stylus-vars.ts`.                                    | `tests/engine/strategies/css-vars/css-vars.test.ts:289-396`, `tests/engine/strategies/scss-vars/scss-vars.test.ts:55-113`, `tests/engine/strategies/less-vars.test.ts:6-83`, and `tests/engine/strategies/stylus-vars.test.ts`.                                   | Implemented                    |
-| Conservative cross-file CSS variables from configured sources and trusted selectors (`README.md:368-372`)                                                                                 | Opt-in/trust gates and source loading are in `src/engine/strategies/css-vars/index.ts:35-62`; the loader enforces 64 files and 512 KiB per file (`src/engine/strategies/css-vars/sources.ts:17-21`, `src/engine/strategies/css-vars/sources.ts:47-86`).                                                           | Context, ambiguity, and external-source behavior are covered by `tests/engine/strategies/css-vars/css-vars.test.ts:318-396`, `tests/engine/strategies/css-vars/css-vars-cache.test.ts`, and `tests/engine/strategies/css-vars/css-var-definition.test.ts:47-199`. | Implemented, bounded by design |
-| Opt-in SCSS `@use`, `@forward`, `@import`, partial/index, nearest `node_modules`, and configured load-path resolution (`README.md:96-106`, `README.md:493-494`)                           | Directives and 5-depth/32-file/512-KiB bounds are defined at `src/engine/strategies/scss-vars/index.ts:35-76`; partial/index candidates and package/load paths are implemented at `src/engine/strategies/scss-vars/index.ts:320-429`; detection uses them at `src/engine/strategies/scss-vars/index.ts:971-1044`. | `tests/engine/strategies/scss-vars/scss-vars.test.ts:113-296`, `tests/engine/strategies/scss-vars/scss-vars-cache.test.ts`, and `tests/engine/strategies/scss-vars/scss-definition.test.ts:152-401`.                                                              | Implemented, bounded by design |
-| Optional bare RGB/HSL triplets and `--color-rgb`-style shorthands (`README.md:162-184`, `README.md:286`)                                                                                  | Conditional bare-value strategies are selected at `src/engine/detection/registry.ts:158-174`; CSS property shorthands are parsed at `src/engine/strategies/color-functions.ts:38-49` and `src/engine/strategies/color-functions.ts:164-192`.                                                                      | `tests/engine/strategies/rgb-no-fn.test.ts:5-20`, `tests/engine/strategies/hsl-no-fn.test.ts:5-15`, and `tests/engine/strategies/color-functions.test.ts:110-133`.                                                                                                | Implemented                    |
-| Flutter/Dart `Color(0xAARRGGBB)` and `Color.fromARGB(...)` (`README.md:288`, `README.md:486`)                                                                                             | `src/engine/strategies/dart-colors.ts:4-73`; dispatch at `src/engine/detection/registry.ts:193-195`.                                                                                                                                                                                                              | `tests/engine/strategies/dart-colors.test.ts:47-60`.                                                                                                                                                                                                              | Implemented                    |
-| Hyprland `rgba(rrggbb)` / `rgba(rrggbbaa)` (`README.md:289`, `README.md:487`)                                                                                                             | `src/engine/strategies/color-functions.ts:32-36` and `src/engine/strategies/color-functions.ts:197-229`.                                                                                                                                                                                                          | `tests/engine/strategies/color-functions.test.ts:41-53`.                                                                                                                                                                                                          | Implemented                    |
-| Transparent values remain visible through opaque marker rendering while preserving the represented color (`README.md:488`)                                                                | Display color conversion occurs before marker styling in `src/features/highlight/decorations/marker-types.ts:17-34`; six marker styles and ruler output are implemented at `src/features/highlight/decorations/marker-types.ts:31-78`.                                                                            | `tests/features/highlight/marker-types.test.ts`.                                                                                                                                                                                                                  | Implemented                    |
+Potential future work requires separate product decisions: additional CSS math
+functions/constants and dimensional algebra; dynamic native expressions;
+broader Compose color spaces; resource qualifier inference; persistent workspace
+indexing; and runtime/cascade-dependent color interpretation. These are
+candidates or deliberate exclusions, not unfinished v0.9.0 requirements.
 
-### Tailwind themes and utilities
-
-| Documented promise                                                                                                                                                                  | Implementation evidence                                                                                                                                                                                                                                                         | Verification evidence                                                                                                                                                              | Status                         |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| Bundled v3/v4 palettes with `auto`, `v3`, and `v4` selection (`README.md:293-309`)                                                                                                  | Mode normalization and shared theme resolution are in `src/engine/strategies/tailwind-theme/index.ts:42-62` and `src/engine/strategies/tailwind-theme/resolver.ts:50-107`; separate v3/v4 palette modules are present.                                                          | `tests/engine/strategies/tailwind-theme/tailwind-palette.test.ts:5-34` and `tests/engine/strategies/tailwind-theme/tailwind-theme-colors.test.ts:71-103`.                          | Implemented                    |
-| Top-level `@theme`, `@theme inline`, `@theme static`, ordered overrides, resets, exact aliases, and conservative property resolution (`README.md:311-319`)                          | Structural parsing recognizes all three forms at `src/engine/strategies/tailwind-theme/parser.ts:71-119` and `src/engine/strategies/tailwind-theme/parser.ts:425-434`; reset/alias semantics are in `src/engine/strategies/tailwind-theme/resolver.ts:47-151`.                  | `tests/engine/strategies/tailwind-theme/tailwind-theme-parser.test.ts:13-314` and `tests/engine/strategies/tailwind-theme/tailwind-theme-resolver.test.ts:26-206`.                 | Implemented, bounded by design |
-| Trusted file/directory/glob theme sources; relative `@import`/`@reference`; 32 files, depth 5, 512 KiB; no package/remote/code execution (`README.md:321-342`, `README.md:362-366`) | Trust and configured-path gates plus exact bounds are in `src/engine/strategies/tailwind-theme/sources.ts:22-78`; traversal restrictions are in `src/engine/strategies/tailwind-theme/sources.ts:81-179`.                                                                       | `tests/engine/strategies/tailwind-theme/tailwind-theme-sources.test.ts:66-528` covers trust, expansion, imports, unsafe dependencies, limits, cancellation, and unsaved documents. | Implemented, bounded by design |
-| Named utilities, variants, gradients/SVG/border/ring/shadow groups, slash opacity, both important forms, arbitrary colors, and custom-property shorthand (`README.md:344-352`)      | The complete utility prefix set and structural token parser are in `src/engine/strategies/tailwind-theme/utility.ts:1-85` and `src/engine/strategies/tailwind-theme/utility.ts:141-249`; color/opacity resolution is in `src/engine/strategies/tailwind-theme/index.ts:85-145`. | `tests/engine/strategies/tailwind-theme/tailwind-theme-colors.test.ts:103-324`.                                                                                                    | Implemented, bounded by design |
-| Tailwind Go/Peek Definition links only for resolvable custom declarations (`README.md:354-360`)                                                                                     | `src/engine/strategies/tailwind-theme/definition.ts:12-64` is invoked before language-specific variable resolution at `src/features/color-navigation/resolve-color-definition.ts:24-33`.                                                                                        | `tests/engine/strategies/tailwind-theme/tailwind-definition.test.ts:32-154` and `tests/engine/strategies/tailwind-theme/tailwind-definition-sources.test.ts:67-178`.               | Implemented, bounded by design |
-
-### Design tokens
-
-| Documented promise                                                                                                                      | Implementation evidence                                                                                                                                                                                                                                                                                                                                                                                                 | Verification evidence                                                                                                                                                                                                                                                                      | Status                         |
-| --------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------ |
-| JSON/JSONC/JSON-formatted `.tokens` modes `token-values`, `strings`, `all`, and `off` (`README.md:144-154`, `README.md:374-385`)        | Mode selection and legacy/structured matching are implemented in `src/engine/strategies/design-tokens/json-strategy.ts:17-111`; `.tokens` dispatch is recognized in `src/engine/detection/registry.ts:72-77`.                                                                                                                                                                                                           | `tests/engine/strategies/design-tokens/json-design-tokens.test.ts:81-292` covers every mode, token fields, broad strings, comments, and malformed input.                                                                                                                                   | Implemented                    |
-| DTCG structured colors in all 14 color spaces, alpha, inherited types, curly aliases, local pointers, and `$root` (`README.md:387-403`) | Eight RGB-like plus six semantic spaces are implemented in `src/engine/strategies/design-tokens/color.ts:14-23` and `src/engine/strategies/design-tokens/color.ts:92-188`; JSON/YAML AST adapters and the shared depth-32 resolver are in `src/engine/strategies/design-tokens/json-document.ts`, `src/engine/strategies/design-tokens/yaml-document.ts`, and `src/engine/strategies/design-tokens/resolver.ts:31-205`. | `tests/engine/strategies/design-tokens/dtcg-color.test.ts:27-116`, `tests/engine/strategies/design-tokens/json-design-tokens.test.ts:5-81`, `tests/engine/strategies/design-tokens/yaml-design-tokens.test.ts`, and `tests/engine/strategies/design-tokens/design-token-resolver.test.ts`. | Implemented, bounded by design |
-| YAML design tokens, but not arbitrary YAML string matching (`README.md:291`, `README.md:384-385`)                                       | YAML intentionally uses semantic token detection only (`src/engine/strategies/design-tokens/yaml-strategy.ts:6-53`) and is selected for YAML/YML at `src/engine/detection/registry.ts:80-82` and `src/engine/detection/registry.ts:143-146`.                                                                                                                                                                            | `tests/engine/strategies/design-tokens/yaml-design-tokens.test.ts` and the committed `playground/tokens.yaml` snapshot.                                                                                                                                                                    | Implemented, bounded by design |
-| Opt-in trusted relative cross-file JSON/JSONC/`.tokens`/YAML `$ref`, limited to 64 files of 512 KiB (`README.md:405-420`)               | Trust gating is in `src/engine/strategies/design-tokens/json-strategy.ts:114-121` and `src/engine/strategies/design-tokens/yaml-strategy.ts:42-51`; limits and loaders are in `src/engine/strategies/design-tokens/external-loader.ts:45-58`.                                                                                                                                                                           | `tests/engine/strategies/design-tokens/design-token-external-loader.test.ts:44-373` covers trust, cross-format references, bounds, cycles, size, cancellation, cache invalidation, and `$root`.                                                                                            | Implemented, bounded by design |
-
-### User workflows and editor integrations
-
-| Documented promise                                                                                                                                                                                | Implementation evidence                                                                                                                                                                                                                                                                                                                                                                                                                  | Verification evidence                                                                                                                                                                                                                                                                                                                                                                                    | Status                                                             |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| Optional hover details with HEX/RGB/HSL/OKLCH copy and replace icons plus ±10 percentage-point alpha actions (`README.md:60-64`, `README.md:463-465`)                                             | Hover lookup/presentations and markdown links are in `src/features/hover/color-hover.ts:149-237` and `src/features/hover/color-hover.ts:257-390`; provider registration is in `src/features/hover/use-color-hover.ts:16-81`.                                                                                                                                                                                                             | `tests/features/hover/color-hover.test.ts:205-301`.                                                                                                                                                                                                                                                                                                                                                      | Implemented                                                        |
-| Copy, replace, and alpha commands validate document/range/source and preserve HEX case (`README.md:18-26`; design contract at `docs/design/2026-07-07-hover-color-actions-design.md:111-170`)     | All handlers are registered at `src/extension/commands/index.ts:27-44`; replacement and alpha logic are in `src/extension/commands/replace-color.ts:12-27`, `src/extension/commands/adjust-color-alpha.ts:16-36`, and the shared range validator.                                                                                                                                                                                        | `tests/extension/commands.test.ts:385-536` covers clipboard, active-editor lookup, wrong/stale document ranges, case preservation, alpha clamping, and source format.                                                                                                                                                                                                                                    | Implemented                                                        |
-| Optional native VS Code color picker with four replacement presentations (`README.md:66-70`, `README.md:467-470`)                                                                                 | Detection, normalization, deduplication, and presentations are in `src/features/color-provider/document-color-provider.ts:36-153`; lifecycle registration is in `src/features/color-provider/use-color-provider.ts:8-19`.                                                                                                                                                                                                                | `tests/features/color-provider/document-color-provider.test.ts:148-242` and `tests/features/color-provider/use-color-provider.test.ts`.                                                                                                                                                                                                                                                                  | Implemented                                                        |
-| Go to Definition / Peek Definition for CSS, SCSS, Less, Stylus, DTCG aliases/refs, and Tailwind custom colors, with conservative context and trust gates (`README.md:78-82`, `README.md:422-460`) | The dispatcher covers CSS/SCSS/Less/Stylus/JSON/YAML and Tailwind at `src/features/color-navigation/resolve-color-definition.ts:18-79`; provider/config/trust gates are in `src/features/color-navigation/definition-provider.ts:14-89`; registration is in `src/features/color-navigation/use-color-navigation.ts:7-16`.                                                                                                                | Focused definition suites cover CSS (`tests/engine/strategies/css-vars/css-var-definition.test.ts:27-199`), SCSS (`tests/engine/strategies/scss-vars/scss-definition.test.ts:75-401`), Less, Stylus, DTCG (`tests/engine/strategies/design-tokens/design-token-definition.test.ts:116-535`), Tailwind, and the VS Code provider (`tests/features/color-navigation/definition-provider.test.ts:131-334`). | Implemented, bounded by design                                     |
-| On-demand cancellable workspace palette with deterministic grouping, bounded scanning, copy actions, exact-source navigation, truncation disclosure, and no retained index (`README.md:206-233`)  | All documented limits are constants at `src/features/workspace-palette/scanner.ts:13-20`; deterministic/cancellable scanning and retention are at `src/features/workspace-palette/scanner.ts:75-225`; ephemeral Quick Pick copy/navigation behavior is at `src/features/workspace-palette/quick-pick.ts:66-108` and `src/features/workspace-palette/quick-pick.ts:242-315`.                                                              | `tests/features/workspace-palette/workspace-palette-scanner.test.ts:126-595`, `tests/features/workspace-palette/workspace-palette-model.test.ts`, and `tests/features/workspace-palette/workspace-palette-quick-pick.test.ts:274-624`.                                                                                                                                                                   | Implemented, bounded by design                                     |
-| Manual WCAG 2.2 contrast comparison, unrounded pass/fail, translucent foreground compositing, and indeterminate translucent backgrounds (`README.md:235-241`)                                     | Thresholds and compositing are implemented at `src/features/contrast/evaluate.ts:9-43`; interaction/result rendering is in `src/features/workspace-palette/quick-pick.ts:127-239`.                                                                                                                                                                                                                                                       | `tests/features/contrast/contrast-evaluation.test.ts:17-139` and workspace Quick Pick tests.                                                                                                                                                                                                                                                                                                             | Implemented, bounded by design                                     |
-| Opt-in deterministic contrast diagnostics for same-rule CSS, static inline styles, and same-variant Tailwind pairs, plus four stale-safe Quick Fixes (`README.md:243-264`)                        | Pair dispatch is at `src/features/contrast/find-contrast-pairs.ts:8-47`; CSS/static-markup and Tailwind resolvers are in `src/features/contrast/css-pairs.ts` and `src/features/contrast/tailwind-pairs.ts`; warnings and four actions are in `src/features/contrast/diagnostics.ts:66-104` and `src/features/contrast/code-actions.ts:26-80`; open-document lifecycle is in `src/features/contrast/use-contrast-diagnostics.ts:23-241`. | `tests/features/contrast/css-contrast-pairs.test.ts:10-310`, `tests/features/contrast/tailwind-contrast-pairs.test.ts:10-346`, `tests/features/contrast/contrast-diagnostics.test.ts:98-133`, `tests/features/contrast/contrast-code-actions.test.ts:81-131`, and `tests/features/contrast/use-contrast-diagnostics.test.ts`.                                                                            | Implemented, bounded by design                                     |
-| Desktop, Web, virtual-workspace, and untrusted-workspace support without Node filesystem APIs in extension runtime (`README.md:266-271`, `README.md:362-366`)                                     | Desktop and browser bundle entries are declared at `package.json:55-57`; capabilities are declared at `package.json:390-404`; cross-file settings are restricted in untrusted workspaces at `package.json:393-400`; runtime paths use the VS Code Workspace FS adapter in `src/shared/workspace/file-system.ts`.                                                                                                                         | Shared desktop/Web runtime assertions are in `tests/e2e/shared.ts:37-140`, consumed by Web at `tests/e2e/web.ts:1-12` and Electron at `tests/e2e/suite/index.ts:38-77`; Workspace FS behavior is unit-tested in `tests/shared/workspace/workspace-file-system.test.ts`.                                                                                                                                  | Implemented; extension-host suites not freshly rerun in this audit |
-
-## Commands and Settings Contract
-
-### Commands
-
-`README.md:14-28`, `package.json:313-378`, and generated
-`src/meta.ts:15-98` agree on the same 13 public commands:
-
-| Commands                                                                             | Runtime registration                    | Status      |
-| ------------------------------------------------------------------------------------ | --------------------------------------- | ----------- |
-| `enable`, `disable`                                                                  | `src/extension/commands/index.ts:23-25` | Implemented |
-| `copyColorAsHex`, `copyColorAsRgb`, `copyColorAsHsl`, `copyColorAsOklch`             | `src/extension/commands/index.ts:27-30` | Implemented |
-| `replaceColorAsHex`, `replaceColorAsRgb`, `replaceColorAsHsl`, `replaceColorAsOklch` | `src/extension/commands/index.ts:32-43` | Implemented |
-| `adjustColorAlpha`                                                                   | `src/extension/commands/index.ts:44`    | Implemented |
-| `showWorkspacePalette`                                                               | `src/extension/commands/index.ts:45`    | Implemented |
-| `checkColorContrast`                                                                 | `src/extension/commands/index.ts:46-48` | Implemented |
-
-Command registration and behavior are tested at `tests/extension/commands.test.ts:174-536`;
-the extension-host scenario additionally checks the main public command set at
-`tests/e2e/shared.ts:18-59`.
-
-### Settings
-
-The generated setting union at `src/meta.ts:104-132` matches the 28 settings
-documented at `README.md:32-204`. Each setting has a runtime consumer:
-
-| Setting                           | Principal consumer                                                                                                           | Status      |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `enable`                          | highlight/provider/hover/navigation/diagnostic gates; e.g. `src/features/highlight/use-color-highlight.ts:365-374`           | Implemented |
-| `languages`                       | `src/engine/detection/registry.ts:206-210` and all providers                                                                 | Implemented |
-| `matchWords`                      | `src/engine/detection/registry.ts:149-156`                                                                                   | Implemented |
-| `namedColorMatchMode`             | registry and named-color context; `src/engine/detection/registry.ts:149-156`                                                 | Implemented |
-| `enableHover`                     | `src/features/hover/use-color-hover.ts:20-27`                                                                                | Implemented |
-| `enableColorPicker`               | `src/features/color-provider/document-color-provider.ts:40-47`                                                               | Implemented |
-| `enableContrastDiagnostics`       | `src/features/contrast/use-contrast-diagnostics.ts:182-189`                                                                  | Implemented |
-| `enableColorNavigation`           | `src/features/color-navigation/definition-provider.ts:20-27`                                                                 | Implemented |
-| `tailwindColorMode`               | `src/engine/strategies/tailwind-theme/index.ts:147-156`                                                                      | Implemented |
-| `tailwindStylesheetPaths`         | `src/engine/strategies/tailwind-theme/index.ts:159-164`                                                                      | Implemented |
-| `resolveScssVariablesAcrossFiles` | `src/engine/strategies/scss-vars/index.ts:385-395`                                                                           | Implemented |
-| `scssLoadPaths`                   | `src/engine/strategies/scss-vars/index.ts:367-429`                                                                           | Implemented |
-| `resolveCssVariablesAcrossFiles`  | `src/engine/strategies/css-vars/index.ts:44-57`                                                                              | Implemented |
-| `cssVariablePaths`                | `src/engine/strategies/css-vars/index.ts:48-56`                                                                              | Implemented |
-| `cssVariableTrustedSelectors`     | `src/engine/strategies/css-vars/index.ts:48-56`                                                                              | Implemented |
-| `maxFileSize`                     | `src/features/highlight/use-color-highlight.ts:342-351` and other providers                                                  | Implemented |
-| `workspacePaletteInclude`         | `src/features/workspace-palette/scanner.ts:82-86`                                                                            | Implemented |
-| `workspacePaletteExclude`         | `src/features/workspace-palette/scanner.ts:82-86`                                                                            | Implemented |
-| `designTokenJsonMode`             | `src/engine/strategies/design-tokens/json-strategy.ts:35-38` and registry YAML/JSON gates                                    | Implemented |
-| `resolveDesignTokensAcrossFiles`  | `src/engine/strategies/design-tokens/json-strategy.ts:114-121`, `src/engine/strategies/design-tokens/yaml-strategy.ts:42-51` | Implemented |
-| `useARGB`                         | `src/engine/detection/registry.ts:100-105`                                                                                   | Implemented |
-| `matchRgbWithNoFunction`          | `src/engine/detection/registry.ts:158-165`                                                                                   | Implemented |
-| `rgbWithNoFunctionLanguages`      | `src/engine/detection/registry.ts:158-165`                                                                                   | Implemented |
-| `matchHslWithNoFunction`          | `src/engine/detection/registry.ts:167-174`                                                                                   | Implemented |
-| `hslWithNoFunctionLanguages`      | `src/engine/detection/registry.ts:167-174`                                                                                   | Implemented |
-| `markerType`                      | `src/features/highlight/use-color-highlight.ts:437-444`, `src/features/highlight/decorations/marker-types.ts:31-76`          | Implemented |
-| `markRuler`                       | `src/features/highlight/decorations/marker-types.ts:26-29`                                                                   | Implemented |
-| `debug`                           | `src/features/highlight/use-color-highlight.ts:321-428`                                                                      | Implemented |
-
-Metadata/README contract tests cover critical defaults and exact descriptions at
-`tests/tooling/readme.test.ts:5-306`.
-
-## Design and Implementation Plan Status
-
-The original audit found 238 checked task boxes and 19 unchecked boxes across
-nine dated implementation plans. Every unchecked box belonged to the hover
-actions plan, whose runtime behavior and tests were already complete. All other
-plans recorded completed work.
-
-Because implementation plans are execution artifacts rather than current
-product documentation, they were removed after this audit. Git history retains
-their task-by-task detail. The eight design records with durable architectural
-value now live in `docs/design/`, with their implementation date and commit
-listed in `docs/design/README.md`.
-
-## TODO, FIXME, HACK, WIP, and Roadmap Audit
-
-### Confirmed non-backlog markers
-
-| Marker                                                                                                                      | Why it is not unfinished work                                                                                                                                                                                                                                                         |
-| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `playground/index.ts:148-150` (`TODO`, `TODO`, `FIXME`)                                                                     | The preceding heading says “Colors in comments (should be highlighted)” at lines 144-146. The three color matches are recorded in `tests/integration/__snapshots__/playground/index.ts.snap`, and the fixture is enforced by `tests/integration/playground-snapshot.test.ts:188-202`. |
-| `playground/css.css:354-355` (two `TODO`s)                                                                                  | The preceding line says “Colors in comments should also be highlighted.” Both matches are recorded in `tests/integration/__snapshots__/playground/css.css.snap`.                                                                                                                      |
-| `src/features/highlight/decorations/marker-types.ts:49` (`hack`)                                                            | This is an explanatory comment for the implemented underline rendering workaround, not a missing task; the assignment follows immediately at line 50.                                                                                                                                 |
-| “first roadmap phase” / “later optimization work” in `docs/design/2026-07-11-quality-hardening-design.md:11-14` and line 44 | The phase's concrete deliverables are implemented. No standalone roadmap or later-feature list exists.                                                                                                                                                                                |
-| “later navigation work” in `docs/design/2026-07-11-dtcg-yaml-design.md:76-80`                                               | Navigation was a later phase and is now implemented in `src/features/color-navigation/**`.                                                                                                                                                                                            |
-
-No actionable `TODO`, `FIXME`, `XXX`, `HACK`, `WIP`, “coming soon,” “not
-implemented,” or equivalent marker was found in tracked runtime source.
-
-### Explicit non-goals, not missing features
-
-The following exclusions are intentional and should not be reported as planned
-but unfinished functionality:
-
-- Hover actions exclude a webview, arbitrary alpha input, extra HEX case
-  buttons, and lossless preservation of every source syntax
-  (`docs/design/2026-07-07-hover-color-actions-design.md:250-258`).
-- Navigation excludes find-all-references, rename, completion, diagnostics, and
-  a persistent workspace index
-  (`docs/design/2026-07-11-contextual-color-navigation-design.md:26-28`).
-- DTCG excludes `$extends`, remote/package references, untyped-object guessing,
-  YAML-wide arbitrary strings, token rewriting, and YAML-anchor aliases
-  (`docs/design/2026-07-11-dtcg-yaml-design.md:51-58`).
-- The native provider excludes replacing built-in providers, default-on native
-  picker behavior, and new syntaxes
-  (`docs/design/2026-07-11-native-color-provider-design.md:31-37`).
-- Quality hardening excludes browser pixel tests, optimization, CI performance
-  budgets, and parser-result changes
-  (`docs/design/2026-07-11-quality-hardening-design.md:31-36`).
-- Workspace palette/contrast excludes a persistent Tree/Activity Bar view,
-  continuous indexing, automatic diagnostic rewrites, runtime/cascade/image
-  inference, APCA, and out-of-workspace scanning
-  (`docs/design/2026-07-12-workspace-palette-contrast-design.md:328-336`).
-
-Some exclusions in the oldest hover design, notably a color picker and palette
-view (`docs/design/2026-07-07-hover-color-actions-design.md:255-256`),
-were later delivered as separate opt-in/Quick Pick features. This reinforces
-that the dated design files describe phase boundaries rather than a current
-backlog.
-
-## Remaining Gaps
-
-### Confirmed feature gaps
-
-None found.
-
-### Verification limitation
-
-1. **Fresh extension-host verification remains separate from this audit.** The
-   Electron and Web smoke suites exist and cover activation, commands, actual
-   highlighting, and a contrast diagnostic, but this audit freshly ran only the
-   unit suite. This is a verification limitation, not evidence of a feature
-   gap.
-
-## Verdict
-
-Yes: the functionality currently promised by README, extension metadata, and
-the retained design records is present in the repository. There is no confirmed
-TODO or planned-but-unimplemented feature. Completed execution plans have been
-removed; the only unfinished-looking items are deliberate playground
-TODO/FIXME fixtures and explicit non-goals.
+This audit verifies the repository contract and local release preparation. It
+does not assert a Marketplace publication or GitHub release for v0.9.0.

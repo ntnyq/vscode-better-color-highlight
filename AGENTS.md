@@ -29,6 +29,12 @@ Use `pnpm` for all package tasks.
 - `pnpm typecheck`: run TypeScript checks with `tsc --noEmit`.
 - `pnpm run pack`: create a `.vsix` package with `vsce` (the `run` is required
   to distinguish the script from pnpm's package-archive command).
+- `pnpm release:version --release <version> --yes`: set the release version and
+  regenerate metadata/build output without committing, tagging, or pushing.
+- `pnpm release:check`: run formatting, lint, types, all unit/desktop/Web tests,
+  and installed-VSIX checks against the current version.
+- `pnpm release:publish`: run the complete checks, then publish the current
+  version to Marketplace without another version bump. See `docs/releasing.md`.
 
 ## Coding Style & Naming Conventions
 

@@ -1,7 +1,9 @@
-# Next release notes
+# v0.9.0 release preparation
 
-Status: unreleased changes after [v0.8.0](releases/v0.8.0.md). The package and
-generated extension metadata remain at 0.8.0 until the next version is chosen.
+Status: prepared locally, not published. The package and generated extension
+metadata declare **0.9.0**. Changes are relative to
+[v0.8.0](releases/v0.8.0.md). Marketplace publication and Git tag/release
+creation are explicitly outside this preparation run.
 
 ## User-facing fixes
 
@@ -23,6 +25,13 @@ generated extension metadata remain at 0.8.0 until the next version is chosen.
 
 ## New features
 
+- Add bounded `round()`, `mod()`, and `rem()` in absolute/relative CSS channels
+  and alpha, plus static math in `color-mix()` weights. Preserve typed units,
+  rounding strategies, signed zero, variable substitution, and complete
+  expression edits. Clamp finite computed weights only after evaluating the
+  entire calculation; reject out-of-range literal weights, invalid units,
+  zero steps, and non-finite calculations. See
+  [the stepped math design](design/2026-10-25-css-stepped-math.md).
 - Add static `calc()`, `min()`, `max()`, and `clamp()` in absolute CSS color
   channels and alpha, including legal legacy RGB/HSL math arguments. Preserve
   nested separators, channel types, percentage scales, missing components,
@@ -51,6 +60,16 @@ generated extension metadata remain at 0.8.0 until the next version is chosen.
 
 ## Development and validation
 
+- Upgrade development dependencies and refresh the lockfile; pin pnpm 12.15.0.
+- Make `pnpm release:check` cover unit/snapshot, desktop/Web, and installed-VSIX
+  checks in addition to formatting, lint, and types. `pnpm release:publish`
+  validates the current version before uploading without bumping it again.
+  Version preparation no longer commits, tags, or pushes. See
+  [the release workflow](releasing.md).
+- Run unit tests before launching the desktop/Web hosts to avoid CPU contention
+  with existing parser performance-regression assertions.
+- Refresh the feature audit and design index, and add stepped-math, computed
+  weight, malformed-input, and external CSS-variable benchmark fixtures.
 - Archive the published v0.8.0 release record and verify the Marketplace and
   GitHub publication states independently.
 - Add desktop and Chromium Web extension-host coverage for Compose, Android
@@ -79,7 +98,40 @@ generated extension metadata remain at 0.8.0 until the next version is chosen.
   cases. Benchmark normal expressions, bounded rejection, unclosed starts,
   and excessive top-level arguments.
 
-## Validation on 2026-10-05
+## Validation on 2026-10-25
+
+Validated the 0.9.0 package on macOS arm64 (Apple M1 Pro), Node 24.22.1,
+pnpm 12.15.0, Vitest 5.0.5, and VS Code 1.143.1:
+
+- `pnpm release:check` passed formatting, lint, types, 80 unit/snapshot files
+  with 2,003 tests, Electron and Chromium Web hosts, and isolated VSIX
+  installation/activation checks.
+- Desktop/Web editing includes 16 native fixtures and ten CSS math fixtures,
+  with picker presentations and real hover alpha actions. Shared host and
+  installed-package checks cover stepped math, computed variable weights,
+  rejection of invalid math, and recovery of independently detectable colors.
+- `pnpm bench` passed all 23 fixtures in one run after the build/host checks.
+  The refreshed [baseline](performance-baseline.md#complete-baseline-2026-10-25)
+  records median/p99 timings for normal and malformed expressions, native
+  colors, Tailwind, and local/external variable resolution.
+- `pnpm run pack --out vscode-better-color-highlight-0.9.0.vsix` produced the
+  prepared artifact below. Archive inspection confirmed the version, both
+  production runtime entries, and exactly eight files. Runtime bundle bytes
+  match the validated build; test bundles and development dependencies are
+  excluded.
+
+Prepared artifact: `vscode-better-color-highlight-0.9.0.vsix`, 237,227 bytes.
+
+SHA-256:
+
+```text
+7a3741446960416399a55b9221c62febf68f2a022306735949aed5f1787a0a4f
+```
+
+This hash identifies the local prepared artifact. No Marketplace upload,
+Git tag, push, or GitHub release was performed for 0.9.0.
+
+## Historical validation on 2026-10-05
 
 Validated on macOS arm64 with Node 24.21.0, user-managed pnpm 12.9.1, and
 VS Code 1.140.0:
@@ -96,17 +148,14 @@ VS Code 1.140.0:
 
 ## Next release checks
 
-Run `pnpm release:check`, the full `pnpm test`, and `pnpm test:package` before
-publication. `pnpm release:check` alone covers formatting, lint, types, and
-unit tests; it does not run the desktop/Web or installed-package checks.
+The version has already been chosen. Use `pnpm release:check` to repeat the
+complete validation and `pnpm run pack` to produce a reviewable VSIX. When
+publication is separately authorized, `pnpm release:publish` checks and uploads
+the current 0.9.0 version; do not invoke another version bump. Verify Marketplace
+and GitHub independently before archiving these notes. Follow
+[the release workflow](releasing.md) for commit and tag ordering.
 
-Choose the next version once, regenerate metadata with `pnpm release:build`,
-and repeat the full checks against the final versioned package. `pnpm release`
-and `pnpm release:version` both invoke a version bump, so do not use them to
-publish an already-versioned VSIX. Confirm the Marketplace version and the
-separate GitHub tag/release after publication, then archive these notes.
-
-Android resource-reference navigation (P2), static Unity colors (P3), relative
-CSS comparison math (P4), and absolute CSS math (P5) are implemented. Additional
-functions such as `round()`, `mod()`, and `rem()`, plus math in `color-mix()`
-weights, remain future candidates.
+Android resource-reference navigation, static Unity colors, comparison,
+absolute and stepped CSS math, and computed mix weights are implemented.
+Additional math functions/constants, general unit algebra, and broader native
+color-space support remain candidates requiring separate scope decisions.
