@@ -185,6 +185,7 @@ export function provideColorPresentations(
       },
       sourceText,
       sourceKind,
+      context.document.languageId,
     )
     return value ? [createColorPresentation(value, context.range)] : []
   }

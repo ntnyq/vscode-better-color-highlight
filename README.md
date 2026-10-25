@@ -442,7 +442,11 @@ These previews convert to sRGB and clip channels outside its gamut. Picker
 edits convert the selected sRGB color back into the original space, including
 HSL/HSV coordinates in that RGB space; alpha commands change only alpha,
 retaining original component text even for colors outside the sRGB gamut.
-Space arguments, names, comments, suffixes, and trailing commas are retained.
+When picker RGB channels equal the current sRGB preview, only alpha is edited;
+an unchanged preview returns the exact original source, preserving wide-gamut
+components and source precision. A distinct RGB selection replaces the color.
+Space arguments, names, comments (including nested Kotlin block comments),
+suffixes, and trailing commas are retained.
 An omitted alpha is appended as a named argument when `colorSpace` is named.
 Conversion uses floating-point math and up to six decimal places on picker
 edits; it does not emulate Compose's packed FP16/alpha storage quantization.
@@ -452,7 +456,8 @@ spaces, and imported aliases are skipped. See [the scope and editing design](doc
 Dynamic arguments, custom Compose color spaces, import aliases, asset colors,
 system colors are outside this editing subset. XML `@color/name` navigation is
 described in [Color navigation](#-color-navigation).
-Each native call is bounded to 4,096 characters.
+Each native call is bounded to 4,096 characters. Android/Compose edits that would
+produce a call beyond that limit are not offered or applied.
 
 </details>
 

@@ -16,14 +16,21 @@ export interface StaticCall {
 
 export interface NativeColor {
   readonly color: RgbaColor
-  readonly format: (color: RgbaColor) => string
+  readonly format: (color: RgbaColor) => string | null
   /**
    * Edit alpha without converting or rounding the original color components.
    */
-  readonly formatAlpha?: (alpha: number) => string
+  readonly formatAlpha?: (alpha: number) => string | null
 }
 
-interface StaticCallScanOptions {
+interface StaticCallCommentOptions {
+  /**
+   * Kotlin block comments may contain further block comments.
+   */
+  readonly nestedBlockComments?: boolean
+}
+
+interface StaticCallScanOptions extends StaticCallCommentOptions {
   /**
    * Disable for literal-only calls to stop invalid nested candidates early.
    */
@@ -60,11 +67,16 @@ export function scanStaticCalls(
       } else if (char === '"' || char === "'") {
         quote = char
       } else if (text.startsWith('/*', index)) {
-        const close = text.slice(index + 2, limit).indexOf('*/')
-        if (close === -1) {
+        const end = getBlockCommentEnd(
+          text,
+          index,
+          limit,
+          options.nestedBlockComments,
+        )
+        if (end === null) {
           break
         }
-        index += close + 3
+        index = end - 1
       } else if (text.startsWith('//', index)) {
         const close = text.slice(index + 2, limit).indexOf('\n')
         if (close === -1) {
@@ -92,7 +104,10 @@ export function scanStaticCalls(
 /**
  * Parse flat, literal native arguments and retain spans for source edits.
  */
-export function parseStaticCall(source: string): StaticCall | null {
+export function parseStaticCall(
+  source: string,
+  options: StaticCallCommentOptions = {},
+): StaticCall | null {
   const head = source.match(/^(?<name>[\w.]+)\s*\(/u)
   if (
     !head?.groups?.name ||
@@ -101,9 +116,10 @@ export function parseStaticCall(source: string): StaticCall | null {
   ) {
     return null
   }
-  const masked = source.replaceAll(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/gu, comment =>
-    ' '.repeat(comment.length),
-  )
+  const masked = maskStaticCallComments(source, options)
+  if (!masked?.endsWith(')')) {
+    return null
+  }
   const body = masked.slice(head[0].length, -1)
   const args: StaticArgument[] = []
   const parts = body.split(',')
@@ -130,6 +146,79 @@ export function parseStaticCall(source: string): StaticCall | null {
     offset += part.length + 1
   }
   return { name: head.groups.name, args, source }
+}
+
+/**
+ * Find a complete block comment without reading beyond the call's limit.
+ */
+function getBlockCommentEnd(
+  text: string,
+  start: number,
+  limit: number,
+  nested = false,
+): number | null {
+  let depth = 1
+  for (let index = start + 2; index + 1 < limit; index++) {
+    if (text.startsWith('*/', index)) {
+      if (--depth === 0) {
+        return index + 2
+      }
+      index++
+    } else if (nested && text.startsWith('/*', index)) {
+      depth++
+      index++
+    }
+  }
+  return null
+}
+
+/**
+ * Mask complete comments while retaining UTF-16 spans and quoted literals.
+ */
+function maskStaticCallComments(
+  source: string,
+  options: StaticCallCommentOptions,
+): string | null {
+  let masked = ''
+  let cursor = 0
+  let quote = ''
+  for (let index = 0; index < source.length; index++) {
+    const char = source[index]
+    if (quote) {
+      if (char === '\\') {
+        index++
+      } else if (char === quote) {
+        quote = ''
+      }
+      continue
+    }
+    if (char === '"' || char === "'") {
+      quote = char
+      continue
+    }
+    let end: number
+    if (source.startsWith('/*', index)) {
+      const commentEnd = getBlockCommentEnd(
+        source,
+        index,
+        source.length,
+        options.nestedBlockComments,
+      )
+      if (commentEnd === null) {
+        return null
+      }
+      end = commentEnd
+    } else if (source.startsWith('//', index)) {
+      const lineEnd = source.indexOf('\n', index + 2)
+      end = lineEnd === -1 ? source.length : lineEnd
+    } else {
+      continue
+    }
+    masked += source.slice(cursor, index) + ' '.repeat(end - index)
+    cursor = end
+    index = end - 1
+  }
+  return quote ? null : masked + source.slice(cursor)
 }
 
 /**

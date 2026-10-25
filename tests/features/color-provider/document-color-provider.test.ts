@@ -655,6 +655,16 @@ describe('document color provider', () => {
     ],
     ['java', 'Color.rgb(255, 0, 0)', 'Color.argb(128, 255, 0, 0)'],
     [
+      'java',
+      'android.graphics.Color.rgb(255, /* outer /* inner */ 0, 0)',
+      'android.graphics.Color.argb(128, 255, /* outer /* inner */ 0, 0)',
+    ],
+    [
+      'kotlin',
+      'android.graphics.Color.rgb(255, /* outer /* inner */ fake=2) */ 0, 0)',
+      'android.graphics.Color.argb(128, 255, /* outer /* inner */ fake=2) */ 0, 0)',
+    ],
+    [
       'swift',
       'Color(red: 1, green: 0, blue: 0)',
       'Color(red: 1, green: 0, blue: 0, opacity: 0.5)',
@@ -684,6 +694,48 @@ describe('document color provider', () => {
       ])
     },
   )
+
+  it.each([0.123, 0.5])(
+    'preserves Compose preview identity when picker alpha is %s',
+    async alpha => {
+      const { provideColorPresentations } =
+        await import('../../../src/features/color-provider/document-color-provider')
+      const source =
+        'Color(1.0000000F,0.010000001f,0F,alpha=.123456789F,colorSpace=ColorSpaces.DisplayP3)'
+      const range = { id: 'source-range' } as unknown as Vscode.Range
+      const nativeDocument = {
+        ...document,
+        getText: () => source,
+        languageId: 'kotlin',
+      } as unknown as Vscode.TextDocument
+      const result = provideColorPresentations(
+        new TestColor(1, 0, 0, alpha) as unknown as Vscode.Color,
+        { document: nativeDocument, range },
+      )
+      expect(result.map(presentation => presentation.label)).toStrictEqual([
+        alpha === 0.123 ? source : source.replace('.123456789F', '0.5F'),
+      ])
+    },
+  )
+
+  it('offers no Compose picker edit when the replacement would exceed the call limit', async () => {
+    const { provideColorPresentations } =
+      await import('../../../src/features/color-provider/document-color-provider')
+    const head = 'Color(1f,0f,0f,colorSpace=ColorSpaces.DisplayP3/*'
+    const source = `${head}${'a'.repeat(4096 - head.length - 3)}*/)`
+    const range = { id: 'source-range' } as unknown as Vscode.Range
+    const nativeDocument = {
+      ...document,
+      getText: () => source,
+      languageId: 'kotlin',
+    } as unknown as Vscode.TextDocument
+    expect(
+      provideColorPresentations(
+        new TestColor(0, 1, 0, 0.5) as unknown as Vscode.Color,
+        { document: nativeDocument, range },
+      ),
+    ).toStrictEqual([])
+  })
 
   it('preserves floating-point channels in Dart picker presentations', async () => {
     const { provideColorPresentations } =

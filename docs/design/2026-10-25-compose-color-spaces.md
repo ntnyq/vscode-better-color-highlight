@@ -59,6 +59,19 @@ at one; append omitted alpha only when transparency is needed. Append named
 `alpha = ...` when the call contains named arguments, allowing insertion after
 a named `colorSpace` without accidentally binding a fifth positional float.
 
+Kotlin scanning and argument masking share nested block-comment boundaries.
+Parameters and closing parentheses within any comment level cannot create a
+match or change its range. Java retains non-nested block-comment semantics.
+Picker formatting passes the document language through the source adapter;
+alpha commands use the active document's language before the existing URI/text
+freshness check. Re-parsing or validating a replacement uses that same language,
+including Kotlin calls to Android framework factories.
+Generated Android/Compose replacements are checked against the same literal
+call bounds before they are returned. If inserting alpha or expanding numeric
+tokens would exceed 4,096 characters, the picker offers no edit and alpha
+commands leave the source unchanged. Comments and whitespace are not removed
+to fit the limit.
+
 Changing alpha must not convert a clipped sRGB preview back to the source
 space: that would destroy wide-gamut colors. `NativeColor.formatAlpha` is an
 optional adapter hook used by the existing alpha command. This adapter edits
@@ -66,8 +79,14 @@ only the alpha argument, or inserts it when missing, leaving every original
 color-component token unchanged. Other native adapters retain their existing
 behavior.
 
-Previews are sRGB approximations. Selecting a new color replaces the original
-color with the selected sRGB color represented in its original space. Picker
+Previews are sRGB approximations. For explicit spaces, picker callbacks whose
+RGB channels equal the current clipped/rounded preview change only alpha.
+Matching alpha as well returns the original source unchanged, including source
+alpha precision beyond the preview's three decimals. Channel comparison allows
+only normalization round-trip floating-point noise, not byte-wide or perceptual
+tolerances. Alpha commands at a clamped endpoint also preserve the original
+text. A distinct RGB selection replaces the original color with the selected
+sRGB color represented in its original space. Picker
 serialization uses the existing six-decimal formatter and shared floating-point
 converter; matrix noise and display rounding may affect the last decimal.
 Compose runtime FP16 RGB, 8/10-bit alpha storage and device rendering intents
@@ -83,8 +102,12 @@ snapshots exercise registry arbitration and complete ranges. Provider tests
 verify source presentations. Desktop and Web fixtures cover actual picker and
 hover-alpha commands, wide-gamut source preservation, LF/CRLF, UTF-16 ranges,
 stale/repeated command rejection, and no edits outside the call.
+Review regressions also cover 9,000 cube/near-neutral picker round trips,
+preview identity and fractional RGB edits, nested-comment decoys, exact-limit
+replacements, and rejected output growth.
 
 ## Sources
 
 - [AndroidX Color constructors and HSL/HSV factories](https://github.com/androidx/androidx/blob/androidx-main/compose/ui/ui-graphics/src/commonMain/kotlin/androidx/compose/ui/graphics/Color.kt)
 - [AndroidX predefined color-space definitions](https://github.com/androidx/androidx/blob/androidx-main/compose/ui/ui-graphics/src/commonMain/kotlin/androidx/compose/ui/graphics/colorspace/ColorSpaces.kt)
+- [Kotlin nested block comments](https://kotlinlang.org/docs/basic-syntax.html#comments)

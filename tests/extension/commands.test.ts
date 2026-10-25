@@ -174,6 +174,7 @@ vi.mock(
 describe('useCommands', () => {
   beforeEach(() => {
     sourceText = '.box { color: #ff0000; }'
+    activeTextEditor.document.languageId = 'css'
     configSnapshot.enableHover = true
     configSnapshot.useARGB = false
   })
@@ -752,6 +753,35 @@ describe('useCommands', () => {
     expect(replace).toHaveBeenCalledWith(expect.any(Object), '#40ff0000')
   })
 
+  it.each([
+    ['java', '/* outer /* inner */'],
+    ['kotlin', '/* outer /* inner */ fake=2) */'],
+  ])(
+    'retains %s comment semantics in Android alpha commands',
+    async (languageId, comment) => {
+      vi.resetModules()
+      registeredCommands.clear()
+      edit.mockClear()
+      replace.mockClear()
+      sourceText = `android.graphics.Color.rgb(255, ${comment} 0, 0)`
+      activeTextEditor.document.languageId = languageId
+      const { useCommands } = await import('../../src/extension/commands')
+      useCommands()
+      await registeredCommands.get('color-highlight.adjustColorAlpha')?.({
+        delta: -0.1,
+        originalColor: 'rgb(255, 0, 0)',
+        originalText: sourceText,
+        range: { start: 0, end: sourceText.length },
+        sourceKind: 'android-color',
+        uri: 'file:///tmp/example.css',
+      })
+      expect(replace).toHaveBeenCalledWith(
+        expect.any(Object),
+        `android.graphics.Color.argb(230, 255, ${comment} 0, 0)`,
+      )
+    },
+  )
+
   it('preserves Dart syntax when adjusting constructor alpha', async () => {
     vi.resetModules()
     registeredCommands.clear()
@@ -777,30 +807,34 @@ describe('useCommands', () => {
   })
 
   it.each([
-    ['android-color', 'Color(1f, 0f, 0f)', 'Color(1f, 0f, 0f, 0.5f)'],
+    ['android-color', 'kotlin', 'Color(1f, 0f, 0f)', 'Color(1f, 0f, 0f, 0.5f)'],
     [
       'unity-color',
+      'csharp',
       'new UnityEngine.Color(1f, 0F, 0f)',
       'new UnityEngine.Color(1f, 0F, 0f, 0.5f)',
     ],
     [
       'unity-color',
+      'csharp',
       'new UnityEngine.Color32(255, 0, 0, 255)',
       'new UnityEngine.Color32(255, 0, 0, 128)',
     ],
     [
       'swift-color',
+      'swift',
       'Color(red: 1, green: 0, blue: 0)',
       'Color(red: 1, green: 0, blue: 0, opacity: 0.5)',
     ],
   ])(
     'adjusts alpha using %s source metadata',
-    async (sourceKind, original, expected) => {
+    async (sourceKind, languageId, original, expected) => {
       vi.resetModules()
       registeredCommands.clear()
       edit.mockClear()
       replace.mockClear()
       sourceText = original
+      activeTextEditor.document.languageId = languageId
       const { useCommands } = await import('../../src/extension/commands')
       useCommands()
       await registeredCommands.get('color-highlight.adjustColorAlpha')?.({

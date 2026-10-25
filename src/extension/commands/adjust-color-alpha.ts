@@ -1,3 +1,4 @@
+import { window } from 'vscode'
 import { formatColorForSourceWithAlphaDelta } from '../../engine/presentation/source-color'
 import {
   formatDartColorWithAlphaDelta,
@@ -36,6 +37,7 @@ export async function adjustColorAlpha(value: unknown) {
       payload.delta,
       payload.originalText,
       payload.sourceKind,
+      window.activeTextEditor?.document.languageId,
     )
     if (sourceReplacement) {
       await replaceActiveEditorRange(payload, sourceReplacement)

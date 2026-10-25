@@ -92,15 +92,17 @@ export function isArgbSourceKind(sourceKind?: ColorSourceKind): boolean {
 
 /**
  * Format a resolved color using its original language-specific syntax.
+ * Pass the document language to retain Kotlin/Java comment semantics.
  */
 export function formatColorForSource(
   color: RgbaColor,
   sourceText: string,
   sourceKind: ColorSourceKind,
+  languageId?: string,
 ): string | null {
   switch (sourceKind) {
     case 'android-color': {
-      return parseAndroidColor(sourceText)?.format(color) ?? null
+      return parseAndroidColor(sourceText, languageId)?.format(color) ?? null
     }
     case 'swift-color': {
       return parseSwiftColor(sourceText)?.format(color) ?? null
@@ -122,11 +124,13 @@ export function formatColorForSource(
 
 /**
  * Adjust alpha while preserving the original language-specific syntax.
+ * Pass the document language to retain Kotlin/Java comment semantics.
  */
 export function formatColorForSourceWithAlphaDelta(
   delta: number,
   sourceText: string,
   sourceKind: ColorSourceKind,
+  languageId?: string,
 ): string | null {
   if (sourceKind === 'dart') {
     return formatDartColorWithAlphaDelta(delta, sourceText)
@@ -138,7 +142,7 @@ export function formatColorForSourceWithAlphaDelta(
     sourceKind === 'unity-color'
   ) {
     const parsers = {
-      'android-color': parseAndroidColor,
+      'android-color': (text: string) => parseAndroidColor(text, languageId),
       'swift-color': parseSwiftColor,
       'unity-color': parseUnityColor,
     }

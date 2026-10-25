@@ -1,5 +1,8 @@
 import { hexARGBToRgb, rgbString } from '../../shared/color'
-import type { RgbaColor } from '../../shared/color/presentation'
+import {
+  parseResolvedColor,
+  type RgbaColor,
+} from '../../shared/color/presentation'
 import type { ColorMatch, StrategyContext } from '../detection'
 import { convertCssColor, createCssColor } from './css-color/space'
 import {
@@ -16,6 +19,7 @@ import {
 
 const ANDROID_CALL =
   /(?:androidx\.compose\.ui\.graphics\.|android\.graphics\.)?Color(?:\.(?:hsl|hsv|rgb|argb|parseColor))?\s*\(/gu
+const PICKER_CHANNEL_EPSILON = Number.EPSILON * 255
 
 /**
  * Detect literal Compose constructors and Android framework color factories.
@@ -31,7 +35,9 @@ export function findAndroidColors(
   ) {
     return []
   }
-  return scanStaticCalls(text, ANDROID_CALL).flatMap(candidate => {
+  return scanStaticCalls(text, ANDROID_CALL, {
+    nestedBlockComments: context?.languageId !== 'java',
+  }).flatMap(candidate => {
     const parsed = parseAndroidColor(
       candidate.source,
       context?.languageId ?? 'kotlin',
@@ -59,7 +65,9 @@ export function parseAndroidColor(
   source: string,
   languageId = 'kotlin',
 ): NativeColor | null {
-  const call = parseStaticCall(source)
+  const call = parseStaticCall(source, {
+    nestedBlockComments: languageId === 'kotlin',
+  })
   if (
     !call ||
     !/^(?:(?:androidx\.compose\.ui\.graphics|android\.graphics)\.)?Color(?:\.(?:hsl|hsv|rgb|argb|parseColor))?$/u.test(
@@ -83,7 +91,7 @@ export function parseAndroidColor(
   }
 
   if (method === 'parseColor') {
-    return parseAndroidHexCall(call)
+    return parseAndroidHexCall(call, languageId)
   }
 
   const isHue = method === 'hsl' || method === 'hsv'
@@ -174,23 +182,38 @@ export function parseAndroidColor(
       ? `${call.args.some(arg => arg.name) ? 'alpha = ' : ''}${formatNativeNumber(isFloat ? nextAlpha : Math.round(nextAlpha * 255), isFloat ? 'f' : '')}`
       : undefined
   const alphaArg = args.get('alpha')
+  const formatAlpha = (nextAlpha: number) =>
+    nextAlpha === alpha
+      ? call.source
+      : rewriteAndroidArguments(
+          call,
+          alphaArg
+            ? new Map([
+                [alphaArg, formatNativeNumber(nextAlpha, alphaArg.value)],
+              ])
+            : new Map(),
+          languageId,
+          appendAlpha(nextAlpha),
+        )
+  const preview = spaceArg
+    ? parseResolvedColor(rgbString(color.r, color.g, color.b, color.a))
+    : null
   return {
     color,
-    ...(spaceArg
-      ? {
-          formatAlpha: (nextAlpha: number) =>
-            rewriteStaticArguments(
-              call,
-              alphaArg
-                ? new Map([
-                    [alphaArg, formatNativeNumber(nextAlpha, alphaArg.value)],
-                  ])
-                : new Map(),
-              appendAlpha(nextAlpha),
-            ),
-        }
-      : {}),
+    formatAlpha: spaceArg ? formatAlpha : undefined,
     format: next => {
+      // Compare the actual picker preview, including clipping/rounding. Only
+      // tolerate normalization round-trip noise, not a visible color change.
+      if (
+        preview &&
+        (['r', 'g', 'b'] as const).every(
+          channel =>
+            Math.abs(next[channel] - preview[channel]) <=
+            PICKER_CHANNEL_EPSILON,
+        )
+      ) {
+        return next.a === preview.a ? call.source : formatAlpha(next.a)
+      }
       // Picker channels are sRGB; HSL/HSV must describe the original RGB space.
       const nativeRgb = convertCssColor(
         createCssColor('srgb', [next.r / 255, next.g / 255, next.b / 255]),
@@ -234,14 +257,41 @@ export function parseAndroidColor(
         )
         // Insert alpha before the original argument text so comments stay
         // attached to their channels and existing numeric suffixes survive.
-        return rewriteStaticArguments(call, replacements).replace(
+        const replacement = rewriteStaticArguments(call, replacements).replace(
           /\.rgb(?<opening>\s*\()/u,
           `.argb$<opening>${alphaArgument}, `,
         )
+        return parseStaticCall(replacement, {
+          nestedBlockComments: languageId === 'kotlin',
+        })
+          ? replacement
+          : null
       }
-      return rewriteStaticArguments(call, replacements, appendAlpha(next.a))
+      return rewriteAndroidArguments(
+        call,
+        replacements,
+        languageId,
+        appendAlpha(next.a),
+      )
     },
   }
+}
+
+/**
+ * Keep generated edits within the same literal-call bounds as detected input.
+ */
+function rewriteAndroidArguments(
+  call: StaticCall,
+  values: ReadonlyMap<StaticArgument, string>,
+  languageId: string,
+  append?: string,
+): string | null {
+  const result = rewriteStaticArguments(call, values, append)
+  return parseStaticCall(result, {
+    nestedBlockComments: languageId === 'kotlin',
+  })
+    ? result
+    : null
 }
 
 /**
@@ -306,7 +356,10 @@ function resolveComposeColorSpace(
 /**
  * Keep Android parseColor strings in their documented alpha-first byte order.
  */
-function parseAndroidHexCall(call: StaticCall): NativeColor | null {
+function parseAndroidHexCall(
+  call: StaticCall,
+  languageId: string,
+): NativeColor | null {
   const arg = call.args[0]
   if (
     call.args.length !== 1 ||
@@ -331,7 +384,11 @@ function parseAndroidHexCall(call: StaticCall): NativeColor | null {
       if (/[A-F]/u.test(arg.value) && !/[a-f]/u.test(arg.value)) {
         hex = hex.toUpperCase()
       }
-      return rewriteStaticArguments(call, new Map([[arg, `"#${hex}"`]]))
+      return rewriteAndroidArguments(
+        call,
+        new Map([[arg, `"#${hex}"`]]),
+        languageId,
+      )
     },
   }
 }

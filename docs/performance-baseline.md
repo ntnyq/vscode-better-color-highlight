@@ -244,3 +244,16 @@ threshold or claimed performance change.
 Unit tests separately assert conversion, rejection, source range and bounded
 recovery. Raw statistics are retained under ignored `.benchmarks/` files named
 `compose-static-color-spaces.json` and `compose-unsupported-color-spaces.json`.
+
+### Compose editing review, 2026-10-25
+
+All 45 fixtures passed after the comment-scanning and editing review fixes.
+The same environment ran this full batch alongside local validation; these
+samples are informational and do not establish a change against the earlier
+focused run.
+
+| Fixture                                          | Median (ms) | p99 (ms) |
+| ------------------------------------------------ | ----------: | -------: |
+| 400 Compose and 400 Swift component constructors |       3.004 |    6.359 |
+| 1,200 explicit-space RGB/HSL/HSV calls           |       6.437 |   22.845 |
+| 1,200 unsupported color-space overloads          |       2.457 |    5.841 |

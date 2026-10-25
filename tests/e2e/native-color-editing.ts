@@ -33,6 +33,7 @@ interface NativeColorFixture {
   readonly genericEdits?: boolean
   readonly pickerColor?: Color
   readonly sourceColor?: Color
+  readonly preservesPickerNoop?: boolean
 }
 
 const NATIVE_COLOR_FIXTURES: readonly NativeColorFixture[] = [
@@ -265,6 +266,57 @@ const NATIVE_COLOR_FIXTURES: readonly NativeColorFixture[] = [
       'Color.hsv(hue = 0f, saturation = 1f, value = 1f, colorSpace = ColorSpaces.DisplayP3, alpha = 0.9f)',
   },
   {
+    name: 'Compose picker alpha-only and no-op preserve wide-gamut source precision',
+    languageId: 'kotlin',
+    source:
+      'Color(1.0000000F,0.010000001f,0F,alpha=.123456789F,colorSpace=ColorSpaces.DisplayP3)',
+    sourceColor: new Color(1, 0, 0, 0.123),
+    pickerColor: new Color(1, 0, 0, 0.5),
+    preservesPickerNoop: true,
+    afterPicker:
+      'Color(1.0000000F,0.010000001f,0F,alpha=0.5F,colorSpace=ColorSpaces.DisplayP3)',
+    afterAlpha:
+      'Color(1.0000000F,0.010000001f,0F,alpha=0.4F,colorSpace=ColorSpaces.DisplayP3)',
+  },
+  {
+    name: 'Compose nested comments do not bind fake parameters or truncate edits',
+    languageId: 'kotlin',
+    source:
+      'Color(1F,0f,0F, /* outer /* inner */\n alpha=.3f, colorSpace=ColorSpaces.Srgb) */ colorSpace=ColorSpaces.DisplayP3)',
+    pickerColor: new Color(0, 0, 0, 0.5),
+    afterPicker:
+      'Color(0F,0f,0F, /* outer /* inner */\n alpha=.3f, colorSpace=ColorSpaces.Srgb) */ colorSpace=ColorSpaces.DisplayP3, alpha = 0.5f)',
+    afterAlpha:
+      'Color(0F,0f,0F, /* outer /* inner */\n alpha=.3f, colorSpace=ColorSpaces.Srgb) */ colorSpace=ColorSpaces.DisplayP3, alpha = 0.4f)',
+    afterSourceAlpha:
+      'Color(1F,0f,0F, /* outer /* inner */\n alpha=.3f, colorSpace=ColorSpaces.Srgb) */ colorSpace=ColorSpaces.DisplayP3, alpha = 0.9f)',
+  },
+  {
+    name: 'Android Java non-nested comments survive picker and alpha commands',
+    languageId: 'java',
+    source: 'android.graphics.Color.rgb(255, /* outer /* inner */ 0, 0)',
+    afterPicker:
+      'android.graphics.Color.argb(128, 0, /* outer /* inner */ 255, 0)',
+    afterAlpha:
+      'android.graphics.Color.argb(103, 0, /* outer /* inner */ 255, 0)',
+    afterSourceAlpha:
+      'android.graphics.Color.argb(230, 255, /* outer /* inner */ 0, 0)',
+    byteAlpha: true,
+  },
+  {
+    name: 'Android Kotlin nested comments survive picker and alpha commands',
+    languageId: 'kotlin',
+    source:
+      'android.graphics.Color.rgb(255, /* outer /* inner */\n fake=2) */ 0, 0)',
+    afterPicker:
+      'android.graphics.Color.argb(128, 0, /* outer /* inner */\n fake=2) */ 255, 0)',
+    afterAlpha:
+      'android.graphics.Color.argb(103, 0, /* outer /* inner */\n fake=2) */ 255, 0)',
+    afterSourceAlpha:
+      'android.graphics.Color.argb(230, 255, /* outer /* inner */\n fake=2) */ 0, 0)',
+    byteAlpha: true,
+  },
+  {
     name: 'Android Java RGB to ARGB',
     languageId: 'java',
     source: 'android.graphics.Color.rgb(255, /* green */ 0, 0 // blue\n)',
@@ -466,6 +518,23 @@ async function assertNativeColorFixture(
       original,
       fixture.genericEdits,
     )
+    if (fixture.preservesPickerNoop) {
+      const presentations = await commands.executeCommand<ColorPresentation[]>(
+        'vscode.executeColorPresentationProvider',
+        original.color,
+        { uri: document.uri, range: original.range },
+      )
+      assertEqual(
+        presentations?.length,
+        1,
+        `${fixture.name}: no-op presentation`,
+      )
+      assertEqual(
+        presentations[0].label,
+        fixture.source,
+        `${fixture.name}: no-op source precision`,
+      )
+    }
     if (fixture.afterSourceAlpha) {
       await commands.executeCommand(ALPHA_COMMAND, staleAlphaPayload)
       assertEqual(

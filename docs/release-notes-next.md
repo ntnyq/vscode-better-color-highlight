@@ -13,6 +13,12 @@ version is chosen.
   and dynamic expressions are skipped. See [the scope and editing rules](design/2026-10-25-compose-color-spaces.md).
 - Cover Compose spaces with conversion/rejection/round-trip regressions,
   provider tests, playground snapshots, and LF/CRLF desktop/Web editing flows.
+- Preserve wide-gamut components when the picker changes only alpha, and keep
+  exact source text for unchanged previews or clamped alpha commands. Respect
+  nested Kotlin comments when finding complete calls and binding arguments.
+  Reject Android/Compose replacements exceeding the 4,096-character call bound.
+  Review coverage includes 9,000 picker round trips, near-black/white channels,
+  fractional edits, nested-comment decoys, output limits and real-host edits.
 - Support bounded CSS `abs()` and `sign()` in absolute/relative channels,
   alpha, and calculated mix weights. Preserve `abs()` result units and
   `sign()` signed zero; `sign()` always returns a number. Reject non-finite
@@ -46,7 +52,7 @@ version is chosen.
 
 ## Validation
 
-- Formatting, lint, types, 85 unit/snapshot files with 2,289 tests, stable
+- Formatting, lint, types, 86 unit/snapshot files with 2,331 tests, stable
   Electron/Chromium Web hosts, and installed-VSIX activation checks passed.
 - The shared desktop suite also passed locally with VS Code 1.140.0. CI tracks
   both versions on Windows and Ubuntu.
