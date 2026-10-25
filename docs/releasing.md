@@ -12,9 +12,11 @@ separate steps. Choose the version once and validate the final versioned tree.
 3. Run `pnpm release:check`. This checks formatting, lint, types, unit/snapshot
    tests, desktop and Chromium Web hosts, and an installed VSIX. Linux needs a
    display server, for example `xvfb-run -a pnpm release:check`.
-4. Run `pnpm run pack --out vscode-better-color-highlight-<version>.vsix`.
-   Record its SHA-256 and validation environment in the release notes. The
-   archive contains production bundles only; development test bundles and the
+4. Retain `dist/release.vsix`, the exact archive installed and validated by the
+   package test. Copy it to `vscode-better-color-highlight-<version>.vsix` when
+   a versioned filename is useful. Record its SHA-256 and validation environment
+   in the release notes. The archive contains production bundles only;
+   development test bundles and the
    test-only Kotlin language extension must stay excluded.
 5. Review and commit the complete release changes. Keep this commit available
    for the later version tag. A preparation-only run ends here.
@@ -26,12 +28,16 @@ continues to record informational measurements separately.
 ## Publish the prepared version
 
 With publisher credentials configured, run `pnpm release:publish`. It repeats
-the complete checks and uploads the current version using `vsce`. It never
-bumps the version. `release:upload` is the internal final upload step; do not
-use it as the public release entry point.
+the complete checks and uploads the retained `dist/release.vsix` using
+`vsce publish --packagePath`, without rebuilding or repackaging. It requires a
+clean committed tree before and after validation, and never bumps the version.
+`release:upload` is the internal final upload step; do not use it as the public
+release entry point. Generated metadata must match the package version.
 
 For a new, unversioned release, `pnpm release` combines the version prompt and
-checked publication. Do not use it after a version has already been prepared.
+complete preparation checks. It stops before publication so the final changes
+can be reviewed and committed. Do not use it after a version has already been
+prepared.
 
 Verify that Marketplace lists the expected version. Then create the matching
 `v<version>` tag on the release commit and push that commit and tag. Pushing

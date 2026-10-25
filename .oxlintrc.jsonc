@@ -105,6 +105,7 @@
     {
       "files": ["scripts/**/*.{js,ts}"],
       "rules": {
+        "node/no-top-level-await": "off",
         "no-console": "off",
         "import/no-default-export": "off",
         "import/no-nodejs-modules": "off",

@@ -22,6 +22,9 @@ creation are explicitly outside this preparation run.
   computed values above 100%, so `hwb(0 200% 100%)` previews as two-thirds gray.
 - Preserve extended HSL saturation and lightness during conversion, so
   calculated channels are not prematurely clipped before interpolation.
+- Preserve decimal `round()` grid points and ties, plus rounding direction when
+  a quotient underflows. Reject `mod()` results absorbed into the excluded
+  divisor boundary instead of producing an incorrect preview.
 
 ## New features
 
@@ -66,6 +69,10 @@ creation are explicitly outside this preparation run.
   validates the current version before uploading without bumping it again.
   Version preparation no longer commits, tags, or pushes. See
   [the release workflow](releasing.md).
+- Stop `pnpm release` after preparation so version changes can be committed.
+  Publication requires a clean committed tree and uploads the exact VSIX
+  retained after installation tests, without another build or package step.
+  Check generated metadata and package version consistency before publication.
 - Run unit tests before launching the desktop/Web hosts to avoid CPU contention
   with existing parser performance-regression assertions.
 - Refresh the feature audit and design index, and add stepped-math, computed
@@ -103,9 +110,12 @@ creation are explicitly outside this preparation run.
 Validated the 0.9.0 package on macOS arm64 (Apple M1 Pro), Node 24.22.1,
 pnpm 12.15.0, Vitest 5.0.5, and VS Code 1.143.1:
 
-- `pnpm release:check` passed formatting, lint, types, 80 unit/snapshot files
-  with 2,003 tests, Electron and Chromium Web hosts, and isolated VSIX
+- `pnpm release:check` passed formatting, lint, types, 81 unit/snapshot files
+  with 2,025 tests, Electron and Chromium Web hosts, and isolated VSIX
   installation/activation checks.
+- Review regressions cover decimal rounding grids/ties, quotient underflow,
+  unrepresentable modulo endpoints, committed/staged/untracked release sources,
+  Git's hidden-untracked configuration, the CLI boundary, and metadata versions.
 - Desktop/Web editing includes 16 native fixtures and ten CSS math fixtures,
   with picker presentations and real hover alpha actions. Shared host and
   installed-package checks cover stepped math, computed variable weights,
@@ -114,18 +124,18 @@ pnpm 12.15.0, Vitest 5.0.5, and VS Code 1.143.1:
   The refreshed [baseline](performance-baseline.md#complete-baseline-2026-10-25)
   records median/p99 timings for normal and malformed expressions, native
   colors, Tailwind, and local/external variable resolution.
-- `pnpm run pack --out vscode-better-color-highlight-0.9.0.vsix` produced the
-  prepared artifact below. Archive inspection confirmed the version, both
+- The installed/tested `dist/release.vsix` was copied unchanged to the
+  versioned artifact below. Archive inspection confirmed the version, both
   production runtime entries, and exactly eight files. Runtime bundle bytes
   match the validated build; test bundles and development dependencies are
   excluded.
 
-Prepared artifact: `vscode-better-color-highlight-0.9.0.vsix`, 237,227 bytes.
+Prepared artifact: `vscode-better-color-highlight-0.9.0.vsix`, 237,841 bytes.
 
 SHA-256:
 
 ```text
-7a3741446960416399a55b9221c62febf68f2a022306735949aed5f1787a0a4f
+b9b74ffb6f8a8e1f036d9ec3c4662db2b8b4f95a5c26b9d7d2282d816a7a9b03
 ```
 
 This hash identifies the local prepared artifact. No Marketplace upload,
@@ -149,7 +159,7 @@ VS Code 1.140.0:
 ## Next release checks
 
 The version has already been chosen. Use `pnpm release:check` to repeat the
-complete validation and `pnpm run pack` to produce a reviewable VSIX. When
+complete validation and retain `dist/release.vsix` as the verified artifact. When
 publication is separately authorized, `pnpm release:publish` checks and uploads
 the current 0.9.0 version; do not invoke another version bump. Verify Marketplace
 and GitHub independently before archiving these notes. Follow

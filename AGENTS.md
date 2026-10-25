@@ -34,7 +34,8 @@ Use `pnpm` for all package tasks.
 - `pnpm release:check`: run formatting, lint, types, all unit/desktop/Web tests,
   and installed-VSIX checks against the current version.
 - `pnpm release:publish`: run the complete checks, then publish the current
-  version to Marketplace without another version bump. See `docs/releasing.md`.
+  committed version to Marketplace using the exact tested VSIX, without another
+  version bump. See `docs/releasing.md`.
 
 ## Coding Style & Naming Conventions
 

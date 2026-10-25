@@ -55,6 +55,9 @@ settings. `tests/tooling/readme.test.ts` checks documentation/metadata contracts
 `pnpm release:check` now runs formatting, lint, types, the full `pnpm test`
 (unit/snapshot plus Electron/Chromium Web), and `pnpm test:package`. The release
 upload entry runs these checks against the current version before publishing.
+It requires a committed tree (including untracked files), checks generated
+metadata versions, and uploads the exact retained, installation-tested VSIX.
+The combined release command stops after preparation for review and commit.
 Version preparation regenerates metadata without creating commits, tags, or
 pushes. See [the release workflow](releasing.md).
 

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFile } from 'node:child_process'
-import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
+import { copyFile, mkdtemp, readdir, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import process from 'node:process'
@@ -48,7 +48,11 @@ try {
   const installedPath = join(extensionsDir, directory)
   const manifest = JSON.parse(
     await readFile(join(installedPath, 'package.json'), 'utf8'),
-  ) as { main: string; browser: string }
+  ) as { main: string; browser: string; version: string }
+  const sourceManifest = JSON.parse(
+    await readFile(join(rootDir, 'package.json'), 'utf8'),
+  ) as { version: string }
+  assert.equal(manifest.version, sourceManifest.version)
   for (const entry of [manifest.main, manifest.browser]) {
     const contents = await readFile(join(installedPath, entry))
     assert.ok(contents.length > 0)
@@ -67,8 +71,10 @@ try {
       extensionsDir,
     ],
   })
+  // Retain the exact installed/tested bytes for --packagePath publication.
+  await copyFile(vsix, join(rootDir, 'dist/release.vsix'))
   process.stdout.write(
-    'Packaged extension installation and activation passed.\n',
+    'Packaged extension installation and activation passed; validated VSIX retained at dist/release.vsix.\n',
   )
 } finally {
   await rm(temporaryDir, { force: true, recursive: true })
