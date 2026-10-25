@@ -1,8 +1,20 @@
 # Next release notes
 
-Status: unreleased quality and delivery improvements after [v0.9.0](releases/v0.9.0.md).
+Status: unreleased features, quality, and delivery improvements after [v0.9.0](releases/v0.9.0.md).
 The package and generated extension metadata remain at 0.9.0 until the next
 version is chosen.
+
+## New features
+
+- Support bounded CSS `abs()` and `sign()` in absolute/relative channels,
+  alpha, and calculated mix weights. Preserve `abs()` result units and
+  `sign()` signed zero; `sign()` always returns a number. Reject non-finite
+  operands/intermediates, invalid arity, incompatible units, and resource-limit
+  violations. Variable substitution and picker/alpha edits retain the complete
+  expression. See [the design](design/2026-10-25-css-sign-math.md).
+- Cover sign-related math with evaluator/parser regressions, variable/provider
+  integration, playground snapshots, and LF/CRLF desktop/Web editing fixtures.
+  The installed-VSIX smoke test includes sign math and overflow rejection.
 
 ## Quality and delivery
 
@@ -27,12 +39,12 @@ version is chosen.
 
 ## Validation
 
-- Formatting, lint, types, 83 unit/snapshot files with 2,080 tests, stable
+- Formatting, lint, types, 84 unit/snapshot files with 2,205 tests, stable
   Electron/Chromium Web hosts, and installed-VSIX activation checks passed.
 - The shared desktop suite also passed locally with VS Code 1.140.0. CI tracks
   both versions on Windows and Ubuntu.
-- All 40 benchmark fixtures passed; measurements are recorded in the
-  [quality follow-up baseline](performance-baseline.md#quality-follow-up-baseline-2026-10-25).
+- All 43 benchmark fixtures passed; focused sign-math measurements are recorded
+  in the [sign-related baseline](performance-baseline.md#sign-related-css-math-2026-10-25).
 - The read-only verifier returned `verified` for the archived v0.9.0 commit and
   recorded VSIX hash against both public services.
 

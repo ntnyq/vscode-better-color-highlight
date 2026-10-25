@@ -364,7 +364,7 @@ and virtual workspaces when their files are readable by VS Code.
 - [x] `color()`：`srgb` `srgb-linear` `display-p3` `display-p3-linear` `a98-rgb` `prophoto-rgb` `rec2020` `xyz`
 - [x] Static `color-mix()`：predefined interpolation spaces, percentages, premultiplied alpha, hue methods, and nested colors
 - [x] Static relative CSS colors：`rgb(from red r g b / .5)`, `oklch(from var(--brand) l calc(c * .9) h)`, and `alpha(from red / .5)`
-- [x] Static CSS math in absolute/relative color channels, alpha, and mix weights：nested `calc()`, `min()`, `max()`, `clamp()`, `round()`, `mod()`, and `rem()`
+- [x] Static CSS math in absolute/relative color channels, alpha, and mix weights：nested `calc()`, `min()`, `max()`, `clamp()`, `round()`, `mod()`, `rem()`, `abs()`, and `sign()`
 - [x] Named color（`red` `rebeccapurple`）
 - [x] CSS / SCSS / Less / Stylus variables
 - [x] Extra expressions：bare RGB / HSL triplets、`--color-rgb: 255 0 0` shorthands
@@ -485,7 +485,7 @@ Relative `rgb`, `hsl`, `hwb`, Lab/LCH, OKLab/OKLCH, and `color()` expressions
 convert their origin into the target space before reading channel identifiers.
 Omitted alpha inherits the origin's alpha. `alpha(from <color> / <alpha>)`
 changes transparency while retaining the origin space. These forms support
-`calc()`, `min()`, `max()`, `clamp()`, `round()`, `mod()`, and `rem()` with channel identifiers, finite
+`calc()`, `min()`, `max()`, `clamp()`, `round()`, `mod()`, `rem()`, `abs()`, and `sign()` with channel identifiers, finite
 numeric/percentage/angle literals, parentheses, and `+`, `-`, `*`, `/` with
 compatible units. The functions can nest, and comparison arguments can contain
 arithmetic directly: `min(c * .9, .2)` or `calc(max(r, 20) / 2)`.
@@ -514,6 +514,19 @@ floating-point precision. If an opposite-sign `mod()` result rounds to its
 excluded divisor endpoint, the expression is skipped rather than previewed
 outside the required interval.
 
+`abs()` and `sign()` each accept one calculation, including nested arithmetic.
+`abs()` preserves its argument's number, percentage, or angle type and changes
+negative zero to positive zero. `sign()` returns the number -1, +1, or the
+argument's signed zero; it always removes the input unit. Angles convert to
+degrees before evaluation. For example, `abs(-25%)` is 25%, while `sign(-25%)`
+is the number -1. To use a sign in a mix weight, multiply it by a percentage,
+such as `calc(sign(1deg) * 25%)`. The color contexts supported here have fixed
+positive percentage scales; layout-dependent percentages are outside this
+evaluator. Operands and intermediates must remain finite even if `sign()`
+could otherwise produce a finite result. See the
+[sign-related math design](docs/design/2026-10-25-css-sign-math.md) and
+[CSS sign-related functions](https://drafts.csswg.org/css-values-4/#sign-funcs).
+
 Absolute RGB, HSL, HWB, Lab/LCH, OKLab/OKLCH, and `color()` channels and alpha
 also accept this math subset, including legal legacy RGB/HSL comma forms:
 
@@ -522,6 +535,8 @@ rgb(min(255, 128) 0 0 / calc(1 / 2))
 hsl(calc(60 + 60), min(100%, 80%), 50%)
 oklch(clamp(.2, .65, .8) .2 30)
 color-mix(in srgb, rgb(max(128, 64) 0 0), blue)
+rgb(abs(-128) calc(sign(-10%) * -64) 0 / abs(-.5))
+color-mix(in srgb, red abs(-25%), blue calc(sign(1deg) * 75%))
 ```
 
 Separators inside nested math stay within their channel. Each result must match

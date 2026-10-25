@@ -1,0 +1,24 @@
+:root {
+  --signed-channel: -128;
+  --signed-opacity: -0.5;
+  --signed-weight: -25%;
+}
+
+.sign-math {
+  color: rgb(abs(var(--signed-channel)) calc(sign(-10%) * -64) 0);
+  background: color(srgb abs(-1) 0 0 / abs(var(--signed-opacity)));
+  border-color: hsl(abs(-120deg) abs(-100%) 50%);
+  outline-color: rgb(from red abs(r - 127) calc(sign(-10%) * -64) b);
+  accent-color: alpha(from red / abs(alpha - 1.75));
+  caret-color: color-mix(in srgb, red abs(var(--signed-weight)), blue);
+  shadow-color: color-mix(in srgb, abs(-25%) red, blue calc(sign(1deg) * 75%));
+  nested-color: rgb(round(abs(-127.5)) mod(abs(-10), 5) rem(sign(1), 5));
+}
+
+.unsupported-sign-math {
+  invalid-arity: rgb(abs(1, 2) 0 0);
+  invalid-angle: rgb(abs(-10deg) 0 0);
+  invalid-overflow: rgb(sign(1e308 * 2) 0 0);
+  invalid-relative-channel: rgb(abs(r) 0 0);
+  recovery-color: #123456;
+}

@@ -36,6 +36,42 @@ interface NativeColorFixture {
 
 const NATIVE_COLOR_FIXTURES: readonly NativeColorFixture[] = [
   {
+    name: 'Sign-related absolute CSS math offers complete generic edits',
+    languageId: 'plaintext',
+    source: 'rgb(abs(-255) sign(0%) abs(-0) / sign(1deg))',
+    afterPicker: 'rgba(0, 255, 0, 0.5)',
+    afterAlpha: 'rgba(0, 255, 0, 0.4)',
+    afterSourceAlpha: 'rgba(255, 0, 0, 0.9)',
+    genericEdits: true,
+  },
+  {
+    name: 'Sign-related relative CSS math offers complete generic edits',
+    languageId: 'plaintext',
+    source: 'rgb(from red abs(r) sign(g) b / abs(alpha))',
+    afterPicker: 'rgba(0, 255, 0, 0.5)',
+    afterAlpha: 'rgba(0, 255, 0, 0.4)',
+    afterSourceAlpha: 'rgba(255, 0, 0, 0.9)',
+    genericEdits: true,
+  },
+  {
+    name: 'Sign-related mix weights offer complete generic edits',
+    languageId: 'plaintext',
+    source: 'color-mix(in srgb, red abs(-50%), red calc(sign(1%) * 50%))',
+    afterPicker: 'rgba(0, 255, 0, 0.5)',
+    afterAlpha: 'rgba(0, 255, 0, 0.4)',
+    afterSourceAlpha: 'rgba(255, 0, 0, 0.9)',
+    genericEdits: true,
+  },
+  {
+    name: 'Sign-related alpha math offers complete generic edits',
+    languageId: 'plaintext',
+    source: 'alpha(from red / abs(alpha * sign(-1)))',
+    afterPicker: 'rgba(0, 255, 0, 0.5)',
+    afterAlpha: 'rgba(0, 255, 0, 0.4)',
+    afterSourceAlpha: 'rgba(255, 0, 0, 0.9)',
+    genericEdits: true,
+  },
+  {
     name: 'Stepped CSS math offers complete generic edits',
     languageId: 'plaintext',
     source: 'rgb(round(254.6) mod(-10, 5) rem(10, 5))',

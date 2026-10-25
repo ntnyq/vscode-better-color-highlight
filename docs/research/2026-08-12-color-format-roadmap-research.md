@@ -186,8 +186,11 @@ expressions, Android resource navigation, and Unity constructors;
 
 The findings above describe the August research baseline; statements about
 then-missing support are historical. Current supported syntax and limits are in
-the README. Bare Unity constructor names, dynamic system/asset colors, custom
+the README. An unreleased follow-up also implements bounded `abs()` and
+`sign()` across absolute/relative channels, alpha, and calculated mix weights;
+see [the sign-related math design](../design/2026-10-25-css-sign-math.md).
+Bare Unity constructor names, dynamic system/asset colors, custom
 Compose spaces and CSS math functions beyond
-`calc()`/`min()`/`max()`/`clamp()`/`round()`/`mod()`/`rem()` remain candidates or
+`calc()`/`min()`/`max()`/`clamp()`/`round()`/`mod()`/`rem()`/`abs()`/`sign()` remain candidates or
 explicit deferrals.
 They are not release commitments.

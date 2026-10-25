@@ -1,7 +1,7 @@
 # Color detection performance baseline
 
-The [latest complete run](#quality-follow-up-baseline-2026-10-25) covers all
-40 fixtures after the v0.9.0 quality follow-up. Earlier measurements below are
+The [latest run](#sign-related-css-math-2026-10-25) passes all 43 fixtures,
+including the sign-related math follow-up. Earlier measurements below are
 historical.
 
 ## Initial baseline, 2026-10-02
@@ -205,3 +205,24 @@ the same machine before drawing performance conclusions.
 | `unclosed-tag-expression-40000`             |      12.394 |   19.814 |
 | `unclosed-unity-constructors`               |       2.048 |    2.283 |
 | `unity-component-constructors`              |       2.025 |    2.848 |
+
+## Sign-related CSS math, 2026-10-25
+
+`pnpm bench` passed all 43 fixtures after adding `abs()` and `sign()`.
+The three new fixtures were then measured independently with
+`pnpm bench -t 'sign-related'` after all extension-host checks completed.
+Environment: Node 24.22.1, pnpm 12.15.0, Vitest 5.0.5, macOS arm64,
+Apple M1 Pro. These local timing samples include substantial scheduling/GC
+variation and establish no improvement or regression against the earlier runs.
+
+| Fixture                                                      | Median (ms) | p99 (ms) |
+| ------------------------------------------------------------ | ----------: | -------: |
+| 400 rules with sign-related channels, alpha, and mix weights |      43.327 |  134.691 |
+| 300 expressions rejected for arity, tokens, or depth         |      26.878 |  127.533 |
+| 20,000 unclosed abs/sign starts followed by a valid color    |      12.045 |  160.901 |
+
+Each normal fixture contains 800 complete color expressions. The malformed
+fixture contains 100 examples of each rejection boundary. Correctness tests
+assert result types, rejection, resource bounds, and later-expression recovery;
+benchmark timings remain informational. Raw statistics are retained under the
+ignored `.benchmarks/` directory using the corresponding `sign-related` names.

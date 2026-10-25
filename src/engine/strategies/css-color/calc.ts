@@ -17,7 +17,7 @@ export function evaluateColorCalc(
     return null
   }
   if (
-    !/^(?:calc|min|max|clamp|round|mod|rem)\(/iu.test(source) &&
+    !/^(?:calc|min|max|clamp|round|mod|rem|abs|sign)\(/iu.test(source) &&
     !/^(?:[a-z]+|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?(?:%|deg|grad|rad|turn)?)$/iu.test(
       source,
     )
@@ -65,7 +65,9 @@ export function evaluateColorCalc(
       token === 'clamp' ||
       token === 'round' ||
       token === 'mod' ||
-      token === 'rem'
+      token === 'rem' ||
+      token === 'abs' ||
+      token === 'sign'
     ) {
       if (
         tokenMatches[index]?.index !==
@@ -76,6 +78,18 @@ export function evaluateColorCalc(
       }
       if (token === 'round' || token === 'mod' || token === 'rem') {
         return stepped(token, depth + 1)
+      }
+      if (token === 'abs' || token === 'sign') {
+        const value = sum(depth + 1)
+        if (!value || tokens[index++] !== ')') {
+          return null
+        }
+        // abs preserves the input type; sign always produces a number.
+        // Math.abs clears negative zero while Math.sign preserves its sign.
+        return createCalculatedComponent(
+          Math[token](value.value),
+          token === 'sign' ? 'number' : value.unit,
+        )
       }
       if (token !== 'calc') {
         return comparison(token, depth + 1)

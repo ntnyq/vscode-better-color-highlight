@@ -1,0 +1,170 @@
+{
+  "file": "sign-math.css",
+  "languageId": "css",
+  "strategyNames": [
+    "findHexRGBA",
+    "findColorFunctions",
+    "findHwb",
+    "findTailwindThemeColors",
+    "findNamedColors",
+    "findRgbNoFunction",
+    "findHslNoFunction",
+    "findCssVars",
+    "findAnsiSgrColors"
+  ],
+  "matches": [
+    {
+      "index": 0,
+      "line": 8,
+      "column": 10,
+      "text": "rgb(abs(var(--signed-channel)) calc(sign(-10%) * -64) 0)",
+      "range": [
+        110,
+        166
+      ],
+      "color": "rgb(128, 64, 0)",
+      "render": {
+        "backgroundColor": "rgb(128, 64, 0)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(128, 64, 0)"
+      }
+    },
+    {
+      "index": 1,
+      "line": 9,
+      "column": 15,
+      "text": "color(srgb abs(-1) 0 0 / abs(var(--signed-opacity)))",
+      "range": [
+        182,
+        234
+      ],
+      "color": "rgba(255, 0, 0, 0.5)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 2,
+      "line": 10,
+      "column": 17,
+      "text": "hsl(abs(-120deg) abs(-100%) 50%)",
+      "range": [
+        252,
+        284
+      ],
+      "color": "rgb(0, 255, 0)",
+      "render": {
+        "backgroundColor": "rgb(0, 255, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(0, 255, 0)"
+      }
+    },
+    {
+      "index": 3,
+      "line": 11,
+      "column": 18,
+      "text": "rgb(from red abs(r - 127) calc(sign(-10%) * -64) b)",
+      "range": [
+        303,
+        354
+      ],
+      "color": "rgb(128, 64, 0)",
+      "render": {
+        "backgroundColor": "rgb(128, 64, 0)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(128, 64, 0)"
+      }
+    },
+    {
+      "index": 4,
+      "line": 12,
+      "column": 17,
+      "text": "alpha(from red / abs(alpha - 1.75))",
+      "range": [
+        372,
+        407
+      ],
+      "color": "rgba(255, 0, 0, 0.75)",
+      "render": {
+        "backgroundColor": "rgb(255, 0, 0)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(255, 0, 0)"
+      }
+    },
+    {
+      "index": 5,
+      "line": 13,
+      "column": 16,
+      "text": "color-mix(in srgb, red abs(var(--signed-weight)), blue)",
+      "range": [
+        424,
+        479
+      ],
+      "color": "rgb(64, 0, 191)",
+      "render": {
+        "backgroundColor": "rgb(64, 0, 191)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(64, 0, 191)"
+      }
+    },
+    {
+      "index": 6,
+      "line": 14,
+      "column": 17,
+      "text": "color-mix(in srgb, abs(-25%) red, blue calc(sign(1deg) * 75%))",
+      "range": [
+        497,
+        559
+      ],
+      "color": "rgb(64, 0, 191)",
+      "render": {
+        "backgroundColor": "rgb(64, 0, 191)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(64, 0, 191)"
+      }
+    },
+    {
+      "index": 7,
+      "line": 15,
+      "column": 17,
+      "text": "rgb(round(abs(-127.5)) mod(abs(-10), 5) rem(sign(1), 5))",
+      "range": [
+        577,
+        633
+      ],
+      "color": "rgb(128, 0, 1)",
+      "render": {
+        "backgroundColor": "rgb(128, 0, 1)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(128, 0, 1)"
+      }
+    },
+    {
+      "index": 8,
+      "line": 23,
+      "column": 19,
+      "text": "#123456",
+      "range": [
+        848,
+        855
+      ],
+      "color": "rgb(18, 52, 86)",
+      "render": {
+        "backgroundColor": "rgb(18, 52, 86)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(18, 52, 86)"
+      }
+    }
+  ]
+}

@@ -598,6 +598,26 @@ describe(findCssVars, () => {
       'rgb(round(var(--channel)) mod(-10, 5) rem(21, 5) / round(49%, var(--step)))',
       'rgba(128, 0, 1, 0.5)',
     ],
+    [
+      '--channel: -128; --direction: -2; --opacity: -.5;',
+      'rgb(abs(var(--channel)) calc(sign(var(--direction)) * -64) 0 / abs(var(--opacity)))',
+      'rgba(128, 64, 0, 0.5)',
+    ],
+    [
+      '--origin: #ff0000; --offset: 127;',
+      'rgb(from var(--origin) abs(r - var(--offset)) calc(sign(-1%) * -64) b)',
+      'rgb(128, 64, 0)',
+    ],
+    [
+      '--weight: -25%;',
+      'color-mix(in srgb, red abs(var(--weight)), blue)',
+      'rgb(64, 0, 191)',
+    ],
+    [
+      '--origin: red; --opacity: -.25;',
+      'alpha(from var(--origin) / abs(var(--opacity)))',
+      'rgba(255, 0, 0, 0.25)',
+    ],
   ])(
     'resolves absolute math variables with the complete original range: %s',
     async (declarations, expression, color) => {
@@ -644,6 +664,10 @@ describe(findCssVars, () => {
     ':root { --cap: 50%; } .x { color: rgb(min(var(--cap), 128) 0 0); }',
     ':root { --cap: 1px; } .x { color: rgb(calc(var(--cap) * 2) 0 0); }',
     ':root { --weight: 50; } .x { color: color-mix(in srgb, red calc(var(--weight)), blue); }',
+    ':root { --weight: 50%; } .x { color: color-mix(in srgb, red sign(var(--weight)), blue); }',
+    ':root { --channel: 1deg; } .x { color: rgb(abs(var(--channel)) 0 0); }',
+    ':root { --channel: 1e999; } .x { color: rgb(sign(var(--channel)) 0 0); }',
+    '.x { color: rgb(abs(var(--missing)) 0 0); }',
   ])('rejects unresolved or unsupported absolute math: %s', async text => {
     await expect(findCssVars(text)).resolves.toStrictEqual([])
   })

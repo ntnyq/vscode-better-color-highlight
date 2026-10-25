@@ -82,6 +82,17 @@ const malformedSteppedMath = Array.from(
     `rgb(round(1, 0) 0 0); color-mix(in srgb, red ${oversizedComparison}, blue); rgb(${'round('.repeat(40)}1${', 2)'.repeat(40)} 0 0);`,
 ).join('\n')
 const unclosedSteppedMath = `color-mix(in srgb, red ${'round('.repeat(10_000)}1; rgb(round(127.5) 0 0)`
+const signMathColors = Array.from(
+  { length: 400 },
+  (_, index) =>
+    `.sign-${index} { color: rgb(abs(-128) calc(sign(-1%) * -64) 0 / abs(-.5)); background: color-mix(in srgb, red abs(-25%), blue calc(sign(1deg) * 75%)); }`,
+).join('\n')
+const malformedSignMath = Array.from(
+  { length: 100 },
+  () =>
+    `rgb(abs(1, 2) 0 0); rgb(sign(${oversizedComparison}) 0 0); rgb(${'abs(sign('.repeat(17)}1${'))'.repeat(17)} 0 0);`,
+).join('\n')
+const unclosedSignMath = `rgb(${'abs(sign('.repeat(10_000)}1; rgb(abs(-128) 0 0)`
 const longChain = `:root { ${Array.from({ length: 200 }, (_, index) => `--v${index}: var(--v${index + 1});`).join(' ')} --v200: red; } .x { color: rgb(from var(--v0) r g b); }`
 const chainDeclarations = collectCssVarDeclarations(longChain, {
   trustedSelectors: [':root'],
@@ -99,6 +110,36 @@ const androidResources = `<resources>${Array.from({ length: 500 }, (_, index) =>
 const malformedAndroidResource = `<resources><${'color'.repeat(20_000)}`
 
 describe('color detection', () => {
+  test('sign-related CSS math and mix weights', async ({ bench }) => {
+    await bench(
+      'sign-related CSS math and mix weights',
+      {
+        writeResult: '.benchmarks/sign-related-css-math-and-mix-weights.json',
+      },
+      () => findColorFunctions(signMathColors),
+    ).run()
+  })
+
+  test('bounded malformed sign-related CSS math', async ({ bench }) => {
+    await bench(
+      'bounded malformed sign-related CSS math',
+      {
+        writeResult: '.benchmarks/bounded-malformed-sign-related-css-math.json',
+      },
+      () => findColorFunctions(malformedSignMath),
+    ).run()
+  })
+
+  test('unclosed sign-related CSS math', async ({ bench }) => {
+    await bench(
+      'unclosed sign-related CSS math',
+      {
+        writeResult: '.benchmarks/unclosed-sign-related-css-math.json',
+      },
+      () => findColorFunctions(unclosedSignMath),
+    ).run()
+  })
+
   test('Tailwind markup decoys', async ({ bench }) => {
     await bench(
       'Tailwind markup decoys',
