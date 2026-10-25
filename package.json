@@ -94,15 +94,15 @@
     "@vscode/test-web": "^0.0.81",
     "@vscode/vsce": "^4.0.0",
     "bumpp": "^12.3.0",
-    "changelogithub": "14.0.0",
+    "changelogithub": "15.0.5",
     "husky": "^9.1.7",
     "nano-staged": "^1.0.2",
-    "npm-run-all2": "^9.0.3",
-    "oxfmt": "^0.73.0",
-    "oxlint": "^1.88.0",
-    "tsdown": "^0.23.1",
+    "npm-run-all2": "^9.0.4",
+    "oxfmt": "^0.74.0",
+    "oxlint": "^1.89.0",
+    "tsdown": "^0.23.2",
     "typescript": "^7.0.2",
-    "vitest": "^5.0.4",
+    "vitest": "^5.0.5",
     "vscode-ext-gen": "^1.6.0"
   },
   "nano-staged": {
@@ -465,7 +465,7 @@
   "engines": {
     "vscode": "^1.140.0"
   },
-  "packageManager": "pnpm@12.11.2",
+  "packageManager": "pnpm@12.15.0",
   "capabilities": {
     "untrustedWorkspaces": {
       "supported": true,
