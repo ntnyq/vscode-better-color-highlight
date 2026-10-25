@@ -423,6 +423,32 @@ Picker and alpha edits retain argument labels, float suffixes, and comments
 where possible. Android `rgb` becomes `argb` when adding alpha; grayscale
 Swift initializers become RGB if the selected color is no longer gray.
 Detection is textual and scoped to language IDs, not import/type resolution.
+
+Compose float `Color(...)`, `Color.hsl(...)`, and `Color.hsv(...)` also accept
+literal `ColorSpaces.Srgb`, `ColorSpaces.LinearSrgb`, or `ColorSpaces.DisplayP3`
+as `colorSpace = ...`, or as the fifth positional argument after alpha. The
+full `androidx.compose.ui.graphics.colorspace.ColorSpaces` qualifier is accepted.
+All numeric arguments must have `f`/`F` suffixes; components and alpha are
+limited to `[0, 1]`, with HSL/HSV hue in `[0, 360]`. Integer overloads do not
+accept a color space.
+
+```kotlin
+val linear = Color(.5f, .5f, .5f, colorSpace = ColorSpaces.LinearSrgb)
+val wide = Color(.5f, .2f, .1f, colorSpace = ColorSpaces.DisplayP3)
+val hue = Color.hsl(210f, .5f, .4f, colorSpace = ColorSpaces.DisplayP3)
+```
+
+These previews convert to sRGB and clip channels outside its gamut. Picker
+edits convert the selected sRGB color back into the original space, including
+HSL/HSV coordinates in that RGB space; alpha commands change only alpha,
+retaining original component text even for colors outside the sRGB gamut.
+Space arguments, names, comments, suffixes, and trailing commas are retained.
+An omitted alpha is appended as a named argument when `colorSpace` is named.
+Conversion uses floating-point math and up to six decimal places on picker
+edits; it does not emulate Compose's packed FP16/alpha storage quantization.
+Other built-in spaces (including extended sRGB, Lab/XYZ, and HDR), custom
+spaces, and imported aliases are skipped. See [the scope and editing design](docs/design/2026-10-25-compose-color-spaces.md).
+
 Dynamic arguments, custom Compose color spaces, import aliases, asset colors,
 system colors are outside this editing subset. XML `@color/name` navigation is
 described in [Color navigation](#-color-navigation).

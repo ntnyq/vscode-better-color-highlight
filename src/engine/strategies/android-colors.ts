@@ -99,6 +99,9 @@ export function parseAndroidColor(
       'alpha',
     ]
   }
+  if (isCompose) {
+    names.push('colorSpace')
+  }
   const args = bindStaticArguments(call, names)
   if (!args || (method === 'rgb' && args.has('alpha'))) {
     return null
@@ -107,26 +110,19 @@ export function parseAndroidColor(
   if (required.some(name => !args.has(name))) {
     return null
   }
-  const values = new Map<string, number>()
-  const floatArguments = [...args.values()].map(arg => /[fF]$/u.test(arg.value))
-  const isFloat = isHue || floatArguments.some(Boolean)
-  if (isFloat && !floatArguments.every(Boolean)) {
+  const spaceArg = args.get('colorSpace')
+  const space = spaceArg ? resolveComposeColorSpace(spaceArg.value) : 'srgb'
+  if (!space) {
     return null
   }
-  if (!isFloat && [...args.values()].some(arg => !/^\d+$/u.test(arg.value))) {
+  const numericArgs = new Map(
+    [...args].filter(([name]) => name !== 'colorSpace'),
+  )
+  const numbers = parseAndroidNumbers(numericArgs, isHue, Boolean(spaceArg))
+  if (!numbers) {
     return null
   }
-  for (const [name, arg] of args) {
-    const value = parseNativeNumber(arg.value)
-    let max = isFloat ? 1 : 255
-    if (isHue && name === 'hue') {
-      max = 360
-    }
-    if (value === null || value < 0 || value > max) {
-      return null
-    }
-    values.set(name, value)
-  }
+  const { isFloat, values } = numbers
   const scale = isFloat ? 1 : 255
   const alpha = (values.get('alpha') ?? scale) / scale
   let color: RgbaColor
@@ -143,8 +139,12 @@ export function parseAndroidColor(
           ? 0
           : (third - lightness) / Math.min(lightness, 1 - lightness)
     }
-    const rgb = convertCssColor(
+    const nativeRgb = convertCssColor(
       createCssColor('hsl', [hue, hslSaturation, lightness], alpha),
+      'srgb',
+    )
+    const rgb = convertCssColor(
+      createCssColor(space, nativeRgb.channels, alpha),
       'srgb',
     )
     color = {
@@ -154,39 +154,71 @@ export function parseAndroidColor(
       a: alpha,
     }
   } else {
+    const rgb = convertCssColor(
+      createCssColor(space, [
+        (values.get('red') ?? 0) / scale,
+        (values.get('green') ?? 0) / scale,
+        (values.get('blue') ?? 0) / scale,
+      ]),
+      'srgb',
+    ).channels
     color = {
-      r: ((values.get('red') ?? 0) / scale) * 255,
-      g: ((values.get('green') ?? 0) / scale) * 255,
-      b: ((values.get('blue') ?? 0) / scale) * 255,
+      r: rgb[0] * 255,
+      g: rgb[1] * 255,
+      b: rgb[2] * 255,
       a: alpha,
     }
   }
+  const appendAlpha = (nextAlpha: number) =>
+    !args.has('alpha') && nextAlpha < 1
+      ? `${call.args.some(arg => arg.name) ? 'alpha = ' : ''}${formatNativeNumber(isFloat ? nextAlpha : Math.round(nextAlpha * 255), isFloat ? 'f' : '')}`
+      : undefined
+  const alphaArg = args.get('alpha')
   return {
     color,
+    ...(spaceArg
+      ? {
+          formatAlpha: (nextAlpha: number) =>
+            rewriteStaticArguments(
+              call,
+              alphaArg
+                ? new Map([
+                    [alphaArg, formatNativeNumber(nextAlpha, alphaArg.value)],
+                  ])
+                : new Map(),
+              appendAlpha(nextAlpha),
+            ),
+        }
+      : {}),
     format: next => {
+      // Picker channels are sRGB; HSL/HSV must describe the original RGB space.
+      const nativeRgb = convertCssColor(
+        createCssColor('srgb', [next.r / 255, next.g / 255, next.b / 255]),
+        space,
+      ).channels.map(channel => Math.min(1, Math.max(0, channel)))
       const nextValues: Record<string, number> = {
-        red: (next.r / 255) * scale,
-        green: (next.g / 255) * scale,
-        blue: (next.b / 255) * scale,
+        red: nativeRgb[0] * scale,
+        green: nativeRgb[1] * scale,
+        blue: nativeRgb[2] * scale,
         alpha: next.a * scale,
       }
       if (isHue) {
         const hsl = convertCssColor(
-          createCssColor('srgb', [next.r / 255, next.g / 255, next.b / 255]),
+          createCssColor('srgb', [nativeRgb[0], nativeRgb[1], nativeRgb[2]]),
           'hsl',
         ).channels
-        const value = Math.max(next.r, next.g, next.b) / 255
+        const value = Math.max(...nativeRgb)
         nextValues.hue = hsl[0]
         nextValues.saturation = hsl[1]
         if (method === 'hsv') {
           nextValues.saturation =
-            value === 0 ? 0 : 1 - Math.min(next.r, next.g, next.b) / 255 / value
+            value === 0 ? 0 : 1 - Math.min(...nativeRgb) / value
         }
         nextValues.lightness = hsl[2]
         nextValues.value = value
       }
       const replacements = new Map<StaticArgument, string>()
-      for (const [name, arg] of args) {
+      for (const [name, arg] of numericArgs) {
         replacements.set(
           arg,
           formatNativeNumber(
@@ -207,12 +239,67 @@ export function parseAndroidColor(
           `.argb$<opening>${alphaArgument}, `,
         )
       }
-      const append =
-        !args.has('alpha') && next.a < 1
-          ? `${call.args.some(arg => arg.name) ? 'alpha = ' : ''}${formatNativeNumber(isFloat ? next.a : Math.round(next.a * 255), isFloat ? 'f' : '')}`
-          : undefined
-      return rewriteStaticArguments(call, replacements, append)
+      return rewriteStaticArguments(call, replacements, appendAlpha(next.a))
     },
+  }
+}
+
+/**
+ * Validate numeric overloads independently of optional color-space arguments.
+ */
+function parseAndroidNumbers(
+  args: ReadonlyMap<string, StaticArgument>,
+  isHue: boolean,
+  hasExplicitSpace: boolean,
+) {
+  const values = new Map<string, number>()
+  const floatArguments = [...args.values()].map(arg => /[fF]$/u.test(arg.value))
+  const isFloat = isHue || floatArguments.some(Boolean)
+  if (
+    (isFloat && !floatArguments.every(Boolean)) ||
+    (hasExplicitSpace && !isFloat)
+  ) {
+    return null
+  }
+  if (!isFloat && [...args.values()].some(arg => !/^\d+$/u.test(arg.value))) {
+    return null
+  }
+  for (const [name, arg] of args) {
+    const value = parseNativeNumber(arg.value)
+    let max = isFloat ? 1 : 255
+    if (isHue && name === 'hue') {
+      max = 360
+    }
+    if (value === null || value < 0 || value > max) {
+      return null
+    }
+    values.set(name, value)
+  }
+  return { isFloat, values }
+}
+
+/**
+ * Resolve a deliberately small, literal-only subset of Compose RGB spaces.
+ */
+function resolveComposeColorSpace(
+  source: string,
+): 'srgb' | 'srgb-linear' | 'display-p3' | null {
+  const name = source.match(
+    /^(?:androidx\.compose\.ui\.graphics\.colorspace\.)?ColorSpaces\.(?<name>Srgb|LinearSrgb|DisplayP3)$/u,
+  )?.groups?.name
+  switch (name) {
+    case 'Srgb': {
+      return 'srgb'
+    }
+    case 'LinearSrgb': {
+      return 'srgb-linear'
+    }
+    case 'DisplayP3': {
+      return 'display-p3'
+    }
+    default: {
+      return null
+    }
   }
 }
 

@@ -136,11 +136,96 @@
     {
       "index": 7,
       "line": 11,
+      "column": 12,
+      "text": "Color(.5f, .5f, .5f, colorSpace = ColorSpaces.Srgb)",
+      "range": [
+        480,
+        531
+      ],
+      "color": "rgb(128, 128, 128)",
+      "render": {
+        "backgroundColor": "rgb(128, 128, 128)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(128, 128, 128)"
+      }
+    },
+    {
+      "index": 8,
+      "line": 12,
+      "column": 14,
+      "text": "Color(.5f, .5f, .5f, 1f, ColorSpaces.LinearSrgb)",
+      "range": [
+        545,
+        593
+      ],
+      "color": "rgb(188, 188, 188)",
+      "render": {
+        "backgroundColor": "rgb(188, 188, 188)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(188, 188, 188)"
+      }
+    },
+    {
+      "index": 9,
+      "line": 13,
+      "column": 10,
+      "text": "Color(.5f, .2f, .1f, colorSpace = ColorSpaces.DisplayP3)",
+      "range": [
+        603,
+        659
+      ],
+      "color": "rgb(138, 44, 13)",
+      "render": {
+        "backgroundColor": "rgb(138, 44, 13)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(138, 44, 13)"
+      }
+    },
+    {
+      "index": 10,
+      "line": 14,
+      "column": 17,
+      "text": "Color.hsl(0f, 0f, .5f, colorSpace = ColorSpaces.LinearSrgb)",
+      "range": [
+        676,
+        735
+      ],
+      "color": "rgb(188, 188, 188)",
+      "render": {
+        "backgroundColor": "rgb(188, 188, 188)",
+        "color": "#000000",
+        "border": null,
+        "overviewRulerColor": "rgb(188, 188, 188)"
+      }
+    },
+    {
+      "index": 11,
+      "line": 15,
+      "column": 20,
+      "text": "Color.hsv(\n    colorSpace = androidx.compose.ui.graphics.colorspace.ColorSpaces.DisplayP3,\n    hue = 210F, saturation = .5F, value = .6F,\n)",
+      "range": [
+        755,
+        894
+      ],
+      "color": "rgb(64, 116, 157)",
+      "render": {
+        "backgroundColor": "rgb(64, 116, 157)",
+        "color": "#FFFFFF",
+        "border": null,
+        "overviewRulerColor": "rgb(64, 116, 157)"
+      }
+    },
+    {
+      "index": 12,
+      "line": 21,
       "column": 21,
       "text": "red",
       "range": [
-        505,
-        508
+        993,
+        996
       ],
       "color": "rgb(255, 0, 0)",
       "render": {
@@ -151,13 +236,13 @@
       }
     },
     {
-      "index": 8,
-      "line": 11,
+      "index": 13,
+      "line": 21,
       "column": 36,
       "text": "green",
       "range": [
-        520,
-        525
+        1008,
+        1013
       ],
       "color": "rgb(0, 128, 0)",
       "render": {
@@ -168,13 +253,13 @@
       }
     },
     {
-      "index": 9,
-      "line": 11,
+      "index": 14,
+      "line": 21,
       "column": 48,
       "text": "blue",
       "range": [
-        532,
-        536
+        1020,
+        1024
       ],
       "color": "rgb(0, 0, 255)",
       "render": {

@@ -51,7 +51,6 @@ describe('android static colors', () => {
     'Color(1.0, 0.0, 0.0)',
     'Color(256, 0, 0)',
     'Color(-1, 0, 0)',
-    'Color(1f, 0f, 0f, colorSpace = ColorSpaces.DisplayP3)',
     'Color(red, 0, 0)',
     'Color(red = 1f, red = 0f, blue = 0f)',
     'Color(red = 1f, 0f, 0f)',

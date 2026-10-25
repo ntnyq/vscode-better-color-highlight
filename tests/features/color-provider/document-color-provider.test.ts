@@ -634,6 +634,16 @@ describe('document color provider', () => {
   it.each([
     ['kotlin', 'Color(255, 0, 0)', 'Color(255, 0, 0, 128)'],
     [
+      'kotlin',
+      'Color(0f, 0f, 0f, colorSpace = ColorSpaces.Srgb)',
+      'Color(1f, 0f, 0f, colorSpace = ColorSpaces.Srgb, alpha = 0.5f)',
+    ],
+    [
+      'kotlin',
+      'Color.hsl(240f, 1f, .5f, colorSpace = ColorSpaces.LinearSrgb)',
+      'Color.hsl(360f, 1f, 0.5f, colorSpace = ColorSpaces.LinearSrgb, alpha = 0.5f)',
+    ],
+    [
       'csharp',
       'new UnityEngine.Color(1f, 0F, 0f)',
       'new UnityEngine.Color(1f, 0F, 0f, 0.5f)',

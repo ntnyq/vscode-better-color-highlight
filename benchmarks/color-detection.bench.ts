@@ -99,6 +99,16 @@ const chainDeclarations = collectCssVarDeclarations(longChain, {
 })
 const nativeColors =
   'Color(1f, 0f, 0f, .5f); Color(red: 1, green: 0, blue: 0);'.repeat(400)
+const composeSpaceColors = (
+  'Color(.5f, .2f, .1f, colorSpace = ColorSpaces.DisplayP3);' +
+  'Color.hsl(210f, .5f, .4f, colorSpace = ColorSpaces.LinearSrgb);' +
+  'Color.hsv(210f, .5f, .6f, .75f, ColorSpaces.Srgb);'
+).repeat(400)
+const rejectedComposeSpaces = (
+  'Color(255, 0, 0, colorSpace = ColorSpaces.Srgb);' +
+  'Color(1f, 0f, 0f, colorSpace = customSpace);' +
+  'Color.hsl(0f, 1f, .5f, colorSpace = ColorSpaces.CieLab);'
+).repeat(400)
 const unityColors = Array.from(
   { length: 400 },
   (_, index) =>
@@ -331,6 +341,22 @@ describe('color detection', () => {
         findAndroidColors(nativeColors)
         findSwiftColors(nativeColors)
       },
+    ).run()
+  })
+
+  test('Compose explicit static color spaces', async ({ bench }) => {
+    await bench(
+      'Compose explicit static color spaces',
+      { writeResult: '.benchmarks/compose-static-color-spaces.json' },
+      () => findAndroidColors(composeSpaceColors, { languageId: 'kotlin' }),
+    ).run()
+  })
+
+  test('Compose unsupported color-space overloads', async ({ bench }) => {
+    await bench(
+      'Compose unsupported color-space overloads',
+      { writeResult: '.benchmarks/compose-unsupported-color-spaces.json' },
+      () => findAndroidColors(rejectedComposeSpaces, { languageId: 'kotlin' }),
     ).run()
   })
 

@@ -26,3 +26,4 @@ execution details.
 | [Absolute CSS math](./2026-10-05-css-absolute-math.md)                                          | 2026-10-05 | `70456a9`      |
 | [Stepped CSS math and computed mix weights](./2026-10-25-css-stepped-math.md)                   | 2026-10-25 | `46b0047`      |
 | [CSS sign-related math](./2026-10-25-css-sign-math.md)                                          | 2026-10-25 | Current tree   |
+| [Compose explicit static color spaces](./2026-10-25-compose-color-spaces.md)                    | 2026-10-25 | Current tree   |

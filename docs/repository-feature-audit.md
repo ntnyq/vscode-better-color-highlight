@@ -74,8 +74,9 @@ October Android, Unity, absolute/comparison math, and stepped-math work.
 
 Potential future work requires separate product decisions: additional CSS math
 functions/constants and dimensional algebra; dynamic native expressions;
-broader Compose color spaces; resource qualifier inference; persistent workspace
-indexing; and runtime/cascade-dependent color interpretation. These are
+Compose spaces beyond literal Srgb/LinearSrgb/DisplayP3; resource qualifier
+inference; persistent workspace indexing; and runtime/cascade-dependent color
+interpretation. These are
 candidates or deliberate exclusions, not unfinished v0.9.0 requirements.
 
 This audit verifies the repository contract. Marketplace publication, the

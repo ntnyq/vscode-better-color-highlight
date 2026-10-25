@@ -143,12 +143,13 @@ export function formatColorForSourceWithAlphaDelta(
       'unity-color': parseUnityColor,
     }
     const parsed = parsers[sourceKind](sourceText)
-    return (
-      parsed?.format({
-        ...parsed.color,
-        a: Math.min(1, Math.max(0, parsed.color.a + delta)),
-      }) ?? null
-    )
+    if (!parsed) {
+      return null
+    }
+    const alpha = Math.min(1, Math.max(0, parsed.color.a + delta))
+    return parsed.formatAlpha
+      ? parsed.formatAlpha(alpha)
+      : parsed.format({ ...parsed.color, a: alpha })
   }
 
   const color = parsePackedArgbSource(sourceText, sourceKind)

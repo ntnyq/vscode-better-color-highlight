@@ -6,6 +6,13 @@ version is chosen.
 
 ## New features
 
+- Support literal Compose `ColorSpaces.Srgb`, `LinearSrgb`, and `DisplayP3`
+  on float RGB and HSL/HSV calls, including full qualification. Previews convert
+  to sRGB; picker edits retain the original space. Alpha commands preserve all
+  original color-component text, including wide-gamut values. Unsupported spaces
+  and dynamic expressions are skipped. See [the scope and editing rules](design/2026-10-25-compose-color-spaces.md).
+- Cover Compose spaces with conversion/rejection/round-trip regressions,
+  provider tests, playground snapshots, and LF/CRLF desktop/Web editing flows.
 - Support bounded CSS `abs()` and `sign()` in absolute/relative channels,
   alpha, and calculated mix weights. Preserve `abs()` result units and
   `sign()` signed zero; `sign()` always returns a number. Reject non-finite
@@ -39,12 +46,13 @@ version is chosen.
 
 ## Validation
 
-- Formatting, lint, types, 84 unit/snapshot files with 2,205 tests, stable
+- Formatting, lint, types, 85 unit/snapshot files with 2,289 tests, stable
   Electron/Chromium Web hosts, and installed-VSIX activation checks passed.
 - The shared desktop suite also passed locally with VS Code 1.140.0. CI tracks
   both versions on Windows and Ubuntu.
-- All 43 benchmark fixtures passed; focused sign-math measurements are recorded
-  in the [sign-related baseline](performance-baseline.md#sign-related-css-math-2026-10-25).
+- All 45 benchmark fixtures passed; focused measurements are recorded in the
+  [sign-related baseline](performance-baseline.md#sign-related-css-math-2026-10-25)
+  and [Compose space baseline](performance-baseline.md#compose-explicit-static-color-spaces-2026-10-25).
 - The read-only verifier returned `verified` for the archived v0.9.0 commit and
   recorded VSIX hash against both public services.
 

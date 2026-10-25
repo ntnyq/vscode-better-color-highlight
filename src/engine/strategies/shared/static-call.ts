@@ -17,6 +17,10 @@ export interface StaticCall {
 export interface NativeColor {
   readonly color: RgbaColor
   readonly format: (color: RgbaColor) => string
+  /**
+   * Edit alpha without converting or rounding the original color components.
+   */
+  readonly formatAlpha?: (alpha: number) => string
 }
 
 interface StaticCallScanOptions {

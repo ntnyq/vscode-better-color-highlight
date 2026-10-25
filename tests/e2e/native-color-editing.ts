@@ -32,6 +32,7 @@ interface NativeColorFixture {
   readonly byteAlpha?: boolean
   readonly genericEdits?: boolean
   readonly pickerColor?: Color
+  readonly sourceColor?: Color
 }
 
 const NATIVE_COLOR_FIXTURES: readonly NativeColorFixture[] = [
@@ -202,6 +203,66 @@ const NATIVE_COLOR_FIXTURES: readonly NativeColorFixture[] = [
       'Color.hsv(hue = 120f, saturation = 1f, value = 1f, alpha = 0.5f)',
     afterAlpha:
       'Color.hsv(hue = 120f, saturation = 1f, value = 1f, alpha = 0.4f)',
+  },
+  {
+    name: 'Compose explicit sRGB with named alpha insertion',
+    languageId: 'kotlin',
+    source: 'Color(1F, 0f, 0F, colorSpace = ColorSpaces.Srgb // keep\n)',
+    afterPicker:
+      'Color(0F, 1f, 0F, colorSpace = ColorSpaces.Srgb, alpha = 0.5f // keep\n)',
+    afterAlpha:
+      'Color(0F, 1f, 0F, colorSpace = ColorSpaces.Srgb, alpha = 0.4f // keep\n)',
+    afterSourceAlpha:
+      'Color(1F, 0f, 0F, colorSpace = ColorSpaces.Srgb, alpha = 0.9f // keep\n)',
+  },
+  {
+    name: 'Compose linear sRGB converts picker channels',
+    languageId: 'kotlin',
+    source: 'Color(1F, 0f, 0F, 1F, ColorSpaces.LinearSrgb)',
+    pickerColor: new Color(128 / 255, 128 / 255, 128 / 255, 0.5),
+    afterPicker:
+      'Color(0.215861F, 0.21586f, 0.21586F, 0.5F, ColorSpaces.LinearSrgb)',
+    afterAlpha:
+      'Color(0.215861F, 0.21586f, 0.21586F, 0.4F, ColorSpaces.LinearSrgb)',
+    afterSourceAlpha: 'Color(1F, 0f, 0F, 0.9F, ColorSpaces.LinearSrgb)',
+  },
+  {
+    name: 'Compose Display P3 retains wide-gamut channels on source alpha edits',
+    languageId: 'kotlin',
+    source:
+      'androidx.compose.ui.graphics.Color(1.0000000F, 0.0000000f, 0F, colorSpace = androidx.compose.ui.graphics.colorspace.ColorSpaces.DisplayP3,)',
+    pickerColor: new Color(0, 0, 0, 0.5),
+    afterPicker:
+      'androidx.compose.ui.graphics.Color(0F, 0f, 0F, colorSpace = androidx.compose.ui.graphics.colorspace.ColorSpaces.DisplayP3, alpha = 0.5f,)',
+    afterAlpha:
+      'androidx.compose.ui.graphics.Color(0F, 0f, 0F, colorSpace = androidx.compose.ui.graphics.colorspace.ColorSpaces.DisplayP3, alpha = 0.4f,)',
+    afterSourceAlpha:
+      'androidx.compose.ui.graphics.Color(1.0000000F, 0.0000000f, 0F, colorSpace = androidx.compose.ui.graphics.colorspace.ColorSpaces.DisplayP3, alpha = 0.9f,)',
+  },
+  {
+    name: 'Compose HSL uses native linear RGB channels',
+    languageId: 'kotlin',
+    source: 'Color.hsl(0f, 0f, .5f, colorSpace = ColorSpaces.LinearSrgb)',
+    sourceColor: new Color(188 / 255, 188 / 255, 188 / 255, 1),
+    afterPicker:
+      'Color.hsl(120f, 1f, 0.5f, colorSpace = ColorSpaces.LinearSrgb, alpha = 0.5f)',
+    afterAlpha:
+      'Color.hsl(120f, 1f, 0.5f, colorSpace = ColorSpaces.LinearSrgb, alpha = 0.4f)',
+    afterSourceAlpha:
+      'Color.hsl(0f, 0f, .5f, colorSpace = ColorSpaces.LinearSrgb, alpha = 0.9f)',
+  },
+  {
+    name: 'Compose HSV in Display P3',
+    languageId: 'kotlin',
+    source:
+      'Color.hsv(hue = 0f, saturation = 1f, value = 1f, colorSpace = ColorSpaces.DisplayP3)',
+    pickerColor: new Color(0, 0, 0, 0.5),
+    afterPicker:
+      'Color.hsv(hue = 0f, saturation = 0f, value = 0f, colorSpace = ColorSpaces.DisplayP3, alpha = 0.5f)',
+    afterAlpha:
+      'Color.hsv(hue = 0f, saturation = 0f, value = 0f, colorSpace = ColorSpaces.DisplayP3, alpha = 0.4f)',
+    afterSourceAlpha:
+      'Color.hsv(hue = 0f, saturation = 1f, value = 1f, colorSpace = ColorSpaces.DisplayP3, alpha = 0.9f)',
   },
   {
     name: 'Android Java RGB to ARGB',
@@ -398,7 +459,7 @@ async function assertNativeColorFixture(
       document,
       fixture.source,
       prefix.length,
-      new Color(1, 0, 0, 1),
+      fixture.sourceColor ?? new Color(1, 0, 0, 1),
     )
     const staleAlphaPayload = await getAlphaDecrementPayload(
       document,
@@ -416,7 +477,12 @@ async function assertNativeColorFixture(
         document,
         fixture.afterSourceAlpha,
         prefix.length,
-        new Color(1, 0, 0, 0.9),
+        new Color(
+          original.color.red,
+          original.color.green,
+          original.color.blue,
+          0.9,
+        ),
       )
       assertCondition(
         await editor.edit(builder => {

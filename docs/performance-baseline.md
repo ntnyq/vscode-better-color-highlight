@@ -226,3 +226,21 @@ fixture contains 100 examples of each rejection boundary. Correctness tests
 assert result types, rejection, resource bounds, and later-expression recovery;
 benchmark timings remain informational. Raw statistics are retained under the
 ignored `.benchmarks/` directory using the corresponding `sign-related` names.
+
+## Compose explicit static color spaces, 2026-10-25
+
+`pnpm bench` passed all 45 fixtures after adding two Compose space fixtures.
+A focused `pnpm bench -t 'Compose'` run then measured both new cases on
+Node 24.22.1, pnpm 12.15.0, Vitest 5.0.5, macOS arm64, Apple M1 Pro.
+Other local validation was active during these samples; scheduling/GC variation
+is visible in the p99. These numbers are informational, with no CI timing
+threshold or claimed performance change.
+
+| Fixture                                                                | Median (ms) | p99 (ms) |
+| ---------------------------------------------------------------------- | ----------: | -------: |
+| 1,200 RGB/HSL/HSV calls using Display P3, linear sRGB, and sRGB        |       7.291 |   19.937 |
+| 1,200 calls rejected for integer overload, dynamic space, or Lab space |       4.100 |   68.073 |
+
+Unit tests separately assert conversion, rejection, source range and bounded
+recovery. Raw statistics are retained under ignored `.benchmarks/` files named
+`compose-static-color-spaces.json` and `compose-unsupported-color-spaces.json`.
