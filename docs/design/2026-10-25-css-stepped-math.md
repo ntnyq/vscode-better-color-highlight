@@ -1,6 +1,6 @@
 # Static stepped CSS math and computed mix weights
 
-Date: 2026-10-25. Status: implemented for v0.9.0 preparation.
+Date: 2026-10-25. Status: implemented in v0.9.0.
 
 ## Behavior
 

@@ -1,6 +1,6 @@
 # Repository Feature Audit
 
-Date: 2026-10-25. Scope: the v0.9.0 preparation tree.
+Date: 2026-10-25. Scope: the released v0.9.0 tree.
 
 ## Current contract
 
@@ -62,7 +62,7 @@ Version preparation regenerates metadata without creating commits, tags, or
 pushes. See [the release workflow](releasing.md).
 
 The current validation totals and environment are recorded in
-[the v0.9.0 preparation notes](release-notes-next.md). Performance measurements
+[the v0.9.0 release record](releases/v0.9.0.md). Performance measurements
 are informational and live in [the baseline](performance-baseline.md).
 
 ## Remaining scope
@@ -78,5 +78,6 @@ broader Compose color spaces; resource qualifier inference; persistent workspace
 indexing; and runtime/cascade-dependent color interpretation. These are
 candidates or deliberate exclusions, not unfinished v0.9.0 requirements.
 
-This audit verifies the repository contract and local release preparation. It
-does not assert a Marketplace publication or GitHub release for v0.9.0.
+This audit verifies the repository contract. Marketplace publication, the
+GitHub Release, and the matching public VSIX download are independently
+documented in [the v0.9.0 release record](releases/v0.9.0.md).
