@@ -1,7 +1,8 @@
 # Color detection performance baseline
 
-The [latest complete run](#complete-baseline-2026-10-25) covers all 23 fixtures
-in the v0.9.0 preparation tree. Earlier measurements below are historical.
+The [latest complete run](#quality-follow-up-baseline-2026-10-25) covers all
+40 fixtures after the v0.9.0 quality follow-up. Earlier measurements below are
+historical.
 
 ## Initial baseline, 2026-10-02
 
@@ -145,3 +146,62 @@ median and p99 statistics when comparing runs. These measurements
 establish the current reference and do not demonstrate improvement against
 older runs taken with different runtime/dependency versions. Benchmark timings
 remain informational and do not impose CI timing thresholds.
+
+## Quality follow-up baseline, 2026-10-25
+
+Measured with `pnpm bench`, Node 24.22.1, pnpm 12.15.0, Vitest 5.0.5,
+macOS arm64, Apple M1 Pro. All 40 fixtures passed in one run after the
+stable/minimum desktop, Web, and installed-VSIX checks finished. This follow-up
+adds 17 scanning fixtures and changes no runtime parser behavior. File stems
+below identify the raw JSON statistics in `.benchmarks/`.
+
+The shorthand, markup, and utility correctness tests retain malformed-input
+rejection, recovery, and exact ranges. Their timing thresholds and sampling
+helpers have moved out of unit tests. Paired 10,000/40,000-element fixtures
+record scaling trends; they do not prove complexity or impose CI limits.
+Allocation, garbage collection, and scheduler noise can affect both median and
+p99, especially for large markup/selector fixtures. Compare repeated runs on
+the same machine before drawing performance conclusions.
+
+| Fixture                                     | Median (ms) | p99 (ms) |
+| ------------------------------------------- | ----------: | -------: |
+| `absolute-css-math-expressions`             |      12.534 |   13.336 |
+| `android-resource-declarations-and-aliases` |       0.822 |    1.356 |
+| `bounded-long-variable-chains`              |       3.274 |    3.718 |
+| `bounded-malformed-absolute-css-math`       |      11.109 |   11.577 |
+| `bounded-malformed-css-comparison-math`     |      12.091 |   12.558 |
+| `bounded-malformed-stepped-css-math`        |       5.150 |    6.115 |
+| `bounded-tailwind-candidate-scanning`       |       5.079 |    7.289 |
+| `colon-and-bracket-heavy-non-utilities`     |       5.529 |    5.931 |
+| `colon-heavy-non-utilities`                 |       2.164 |    3.271 |
+| `css-comparison-math-expressions`           |       7.829 |    8.828 |
+| `css-custom-property-resolution`            |       0.601 |    4.475 |
+| `direct-css-literals`                       |       1.328 |    1.993 |
+| `excess-absolute-css-math-arguments`        |       1.194 |    3.879 |
+| `external-css-custom-property-resolution`   |       0.556 |    0.764 |
+| `malformed-shorthand-0`                     |       0.196 |    0.250 |
+| `malformed-shorthand-1`                     |       0.197 |    0.253 |
+| `malformed-shorthand-2`                     |      46.586 |   59.970 |
+| `malformed-shorthand-3`                     |       1.856 |    2.018 |
+| `malformed-tags-10000`                      |       2.220 |    2.689 |
+| `malformed-tags-40000`                      |      16.115 |   94.617 |
+| `native-component-constructors`             |       2.650 |    5.423 |
+| `nested-relative-colors-and-interpolation`  |       2.319 |    2.601 |
+| `punctuation-heavy-selectors-10000`         |      74.652 |  163.916 |
+| `punctuation-heavy-selectors-40000`         |     107.237 |  120.151 |
+| `stepped-css-math-and-mix-weights`          |       5.222 |    5.851 |
+| `tailwind-markup-decoys`                    |       9.279 |   12.742 |
+| `tailwind-utilities`                        |       9.699 |   10.936 |
+| `unclosed-Vue-expression-10000`             |       0.164 |    0.202 |
+| `unclosed-Vue-expression-40000`             |       0.703 |    4.850 |
+| `unclosed-absolute-css-math`                |       1.579 |    6.764 |
+| `unclosed-android-resource-tags`            |       0.289 |    0.336 |
+| `unclosed-color-expressions`                |       1.730 |    2.203 |
+| `unclosed-css-comparison-math`              |       1.514 |    1.942 |
+| `unclosed-regex-expression-10000`           |       0.180 |    0.219 |
+| `unclosed-regex-expression-40000`           |       0.773 |    2.954 |
+| `unclosed-stepped-css-math`                 |       2.066 |    2.729 |
+| `unclosed-tag-expression-10000`             |       2.937 |    9.262 |
+| `unclosed-tag-expression-40000`             |      12.394 |   19.814 |
+| `unclosed-unity-constructors`               |       2.048 |    2.283 |
+| `unity-component-constructors`              |       2.025 |    2.848 |

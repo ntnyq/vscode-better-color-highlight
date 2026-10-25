@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { describe, expect, it } from 'vitest'
+import { parse } from 'yaml'
 import { version } from '../../src/meta'
 
 describe('release workflow', () => {
@@ -50,5 +51,48 @@ describe('release workflow', () => {
     expect(workflow).toContain('pnpm install --frozen-lockfile')
     expect(workflow).toContain('pnpm exec changelogithub')
     expect(workflow).not.toContain('npx changelogithub')
+  })
+
+  it('covers the declared minimum and stable desktop host on Linux and Windows', async () => {
+    const manifest = JSON.parse(await readFile('package.json', 'utf8')) as {
+      engines: { vscode: string }
+    }
+    const workflow = parse(await readFile('.github/workflows/ci.yml', 'utf8'))
+    const job = workflow.jobs['desktop-compatibility']
+    expect(job.strategy['fail-fast']).toBe(false)
+    expect(job.strategy.matrix.os).toStrictEqual([
+      'ubuntu-latest',
+      'windows-latest',
+    ])
+    expect(job.strategy.matrix.vscode).toStrictEqual([
+      manifest.engines.vscode.replace(/^\^/u, ''),
+      'stable',
+    ])
+    expect(job.env.VSCODE_VERSION).toBe(`\${{ matrix.vscode }}`)
+    const runner = await readFile('tests/e2e/run.ts', 'utf8')
+    expect(runner).toContain("process.env.VSCODE_VERSION || 'stable'")
+  })
+
+  it('keeps public verification read-only and retains reports after failure', async () => {
+    const workflow = parse(
+      await readFile('.github/workflows/verify-publication.yml', 'utf8'),
+    )
+    expect(workflow.permissions).toStrictEqual({ contents: 'read' })
+    expect(Object.keys(workflow.on)).toStrictEqual(['workflow_dispatch'])
+    const steps = workflow.jobs.verify.steps as {
+      run?: string
+      uses?: string
+      if?: string
+      with?: Record<string, unknown>
+    }[]
+    const verify = steps.find(step =>
+      step.run?.includes('verify-publication.ts'),
+    )
+    expect(verify?.run).toContain('--sha256 "$RELEASE_SHA256"')
+    const artifact = steps.find(step =>
+      step.uses?.startsWith('actions/upload-artifact@'),
+    )
+    expect(artifact?.if).toBe('always()')
+    expect(artifact?.with?.path).toBe('publication-verification.json')
   })
 })

@@ -1,6 +1,7 @@
 import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
+import process from 'node:process'
 import { runTests } from '@vscode/test-electron'
 
 const rootDir = resolve(import.meta.dirname, '../..')
@@ -10,6 +11,7 @@ const userDataDir = await mkdtemp(
 
 try {
   await runTests({
+    version: process.env.VSCODE_VERSION || 'stable',
     extensionDevelopmentPath: [
       rootDir,
       resolve(rootDir, 'tests/fixtures/native-languages'),

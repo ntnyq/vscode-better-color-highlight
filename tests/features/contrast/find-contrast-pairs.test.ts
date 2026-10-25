@@ -2,70 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { findContrastPairs } from '../../../src/features/contrast/find-contrast-pairs'
 import { collectStaticMarkupContexts } from '../../../src/features/contrast/markup-contexts'
 
-/**
- * Measure malformed markup scanning and assert that no contexts are produced.
- */
-function measureMalformedMarkup(count: number): number {
-  const text = '<a x '.repeat(count)
-  const start = performance.now()
-  expect(collectStaticMarkupContexts(text, 'html')).toStrictEqual({
-    attributes: [],
-    styles: [],
-  })
-  return performance.now() - start
-}
-
-/**
- * Measure scanning of an unclosed Vue expression without false markup matches.
- */
-function measureUnclosedVueExpression(count: number): number {
-  const text = `{{ "${'<a x '.repeat(count)}`
-  const start = performance.now()
-  expect(collectStaticMarkupContexts(text, 'vue')).toStrictEqual({
-    attributes: [],
-    styles: [],
-  })
-  return performance.now() - start
-}
-
-/**
- * Measure scanning of an unclosed regex expression without false markup
- * matches.
- */
-function measureUnclosedRegexExpression(count: number): number {
-  const text = `{{ /[}}${'<a x '.repeat(count)}`
-  const start = performance.now()
-  expect(collectStaticMarkupContexts(text, 'vue')).toStrictEqual({
-    attributes: [],
-    styles: [],
-  })
-  return performance.now() - start
-}
-
-/**
- * Measure scanning of an unclosed tag expression without false markup matches.
- */
-function measureUnclosedTagExpression(count: number): number {
-  const text = `<div data={fn(${'value + '.repeat(count)}`
-  const start = performance.now()
-  expect(collectStaticMarkupContexts(text, 'svelte')).toStrictEqual({
-    attributes: [],
-    styles: [],
-  })
-  return performance.now() - start
-}
-
-/**
- * Use the fastest sample to exclude scheduler pauses from concurrent suites
- * and VS Code startup, matching the Tailwind parser performance checks.
- */
-function fastestMeasurement(
-  measure: (count: number) => number,
-  count: number,
-): number {
-  return Math.min(...Array.from({ length: 5 }, () => measure(count)))
-}
-
 describe(findContrastPairs, () => {
   it('combines CSS and Tailwind contexts in source order without duplicates', async () => {
     const text = `<style>.a { color: red; background-color: white }</style>
@@ -89,15 +25,12 @@ describe(findContrastPairs, () => {
     ).resolves.toStrictEqual([])
   })
 
-  it('scans malformed tag suffixes in linear time', () => {
-    measureMalformedMarkup(200)
-    const small = fastestMeasurement(measureMalformedMarkup, 10_000)
-    const large = fastestMeasurement(measureMalformedMarkup, 40_000)
-
-    expect(large / small).toBeLessThan(8)
-
-    const maxSizeCount = Math.floor((512 * 1024) / '<a x '.length)
-    expect(measureMalformedMarkup(maxSizeCount)).toBeLessThan(500)
+  it('scans malformed tag suffixes without false markup', () => {
+    const text = '<a x '.repeat(Math.floor((512 * 1024) / '<a x '.length))
+    expect(collectStaticMarkupContexts(text, 'html')).toStrictEqual({
+      attributes: [],
+      styles: [],
+    })
   })
 
   it.each([
@@ -125,12 +58,12 @@ describe(findContrastPairs, () => {
     },
   )
 
-  it('skips malformed tag expressions in linear time', () => {
-    measureUnclosedTagExpression(200)
-    const small = fastestMeasurement(measureUnclosedTagExpression, 10_000)
-    const large = fastestMeasurement(measureUnclosedTagExpression, 40_000)
-
-    expect(large / small).toBeLessThan(8)
+  it('skips malformed tag expressions without false markup', () => {
+    const text = `<div data={fn(${'value + '.repeat(40_000)}`
+    expect(collectStaticMarkupContexts(text, 'svelte')).toStrictEqual({
+      attributes: [],
+      styles: [],
+    })
   })
 
   it.each([
@@ -164,14 +97,12 @@ const decoy = '<div class="bg-black text-white" style="color:white;background-co
     },
   )
 
-  it('skips unclosed host expressions in linear time', () => {
-    measureUnclosedVueExpression(200)
-    const small = fastestMeasurement(measureUnclosedVueExpression, 10_000)
-    const large = fastestMeasurement(measureUnclosedVueExpression, 40_000)
-
-    expect(large / small).toBeLessThan(8)
-    const maxSizeCount = Math.floor((512 * 1024) / '<a x '.length)
-    expect(measureUnclosedVueExpression(maxSizeCount)).toBeLessThan(500)
+  it('skips unclosed host expressions without false markup', () => {
+    const text = `{{ "${'<a x '.repeat(Math.floor((512 * 1024) / '<a x '.length))}`
+    expect(collectStaticMarkupContexts(text, 'vue')).toStrictEqual({
+      attributes: [],
+      styles: [],
+    })
   })
 
   it('masks host-expression theme decoys from real Tailwind attributes', async () => {
@@ -423,12 +354,12 @@ const decoy = '<div className="bg-black text-white" />';
     },
   )
 
-  it('scans malformed regex expressions in linear time', () => {
-    measureUnclosedRegexExpression(200)
-    const small = fastestMeasurement(measureUnclosedRegexExpression, 10_000)
-    const large = fastestMeasurement(measureUnclosedRegexExpression, 40_000)
-
-    expect(large / small).toBeLessThan(8)
+  it('scans malformed regex expressions without false markup', () => {
+    const text = `{{ /[}}${'<a x '.repeat(40_000)}`
+    expect(collectStaticMarkupContexts(text, 'vue')).toStrictEqual({
+      attributes: [],
+      styles: [],
+    })
   })
 
   it.each(['textarea', 'title', 'xmp', 'iframe', 'noembed', 'noframes'])(

@@ -145,7 +145,7 @@ Sources:
 
 ## Delivery Status
 
-Updated: 2026-10-05. The following bounded delivery units are implemented:
+Updated: 2026-10-25 (v0.9.0). The following bounded delivery units are implemented:
 
 1. Source-aware presentation metadata, overlap arbitration, and contextual
    Android XML, Compose, and Dart packed-color handling.
@@ -172,6 +172,10 @@ Updated: 2026-10-05. The following bounded delivery units are implemented:
 9. Static `calc()`, `min()`, `max()`, and `clamp()` in absolute CSS color
    channels and alpha, including legal legacy RGB/HSL forms, nested
    interpolation operands, and deterministic custom-property substitution.
+10. Static `round()`, `mod()`, and `rem()` in absolute/relative channels and
+    alpha, plus calculated `color-mix()` weights, with canonical decimal
+    rounding grids, signed zero, finite typed arithmetic, resource limits,
+    variable substitution, and complete-expression editing.
 
 Regression fixtures cover language boundaries, invalid syntax, source edits,
 missing components, variable ambiguity/cycles, and nesting limits. Performance
@@ -183,6 +187,7 @@ expressions, Android resource navigation, and Unity constructors;
 The findings above describe the August research baseline; statements about
 then-missing support are historical. Current supported syntax and limits are in
 the README. Bare Unity constructor names, dynamic system/asset colors, custom
-Compose spaces, math in `color-mix()` weights, and CSS math functions beyond
-`calc()`/`min()`/`max()`/`clamp()` remain candidates or explicit deferrals.
+Compose spaces and CSS math functions beyond
+`calc()`/`min()`/`max()`/`clamp()`/`round()`/`mod()`/`rem()` remain candidates or
+explicit deferrals.
 They are not release commitments.

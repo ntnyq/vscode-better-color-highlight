@@ -1,0 +1,47 @@
+name: Verify publication
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published stable version (without v)
+        required: true
+        type: string
+      commit:
+        description: Full SHA of the tested release commit
+        required: true
+        type: string
+      sha256:
+        description: SHA-256 of the exact tested and uploaded VSIX
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+      - name: Check public release evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_COMMIT: ${{ inputs.commit }}
+          RELEASE_SHA256: ${{ inputs.sha256 }}
+        run: >-
+          node scripts/verify-publication.ts
+          --version "$RELEASE_VERSION"
+          --commit "$RELEASE_COMMIT"
+          --sha256 "$RELEASE_SHA256"
+          --output publication-verification.json
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: publication-verification
+          path: publication-verification.json
+          if-no-files-found: ignore

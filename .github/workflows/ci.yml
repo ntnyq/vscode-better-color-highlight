@@ -51,5 +51,30 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: xvfb-run -a pnpm run test:e2e
+      - run: pnpm build
+      - run: xvfb-run -a pnpm run test:e2e:web
       - run: xvfb-run -a pnpm run test:package
+
+  desktop-compatibility:
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        vscode: ['1.140.0', stable]
+    runs-on: ${{ matrix.os }}
+    env:
+      VSCODE_VERSION: ${{ matrix.vscode }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - if: runner.os == 'Linux'
+        run: xvfb-run -a pnpm test:e2e:electron
+      - if: runner.os == 'Windows'
+        run: pnpm test:e2e:electron

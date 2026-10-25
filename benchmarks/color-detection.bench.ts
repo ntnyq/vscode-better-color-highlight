@@ -7,6 +7,7 @@ import { resolveCssVarMatches } from '../src/engine/strategies/css-vars/resolver
 import { findHexRGBA } from '../src/engine/strategies/hex'
 import { findSwiftColors } from '../src/engine/strategies/swift-colors'
 import { findTailwindThemeColors } from '../src/engine/strategies/tailwind-theme'
+import { parseTailwindThemeSource } from '../src/engine/strategies/tailwind-theme/parser'
 import { findUnityColors } from '../src/engine/strategies/unity-colors'
 
 const literalCss = Array.from(
@@ -22,6 +23,10 @@ const tailwindMarkup = Array.from(
 ).join('\n')
 
 const adversarialTailwind = `${'variant:'.repeat(10_000)}${'['.repeat(10_000)}x`
+const tailwindMarkupDecoys =
+  '<div data-template="<style>@theme { --color-x: red; }</style>"></div>'.repeat(
+    5000,
+  )
 
 const variableCss = Array.from(
   { length: 100 },
@@ -94,6 +99,15 @@ const androidResources = `<resources>${Array.from({ length: 500 }, (_, index) =>
 const malformedAndroidResource = `<resources><${'color'.repeat(20_000)}`
 
 describe('color detection', () => {
+  test('Tailwind markup decoys', async ({ bench }) => {
+    await bench(
+      'Tailwind markup decoys',
+      { writeResult: '.benchmarks/tailwind-markup-decoys.json' },
+      () => {
+        parseTailwindThemeSource(tailwindMarkupDecoys, '/workspace/index.html')
+      },
+    ).run()
+  })
   test('stepped CSS math and mix weights', async ({ bench }) => {
     await bench(
       'stepped CSS math and mix weights',

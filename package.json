@@ -72,6 +72,7 @@
     "release:publish": "run-s release:verify release:check release:verify release:upload",
     "release:upload": "vsce publish --packagePath dist/release.vsix",
     "release:verify": "node scripts/verify-release.ts",
+    "release:verify-publication": "node scripts/verify-publication.ts",
     "release:version": "bumpp --all --no-commit --no-tag --no-push --execute='pnpm release:build'",
     "test": "run-s test:unit test:e2e",
     "test:e2e": "pnpm build && run-s test:e2e:electron test:e2e:web",

@@ -21,9 +21,13 @@ separate steps. Choose the version once and validate the final versioned tree.
 5. Review and commit the complete release changes. Keep this commit available
    for the later version tag. A preparation-only run ends here.
 
-Unit tests finish before VS Code launches. This keeps startup load from
-competing with parser performance-regression assertions; the benchmark suite
-continues to record informational measurements separately.
+Unit tests finish before VS Code launches. Correctness checks have no fixed
+wall-clock performance threshold; `pnpm bench` records timing trends separately.
+CI runs the shared desktop activation, highlight, picker, alpha-editing, and
+navigation checks on Ubuntu and Windows with both VS Code 1.140.0 (the minimum)
+and stable. Web and installed-VSIX checks run on Ubuntu stable. Set
+`VSCODE_VERSION=1.140.0` when running `pnpm test:e2e:electron` locally to select
+that desktop host; build first with `pnpm build`.
 
 ## Publish the prepared version
 
@@ -46,6 +50,40 @@ notes with the lockfile-pinned `changelogithub`; it does not publish the VSIX.
 Verify the GitHub release independently. If either destination already has the
 version, inspect its state before retrying; do not bump again to recover a
 partially completed publication.
+
+## Verify public availability
+
+After uploading and creating the GitHub release, run:
+
+```sh
+pnpm release:verify-publication --version <version> --commit <full-release-commit-sha> --artifact dist/release.vsix --output /tmp/publication-verification.json
+```
+
+Use the retained tested/uploaded archive, never a fresh build. Alternatively,
+pass `--sha256 <recorded-sha256>` instead of `--artifact` when verifying an
+archived release. Defaults use the current package version, the local
+`v<version>` tag's commit, and `dist/release.vsix`. Explicit expected evidence
+also allows verification after later development or without a local tag.
+
+The read-only verifier checks the public stable GitHub release, the remote
+tag's resolved commit (including annotated tags), the tagged package identity
+and version, the validated Marketplace listing, and the public versioned VSIX's
+SHA-256. It never bumps, uploads, tags, or pushes. GitHub API requests can use
+`GITHUB_TOKEN`; credentials are not forwarded to Marketplace or CDN requests.
+
+Exit codes are `0` for verified, `2` for pending public availability or temporary
+service failure, and `1` for mismatched evidence, invalid input, or an API error.
+JSON reports keep each destination's status, so a pending GitHub release does
+not conceal a Marketplace hash mismatch. Preserve pending evidence and rerun
+the verification after synchronization; do not republish to repair a delay.
+Malformed responses and access failures require investigation.
+
+The manually dispatched **Verify publication** workflow accepts the version,
+release commit SHA, and recorded VSIX SHA-256, and retains the JSON report as an
+Actions artifact even when a destination is pending or mismatched. It requires
+no Marketplace publishing credentials or dependency installation. Dispatch or
+rerun this workflow after both publication steps; the tag-triggered release
+workflow cannot infer the tested VSIX hash.
 
 After both publications are verified, move the completed notes into
 `docs/releases/v<version>.md` and start new next-release notes. Keep prepared

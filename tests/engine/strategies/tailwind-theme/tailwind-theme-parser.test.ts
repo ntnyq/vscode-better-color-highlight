@@ -208,16 +208,24 @@ describe(parseTailwindThemeSource, () => {
     expect(declaration.valueRange).toStrictEqual(rangeOf(text, 'blue'))
   })
 
-  it('scans markup decoys in bounded linear time', () => {
+  it('skips thousands of markup decoys and preserves the following theme', () => {
     const decoy =
       '<div data-template="<style>@theme { --color-x: red; }</style>"></div>'
     const text = decoy.repeat(5000)
-    const start = performance.now()
 
     expect(
       parseTailwindThemeSource(text, '/workspace/index.html').themeDeclarations,
     ).toStrictEqual([])
-    expect(performance.now() - start).toBeLessThan(150)
+    const suffix = '<style>@theme { --color-brand: #123456; }</style>'
+    const parsed = parseTailwindThemeSource(
+      text + suffix,
+      '/workspace/index.html',
+    )
+    expect(parsed.hasV4Signal).toBe(true)
+    expect(parsed.themeDeclarations).toHaveLength(1)
+    expect(parsed.themeDeclarations[0].valueRange).toStrictEqual(
+      rangeOf(text + suffix, '#123456'),
+    )
   })
 
   it('collects contextual regular properties outside theme blocks', () => {
