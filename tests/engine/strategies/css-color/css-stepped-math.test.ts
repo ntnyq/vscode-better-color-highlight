@@ -40,6 +40,13 @@ describe('static CSS stepped calculations', () => {
     ['clamp(0, round(down, max(r, 110), 10), 255)', 120],
     ['round(min(20, 25), max(5, 10))', 20],
     ['mod(1e308, 3)', 2],
+    ['round(down, .3, .1)', 0.3],
+    ['round(up, -.3, .1)', -0.3],
+    ['round(1.15, .1)', 1.2],
+    ['round(1.005, .01)', 1.01],
+    ['round(-1.15, .1)', -1.1],
+    ['round(up, 1e-323, 1e308)', 1e308],
+    ['round(down, -1e-323, 1e308)', -1e308],
   ])('evaluates %s', (source, value) => {
     expect(evaluateColorCalc(source, CHANNELS)).toStrictEqual({
       value,
@@ -70,6 +77,9 @@ describe('static CSS stepped calculations', () => {
     ['mod(10, -5)', -0],
     ['rem(-10, 5)', -0],
     ['rem(10, -5)', 0],
+    ['round(-.05, .1)', -0],
+    ['round(up, -1e-323, 1e308)', -0],
+    ['round(to-zero, -1e-323, 1e308)', -0],
   ])('preserves signed zero in %s', (source, value) => {
     expect(evaluateColorCalc(source, CHANNELS)?.value).toBe(value)
   })
@@ -107,6 +117,10 @@ describe('static CSS stepped calculations', () => {
     'rem(none, 2)',
     'calc(round (1))',
     'round(1)px',
+    'mod(-1e-20, 1)',
+    'mod(1e-20, -1)',
+    'mod(-1e-323, 1e308)',
+    'mod(1e-323, -1e308)',
   ])('rejects invalid or non-finite %s', source => {
     expect(evaluateColorCalc(source, CHANNELS)).toBeNull()
   })
@@ -135,6 +149,8 @@ describe('static CSS stepped calculations', () => {
       'rgb(128, 32, 64)',
     ],
     ['alpha(from red / round(alpha / 3, .1))', 'rgba(255, 0, 0, 0.3)'],
+    ['color(srgb round(down, .3, .1) 0 0)', 'rgb(77, 0, 0)'],
+    ['color-mix(in srgb, red round(1.15%, .1%), blue)', 'rgb(3, 0, 252)'],
   ])('owns the complete expression %s', (source, color) => {
     const parsed = parseCssColorExpression(source)
     expect(parsed && formatCssColor(parsed)).toBe(color)

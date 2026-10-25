@@ -3,6 +3,8 @@ export interface CalculatedComponent {
   readonly unit: 'number' | 'percentage' | 'angle'
 }
 
+type ColorRoundingStrategy = 'nearest' | 'up' | 'down' | 'to-zero'
+
 /**
  * Evaluate bounded arithmetic with typed values, without executing source code.
  * Unsupported functions, inconsistent units, and non-finite values are rejected.
@@ -112,12 +114,17 @@ export function evaluateColorCalc(
     name: 'round' | 'mod' | 'rem',
     depth: number,
   ): CalculatedComponent | null {
-    let strategy = 'nearest'
+    let strategy: ColorRoundingStrategy = 'nearest'
+    const candidate = tokens[index]?.toLowerCase()
     if (
       name === 'round' &&
-      /^(?:nearest|up|down|to-zero)$/iu.test(tokens[index] ?? '')
+      (candidate === 'nearest' ||
+        candidate === 'up' ||
+        candidate === 'down' ||
+        candidate === 'to-zero')
     ) {
-      strategy = tokens[index++].toLowerCase()
+      strategy = candidate
+      index++
       if (tokens[index++] !== ',') {
         return null
       }
@@ -149,38 +156,20 @@ export function evaluateColorCalc(
       if (remainder === 0) {
         return createCalculatedComponent(step.value < 0 ? -0 : 0, value.unit)
       }
-      return createCalculatedComponent(
+      const result =
         Math.sign(remainder) === Math.sign(step.value)
           ? remainder
-          : remainder + step.value,
-        value.unit,
-      )
+          : remainder + step.value
+      // Absorption can round an opposite-sign remainder to the excluded B
+      // endpoint. Skip a result whose required open interval is unrepresentable.
+      return Math.abs(result) < Math.abs(step.value)
+        ? createCalculatedComponent(result, value.unit)
+        : null
     }
-    // Exact multiples retain their original value, including signed zero.
-    if (remainder === 0) {
-      return value
-    }
-    const interval = Math.abs(step.value)
-    const quotient = value.value / interval
-    let rounded: number
-    switch (strategy) {
-      case 'up': {
-        rounded = Math.ceil(quotient)
-        break
-      }
-      case 'down': {
-        rounded = Math.floor(quotient)
-        break
-      }
-      case 'to-zero': {
-        rounded = Math.trunc(quotient)
-        break
-      }
-      default: {
-        rounded = Math.round(quotient)
-      }
-    }
-    return createCalculatedComponent(rounded * interval, value.unit)
+    const rounded = roundColorValue(value.value, Math.abs(step.value), strategy)
+    return rounded === null
+      ? null
+      : createCalculatedComponent(rounded, value.unit)
   }
   function comparison(
     name: 'min' | 'max' | 'clamp',
@@ -299,4 +288,72 @@ function createCalculatedComponent(
   unit: CalculatedComponent['unit'],
 ): CalculatedComponent | null {
   return Number.isFinite(value) ? { value, unit } : null
+}
+
+/**
+ * Round on the canonical decimal grid without a lossy floating-point quotient.
+ * Finite numbers need at most 17 coefficient digits and 632 scale positions,
+ * keeping the integer work bounded independently of the input expression.
+ */
+function roundColorValue(
+  value: number,
+  interval: number,
+  strategy: ColorRoundingStrategy,
+): number | null {
+  if (!Number.isFinite(value / interval)) {
+    return null
+  }
+  const decimalValue = toDecimalCoefficient(value)
+  const decimalInterval = toDecimalCoefficient(interval)
+  const exponent = Math.min(decimalValue.exponent, decimalInterval.exponent)
+  const dividend =
+    decimalValue.coefficient * 10n ** BigInt(decimalValue.exponent - exponent)
+  const divisor =
+    decimalInterval.coefficient *
+    10n ** BigInt(decimalInterval.exponent - exponent)
+  if (dividend % divisor === 0n) {
+    return value
+  }
+  const truncated = dividend / divisor
+  const lower = dividend < 0n ? truncated - 1n : truncated
+  const upper = lower + 1n
+  let multiple: bigint
+  switch (strategy) {
+    case 'up': {
+      multiple = upper
+      break
+    }
+    case 'down': {
+      multiple = lower
+      break
+    }
+    case 'to-zero': {
+      multiple = truncated
+      break
+    }
+    default: {
+      multiple =
+        dividend - lower * divisor < upper * divisor - dividend ? lower : upper
+    }
+  }
+  if (multiple === 0n) {
+    return value < 0 ? -0 : 0
+  }
+  const result = Number(`${multiple * divisor}e${exponent}`)
+  return Number.isFinite(result) ? result : null
+}
+
+/**
+ * Decompose a finite number's shortest decimal representation into integers.
+ */
+function toDecimalCoefficient(value: number): {
+  readonly coefficient: bigint
+  readonly exponent: number
+} {
+  const [mantissa, exponent = '0'] = value.toString().split('e')
+  const fractionalDigits = mantissa.split('.')[1]?.length ?? 0
+  return {
+    coefficient: BigInt(mantissa.replace('.', '')),
+    exponent: Number(exponent) - fractionalDigits,
+  }
 }

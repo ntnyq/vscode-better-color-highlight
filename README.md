@@ -506,6 +506,13 @@ type: non-zero results follow the divisor's sign for `mod()` and the dividend's
 sign for `rem()`. Zero steps and non-finite calculations are skipped. These
 functions follow the finite subset of [CSS stepped-value functions](https://www.w3.org/TR/css-values-4/#round-func).
 
+`round()` selects multiples using the evaluated values' canonical decimal
+representations, so decimal grid points and ties are preserved without a lossy
+floating-point quotient. Earlier arithmetic and angle conversion retain normal
+floating-point precision. If an opposite-sign `mod()` result rounds to its
+excluded divisor endpoint, the expression is skipped rather than previewed
+outside the required interval.
+
 Absolute RGB, HSL, HWB, Lab/LCH, OKLab/OKLCH, and `color()` channels and alpha
 also accept this math subset, including legal legacy RGB/HSL comma forms:
 

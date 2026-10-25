@@ -31,6 +31,13 @@ strategies, inconsistent units, and non-finite values/intermediate results are
 rejected. A round quotient or result that overflows is also rejected. The
 implementation never executes input as JavaScript.
 
+Review fixes use bounded decimal integer scaling for `round()`'s multiple
+selection. This preserves canonical decimal grid points/ties and direction when
+the floating-point quotient underflows to zero. Input arithmetic and angle
+conversion still use finite floating-point values. Integer scaling spans at
+most 632 decimal positions for finite inputs. Opposite-sign `mod()` results
+that round to the excluded divisor endpoint are rejected as unrepresentable.
+
 Variable expansion uses the existing deterministic CSS custom-property
 resolver and its trust, ambiguity, freshness, and resource limits. Picker and
 alpha actions replace the complete outer expression with a static color.
