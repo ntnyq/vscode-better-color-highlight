@@ -7,6 +7,7 @@ import {
 import type { CssVarDeclaration } from '../../../../src/engine/strategies/css-vars/parser'
 import {
   findCssVarUsages,
+  resolveCssVarDefinition,
   resolveCssVarMatches,
 } from '../../../../src/engine/strategies/css-vars/resolver'
 import type { LoadCssVarSourceDeclarationsOptions } from '../../../../src/engine/strategies/css-vars/sources'
@@ -31,6 +32,142 @@ describe(findCssVars, () => {
     loadCssVarSourceDeclarationsMock.mockReset()
     loadCssVarSourceDeclarationsMock.mockResolvedValue([])
   })
+
+  it.each([
+    'initial',
+    'INITIAL',
+    'var(--missing)',
+    'calc(var(--missing) + 1px)',
+    'var(--other)',
+  ])('uses caller fallback for a guaranteed-invalid value: %s', async value => {
+    const text = `:root { --other: initial; --x: ${value}; } .a { color: var(--x, red); }`
+    const matches = await findCssVars(text)
+    expect(matches.at(-1)).toStrictEqual({
+      start: text.lastIndexOf('var(--x'),
+      end: text.lastIndexOf('var(--x') + 'var(--x, red)'.length,
+      color: 'rgb(255, 0, 0)',
+    })
+    await expect(
+      resolveCssVarDefinition(text, text.lastIndexOf('var(--x'), {
+        currentDeclarations: collectCssVarDeclarations(text, {
+          filePath: '/workspace/main.css',
+          trustedSelectors: [':root'],
+        }),
+        externalDeclarations: [],
+      }),
+    ).resolves.toBeNull()
+  })
+
+  it.each([
+    '1rem',
+    'rgb(bogus)',
+    'var(--missing,)',
+    'calc(1px + var(--missing, 2px))',
+  ])('does not use fallback for a valid non-color value: %s', async value => {
+    const text = `:root { --x: ${value}; } .a { color: var(--x, red); }`
+    await expect(findCssVars(text)).resolves.toStrictEqual([])
+  })
+
+  it('uses invalid-value fallbacks inside aliases and color functions', async () => {
+    const text =
+      ':root { --x: initial; --alias: var(--x, red); } .a { color: var(--alias); background: rgb(var(--x, 255) 0 0); }'
+    const matches = await findCssVars(text)
+    expect(matches).toStrictEqual(
+      expect.arrayContaining([
+        {
+          start: text.indexOf('var(--alias)'),
+          end: text.indexOf('var(--alias)') + 'var(--alias)'.length,
+          color: 'rgb(255, 0, 0)',
+        },
+        {
+          start: text.indexOf('rgb('),
+          end: text.indexOf('rgb(') + 'rgb(var(--x, 255) 0 0)'.length,
+          color: 'rgb(255, 0, 0)',
+        },
+      ]),
+    )
+  })
+
+  it('indexes declarations once instead of searching unrelated names per usage', async () => {
+    const count = 1000
+    const text = Array.from(
+      { length: count },
+      (_, index) => `.a${index} { --c${index}: red; color: var(--c${index}); }`,
+    ).join('\n')
+    let nameReads = 0
+    const currentDeclarations = collectCssVarDeclarations(text, {
+      trustedSelectors: [],
+    }).map(
+      declaration =>
+        new Proxy(declaration, {
+          get(target, key, receiver) {
+            if (key === 'name') {
+              nameReads++
+            }
+            return Reflect.get(target, key, receiver)
+          },
+        }),
+    )
+    const matches = await resolveCssVarMatches(text, {
+      currentDeclarations,
+      externalDeclarations: [],
+    })
+    expect(matches).toHaveLength(count)
+    expect(nameReads).toBeLessThan(count * 5)
+  })
+
+  it('yields to timers and discards partial results when cancelled', async () => {
+    const text = `:root { --x: red; }${'.a { color: var(--x); }'.repeat(2000)}`
+    const signal = { isCancellationRequested: false }
+    const cancellation = setTimeout(() => {
+      signal.isCancellationRequested = true
+    }, 0)
+    try {
+      await expect(
+        findCssVars(text, { languageId: 'css', signal }),
+      ).resolves.toStrictEqual([])
+      expect(signal.isCancellationRequested).toBe(true)
+    } finally {
+      clearTimeout(cancellation)
+    }
+  })
+
+  it.each(['current', 'external'])(
+    'indexes repeated variable names by context in %s declarations',
+    async source => {
+      const count = 1000
+      const selectors = Array.from(
+        { length: count },
+        (_, index) => `.a${index}`,
+      )
+      const text = selectors
+        .map(selector => `${selector} { --brand: red; color: var(--brand); }`)
+        .join('\n')
+      let contextReads = 0
+      const declarations = collectCssVarDeclarations(text, {
+        trustedSelectors: selectors,
+      }).map(
+        declaration =>
+          new Proxy(declaration, {
+            get(target, key, receiver) {
+              if (key === 'selectorContext') {
+                contextReads++
+              }
+              return Reflect.get(target, key, receiver)
+            },
+          }),
+      )
+      const matches = await resolveCssVarMatches(text, {
+        currentDeclarations: source === 'current' ? declarations : [],
+        externalDeclarations: source === 'external' ? declarations : [],
+      })
+      expect(matches).toHaveLength(count)
+      expect(matches.every(match => match.color === 'rgb(255, 0, 0)')).toBe(
+        true,
+      )
+      expect(contextReads).toBeLessThan(count * 5)
+    },
+  )
 
   it('marks default trusted selectors as trusted', () => {
     const declarations = collectCssVarDeclarations(

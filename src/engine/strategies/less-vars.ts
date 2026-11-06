@@ -1,198 +1,217 @@
 import type { ColorDefinitionTarget } from '../definition/types'
 import type { ColorMatch, StrategyContext } from '../detection'
 import { resolveDirectColor } from './shared/direct-color'
-import { resolveVariableColors } from './shared/variable-colors'
-import {
-  getCapturedVariableValue,
-  resolveRangedVariableDefinition,
-  toColorDefinitionTarget,
-} from './shared/variable-definition'
+import { toColorDefinitionTarget } from './shared/variable-definition'
 import type {
   RangedVariableDefinition,
   VariableUsage,
 } from './shared/variable-definition'
 
-/**
- * Less variable definitions anywhere in a stylesheet: @my-color: #ff0000;
- */
-const LESS_VAR_DEF_REGEX = /@(?<name>[-\w]+)\s*:\s*(?<value>[^;]+?)\s*;/gu
-
-/**
- * Parse a value that is exactly one Less variable alias.
- *
- * @param value - Normalized Less value
- * @returns Variable name without `@`, or null when value is composite
- */
-function getExactLessVarAlias(value: string): string | null {
-  const match = value.match(/^@(?<name>[-\w]+)$/u)
-  return match?.groups?.name ?? null
+interface LessScope {
+  readonly parent?: LessScope
+  readonly definitions: Map<string, RangedVariableDefinition>
 }
 
+interface ScopedLessUsage extends VariableUsage {
+  readonly scope: LessScope
+}
+
+interface ResolvedLessVariable {
+  readonly color: string
+  readonly definition: RangedVariableDefinition
+}
+
+const LESS_TOKEN_REGEX =
+  /\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$)|"(?:\\[\s\S]|[^"\\])*(?:"|$)|'(?:\\[\s\S]|[^'\\])*(?:'|$)|@(?<name>[-\w]+)|[{}();[\]]/gu
+
 /**
- * Collect LESS variable definitions with their name and value ranges.
+ * Collect lexical scopes before resolving references so the final assignment
+ * in each scope is visible even to earlier usages (Less lazy evaluation).
  */
-function collectLessVarDefs(
+function collectLessVarUsages(
   text: string,
   filePath: string,
-): Map<string, RangedVariableDefinition> {
-  const definitions = new Map<string, RangedVariableDefinition>()
-  for (const match of text.matchAll(LESS_VAR_DEF_REGEX)) {
-    const name = match.groups?.name
-    const rawValue = match.groups?.value
-    if (!name || !rawValue) {
-      continue
-    }
+): ScopedLessUsage[] {
+  let scope: LessScope = { definitions: new Map() }
+  let scopeDepth = 0
+  let expressionDepth = 0
+  let pending:
+    | {
+        readonly name: string
+        readonly start: number
+        readonly valueStart: number
+      }
+    | undefined
+  const usages: ScopedLessUsage[] = []
 
-    const matchStart = match.index ?? 0
-    const relativeNameStart = match[0].indexOf(`@${name}`)
-    const nameStart = matchStart + relativeNameStart
-    const delimiter = match[0].indexOf(':', relativeNameStart + name.length + 1)
-    const { value, valueRange } = getCapturedVariableValue(
-      match,
-      rawValue,
-      delimiter + 1,
-    )
-    definitions.set(name, {
+  function assign(end: number): void {
+    if (!pending) {
+      return
+    }
+    const { name, start, valueStart } = pending
+    const rawValue = text.slice(valueStart, end)
+    const value = rawValue.trim()
+    const offset = valueStart + rawValue.length - rawValue.trimStart().length
+    scope.definitions.set(name, {
       name,
       value,
       filePath,
-      nameRange: { start: nameStart, end: nameStart + name.length + 1 },
-      valueRange,
+      nameRange: { start, end: start + name.length + 1 },
+      valueRange: { start: offset, end: offset + value.length },
     })
+    pending = undefined
   }
-  return definitions
+
+  for (const token of text.matchAll(LESS_TOKEN_REGEX)) {
+    const source = token[0]
+    const start = token.index
+    if (
+      source.startsWith('/') ||
+      source.startsWith('"') ||
+      source.startsWith("'")
+    ) {
+      continue
+    }
+    if (source === '(' || source === '[') {
+      expressionDepth++
+      continue
+    }
+    if (source === ')' || source === ']') {
+      expressionDepth = Math.max(0, expressionDepth - 1)
+      continue
+    }
+    if (source === '{' && expressionDepth === 0) {
+      if (++scopeDepth > 256) {
+        return []
+      }
+      pending = undefined
+      scope = { parent: scope, definitions: new Map() }
+      continue
+    }
+    if ((source === ';' || source === '}') && expressionDepth === 0) {
+      assign(start)
+      if (source === '}' && scope.parent) {
+        scope = scope.parent
+        scopeDepth--
+      }
+      continue
+    }
+    const name = token.groups?.name
+    if (!name || /[-\w@]/u.test(text[start - 1] ?? '')) {
+      continue
+    }
+    const end = start + source.length
+    const colon = text.slice(end).match(/^\s*:\s*/u)
+    if (colon) {
+      if (!pending && expressionDepth === 0) {
+        pending = { name, start, valueStart: end + colon[0].length }
+      }
+      continue
+    }
+    usages.push({ name, originRange: { start, end }, scope })
+  }
+  assign(text.length)
+  return usages
 }
 
 /**
- * Find a known LESS variable reference at an offset, excluding declarations.
+ * Resolve aliases in the reference's scope, caching each scoped name once.
+ * An inherited alias can refer to a variable overridden in the child scope.
  */
-function findLessVarUsageAtOffset(
-  text: string,
-  offset: number,
-  definitions: ReadonlyMap<string, RangedVariableDefinition>,
-): VariableUsage | null {
-  const regex = /@(?<name>[-\w]+)/gu
-  for (const match of text.matchAll(regex)) {
-    const name = match.groups?.name
-    if (!name || !definitions.has(name)) {
-      continue
+function createLessVarResolver(context?: Partial<StrategyContext>) {
+  const resolutions = new Map<
+    LessScope,
+    Map<string, ResolvedLessVariable | null>
+  >()
+  const literalColors = new Map<RangedVariableDefinition, string | null>()
+  return async (
+    usage: ScopedLessUsage,
+  ): Promise<ResolvedLessVariable | null> => {
+    let cache = resolutions.get(usage.scope)
+    if (!cache) {
+      cache = new Map()
+      resolutions.set(usage.scope, cache)
     }
-    const start = match.index ?? 0
-    const end = start + match[0].length
-    if (offset < start || offset >= end) {
-      continue
+    const path = new Set<string>()
+    let name: string | undefined = usage.name
+    let resolved: ResolvedLessVariable | null = null
+    while (name !== undefined && !path.has(name)) {
+      if (context?.signal?.isCancellationRequested) {
+        return null
+      }
+      if (cache.has(name)) {
+        resolved = cache.get(name) ?? null
+        break
+      }
+      path.add(name)
+      let scope: LessScope | undefined = usage.scope
+      while (scope && !scope.definitions.has(name)) {
+        scope = scope.parent
+      }
+      const definition: RangedVariableDefinition | undefined =
+        scope?.definitions.get(name)
+      if (!definition) {
+        break
+      }
+      const value: string = definition.value
+        .replaceAll(/!important\b/gu, '')
+        .trim()
+      const alias: string | undefined =
+        value.match(/^@(?<name>[-\w]+)$/u)?.groups?.name
+      if (alias) {
+        name = alias
+        continue
+      }
+      if (!literalColors.has(definition)) {
+        literalColors.set(definition, await resolveDirectColor(value, context))
+      }
+      const color = literalColors.get(definition)
+      resolved = color ? { color, definition } : null
+      break
     }
-    if (/[-\w@]/u.test(text[start - 1] ?? '')) {
-      continue
+    for (const visited of path) {
+      cache.set(visited, resolved)
     }
-    if (/^\s*:/u.test(text.slice(end))) {
-      continue
-    }
-    return { name, originRange: { start, end } }
+    return context?.signal?.isCancellationRequested ? null : resolved
   }
-  return null
 }
 
 /**
- * Resolve a LESS reference to its color definition through local aliases.
+ * Resolve a LESS reference to its color definition through scoped aliases.
  */
 export async function resolveLessVarDefinition(
   text: string,
   offset: number,
   context?: Partial<StrategyContext>,
 ): Promise<ColorDefinitionTarget | null> {
-  const definitions = collectLessVarDefs(text, context?.filePath ?? '')
-  const usage = findLessVarUsageAtOffset(text, offset, definitions)
+  const usage = collectLessVarUsages(text, context?.filePath ?? '').find(
+    item => offset >= item.originRange.start && offset < item.originRange.end,
+  )
   if (!usage) {
     return null
   }
-
-  const definition = await resolveRangedVariableDefinition(
-    usage.name,
-    definitions,
-    getExactLessVarAlias,
-    async value => (await resolveDirectColor(value, context)) !== null,
-  )
-  return definition ? toColorDefinitionTarget(usage, definition) : null
+  const resolved = await createLessVarResolver(context)(usage)
+  return resolved ? toColorDefinitionTarget(usage, resolved.definition) : null
 }
 
 /**
- * Detect Less variable colors.
- * Phase 1: Find all @var definitions and resolve their values.
- * Phase 2: Find all @var usages and map them to resolved colors.
- *
- * @param text - The document text to scan for Less variable colors
- * @param context - Optional strategy context with parser settings
- * @returns Array of color matches found in the text
+ * Detect Less variable colors using the nearest scope's final assignments.
  */
 export async function findLessVars(
   text: string,
   context?: StrategyContext,
 ): Promise<ColorMatch[]> {
-  // Phase 1: Find variable definitions
-  const rangedVarDefs = collectLessVarDefs(text, '')
-  const varDefs = new Map(
-    [...rangedVarDefs].map(([name, definition]) => [name, definition.value]),
-  )
-  const varColors = await resolveVariableColors(
-    varDefs,
-    getExactLessVarAlias,
-    value => resolveDirectColor(value, context),
-    context?.signal,
-  )
-
-  if (varColors.size === 0) {
-    return []
-  }
-
-  // Phase 2: Find @var usages
-  const matchableNames = [...varColors.keys()]
-  const usageRegex = buildLessVarUsageRegex(matchableNames)
-  if (!usageRegex) {
-    return []
-  }
-
+  const usages = collectLessVarUsages(text, context?.filePath ?? '')
+  const resolve = createLessVarResolver(context)
   const matches: ColorMatch[] = []
-
-  for (const m of text.matchAll(usageRegex)) {
-    const prefix = m.groups?.prefix ?? ''
-    const fullMatch = m.groups?.full
-    const name = m.groups?.name
-    if (!fullMatch || !name) {
-      continue
+  for (const usage of usages) {
+    const resolved = await resolve(usage)
+    if (context?.signal?.isCancellationRequested) {
+      return []
     }
-
-    const start = (m.index ?? 0) + prefix.length
-    const end = start + fullMatch.length
-
-    const color = varColors.get(name)
-    if (!color) {
-      continue
+    if (resolved) {
+      matches.push({ ...usage.originRange, color: resolved.color })
     }
-
-    matches.push({ start, end, color })
   }
-
   return matches
-}
-
-/**
- * Build a regex that matches Less @var usages for the given variable names.
- * Skips definitions (@varName:) and hyphenated names (@varName-xxx).
- *
- * @param varNames - Array of Less variable names without the @ prefix
- * @returns A RegExp matching @name usages, or null if no names provided
- */
-function buildLessVarUsageRegex(varNames: string[]): RegExp | null {
-  if (varNames.length === 0) {
-    return null
-  }
-  const names = varNames
-    .sort((a, b) => b.length - a.length)
-    .map(name => name.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`))
-    .join('|')
-  return new RegExp(
-    `(?<prefix>^|[^-\\w@])(?<full>@(?<name>${names}))(?![-\\w])(?!(?:\\s*:))`,
-    'gmu',
-  )
 }

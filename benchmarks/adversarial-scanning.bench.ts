@@ -1,10 +1,38 @@
 import { describe, test } from 'vitest'
 import { findColorFunctions } from '../src/engine/strategies/color-functions'
+import { findCssVars } from '../src/engine/strategies/css-vars'
 import { findTailwindThemeColors } from '../src/engine/strategies/tailwind-theme'
+import { parseTailwindThemeSource } from '../src/engine/strategies/tailwind-theme/parser'
 import { findTailwindColorUtilities } from '../src/engine/strategies/tailwind-theme/utility'
 import { collectStaticMarkupContexts } from '../src/features/contrast/markup-contexts'
 
 describe('adversarial scanning trends', () => {
+  for (const count of [10_000, 20_000]) {
+    const css = Array.from(
+      { length: count },
+      (_, index) => `.a${index} { --c${index}: red; color: var(--c${index}); }`,
+    ).join('\n')
+    test(`CSS variable declarations and usages ${count}`, async ({ bench }) => {
+      await bench(
+        'CSS variables',
+        {
+          writeResult: `.benchmarks/css-variable-index-${count}.json`,
+        },
+        () => findCssVars(css),
+      ).run()
+    })
+    const markup = `${'<a x '.repeat(count)}<style `
+    test(`unterminated embedded style tags ${count}`, async ({ bench }) => {
+      await bench(
+        'embedded styles',
+        {
+          writeResult: `.benchmarks/unterminated-embedded-styles-${count}.json`,
+        },
+        () => parseTailwindThemeSource(markup, '/workspace/App.vue'),
+      ).run()
+    })
+  }
+
   for (const [index, repeated] of ['1', '.', ' ', '--'].entries()) {
     const text = `--brand-rgb: ${repeated.repeat(64_000)}x`
     test(`malformed shorthand ${JSON.stringify(repeated)}`, async ({

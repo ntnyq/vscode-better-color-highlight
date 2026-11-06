@@ -29,6 +29,28 @@ function resolve(...texts: string[]) {
 }
 
 describe(resolveTailwindTheme, () => {
+  it.each([
+    '--brand: red !important;',
+    '--brand: red !important; --brand: blue;',
+    '--brand: blue; --brand: red ! /* priority */ IMPORTANT;',
+    '--brand: blue !important; --brand: red !important;',
+  ])('respects regular property priority: %s', async declaration => {
+    const text = `:root { ${declaration} }
+      @theme inline { --color-brand: var(--brand); }`
+    const theme = await resolve(text)
+    const color = await resolveTailwindThemeColor(theme, 'brand')
+
+    expect(color?.value).toBe('rgb(255, 0, 0)')
+    expect(color?.source?.value).toBe('red')
+    expect(color?.source?.valueRange.start).toBe(text.indexOf('red'))
+    expect(
+      text.slice(
+        color?.source?.valueRange.start,
+        color?.source?.valueRange.end,
+      ),
+    ).toBe('red')
+  })
+
   it('applies declarations and overrides in source order', async () => {
     const first = '@theme { --color-brand: red; }'
     const second = '@theme static { --color-brand: #0ea5e9; }'

@@ -10,6 +10,26 @@ function context(languageId: string): StrategyContext {
 }
 
 describe('css contrast pairs', () => {
+  it.each(['unset', 'initial', 'inherit', 'revert', 'revert-layer'])(
+    'skips rules and inline styles containing all: %s',
+    async reset => {
+      for (const declarations of [
+        `color: #aaa; background-color: #fff; all: ${reset};`,
+        `all: ${reset} !important; color: #aaa; background-color: #fff;`,
+      ]) {
+        await expect(
+          findContrastPairs(`.a { ${declarations} }`, context('css')),
+        ).resolves.toStrictEqual([])
+        await expect(
+          findContrastPairs(
+            `<div style="${declarations}"></div>`,
+            context('html'),
+          ),
+        ).resolves.toStrictEqual([])
+      }
+    },
+  )
+
   it('returns final declarations with exact half-open value ranges', async () => {
     const text = `.card {
       color: blue;

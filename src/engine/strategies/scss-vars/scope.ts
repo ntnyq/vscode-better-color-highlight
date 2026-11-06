@@ -25,6 +25,7 @@ export function bindScssVariables(
   text: string,
   filePath: string,
   initialDefinitions: ReadonlyMap<string, RangedVariableDefinition> = new Map(),
+  privateDefinitions: ReadonlyMap<string, RangedVariableDefinition> = new Map(),
 ): {
   readonly definitions: Map<string, RangedVariableDefinition>
   readonly usages: readonly BoundScssUsage[]
@@ -56,7 +57,7 @@ export function bindScssVariables(
         return definition
       }
     }
-    return undefined
+    return privateDefinitions.get(name)
   }
 
   function assign(end: number): void {

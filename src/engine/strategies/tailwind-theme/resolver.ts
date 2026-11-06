@@ -292,7 +292,7 @@ function resolveRegularProperty(
 }
 
 /**
- * Select the last property declaration only when its context is unambiguous.
+ * Select by importance and source order only in an unambiguous context.
  */
 function selectRegularProperty(
   name: string,
@@ -310,7 +310,16 @@ function selectRegularProperty(
       JSON.stringify([declaration.selectorContext, declaration.atRuleContext]),
     ),
   )
-  return contexts.size === 1 ? (candidates.at(-1) ?? null) : null
+  if (contexts.size !== 1) {
+    return null
+  }
+  let selected = candidates[0]
+  for (const candidate of candidates) {
+    if (!selected.isImportant || candidate.isImportant) {
+      selected = candidate
+    }
+  }
+  return selected
 }
 
 /**

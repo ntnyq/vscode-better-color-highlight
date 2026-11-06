@@ -1,3 +1,4 @@
+import { waitFor } from '@ntnyq/utils'
 import type {
   ColorDefinitionTarget,
   ColorSourceRange,
@@ -17,6 +18,58 @@ export interface ResolveCssVarMatchOptions {
   readonly currentDeclarations: readonly CssVarDeclaration[]
   readonly externalDeclarations: readonly CssVarDeclaration[]
   readonly strategyContext?: StrategyContext
+}
+
+interface CssVarDeclarationGroup {
+  readonly byContext: Map<string, CssVarDeclaration>
+  hasUntrusted: boolean
+}
+
+interface IndexedCssVarOptions extends ResolveCssVarMatchOptions {
+  readonly currentByName: ReadonlyMap<string, CssVarDeclarationGroup>
+  readonly externalByName: ReadonlyMap<string, CssVarDeclarationGroup>
+}
+
+/**
+ * Build per-run name indexes; unrelated declarations are never rescanned while
+ * resolving aliases or usages. No index survives changes to a source document.
+ */
+function indexCssVarOptions(
+  options: ResolveCssVarMatchOptions,
+): IndexedCssVarOptions {
+  return {
+    ...options,
+    currentByName: indexCssVarDeclarations(options.currentDeclarations),
+    externalByName: indexCssVarDeclarations(options.externalDeclarations),
+  }
+}
+
+/**
+ * Index the cascade winner in each name/context group. Repeated names in many
+ * rules remain constant-time lookups, and external trust covers every candidate.
+ */
+function indexCssVarDeclarations(declarations: readonly CssVarDeclaration[]) {
+  const byName = new Map<string, CssVarDeclarationGroup>()
+  for (const declaration of declarations) {
+    const name = declaration.name
+    let group = byName.get(name)
+    if (!group) {
+      group = { byContext: new Map(), hasUntrusted: false }
+      byName.set(name, group)
+    }
+    group.hasUntrusted ||= !declaration.isTrusted
+    const key = getCssVarContextKey(declaration)
+    const current = group.byContext.get(key)
+    if (
+      !current ||
+      (declaration.isImportant === current.isImportant
+        ? declaration.sourceOrder > current.sourceOrder
+        : declaration.isImportant)
+    ) {
+      group.byContext.set(key, declaration)
+    }
+  }
+  return byName
 }
 
 export interface CssVarUsage {
@@ -56,6 +109,9 @@ type CssVarResolution =
   | {
       readonly status: 'invalid'
     }
+  | {
+      readonly status: 'non-color'
+    }
 
 const MAX_RESOLUTION_DEPTH = 16
 
@@ -68,23 +124,37 @@ export type CssVarSourceContext = Pick<
  * Resolve CSS custom property usages in document text to highlight colors.
  *
  * @param text - Document text to scan
- * @param options - Current-file and external declaration sets
+ * @param input - Current-file and external declaration sets
  * @returns Color matches for resolvable `var(...)` usages
  */
 export async function resolveCssVarMatches(
   text: string,
-  options: ResolveCssVarMatchOptions,
+  input: ResolveCssVarMatchOptions,
 ): Promise<ColorMatch[]> {
+  if (input.strategyContext?.signal?.isCancellationRequested) {
+    return []
+  }
+  const options = indexCssVarOptions(input)
   const matches: ColorMatch[] = []
 
   const usages = findCssVarUsages(text)
-  for (const candidate of scanCssColorFunctions(text)) {
-    const usage = usages.find(
-      reference =>
-        reference.originRange.start >= candidate.start &&
-        reference.originRange.end <= candidate.end,
-    )
-    if (!usage) {
+  let usageIndex = 0
+  let workCount = 0
+  const candidates = scanCssColorFunctions(text).sort(
+    (a, b) => a.start - b.start,
+  )
+  for (const candidate of candidates) {
+    if (++workCount % 256 === 0) {
+      await waitFor(0)
+    }
+    if (options.strategyContext?.signal?.isCancellationRequested) {
+      return []
+    }
+    while (usages[usageIndex]?.originRange.start < candidate.start) {
+      usageIndex++
+    }
+    const usage = usages[usageIndex]
+    if (!usage || usage.originRange.end > candidate.end) {
       continue
     }
     const expanded = expandCssColorVariables(
@@ -107,8 +177,25 @@ export async function resolveCssVarMatches(
       })
     }
   }
+  let scannedOffset = 0
+  let declarationStart = -1
   for (const usage of getOutermostCssVarUsages(usages)) {
-    if (isSkippedCssCustomPropertyValueUsage(text, usage)) {
+    if (++workCount % 256 === 0) {
+      await waitFor(0)
+    }
+    if (options.strategyContext?.signal?.isCancellationRequested) {
+      return []
+    }
+    for (; scannedOffset < usage.originRange.start; scannedOffset++) {
+      if (
+        text[scannedOffset] === ';' ||
+        text[scannedOffset] === '{' ||
+        text[scannedOffset] === '}'
+      ) {
+        declarationStart = scannedOffset
+      }
+    }
+    if (isSkippedCssCustomPropertyValueUsage(text, usage, declarationStart)) {
       continue
     }
 
@@ -131,7 +218,7 @@ export async function resolveCssVarMatches(
     })
   }
 
-  return matches
+  return options.strategyContext?.signal?.isCancellationRequested ? [] : matches
 }
 
 /**
@@ -139,33 +226,40 @@ export async function resolveCssVarMatches(
  *
  * @param text - Document text containing the usage
  * @param offset - Offset within the `var(...)` call
- * @param options - Current-file and external declaration sets
+ * @param input - Current-file and external declaration sets
  * @returns Definition target, or null when resolution is unsafe or non-color
  */
 export async function resolveCssVarDefinition(
   text: string,
   offset: number,
-  options: ResolveCssVarMatchOptions,
+  input: ResolveCssVarMatchOptions,
 ): Promise<ColorDefinitionTarget | null> {
+  if (input.strategyContext?.signal?.isCancellationRequested) {
+    return null
+  }
+  const options = indexCssVarOptions(input)
   const usage = findInnermostCssVarUsage(findCssVarUsages(text), offset)
   if (!usage) {
     return null
   }
 
-  const candidate = selectCssVarDeclaration(usage.name, options, usage)
+  const candidate = selectIndexedCssVarDeclaration(usage.name, options, usage)
   if (candidate.status !== 'found' || !candidate.declaration.filePath) {
     return null
   }
 
   const resolution = await resolveCssVarUsage(
-    usage,
+    { name: usage.name },
     usage,
     options,
     new Set(),
     0,
     false,
   )
-  if (resolution.status !== 'resolved') {
+  if (
+    resolution.status !== 'resolved' ||
+    options.strategyContext?.signal?.isCancellationRequested
+  ) {
     return null
   }
 
@@ -193,7 +287,7 @@ export async function resolveCssVarDefinition(
 async function resolveCssVarUsage(
   usage: Pick<CssVarUsage, 'name' | 'fallback'>,
   context: CssVarSourceContext | undefined,
-  options: ResolveCssVarMatchOptions,
+  options: IndexedCssVarOptions,
   seen: ReadonlySet<string>,
   depth: number,
   canUseInvalidFallback: boolean,
@@ -210,7 +304,7 @@ async function resolveCssVarUsage(
       : { status: 'invalid' }
   }
 
-  const candidate = selectCssVarDeclaration(usage.name, options, context)
+  const candidate = selectIndexedCssVarDeclaration(usage.name, options, context)
   if (candidate.status === 'missing') {
     return resolveFallback(usage, context, options, seen, depth)
   }
@@ -230,6 +324,10 @@ async function resolveCssVarUsage(
     nextSeen,
     depth + 1,
   )
+
+  if (result.status === 'missing') {
+    return resolveFallback(usage, context, options, seen, depth)
+  }
 
   if (result.status !== 'invalid') {
     return result
@@ -254,11 +352,11 @@ async function resolveCssVarUsage(
 async function resolveFallback(
   usage: Pick<CssVarUsage, 'fallback'>,
   context: CssVarSourceContext | undefined,
-  options: ResolveCssVarMatchOptions,
+  options: IndexedCssVarOptions,
   seen: ReadonlySet<string>,
   depth: number,
 ): Promise<CssVarResolution> {
-  if (!usage.fallback) {
+  if (usage.fallback === undefined) {
     return { status: 'missing' }
   }
 
@@ -284,11 +382,11 @@ async function resolveFallback(
 async function resolveInvalidFallback(
   usage: Pick<CssVarUsage, 'fallback'>,
   context: CssVarSourceContext | undefined,
-  options: ResolveCssVarMatchOptions,
+  options: IndexedCssVarOptions,
   seen: ReadonlySet<string>,
   depth: number,
 ): Promise<CssVarResolution> {
-  if (!usage.fallback) {
+  if (usage.fallback === undefined) {
     return { status: 'invalid' }
   }
 
@@ -316,7 +414,7 @@ async function resolveCssVarValue(
   value: string,
   currentName: string | undefined,
   context: CssVarSourceContext | undefined,
-  options: ResolveCssVarMatchOptions,
+  options: IndexedCssVarOptions,
   seen: ReadonlySet<string>,
   depth: number,
 ): Promise<CssVarResolution> {
@@ -325,6 +423,9 @@ async function resolveCssVarValue(
   }
 
   const normalized = value.trim()
+  if (/^initial$/iu.test(normalized)) {
+    return { status: 'missing' }
+  }
   const varUsages = getOutermostCssVarUsages(findCssVarUsages(normalized))
 
   if (varUsages.length > 0) {
@@ -344,7 +445,10 @@ async function resolveCssVarValue(
           : null
       return parsed
         ? { status: 'resolved', color: formatCssColor(parsed) }
-        : { status: expanded.status === 'ambiguous' ? 'ambiguous' : 'missing' }
+        : {
+            status:
+              expanded.status === 'resolved' ? 'non-color' : expanded.status,
+          }
     }
 
     return await resolveCssVarUsage(
@@ -376,12 +480,12 @@ async function resolveCssVarValue(
     }
   }
 
-  return { status: 'missing' }
+  return { status: 'non-color' }
 }
 
 type ExpandedCssValue =
   | { readonly status: 'resolved'; readonly value: string }
-  | { readonly status: 'invalid' | 'ambiguous' }
+  | { readonly status: 'invalid' | 'ambiguous' | 'missing' }
 
 /**
  * Substitute deterministic custom-property tokens before parsing an expression.
@@ -391,7 +495,7 @@ type ExpandedCssValue =
 function expandCssColorVariables(
   value: string,
   context: CssVarSourceContext | undefined,
-  options: ResolveCssVarMatchOptions,
+  options: IndexedCssVarOptions,
   seen: ReadonlySet<string>,
   depth: number,
   budget: { remaining: number },
@@ -403,13 +507,20 @@ function expandCssColorVariables(
   ) {
     return { status: 'invalid' }
   }
+  if (/^initial$/iu.test(value.trim())) {
+    return { status: 'missing' }
+  }
   let result = value
   const usages = getOutermostCssVarUsages(findCssVarUsages(value))
   for (const usage of usages.toReversed()) {
     if (seen.has(usage.name)) {
       return { status: 'invalid' }
     }
-    const candidate = selectCssVarDeclaration(usage.name, options, context)
+    const candidate = selectIndexedCssVarDeclaration(
+      usage.name,
+      options,
+      context,
+    )
     if (candidate.status === 'ambiguous') {
       return { status: 'ambiguous' }
     }
@@ -420,9 +531,9 @@ function expandCssColorVariables(
         ? candidate.declaration.value
         : usage.fallback
     if (source === undefined) {
-      return { status: 'invalid' }
+      return { status: 'missing' }
     }
-    const expanded = expandCssColorVariables(
+    let expanded = expandCssColorVariables(
       source,
       candidate.status === 'found' ? candidate.declaration : context,
       options,
@@ -430,6 +541,20 @@ function expandCssColorVariables(
       depth + 1,
       budget,
     )
+    if (
+      expanded.status === 'missing' &&
+      candidate.status === 'found' &&
+      usage.fallback !== undefined
+    ) {
+      expanded = expandCssColorVariables(
+        usage.fallback,
+        context,
+        options,
+        seen,
+        depth + 1,
+        budget,
+      )
+    }
     if (expanded.status !== 'resolved') {
       return expanded
     }
@@ -456,131 +581,48 @@ export function selectCssVarDeclaration(
   options: ResolveCssVarMatchOptions,
   context?: CssVarSourceContext,
 ): CssVarCandidateResolution {
-  const currentCandidates = options.currentDeclarations.filter(
-    declaration => declaration.name === name,
+  return selectIndexedCssVarDeclaration(
+    name,
+    indexCssVarOptions(options),
+    context,
   )
-  if (currentCandidates.length > 0) {
-    const exactCandidates = context
-      ? currentCandidates.filter(declaration =>
-          hasSameCssVarContext(declaration, context),
-        )
-      : []
-    if (exactCandidates.length > 0) {
-      return {
-        status: 'found',
-        declaration: selectLatestDeclaration(exactCandidates),
-      }
-    }
+}
 
-    if (hasMultipleDeclarationContexts(currentCandidates)) {
-      return { status: 'ambiguous' }
-    }
-
-    return {
-      status: 'found',
-      declaration: selectLatestDeclaration(currentCandidates),
-    }
-  }
-
-  const externalCandidates = options.externalDeclarations.filter(
-    declaration => declaration.name === name,
-  )
-  if (externalCandidates.length === 0) {
+/**
+ * Apply cascade and ambiguity rules to candidates for just one variable name.
+ */
+function selectIndexedCssVarDeclaration(
+  name: string,
+  options: IndexedCssVarOptions,
+  context?: CssVarSourceContext,
+): CssVarCandidateResolution {
+  const current = options.currentByName.get(name)
+  const external = options.externalByName.get(name)
+  const group = current ?? external
+  if (!group) {
     return { status: 'missing' }
   }
-
-  if (externalCandidates.some(declaration => !declaration.isTrusted)) {
+  if (!current && group.hasUntrusted) {
     return { status: 'ambiguous' }
   }
-
-  const exactCandidates = context
-    ? externalCandidates.filter(declaration =>
-        hasSameCssVarContext(declaration, context),
-      )
-    : []
-  if (exactCandidates.length > 0) {
-    return {
-      status: 'found',
-      declaration: selectLatestDeclaration(exactCandidates),
-    }
+  const exact = context
+    ? group.byContext.get(getCssVarContextKey(context))
+    : undefined
+  if (exact) {
+    return { status: 'found', declaration: exact }
   }
-
-  if (hasMultipleDeclarationContexts(externalCandidates)) {
+  if (group.byContext.size > 1) {
     return { status: 'ambiguous' }
   }
-
-  return {
-    status: 'found',
-    declaration: selectLatestDeclaration(externalCandidates),
-  }
+  const declaration = group.byContext.values().next().value
+  return declaration ? { status: 'found', declaration } : { status: 'missing' }
 }
 
 /**
- * Check whether a declaration has matching selector and at-rule contexts.
+ * Identify selector and at-rule context consistently for declarations and usages.
  */
-function hasSameCssVarContext(
-  declaration: CssVarDeclaration,
-  context: CssVarSourceContext,
-): boolean {
-  return (
-    JSON.stringify(declaration.selectorContext) ===
-      JSON.stringify(context.selectorContext) &&
-    JSON.stringify(declaration.atRuleContext) ===
-      JSON.stringify(context.atRuleContext)
-  )
-}
-
-/**
- * Check whether declarations depend on different selector or at-rule contexts.
- *
- * @param declarations - Candidate declarations for one custom property
- * @returns Whether runtime cascade conditions make the candidates ambiguous
- */
-function hasMultipleDeclarationContexts(
-  declarations: readonly CssVarDeclaration[],
-): boolean {
-  const first = declarations[0]
-  const firstContext = JSON.stringify([
-    first.selectorContext,
-    first.atRuleContext,
-  ])
-
-  return declarations
-    .slice(1)
-    .some(
-      declaration =>
-        JSON.stringify([
-          declaration.selectorContext,
-          declaration.atRuleContext,
-        ]) !== firstContext,
-    )
-}
-
-/**
- * Select a declaration by CSS priority, then source order.
- *
- * @param declarations - Declarations with the same name and selector context
- * @returns Winning declaration for one selector context
- */
-function selectLatestDeclaration(
-  declarations: readonly CssVarDeclaration[],
-): CssVarDeclaration {
-  let latest = declarations[0]
-
-  for (const declaration of declarations.slice(1)) {
-    if (declaration.isImportant !== latest.isImportant) {
-      if (declaration.isImportant) {
-        latest = declaration
-      }
-      continue
-    }
-
-    if (declaration.sourceOrder > latest.sourceOrder) {
-      latest = declaration
-    }
-  }
-
-  return latest
+function getCssVarContextKey(context: CssVarSourceContext): string {
+  return JSON.stringify([context.selectorContext, context.atRuleContext])
 }
 
 /**
@@ -619,12 +661,8 @@ function getExactCssVarAlias(
 function isSkippedCssCustomPropertyValueUsage(
   text: string,
   usage: CssVarUsage,
+  declarationStart: number,
 ): boolean {
-  const declarationStart = Math.max(
-    text.lastIndexOf(';', usage.originRange.start),
-    text.lastIndexOf('{', usage.originRange.start),
-    text.lastIndexOf('}', usage.originRange.start),
-  )
   const declarationPrefix = text.slice(
     declarationStart + 1,
     usage.originRange.start,
@@ -873,7 +911,7 @@ function parseCssVarContent(content: string): {
 
   return {
     name: rawName,
-    fallback: fallback || undefined,
+    fallback,
     nameOffset: nameSegment.indexOf(rawName),
   }
 }

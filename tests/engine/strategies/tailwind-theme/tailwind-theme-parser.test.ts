@@ -13,6 +13,51 @@ function rangeOf(text: string, value: string, occurrence = 0) {
 }
 
 describe(parseTailwindThemeSource, () => {
+  it.each(['<a x ', '<style></style '])(
+    'reads an unterminated markup suffix only a bounded number of times: %s',
+    prefix => {
+      const source =
+        prefix === '<a x '
+          ? `${'<a x '.repeat(400)}<style `
+          : `<style>${'</style '.repeat(400)}`
+      let characterReads = 0
+      class MarkupText extends String {}
+      const instrumented = new Proxy(new MarkupText(source), {
+        get(target, key) {
+          if (typeof key === 'string' && /^\d+$/u.test(key)) {
+            characterReads++
+          }
+          const value = Reflect.get(target, key)
+          return typeof value === 'function' ? value.bind(target) : value
+        },
+      })
+      // The wrapper instruments string indexing without a wall-clock threshold.
+      parseTailwindThemeSource(
+        instrumented as unknown as string,
+        '/workspace/App.vue',
+      )
+      expect(characterReads).toBeLessThan(source.length * 20)
+    },
+  )
+
+  it('preserves completed styles before an unterminated trailing tag', () => {
+    const text = `<style>@theme { --color-brand: red; }</style>${'<a x '.repeat(1000)}`
+    const parsed = parseTailwindThemeSource(text, '/workspace/App.vue')
+    expect(parsed.themeDeclarations).toHaveLength(1)
+    expect(parsed.themeDeclarations[0].value).toBe('red')
+  })
+
+  it.each([
+    `${'<a x '.repeat(20_000)}<style `,
+    `<style>${'</style '.repeat(20_000)}`,
+    `<a x="${'<style '.repeat(20_000)}`,
+  ])('stops scanning an unterminated markup suffix %#', text => {
+    const parsed = parseTailwindThemeSource(text, '/workspace/App.vue')
+    expect(parsed.themeDeclarations).toStrictEqual([])
+    expect(parsed.customProperties).toStrictEqual([])
+    expect(parsed.hasV4Signal).toBe(false)
+  })
+
   it('collects ranged declarations from all top-level theme forms', () => {
     const text = `
       @theme { --color-brand: #0ea5e9; }

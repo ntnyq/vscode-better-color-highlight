@@ -55,6 +55,94 @@ vi.mock(
 )
 
 describe(findScssVars, () => {
+  it.each(['@use "palette";', '@use "palette" as *;'])(
+    'resolves a dependency module own bindings: %s',
+    async directive => {
+      const dir = await mkdtemp(join(tmpdir(), 'scss-nested-use-'))
+      const palette = '$red: #ff0000;'
+      await writeFile(join(dir, '_palette.scss'), palette)
+      await writeFile(
+        join(dir, '_theme.scss'),
+        `${directive}\n$brand: ${directive.includes('*') ? '' : 'palette.'}$red;`,
+      )
+      await writeFile(join(dir, '_facade.scss'), '@forward "theme";')
+      const text =
+        '@use "facade"; .a { color: facade.$brand; border: facade.$red; }'
+      const context = {
+        languageId: 'scss',
+        filePath: join(dir, 'main.scss'),
+        resolveScssVariablesAcrossFiles: true,
+      }
+      const matches = await findScssVars(text, context)
+      expect(
+        matches.map(match => ({
+          token: text.slice(match.start, match.end),
+          color: match.color,
+        })),
+      ).toStrictEqual([{ token: 'facade.$brand', color: 'rgb(255, 0, 0)' }])
+      const target = await resolveScssVarDefinition(
+        text,
+        text.indexOf('facade.$brand'),
+        context,
+      )
+      expect(target?.targetFilePath).toBe(join(dir, '_palette.scss'))
+      expect(target?.targetSelectionRange).toStrictEqual({ start: 0, end: 4 })
+    },
+  )
+
+  it.each([
+    '// @use "palette";',
+    '/* @use "palette"; */',
+    '$text: \'@use "palette";\';',
+  ])('ignores dependency-looking text: %s', async decoy => {
+    const dir = await mkdtemp(join(tmpdir(), 'scss-ignored-use-'))
+    await writeFile(join(dir, '_palette.scss'), '$red: red;')
+    const text = `${decoy}\n@use "palette"; .a { color: palette.$red; }`
+    const context = {
+      languageId: 'scss',
+      filePath: join(dir, 'main.scss'),
+      resolveScssVariablesAcrossFiles: true,
+    }
+    const matches = await findScssVars(text, context)
+    expect(matches.at(-1)?.color).toBe('rgb(255, 0, 0)')
+    await expect(
+      resolveScssVarDefinition(text, text.lastIndexOf('palette.$red'), context),
+    ).resolves.toMatchObject({ targetFilePath: join(dir, '_palette.scss') })
+  })
+
+  it.each(['use', 'import', 'forward'])(
+    'does not load a commented or quoted @%s dependency',
+    async directive => {
+      const dir = await mkdtemp(join(tmpdir(), 'scss-ignored-dependency-'))
+      await writeFile(join(dir, '_palette.scss'), '$red: red;')
+      await writeFile(
+        join(dir, '_theme.scss'),
+        `// @${directive} "palette";\n/* @${directive} "palette"; */\n$text: '@${directive} "palette";';`,
+      )
+      const text = '@use "theme"; .a { color: theme.$red; }'
+      await expect(
+        findScssVars(text, {
+          languageId: 'scss',
+          filePath: join(dir, 'main.scss'),
+          resolveScssVariablesAcrossFiles: true,
+        }),
+      ).resolves.toStrictEqual([])
+    },
+  )
+
+  it('bounds recursive module use cycles', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'scss-use-cycle-'))
+    await writeFile(join(dir, '_a.scss'), '@use "b"; $brand: b.$brand;')
+    await writeFile(join(dir, '_b.scss'), '@use "a"; $brand: a.$brand;')
+    await expect(
+      findScssVars('@use "a"; .x { color: a.$brand; }', {
+        languageId: 'scss',
+        filePath: join(dir, 'main.scss'),
+        resolveScssVariablesAcrossFiles: true,
+      }),
+    ).resolves.toStrictEqual([])
+  })
+
   it('discards results cancelled during asynchronous color resolution', async () => {
     const text = '$brand: red; .a { color: $brand; }'
     const signal = { isCancellationRequested: false }

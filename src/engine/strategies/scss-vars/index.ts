@@ -43,6 +43,22 @@ const SCSS_IMPORT_REGEX =
   /@import\s+(?<quote>["'])(?<path>[^"']+)\k<quote>\s*;/gu
 
 /**
+ * Match dependency directives only outside comments and string literals.
+ *
+ * @yields {RegExpMatchArray} Each real directive with its captured path and namespace
+ */
+function* findScssDirectives(text: string, directive: RegExp) {
+  const ignored =
+    /\/\/[^\n]*|\/\*[\s\S]*?(?:\*\/|$)|"(?:\\[\s\S]|[^"\\])*(?:"|$)|'(?:\\[\s\S]|[^'\\])*(?:'|$)/u
+  const tokens = new RegExp(`${ignored.source}|${directive.source}`, 'gu')
+  for (const match of text.matchAll(tokens)) {
+    if (match.groups?.path) {
+      yield match
+    }
+  }
+}
+
+/**
  * Maximum recursive depth for SCSS dependency resolution.
  */
 const MAX_SCSS_RESOLVE_DEPTH = 5
@@ -497,10 +513,29 @@ async function loadScssModule(
       }
     }
 
+    const context = { languageId: 'scss', filePath }
+    const privateDefinitions = await collectUsedStarScssVarDefs(
+      text,
+      context,
+      state,
+      depth + 1,
+    )
+    for (const module of await collectUsedScssModules(
+      text,
+      context,
+      state,
+      depth + 1,
+    )) {
+      for (const [name, definition] of module.varDefs) {
+        privateDefinitions.set(`${module.namespace}.${name}`, definition)
+      }
+    }
+
     return {
       filePath,
       namespace,
-      varDefs: bindScssVariables(text, filePath, varDefs).definitions,
+      varDefs: bindScssVariables(text, filePath, varDefs, privateDefinitions)
+        .definitions,
     }
   } finally {
     state.resolvingFiles.delete(filePath)
@@ -525,7 +560,7 @@ async function collectForwardedScssVarDefs(
   const varDefs = new Map<string, RangedVariableDefinition>()
   const ambiguousNames = new Set<string>()
 
-  for (const m of text.matchAll(SCSS_FORWARD_REGEX)) {
+  for (const m of findScssDirectives(text, SCSS_FORWARD_REGEX)) {
     if (state.signal?.isCancellationRequested) {
       break
     }
@@ -601,7 +636,7 @@ async function collectImportedScssVarDefs(
     return varDefs
   }
 
-  for (const m of text.matchAll(SCSS_IMPORT_REGEX)) {
+  for (const m of findScssDirectives(text, SCSS_IMPORT_REGEX)) {
     if (state.signal?.isCancellationRequested) {
       break
     }
@@ -640,6 +675,7 @@ async function collectUsedStarScssVarDefs(
   text: string,
   context: StrategyContext | undefined,
   state: ScssResolveState,
+  depth = 0,
 ): Promise<Map<string, RangedVariableDefinition>> {
   const varDefs = new Map<string, RangedVariableDefinition>()
   const ambiguousNames = new Set<string>()
@@ -647,7 +683,7 @@ async function collectUsedStarScssVarDefs(
     return varDefs
   }
 
-  for (const m of text.matchAll(SCSS_USE_REGEX)) {
+  for (const m of findScssDirectives(text, SCSS_USE_REGEX)) {
     if (state.signal?.isCancellationRequested) {
       break
     }
@@ -662,6 +698,7 @@ async function collectUsedStarScssVarDefs(
       specifier,
       getScssNamespace(specifier),
       state,
+      depth,
     )
     if (!module) {
       continue
@@ -694,6 +731,7 @@ async function collectUsedScssModules(
   text: string,
   context: StrategyContext | undefined,
   state: ScssResolveState,
+  depth = 0,
 ): Promise<ScssModule[]> {
   if (!context?.filePath) {
     return []
@@ -701,7 +739,7 @@ async function collectUsedScssModules(
 
   const modules: ScssModule[] = []
 
-  for (const m of text.matchAll(SCSS_USE_REGEX)) {
+  for (const m of findScssDirectives(text, SCSS_USE_REGEX)) {
     if (state.signal?.isCancellationRequested) {
       break
     }
@@ -716,6 +754,7 @@ async function collectUsedScssModules(
       specifier,
       namespace,
       state,
+      depth,
     )
     if (module) {
       modules.push(module)

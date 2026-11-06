@@ -39,6 +39,7 @@ const STYLE_LANGUAGES = new Set([
 ])
 
 const RENDERING_DEPENDENT_PROPERTIES = new Set([
+  'all',
   'background',
   'background-blend-mode',
   'background-image',

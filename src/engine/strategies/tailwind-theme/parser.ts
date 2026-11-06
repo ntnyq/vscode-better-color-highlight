@@ -1,3 +1,4 @@
+import { parseCssDeclarationValue } from '../../../shared/css/declaration'
 import { collectCssVarDeclarations } from '../css-vars/parser'
 import type { CssVarDeclaration } from '../css-vars/parser'
 import type { TailwindSourceRange, TailwindRangedValue } from './types'
@@ -199,9 +200,10 @@ function findStyleElementContents(
       continue
     }
 
-    const tag = readMarkupTag(text, cursor)
+    const scanned = readMarkupTag(text, cursor)
+    cursor = scanned.end
+    const tag = scanned.tag
     if (!tag) {
-      cursor++
       continue
     }
     hasMarkupContext = true
@@ -294,7 +296,10 @@ function skipSourceString(
 /**
  * Read a markup tag's name, extent, and closing or self-closing state.
  */
-function readMarkupTag(text: string, start: number): MarkupTag | null {
+function readMarkupTag(
+  text: string,
+  start: number,
+): { readonly end: number; readonly tag?: MarkupTag } {
   let cursor = start + 1
   const closing = text[cursor] === '/'
   if (closing) {
@@ -302,19 +307,19 @@ function readMarkupTag(text: string, start: number): MarkupTag | null {
   }
   const nameStart = cursor
   if (!isAsciiLetter(text[cursor])) {
-    return null
+    return { end: cursor }
   }
   cursor++
   while (isMarkupNameChar(text[cursor])) {
     cursor++
   }
   if (!/[\s/>]/u.test(text[cursor] ?? '')) {
-    return null
+    return { end: cursor }
   }
 
   const end = findMarkupTagEnd(text, cursor)
   if (end === -1) {
-    return null
+    return { end: text.length }
   }
   let marker = end - 2
   while (marker >= cursor && /\s/u.test(text[marker])) {
@@ -322,10 +327,13 @@ function readMarkupTag(text: string, start: number): MarkupTag | null {
   }
 
   return {
-    closing,
     end,
-    name: text.slice(nameStart, cursor).toLowerCase(),
-    selfClosing: text[marker] === '/',
+    tag: {
+      closing,
+      end,
+      name: text.slice(nameStart, cursor).toLowerCase(),
+      selfClosing: text[marker] === '/',
+    },
   }
 }
 
@@ -353,6 +361,8 @@ function findRawTextElementClose(
     if (end !== -1) {
       return { start: cursor, end }
     }
+    // The closing-tag scan already reached EOF; do not rescan its suffix.
+    return null
   }
   return null
 }
@@ -661,7 +671,7 @@ function scanThemeDeclarations(
 }
 
 /**
- * Restore a custom property's original value text and source range.
+ * Restore original value text without reintroducing the priority annotation.
  */
 function restoreCustomPropertyValue(
   text: string,
@@ -692,10 +702,14 @@ function restoreCustomPropertyValue(
   while (valueEnd > valueStart && /\s/u.test(text[valueEnd - 1])) {
     valueEnd--
   }
+  const parsedValue = parseCssDeclarationValue(text.slice(valueStart, valueEnd))
   return {
     ...declaration,
-    value: text.slice(valueStart, valueEnd),
-    valueRange: { start: valueStart, end: valueEnd },
+    ...parsedValue,
+    valueRange: {
+      start: valueStart,
+      end: valueStart + parsedValue.value.length,
+    },
   }
 }
 
