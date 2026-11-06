@@ -5,6 +5,29 @@ export interface CalculatedComponent {
 
 type ColorRoundingStrategy = 'nearest' | 'up' | 'down' | 'to-zero'
 
+const SCIENTIFIC_FUNCTIONS = [
+  'sin',
+  'cos',
+  'tan',
+  'asin',
+  'acos',
+  'atan',
+  'atan2',
+  'pow',
+  'sqrt',
+  'hypot',
+  'log',
+  'exp',
+] as const
+
+type ColorScientificFunction = (typeof SCIENTIFIC_FUNCTIONS)[number]
+
+function isScientificFunction(
+  name: string | undefined,
+): name is ColorScientificFunction {
+  return SCIENTIFIC_FUNCTIONS.some(candidate => candidate === name)
+}
+
 /**
  * Evaluate bounded arithmetic with typed values, without executing source code.
  * Unsupported functions, inconsistent units, and non-finite values are rejected.
@@ -17,7 +40,9 @@ export function evaluateColorCalc(
     return null
   }
   if (
-    !/^(?:calc|min|max|clamp|round|mod|rem|abs|sign)\(/iu.test(source) &&
+    !/^(?:calc|min|max|clamp|round|mod|rem|abs|sign|sin|cos|tan|asin|acos|atan|atan2|pow|sqrt|hypot|log|exp)\(/iu.test(
+      source,
+    ) &&
     !/^(?:[a-z]+|[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?(?:%|deg|grad|rad|turn)?)$/iu.test(
       source,
     )
@@ -26,7 +51,7 @@ export function evaluateColorCalc(
   }
   const tokenMatches = [
     ...source.matchAll(
-      /(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?(?:%|deg|grad|rad|turn)?|[a-z]+(?:-[a-z]+)*|[^\s]/giu,
+      /(?:\d+(?:\.\d*)?|\.\d+)(?:e[-+]?\d+)?(?:%|deg|grad|rad|turn)?|[a-z][a-z0-9]*(?:-[a-z0-9]+)*|[^\s]/giu,
     ),
   ]
   const tokens = tokenMatches.map(match => match[0])
@@ -46,7 +71,8 @@ export function evaluateColorCalc(
       ) {
         return null
       }
-      const value = atom(depth + 1)
+      // A sign belongs to the numeric token; it does not add parentheses.
+      const value = atom(depth)
       return value
         ? createCalculatedComponent(
             value.value * (token === '-' ? -1 : 1),
@@ -67,7 +93,8 @@ export function evaluateColorCalc(
       token === 'mod' ||
       token === 'rem' ||
       token === 'abs' ||
-      token === 'sign'
+      token === 'sign' ||
+      isScientificFunction(token)
     ) {
       if (
         tokenMatches[index]?.index !==
@@ -91,14 +118,24 @@ export function evaluateColorCalc(
           token === 'sign' ? 'number' : value.unit,
         )
       }
-      if (token !== 'calc') {
+      if (token === 'min' || token === 'max' || token === 'clamp') {
         return comparison(token, depth + 1)
+      }
+      if (token !== 'calc') {
+        return numericFunction(token, depth + 1)
       }
       const value = sum(depth + 1)
       return tokens[index++] === ')' ? value : null
     }
     if (!token) {
       return null
+    }
+    if (token === 'pi' || token === 'e') {
+      // CSS constants are only keywords within a calculation, never bare
+      // color components (including in relative colors).
+      return depth > 0
+        ? createCalculatedComponent(token === 'pi' ? Math.PI : Math.E, 'number')
+        : null
     }
     const channel = channels.get(token)
     if (channel !== undefined) {
@@ -123,6 +160,116 @@ export function evaluateColorCalc(
       )
     }
     return createCalculatedComponent(value, 'number')
+  }
+  function numericFunction(
+    name: ColorScientificFunction,
+    depth: number,
+  ): CalculatedComponent | null {
+    const args: CalculatedComponent[] = []
+    do {
+      const value = sum(depth)
+      if (!value) {
+        return null
+      }
+      args.push(value)
+      if (tokens[index] !== ',') {
+        break
+      }
+      index++
+    } while (index < tokens.length)
+    if (tokens[index++] !== ')') {
+      return null
+    }
+    const [first, second] = args
+    if (!first) {
+      return null
+    }
+    if (name === 'hypot' || name === 'atan2') {
+      if (args.some(value => value.unit !== first.unit)) {
+        return null
+      }
+      if (name === 'hypot') {
+        // Scaling inside Math.hypot avoids overflow from squaring finite
+        // operands when their vector length is still representable.
+        return createCalculatedComponent(
+          Math.hypot(...args.map(value => value.value)),
+          first.unit,
+        )
+      }
+      return args.length === 2 && second
+        ? createCalculatedComponent(
+            Math.atan2(first.value, second.value) * (180 / Math.PI),
+            'angle',
+          )
+        : null
+    }
+    if (name === 'sin' || name === 'cos' || name === 'tan') {
+      if (args.length !== 1 || first.unit === 'percentage') {
+        return null
+      }
+      const halfTurn = first.unit === 'angle' ? 180 : Math.PI
+      const phase = first.value % (2 * halfTurn)
+      // Resolve exact quadrants in the input unit. A tiny Math.sin/cos
+      // residual would otherwise become +/-1 under sign(). No epsilon is
+      // used, so neighboring finite angles retain their sign and magnitude.
+      if (phase % halfTurn === 0) {
+        if (name === 'cos') {
+          return createCalculatedComponent(phase === 0 ? 1 : -1, 'number')
+        }
+        return createCalculatedComponent(
+          first.value === 0 ? first.value : 0,
+          'number',
+        )
+      }
+      if (
+        Math.abs(phase) === halfTurn / 2 ||
+        Math.abs(phase) === halfTurn * 1.5
+      ) {
+        // Exact tangent poles have no portable finite preview.
+        if (name === 'tan') {
+          return null
+        }
+        const sine =
+          Math.sign(phase) * (Math.abs(phase) === halfTurn / 2 ? 1 : -1)
+        return createCalculatedComponent(name === 'cos' ? 0 : sine, 'number')
+      }
+      const radians =
+        first.unit === 'angle' ? phase * (Math.PI / 180) : first.value
+      return createCalculatedComponent(Math[name](radians), 'number')
+    }
+    if (args.some(value => value.unit !== 'number')) {
+      return null
+    }
+    if (name === 'pow') {
+      return args.length === 2 && second
+        ? createCalculatedComponent(first.value ** second.value, 'number')
+        : null
+    }
+    if (name === 'log') {
+      if (
+        args.length > 2 ||
+        first.value <= 0 ||
+        (second && (second.value <= 0 || second.value === 1))
+      ) {
+        return null
+      }
+      return createCalculatedComponent(
+        first.value === 1
+          ? 0
+          : Math.log(first.value) / (second ? Math.log(second.value) : 1),
+        'number',
+      )
+    }
+    if (args.length !== 1) {
+      return null
+    }
+    if (name === 'asin' || name === 'acos' || name === 'atan') {
+      return createCalculatedComponent(
+        Math[name](first.value) * (180 / Math.PI),
+        'angle',
+      )
+    }
+    return createCalculatedComponent(Math[name](first.value), 'number')
   }
   function stepped(
     name: 'round' | 'mod' | 'rem',

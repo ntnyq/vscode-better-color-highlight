@@ -681,6 +681,26 @@ describe(findCssVars, () => {
 
   it.each([
     [
+      '--phase: pi / 2; --opacity: .25;',
+      'rgb(calc(sin(var(--phase)) * 128) pow(2, 6) 0 / sqrt(var(--opacity)))',
+      'rgba(128, 64, 0, 0.5)',
+    ],
+    [
+      '--origin: #ff0000; --factor: .5;',
+      'rgb(from var(--origin) pow(r * var(--factor), 1) g b)',
+      'rgb(128, 0, 0)',
+    ],
+    [
+      '--legs: 30%, 40%;',
+      'color-mix(in srgb, red hypot(var(--legs)), blue)',
+      'rgb(128, 0, 128)',
+    ],
+    [
+      '--unused: 1;',
+      'hsl(atan2(var(--missing, 1), -1) 100% 50%)',
+      'rgb(0, 255, 64)',
+    ],
+    [
       '--channel: calc(64 + 64); --opacity: 50%;',
       'rgb(var(--channel) max(16, 32) clamp(0, 64, 255) / var(--opacity))',
       'rgba(128, 32, 64, 0.5)',
@@ -795,6 +815,9 @@ describe(findCssVars, () => {
   })
 
   it.each([
+    ':root { --phase: 25%; } .x { color: rgb(sin(var(--phase)) 0 0); }',
+    ':root { --base: 0; } .x { color: rgb(log(2, var(--base)) 0 0); }',
+    ':root { --channel: 1e308; } .x { color: rgb(pow(var(--channel), 2) 0 0); }',
     '.a { --cap: 20; } .b { --cap: 100; } .x { color: rgb(min(var(--cap, 128), 255) 0 0); }',
     ':root { --cap: var(--cap, 128); } .x { color: rgb(min(var(--cap), 255) 0 0); }',
     ':root { --cap: currentColor; } .x { color: rgb(min(var(--cap), 255) 0 0); }',

@@ -1,5 +1,6 @@
 import { hslToRgb, rgbString } from '../../shared/color'
 import type { ColorMatch } from '../detection'
+import { createCssMathContextChecker } from './shared/css-math-context'
 
 /**
  * Regex for bare HSL triplets (not wrapped in hsl() function).
@@ -23,8 +24,12 @@ const HSL_NO_FN_REGEX =
  */
 export function findHslNoFunction(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
+  const isInMath = createCssMathContextChecker(text)
 
   for (const m of text.matchAll(HSL_NO_FN_REGEX)) {
+    if (isInMath(m.index ?? 0)) {
+      continue
+    }
     const { hue, lightness, saturation } = m.groups ?? {}
     if (!hue || !saturation || !lightness) {
       continue

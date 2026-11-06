@@ -2,6 +2,26 @@ import { describe, expect, it } from 'vitest'
 import { findNamedColors } from '../../../src/engine/strategies/named-colors'
 
 describe(findNamedColors, () => {
+  it.each(['css', 'scss', 'less', 'plaintext'])(
+    'distinguishes tangent functions from the tan color in %s',
+    languageId => {
+      const text =
+        '.x { color: rgb(tan(90deg) 0 0); a: TAN(0); b: tan(; color: tan; }'
+      const start = text.lastIndexOf('tan')
+      expect(
+        findNamedColors(text, { languageId, namedColorMatchMode: 'always' }),
+      ).toStrictEqual([{ start, end: start + 3, color: 'rgb(210, 180, 140)' }])
+    },
+  )
+
+  it('retains independent tan operands around rejected tangent calculations', () => {
+    const text = 'color-mix(in srgb, tan, rgb(tan(90deg) 0 0))'
+    const start = text.indexOf('tan')
+    expect(findNamedColors(text)).toStrictEqual([
+      { start, end: start + 3, color: 'rgb(210, 180, 140)' },
+    ])
+  })
+
   it('finds named color "red"', () => {
     const result = findNamedColors('color: red;')
     expect(result).toStrictEqual([

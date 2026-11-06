@@ -364,7 +364,7 @@ and virtual workspaces when their files are readable by VS Code.
 - [x] `color()`：`srgb` `srgb-linear` `display-p3` `display-p3-linear` `a98-rgb` `prophoto-rgb` `rec2020` `xyz`
 - [x] Static `color-mix()`：predefined interpolation spaces, percentages, premultiplied alpha, hue methods, and nested colors
 - [x] Static relative CSS colors：`rgb(from red r g b / .5)`, `oklch(from var(--brand) l calc(c * .9) h)`, and `alpha(from red / .5)`
-- [x] Static CSS math in absolute/relative color channels, alpha, and mix weights：nested `calc()`, `min()`, `max()`, `clamp()`, `round()`, `mod()`, `rem()`, `abs()`, and `sign()`
+- [x] Static CSS math in absolute/relative color channels, alpha, and mix weights：arithmetic, comparison, stepped, sign, trigonometric and exponential functions, plus `pi` / `e`
 - [x] Named color（`red` `rebeccapurple`）
 - [x] CSS / SCSS / Less / Stylus variables
 - [x] Extra expressions：bare RGB / HSL triplets、`--color-rgb: 255 0 0` shorthands
@@ -516,9 +516,10 @@ Relative `rgb`, `hsl`, `hwb`, Lab/LCH, OKLab/OKLCH, and `color()` expressions
 convert their origin into the target space before reading channel identifiers.
 Omitted alpha inherits the origin's alpha. `alpha(from <color> / <alpha>)`
 changes transparency while retaining the origin space. These forms support
-`calc()`, `min()`, `max()`, `clamp()`, `round()`, `mod()`, `rem()`, `abs()`, and `sign()` with channel identifiers, finite
-numeric/percentage/angle literals, parentheses, and `+`, `-`, `*`, `/` with
-compatible units. The functions can nest, and comparison arguments can contain
+`calc()`, `min()`, `max()`, `clamp()`, `round()`, `mod()`, `rem()`, `abs()`,
+`sign()`, and the trigonometric/exponential functions described below with
+channel identifiers, finite numeric/percentage/angle literals, parentheses,
+and `+`, `-`, `*`, `/` with compatible units. The functions can nest, and arguments can contain
 arithmetic directly: `min(c * .9, .2)` or `calc(max(r, 20) / 2)`.
 
 `min()` and `max()` accept one or more comma-separated arguments; `clamp()`
@@ -527,7 +528,7 @@ bound can be `none` to leave that side unlimited. Comparison arguments must
 have the same type; angle units are converted to degrees. Channel identifiers
 are numbers, so use `min(alpha, .5)`, not `min(alpha, 50%)`. Binary `+` and `-`
 require surrounding whitespace. Division by zero, non-finite literals or
-intermediate results, mixed-unit sums/comparisons, and other math functions
+intermediate results, mixed-unit sums/comparisons, and unsupported math functions
 are skipped. This follows the supported finite subset of
 [CSS comparison functions](https://www.w3.org/TR/css-values-4/#comp-func).
 
@@ -558,6 +559,22 @@ could otherwise produce a finite result. See the
 [sign-related math design](docs/design/2026-10-25-css-sign-math.md) and
 [CSS sign-related functions](https://drafts.csswg.org/css-values-4/#sign-funcs).
 
+`sin()`, `cos()`, and `tan()` take a number in radians or an angle and return a
+number. `asin()`, `acos()`, and `atan()` take numbers and return angles.
+`atan2(y, x)` accepts two arguments of the same type and returns an angle;
+`hypot()` accepts one or more arguments of the same type and preserves that
+type. For example, `hypot(30%, 40%)` is a 50% mix weight. Relative hue keywords
+are numbers: combine `h` with an angle using `calc(h * 1deg + acos(-1))`.
+
+`pow(base, exponent)`, `sqrt(value)`, `log(value[, base])`, and `exp(value)`
+accept numbers and return numbers. The constants `pi` and `e` are available
+inside calculations, such as `sin(pi / 2)` or `log(e)`, but cannot be bare color
+components. Logarithm bases must be positive and different from 1. Invalid
+domains, non-finite operands/results, and exactly represented tangent poles
+are skipped. Exact quadrant zeros remain zero under nested `sign()` calls;
+nearby inputs use floating-point precision without an epsilon cutoff. See the
+[trigonometric and exponential math design](docs/design/2026-11-06-css-scientific-math.md).
+
 Absolute RGB, HSL, HWB, Lab/LCH, OKLab/OKLCH, and `color()` channels and alpha
 also accept this math subset, including legal legacy RGB/HSL comma forms:
 
@@ -568,6 +585,9 @@ oklch(clamp(.2, .65, .8) .2 30)
 color-mix(in srgb, rgb(max(128, 64) 0 0), blue)
 rgb(abs(-128) calc(sign(-10%) * -64) 0 / abs(-.5))
 color-mix(in srgb, red abs(-25%), blue calc(sign(1deg) * 75%))
+rgb(calc(sin(pi / 2) * 128) pow(2, 6) sqrt(256) / exp(log(.5)))
+hsl(atan2(1, -1) 100% 50%)
+color-mix(in srgb, red hypot(30%, 40%), blue)
 ```
 
 Separators inside nested math stay within their channel. Each result must match

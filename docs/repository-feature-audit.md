@@ -19,7 +19,7 @@ skipped. A design record's historical non-goals do not create backlog promises.
 | Capability                                                                                                                   | Runtime owner                                                                                   | Verification                                                                              |
 | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | HEX, CSS named/function colors, missing components, wide gamut, interpolation, relative colors, alpha, and typed static math | `src/engine/strategies/css-color/`, `color-functions.ts`, `hex.ts`, `named-colors.ts`, `hwb.ts` | `tests/engine/strategies/css-color/`, playground snapshots                                |
-| `calc`, comparison and stepped math in channels/alpha and calculated mix percentages                                         | `src/engine/strategies/css-color/calc.ts`, `parser.ts`, `relative.ts`                           | evaluator/parser tests, CSS-variable/provider tests, shared desktop/Web/VSIX smoke checks |
+| `calc`, comparison, stepped, sign, trigonometric/exponential math and finite constants in channels/alpha and mix weights     | `src/engine/strategies/css-color/calc.ts`, `parser.ts`, `relative.ts`                           | evaluator/parser tests, CSS-variable/provider tests, shared desktop/Web/VSIX smoke checks |
 | CSS/SCSS/Less/Stylus variables with conservative scope and cross-file resolution                                             | `src/engine/strategies/css-vars/`, `scss-vars/`, `less-vars.ts`, `stylus-vars.ts`               | corresponding strategy/resolver/cache/definition suites                                   |
 | Tailwind v3/v4 palettes, CSS-first themes, utilities, opacity and contextual navigation                                      | `src/engine/strategies/tailwind-theme/`                                                         | Tailwind strategy suites and playground snapshots                                         |
 | JSON/JSONC/JSON-formatted `.tokens` and YAML design-token colors and aliases                                                 | `src/engine/strategies/design-tokens/`                                                          | design-token parser/resolver/navigation suites                                            |
@@ -70,10 +70,11 @@ are informational and live in [the baseline](performance-baseline.md).
 No documented feature was found to exist only in prose. Playground TODO/FIXME
 color examples remain intentional fixtures, not engineering tasks. Design
 records are indexed in [the design directory](design/README.md), including the
-October Android, Unity, absolute/comparison math, and stepped-math work.
+October Android, Unity, absolute/comparison math, stepped-math work, and the
+November [trigonometric/exponential math extension](design/2026-11-06-css-scientific-math.md).
 
-Potential future work requires separate product decisions: additional CSS math
-functions/constants and dimensional algebra; dynamic native expressions;
+Potential future work requires separate product decisions: CSS dimensional
+algebra and non-finite calculation semantics; dynamic native expressions;
 Compose spaces beyond literal Srgb/LinearSrgb/DisplayP3; resource qualifier
 inference; persistent workspace indexing; and runtime/cascade-dependent color
 interpretation. These are

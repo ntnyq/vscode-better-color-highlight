@@ -89,7 +89,7 @@ describe('static CSS sign-related calculations', () => {
     'sign(none)',
     'abs(infinity)',
     'sign(NaN)',
-    'sign(pi)',
+    'sign(tau)',
     'abs(var(--value))',
     'sign(bogus)',
     'abs(1);',

@@ -93,6 +93,17 @@ const malformedSignMath = Array.from(
     `rgb(abs(1, 2) 0 0); rgb(sign(${oversizedComparison}) 0 0); rgb(${'abs(sign('.repeat(17)}1${'))'.repeat(17)} 0 0);`,
 ).join('\n')
 const unclosedSignMath = `rgb(${'abs(sign('.repeat(10_000)}1; rgb(abs(-128) 0 0)`
+const scientificMathColors = Array.from(
+  { length: 400 },
+  (_, index) =>
+    `.scientific-${index} { color: rgb(calc(sin(pi / 2) * 128) pow(2, 6) sqrt(256) / exp(log(.5))); background: hsl(atan2(1, -1) 100% 50%); border-color: color-mix(in srgb, red hypot(30%, 40%), blue); }`,
+).join('\n')
+const malformedScientificMath = Array.from(
+  { length: 100 },
+  () =>
+    `rgb(pow(-1, .5) 0 0); rgb(hypot(${oversizedComparison}) 0 0); rgb(${'sqrt(pow('.repeat(17)}1${', 2))'.repeat(17)} 0 0);`,
+).join('\n')
+const unclosedScientificMath = `rgb(${'sqrt(pow('.repeat(10_000)}1; rgb(pow(2, 7) 0 0)`
 const longChain = `:root { ${Array.from({ length: 200 }, (_, index) => `--v${index}: var(--v${index + 1});`).join(' ')} --v200: red; } .x { color: rgb(from var(--v0) r g b); }`
 const chainDeclarations = collectCssVarDeclarations(longChain, {
   trustedSelectors: [':root'],
@@ -120,6 +131,26 @@ const androidResources = `<resources>${Array.from({ length: 500 }, (_, index) =>
 const malformedAndroidResource = `<resources><${'color'.repeat(20_000)}`
 
 describe('color detection', () => {
+  for (const [name, source, fileName] of [
+    ['scientific CSS math', scientificMathColors, 'scientific-css-math'],
+    [
+      'bounded malformed scientific CSS math',
+      malformedScientificMath,
+      'bounded-malformed-scientific-css-math',
+    ],
+    [
+      'unclosed scientific CSS math',
+      unclosedScientificMath,
+      'unclosed-scientific-css-math',
+    ],
+  ]) {
+    test(name, async ({ bench }) => {
+      await bench(name, { writeResult: `.benchmarks/${fileName}.json` }, () =>
+        findColorFunctions(source),
+      ).run()
+    })
+  }
+
   test('sign-related CSS math and mix weights', async ({ bench }) => {
     await bench(
       'sign-related CSS math and mix weights',

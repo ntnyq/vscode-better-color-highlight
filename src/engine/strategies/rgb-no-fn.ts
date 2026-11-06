@@ -1,5 +1,6 @@
 import { rgbString } from '../../shared/color'
 import type { ColorMatch } from '../detection'
+import { createCssMathContextChecker } from './shared/css-math-context'
 
 /**
  * Regex for bare RGB triplets (not wrapped in rgb() function).
@@ -21,8 +22,12 @@ const RGB_NO_FN_REGEX =
  */
 export function findRgbNoFunction(text: string): ColorMatch[] {
   const matches: ColorMatch[] = []
+  const isInMath = createCssMathContextChecker(text)
 
   for (const m of text.matchAll(RGB_NO_FN_REGEX)) {
+    if (isInMath(m.index ?? 0)) {
+      continue
+    }
     const { blue, green, red } = m.groups ?? {}
     if (!red || !green || !blue) {
       continue

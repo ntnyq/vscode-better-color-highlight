@@ -6,6 +6,18 @@ version is chosen.
 
 ## New features
 
+- Support static CSS trigonometric/inverse-trigonometric functions, `pow()`,
+  `sqrt()`, `hypot()`, `log()`, `exp()`, and calculation constants `pi` / `e`
+  in absolute/relative channels, alpha, and calculated mix weights. Enforce
+  argument types, domains, finite results, and shared evaluation limits.
+  Variable substitution and complete-expression picker/alpha edits are covered
+  by unit, snapshot, and LF/CRLF host fixtures. See [the design](design/2026-11-06-css-scientific-math.md).
+- Distinguish the tangent function `tan()` from the named color `tan`, including
+  when a calculation is rejected or incomplete.
+- Preserve exact trigonometric quadrant zeros under `sign()`, accept signed
+  numeric literals at the nesting limit, and exclude math operands from optional
+  bare RGB/HSL highlighting. Review regressions cover adjacent representable
+  angles, malformed-input recovery, comments, quotes, and deep calculations.
 - Support literal Compose `ColorSpaces.Srgb`, `LinearSrgb`, and `DisplayP3`
   on float RGB and HSL/HSV calls, including full qualification. Previews convert
   to sRGB; picker edits retain the original space. Alpha commands preserve all
@@ -52,7 +64,11 @@ version is chosen.
 
 ## Validation
 
-- Formatting, lint, types, 86 unit/snapshot files with 2,331 tests, stable
+- On 2026-11-06, formatting, lint, types, 88 unit/snapshot files with 2,635
+  tests, stable Electron/Chromium Web hosts, and installed-VSIX checks passed
+  with the trigonometric/exponential math changes and review fixes. All three focused benchmarks
+  passed; measurements are in the [math baseline](performance-baseline.md#trigonometric-and-exponential-css-math-2026-11-06).
+- Previously recorded: formatting, lint, types, 86 unit/snapshot files with 2,331 tests, stable
   Electron/Chromium Web hosts, and installed-VSIX activation checks passed.
 - The shared desktop suite also passed locally with VS Code 1.140.0. CI tracks
   both versions on Windows and Ubuntu.

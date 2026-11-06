@@ -139,11 +139,21 @@ export async function assertAbsoluteColorHighlighting(): Promise<void> {
   sign-color: rgb(abs(-128) calc(sign(-10%) * -64) 0 / abs(0 - var(--opacity)));
   sign-relative: rgb(from red abs(r - 127) calc(sign(-10%) * -64) b);
   sign-mix: color-mix(in srgb, red abs(0% - var(--weight) / 2), blue);
+  trig-color: rgb(calc(sin(pi / 2) * var(--red)) pow(2, 6) sqrt(256) / exp(log(var(--opacity))));
+  inverse-color: hsl(atan2(1, -1) 100% 50%);
+  power-relative: rgb(from red sqrt(r * r) g b / pow(alpha / 2, 2));
+  hypot-mix: color-mix(in srgb, red hypot(30%, 40%), blue);
+  exact-trig-zero: rgb(calc(sign(cos(90deg)) * var(--red)) 0 0);
   invalid-unit: rgb(calc(1px) 0 0);
   invalid-division: rgb(calc(1 / 0) 0 0);
   invalid-step: rgb(round(128, 0) 0 0);
   invalid-sign-overflow: rgb(sign(1e308 * 2) 0 0);
   invalid-abs-unit: rgb(abs(-1deg) 0 0);
+  invalid-trig-unit: rgb(sin(50%) 0 0);
+  invalid-tangent-pole: rgb(tan(90deg) 0 0);
+  invalid-power-domain: rgb(pow(-1, .5) 0 0);
+  invalid-exponential-overflow: rgb(min(0, exp(1000)) 0 0);
+  invalid-bare-constant: rgb(pi 0 0);
   invalid-weight: color-mix(in srgb, red calc(50), blue);
   invalid-lab-conversion: lab(50% calc(1e308) 0);
   invalid-oklab-conversion: oklab(50% calc(1e308) 0);
@@ -154,8 +164,12 @@ export async function assertAbsoluteColorHighlighting(): Promise<void> {
   })
   await window.showTextDocument(document)
   // Invalid weights leave the two independently detectable named colors.
-  const state = await waitForHighlightState(document.uri.toString(), 16)
-  assertEqual(state.colorCount, 14, 'Expected fourteen CSS math colors')
+  const state = await waitForHighlightState(document.uri.toString(), 21)
+  assertEqual(
+    state.colorCount,
+    18,
+    'Expected eighteen distinct CSS math colors',
+  )
   assertEqual(
     JSON.stringify([...state.colors].sort()),
     JSON.stringify(
@@ -173,6 +187,10 @@ export async function assertAbsoluteColorHighlighting(): Promise<void> {
         'rgba(128, 64, 0, 0.5)',
         'rgb(128, 64, 0)',
         'rgb(64, 0, 191)',
+        'rgba(255, 64, 16, 0.5)',
+        'rgb(0, 255, 64)',
+        'rgba(255, 0, 0, 0.25)',
+        'rgb(0, 0, 0)',
         'rgb(18, 52, 86)',
       ].sort(),
     ),

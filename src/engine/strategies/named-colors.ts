@@ -74,6 +74,11 @@ export function findNamedColors(
 
     const start = (m.index ?? 0) + prefix.length
     const end = start + name.length
+    // The CSS tangent function is not the named color, even when its outer
+    // expression is invalid or incomplete and cannot own the source range.
+    if (name.toLowerCase() === 'tan' && text[end] === '(') {
+      continue
+    }
     if (
       !isNamedColorAllowed(
         text,

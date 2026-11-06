@@ -1,0 +1,31 @@
+:root {
+  --phase: calc(pi / 2);
+  --opacity: 0.25;
+  --legs: 30%, 40%;
+}
+
+.scientific-math {
+  color: rgb(calc(sin(var(--phase)) * 128) pow(2, 6) sqrt(256));
+  background: color(srgb cos(0) sin(0) log(1) / sqrt(var(--opacity)));
+  border-color: hsl(atan2(1, -1) 100% 50%);
+  outline-color: hwb(acos(-1) 0% 0%);
+  accent-color: rgb(from red sqrt(r * r) g b / pow(alpha / 2, 2));
+  caret-color: color-mix(in srgb, red hypot(var(--legs)), blue);
+  shadow-color: alpha(from red / exp(log(0.5)));
+  nested-color: oklch(sqrt(0.25) 0 calc(asin(0.5) + atan(1)));
+  constant-color: rgb(calc(e * 40) calc(pi * 40) calc(tan(45deg) * 128));
+  exact-zero: rgb(calc(sign(cos(90deg)) * 255) 0 0);
+}
+
+.unsupported-scientific-math {
+  invalid-arity: rgb(pow(2) 0 0);
+  invalid-unit: rgb(sin(50%) 0 0);
+  invalid-domain: rgb(sqrt(-1) 0 0);
+  invalid-pole: rgb(tan(90deg) 0 0);
+  invalid-overflow: rgb(min(0, exp(1000)) 0 0);
+  invalid-bare-constant: rgb(pi 0 0);
+  invalid-rgb-triplet: rgb(pow(3, 4, 5) 0 0);
+  invalid-hsl-triplet: hsl(atan2(30 40% 50%) 100% 50%);
+  numeric-triplet: hypot(3, 4, 5);
+  recovery-color: #123456;
+}

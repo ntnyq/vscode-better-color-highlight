@@ -38,6 +38,52 @@ interface NativeColorFixture {
 
 const NATIVE_COLOR_FIXTURES: readonly NativeColorFixture[] = [
   {
+    name: 'Trigonometric and exponential CSS math offers complete generic edits',
+    languageId: 'plaintext',
+    source: 'rgb(calc(sin(pi / 2) * 255) sqrt(0) log(1) / exp(0))',
+    afterPicker: 'rgba(0, 255, 0, 0.5)',
+    afterAlpha: 'rgba(0, 255, 0, 0.4)',
+    afterSourceAlpha: 'rgba(255, 0, 0, 0.9)',
+    genericEdits: true,
+  },
+  {
+    name: 'Inverse trigonometric CSS hue offers complete generic edits',
+    languageId: 'plaintext',
+    source: 'hsl(atan2(0, 1) 100% 50% / cos(0))',
+    afterPicker: 'rgba(0, 255, 0, 0.5)',
+    afterAlpha: 'rgba(0, 255, 0, 0.4)',
+    afterSourceAlpha: 'hsl(0 100% 50% / 0.9)',
+    genericEdits: true,
+  },
+  {
+    name: 'Relative CSS powers offer complete generic edits',
+    languageId: 'plaintext',
+    source: 'rgb(from red sqrt(r * r) g b / pow(alpha, 2))',
+    afterPicker: 'rgba(0, 255, 0, 0.5)',
+    afterAlpha: 'rgba(0, 255, 0, 0.4)',
+    afterSourceAlpha: 'rgba(255, 0, 0, 0.9)',
+    genericEdits: true,
+  },
+  {
+    name: 'Hypotenuse mix weights offer complete generic edits',
+    languageId: 'plaintext',
+    source:
+      'color-mix(in srgb, red hypot(30%, 40%), red calc(sin(pi / 2) * 50%))',
+    afterPicker: 'rgba(0, 255, 0, 0.5)',
+    afterAlpha: 'rgba(0, 255, 0, 0.4)',
+    afterSourceAlpha: 'rgba(255, 0, 0, 0.9)',
+    genericEdits: true,
+  },
+  {
+    name: 'Exponential alpha offers complete generic edits',
+    languageId: 'plaintext',
+    source: 'alpha(from red / exp(log(alpha)))',
+    afterPicker: 'rgba(0, 255, 0, 0.5)',
+    afterAlpha: 'rgba(0, 255, 0, 0.4)',
+    afterSourceAlpha: 'rgba(255, 0, 0, 0.9)',
+    genericEdits: true,
+  },
+  {
     name: 'Sign-related absolute CSS math offers complete generic edits',
     languageId: 'plaintext',
     source: 'rgb(abs(-255) sign(0%) abs(-0) / sign(1deg))',

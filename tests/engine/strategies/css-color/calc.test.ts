@@ -127,9 +127,9 @@ describe('bounded CSS color calculations', () => {
     'min(infinity, 1)',
     'max(-infinity, 1)',
     'min(NaN, 1)',
-    'min(pi, 1)',
+    'min(tau, 1)',
     'min(var(--r), 1)',
-    'min(sin(1), 1)',
+    'min(sin(1%), 1)',
     'min(1px, 2px)',
   ])('rejects invalid or unsupported %s', source => {
     expect(evaluateColorCalc(source, CHANNELS)).toBeNull()

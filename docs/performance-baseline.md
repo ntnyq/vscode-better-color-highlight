@@ -257,3 +257,21 @@ focused run.
 | 400 Compose and 400 Swift component constructors |       3.004 |    6.359 |
 | 1,200 explicit-space RGB/HSL/HSV calls           |       6.437 |   22.845 |
 | 1,200 unsupported color-space overloads          |       2.457 |    5.841 |
+
+## Trigonometric and exponential CSS math, 2026-11-06
+
+The focused command `pnpm bench benchmarks/color-detection.bench.ts -t 'scientific CSS math'`
+passed all three new fixtures on Node 24.22.1, pnpm 12.18.0, Vitest 5.0.5,
+macOS arm64. These local samples establish an informational baseline, with no
+CI timing threshold or performance comparison to older runs.
+
+| Fixture                                                                       | Median (ms) | p99 (ms) |
+| ----------------------------------------------------------------------------- | ----------: | -------: |
+| 400 rules with 1,200 complete trigonometric, exponential, and mix expressions |       8.285 |   12.366 |
+| 300 expressions rejected for domains, tokens, or depth                        |       4.571 |    5.138 |
+| 20,000 unclosed sqrt/pow starts followed by a valid color                     |       3.619 |    4.762 |
+
+Raw results are retained under ignored `.benchmarks/` files named
+`scientific-css-math.json`, `bounded-malformed-scientific-css-math.json`, and
+`unclosed-scientific-css-math.json`. Unit tests separately verify evaluation,
+rejection, resource limits, and recovery ranges.
