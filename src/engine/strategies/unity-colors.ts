@@ -31,11 +31,13 @@ export function findUnityColors(
   return scanStaticCalls(text, UNITY_CALL, { allowNesting: false }).flatMap(
     candidate => {
       // C# identifiers include Unicode characters and the @ escape prefix.
-      if (
-        /[\p{L}\p{N}\p{Pc}\p{M}\p{Cf}@]$/u.test(
-          text.slice(Math.max(0, candidate.start - 2), candidate.start),
-        )
-      ) {
+      const precedingText = text.slice(
+        Math.max(0, candidate.start - 2),
+        candidate.start,
+      )
+      const precedingCharacter = [...precedingText].at(-1) ?? ''
+      // A full code-point match avoids Node 26's astral suffix matching regression.
+      if (/^[\p{L}\p{N}\p{Pc}\p{M}\p{Cf}@]$/u.test(precedingCharacter)) {
         return []
       }
       const parsed = parseUnityColor(candidate.source)

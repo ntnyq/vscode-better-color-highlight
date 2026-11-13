@@ -86,12 +86,37 @@ describe('unity static colors', () => {
     'anew UnityEngine.Color(1, 0, 0)',
     '@new UnityEngine.Color(1, 0, 0)',
     'énew UnityEngine.Color(1, 0, 0)',
+    'aénew UnityEngine.Color(1, 0, 0)',
+    '𐐀énew UnityEngine.Color(1, 0, 0)',
     '𐐀new UnityEngine.Color(1, 0, 0)',
+    'a𐐀new UnityEngine.Color(1, 0, 0)',
+    '𞤀new UnityEngine.Color(1, 0, 0)',
+    '𐒠new UnityEngine.Color(1, 0, 0)',
+    '\u{1D165}new UnityEngine.Color(1, 0, 0)',
+    '\u0301new UnityEngine.Color(1, 0, 0)',
+    '\u200Cnew UnityEngine.Color(1, 0, 0)',
+    '𐐀new global::UnityEngine.Color32(255, 0, 0, 255)',
     'thing.new UnityEngine.Color(1, 0, 0)',
   ])('rejects %s', source => {
     expect(findUnityColors(source)).toStrictEqual([])
     expect(parseUnityColor(source)).toBeNull()
   })
+
+  it.each(['a ', '𐐀 ', '😀', '😀 ', '\n', ';', 'é;', '@ '])(
+    'resolves constructors after the non-identifier boundary %j',
+    prefix => {
+      const source = 'new UnityEngine.Color(1, 0, 0)'
+      expect(findUnityColors(prefix + source)).toStrictEqual([
+        {
+          start: prefix.length,
+          end: prefix.length + source.length,
+          color: 'rgb(255, 0, 0)',
+          editMode: 'source',
+          sourceKind: 'unity-color',
+        },
+      ])
+    },
+  )
 
   it('scopes detection to C#', () => {
     expect(
