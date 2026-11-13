@@ -33,6 +33,11 @@ Highlight and preview colors in multiple formats across code, comments, and stri
 
 <!-- commands -->
 
+The replacement and alpha-adjustment commands are invoked through color hover
+actions. They are hidden from the Command Palette because they require the
+source range and color captured by the hover. Copy commands also work directly
+from the Command Palette using the color under the cursor.
+
 </details>
 
 ## ⚙️ Configs
@@ -809,7 +814,8 @@ workspace-trust gates as cross-file highlighting:
 - SCSS modules require `color-highlight.resolveScssVariablesAcrossFiles`;
   `color-highlight.scssLoadPaths` applies to non-relative modules. Resolution
   follows dependencies to a maximum depth of 5, reads at most 32 files, and
-  limits each dependency to 512 KiB.
+  limits each dependency to 512 KiB. Each request also probes at most 1,024
+  unique module candidate paths, including missing files.
 - DTCG `$ref` navigation requires
   `color-highlight.resolveDesignTokensAcrossFiles`, accepts only relative JSON,
   JSONC, JSON-formatted `.tokens`, YAML, or YML dependencies, reads at most 64

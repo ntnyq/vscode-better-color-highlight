@@ -257,6 +257,7 @@ export async function loadDesignTokenDocument(
     }
 
     const signature = JSON.stringify([
+      stat.documentSession,
       stat.documentVersion,
       stat.mtimeMs,
       stat.size,

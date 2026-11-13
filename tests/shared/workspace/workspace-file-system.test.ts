@@ -91,6 +91,7 @@ describe('workspace file system path helpers', () => {
       ':root { --brand: #0ea5e9; }',
     )
     await expect(statWorkspaceFile('/tmp/tokens.css')).resolves.toStrictEqual({
+      documentSession: expect.any(Number),
       documentVersion: 7,
       mtimeMs: 1,
       size: 27,

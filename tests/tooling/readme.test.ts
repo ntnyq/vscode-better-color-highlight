@@ -3,6 +3,32 @@ import { describe, expect, it } from 'vitest'
 import { scopedConfigs } from '../../src/meta'
 
 describe('readme generated config documentation', () => {
+  it('keeps hover-only editing commands out of the Command Palette', async () => {
+    const manifest = JSON.parse(await readFile('package.json', 'utf8')) as {
+      contributes: {
+        commands: { command: string }[]
+        menus?: { commandPalette: { command: string; when: string }[] }
+      }
+    }
+    const hoverCommands = [
+      'color-highlight.replaceColorAsHex',
+      'color-highlight.replaceColorAsRgb',
+      'color-highlight.replaceColorAsHsl',
+      'color-highlight.replaceColorAsOklch',
+      'color-highlight.adjustColorAlpha',
+    ]
+    expect(manifest.contributes.menus?.commandPalette).toHaveLength(5)
+    for (const command of hoverCommands) {
+      expect(manifest.contributes.commands).toContainEqual(
+        expect.objectContaining({ command }),
+      )
+      expect(manifest.contributes.menus?.commandPalette).toContainEqual({
+        command,
+        when: 'false',
+      })
+    }
+  })
+
   it('contributes the workspace palette and contrast commands', async () => {
     const packageJson = JSON.parse(await readFile('package.json', 'utf8')) as {
       contributes: {

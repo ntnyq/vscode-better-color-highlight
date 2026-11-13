@@ -27,6 +27,7 @@ const MAX_CACHE_SIZE = 256
 
 interface SourceCacheEntry {
   readonly documentVersion?: number
+  readonly documentSession?: number
   readonly mtimeMs: number
   readonly size: number
   readonly text: string
@@ -306,6 +307,7 @@ async function readCachedSource(
     const cached = sourceTextCache.get(identity)
     if (
       cached &&
+      cached.documentSession === stat.documentSession &&
       cached.documentVersion === stat.documentVersion &&
       cached.mtimeMs === stat.mtimeMs &&
       cached.size === stat.size

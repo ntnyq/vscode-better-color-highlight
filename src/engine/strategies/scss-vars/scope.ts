@@ -18,6 +18,16 @@ const TOKEN_REGEX =
 const MAX_SCOPE_DEPTH = 256
 
 /**
+ * Normalize variable names while preserving underscore-sensitive namespaces.
+ */
+function normalizeScssVariableKey(name: string): string {
+  const memberStart = name.lastIndexOf('.') + 1
+  return (
+    name.slice(0, memberStart) + name.slice(memberStart).replaceAll('_', '-')
+  )
+}
+
+/**
  * Bind references in source order. Aliases retain their value at assignment,
  * and only the root scope is exported to importing stylesheets.
  */
@@ -31,7 +41,12 @@ export function bindScssVariables(
   readonly usages: readonly BoundScssUsage[]
 } {
   const root: ScssScope = {
-    definitions: new Map(initialDefinitions),
+    definitions: new Map(
+      [...initialDefinitions].map(([name, definition]) => [
+        normalizeScssVariableKey(name),
+        definition,
+      ]),
+    ),
     kind: 'static',
   }
   const scopes = [root]
@@ -51,6 +66,7 @@ export function bindScssVariables(
   }
 
   function lookup(name: string): RangedVariableDefinition | undefined {
+    name = normalizeScssVariableKey(name)
     for (let index = scopes.length - 1; index >= 0; index--) {
       const definition = scopes[index].definitions.get(name)
       if (definition) {
@@ -64,7 +80,8 @@ export function bindScssVariables(
     if (!pending) {
       return
     }
-    const { name, start, valueStart } = pending
+    const { name: sourceName, start, valueStart } = pending
+    const name = normalizeScssVariableKey(sourceName)
     pending = undefined
     const rawValue = text.slice(valueStart, end)
     let value = rawValue.trim()
@@ -90,9 +107,9 @@ export function bindScssVariables(
     const valueOffset =
       valueStart + rawValue.length - rawValue.trimStart().length
     const declaration: RangedVariableDefinition = {
-      name,
+      name: sourceName,
       filePath,
-      nameRange: { start, end: start + name.length + 1 },
+      nameRange: { start, end: start + sourceName.length + 1 },
       valueRange: { start: valueOffset, end: valueOffset + value.length },
       value: value.replaceAll(/!important\b/gu, '').trim(),
     }

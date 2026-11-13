@@ -2,6 +2,8 @@ import { defineExtension, nextTick } from 'reactive-vscode'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type * as Vscode from 'vscode'
 import type { ExtensionContext, TextDocument, TextEditor } from 'vscode'
+import type { ColorDetector, ColorMatch } from '../../src/engine/detection'
+import * as strategyRegistry from '../../src/engine/detection/registry'
 import { useColorDependencyRevision } from '../../src/extension/color-dependency-revision'
 import type * as ConfigModule from '../../src/extension/config'
 import { config } from '../../src/extension/config'
@@ -56,6 +58,16 @@ vi.mock(
       },
       workspace: {
         isTrusted: true,
+        onDidOpenTextDocument: vi.fn<
+          (
+            listener: (document: Vscode.TextDocument) => void,
+          ) => Vscode.Disposable
+        >(() => ({ dispose: vi.fn<() => void>() })),
+        onDidCloseTextDocument: vi.fn<
+          (
+            listener: (document: Vscode.TextDocument) => void,
+          ) => Vscode.Disposable
+        >(() => ({ dispose: vi.fn<() => void>() })),
         onDidChangeTextDocument: (
           listener: (event: { document: TextDocument }) => void,
         ) => {
@@ -115,26 +127,67 @@ describe('color tracking lifecycle with real reactive scopes', () => {
     for (const deactivate of deactivators.splice(0)) {
       await deactivate()
     }
+    config.enable = false
+    vi.restoreAllMocks()
     vi.useRealTimers()
   })
 
-  it('releases document listeners whenever an editor is hidden', async () => {
+  it('cancels stale scans and releases listeners with real reactive watchers', async () => {
+    vi.useFakeTimers()
+    config.enable = true
+    const pending = Promise.withResolvers<ColorMatch[]>()
+    const detector = vi
+      .fn<ColorDetector>()
+      .mockReturnValueOnce(pending.promise)
+      .mockResolvedValue([])
+    vi.spyOn(strategyRegistry, 'getStrategies').mockReturnValue([detector])
     const extension = defineExtension(() => useColorHighlight())
     deactivators.push(extension.deactivate)
     await extension.activate({} as ExtensionContext)
+    let text = '#ff0000'
+    const setDecorations = vi.fn<() => void>()
     const editor = {
       document: {
-        getText: () => '',
+        getText: () => text,
         languageId: 'css',
         uri: {
           scheme: 'file',
-          fsPath: '/tmp/colors.css',
-          toString: () => 'file:///tmp/colors.css',
+          fsPath: '/tmp/pending.css',
+          toString: () => 'file:///tmp/pending.css',
         },
       },
       viewColumn: 1,
-      setDecorations: vi.fn<() => void>(),
+      setDecorations,
     } as unknown as TextEditor
+    for (const listener of harness.editorListeners) {
+      listener([editor])
+    }
+    await nextTick()
+    expect(detector).toHaveBeenCalledTimes(1)
+    const signal = detector.mock.calls[0]?.[1]?.signal
+
+    text = 'prefix #00ff00'
+    for (const listener of harness.documentListeners) {
+      listener({ document: editor.document })
+    }
+    expect(signal?.isCancellationRequested).toBe(true)
+    pending.resolve([{ start: 0, end: 7, color: 'rgb(255, 0, 0)' }])
+    await vi.advanceTimersByTimeAsync(0)
+    expect(setDecorations).not.toHaveBeenCalled()
+
+    text = '#ff0000'
+    for (const listener of harness.documentListeners) {
+      listener({ document: editor.document })
+    }
+    await vi.advanceTimersByTimeAsync(99)
+    expect(detector).toHaveBeenCalledTimes(1)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(detector).toHaveBeenCalledTimes(2)
+    expect(detector.mock.calls[1]?.[0]).toBe('#ff0000')
+    for (const listener of harness.editorListeners) {
+      listener([])
+    }
+    await nextTick()
     const baseline = harness.documentListeners.size
     for (let index = 0; index < 5; index++) {
       for (const listener of harness.editorListeners) {

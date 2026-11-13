@@ -381,22 +381,25 @@ function setupEditorTracking(
   const doc = editor.document
   const textRef = useDocumentText(doc)
 
-  // Debounce text changes (100ms)
-  const debouncedText = useDebouncedRef(textRef, 100)
-  const debouncedTextRevision = ref(0)
-  const stopRevisionWatch = watch(
-    debouncedText,
-    () => {
-      debouncedTextRevision.value++
-    },
-    { immediate: true },
-  )
-
   // Track the current config for this editor
   let pendingVersion = 0
   let lastRunSignature: string | undefined
   let activeCancellation: HighlightRunCancellation | undefined
   let disposed = false
+
+  // Invalidate immediately; debounce only the next scan, including A -> B -> A.
+  const textRevision = ref(0)
+  const debouncedTextRevision = useDebouncedRef(textRevision, 100)
+  const stopRevisionWatch = watch(
+    textRef,
+    () => {
+      pendingVersion++
+      activeCancellation?.cancel()
+      activeCancellation = undefined
+      textRevision.value++
+    },
+    { flush: 'sync' },
+  )
 
   // Watch debounced text and apply decorations
   const stopWatch = watch(
@@ -429,7 +432,7 @@ function setupEditorTracking(
       const thisVersion = pendingVersion
       activeCancellation?.cancel()
       activeCancellation = undefined
-      const text = debouncedText.value
+      const text = textRef.value
 
       if (!text) {
         clearDecorations(editor, cache)
@@ -467,6 +470,11 @@ function setupEditorTracking(
         }
 
         clearDecorations(editor, cache)
+        return
+      }
+
+      // A configuration update must not scan until the current text settles.
+      if (textRevision.value !== debouncedTextRevision.value) {
         return
       }
 
@@ -578,7 +586,7 @@ function setupEditorTracking(
       activeCancellation?.cancel()
       activeCancellation = undefined
     },
-    debouncedText.dispose,
+    debouncedTextRevision.dispose,
     stopRevisionWatch,
     stopWatch,
   )

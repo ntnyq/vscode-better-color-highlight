@@ -41,8 +41,9 @@ const statMock = vi.fn<
 
 vi.mock(
   import('../../../../src/shared/workspace/file-system'),
-  () =>
+  async importActual =>
     ({
+      ...(await importActual()),
       basenameWorkspacePath: basename,
       dirnameWorkspacePath: dirname,
       extnameWorkspacePath: extname,
@@ -70,6 +71,113 @@ describe('resolveScssVarDefinition', () => {
     existsMock.mockClear()
     readFileMock.mockClear()
     statMock.mockClear()
+  })
+
+  it('shares hyphen and underscore bindings without changing declaration ranges', async () => {
+    const { findScssVars, resolveScssVarDefinition } =
+      await import('../../../../src/engine/strategies/scss-vars')
+    const text =
+      '$brand_color: red; $brand-color: blue; .a { color: $brand_color; }'
+    const offset = text.lastIndexOf('$brand_color')
+    await expect(findScssVars(text, context)).resolves.toContainEqual({
+      start: offset,
+      end: offset + '$brand_color'.length,
+      color: 'rgb(0, 0, 255)',
+    })
+    const target = await resolveScssVarDefinition(text, offset, context)
+    expect(target?.targetSelectionRange).toStrictEqual({
+      start: text.indexOf('$brand-color'),
+      end: text.indexOf('$brand-color') + '$brand-color'.length,
+    })
+  })
+
+  it.each(['@use "theme" as *;', '@use "theme";', '@forward "theme";'])(
+    'keeps private members internal to modules: %s',
+    async directive => {
+      const { findScssVars, resolveScssVarDefinition } =
+        await import('../../../../src/engine/strategies/scss-vars')
+      fileTexts.set(
+        '/workspace/_theme.scss',
+        '$_private: red; $-hidden: blue; $public_color: $_private;',
+      )
+      const isNamespaced = directive === '@use "theme";'
+      if (directive.startsWith('@forward')) {
+        fileTexts.set('/workspace/_facade.scss', directive)
+        directive = '@use "facade" as *;'
+      }
+      const prefix = isNamespaced ? 'theme.' : ''
+      const text = `${directive} .a { color: ${prefix}$_private; background: ${prefix}$-hidden; border-color: ${prefix}$public-color; }`
+      const matches = await findScssVars(text, context)
+      expect(matches).toStrictEqual([
+        {
+          start: text.indexOf(`${prefix}$public-color`),
+          end:
+            text.indexOf(`${prefix}$public-color`) +
+            `${prefix}$public-color`.length,
+          color: 'rgb(255, 0, 0)',
+        },
+      ])
+      await expect(
+        resolveScssVarDefinition(text, text.indexOf('$_private'), context),
+      ).resolves.toBeNull()
+      await expect(
+        resolveScssVarDefinition(text, text.indexOf('$-hidden'), context),
+      ).resolves.toBeNull()
+    },
+  )
+
+  it('retains private variables for legacy imports', async () => {
+    const { findScssVars } =
+      await import('../../../../src/engine/strategies/scss-vars')
+    fileTexts.set(
+      '/workspace/_theme.scss',
+      '$_private: red; $brand_color: blue;',
+    )
+    await expect(
+      findScssVars('@import "theme"; .a { color: $_private; }', context),
+    ).resolves.toMatchObject([{ color: 'rgb(255, 0, 0)' }])
+  })
+
+  it('keeps underscore and hyphen namespaces distinct for matching and navigation', async () => {
+    const { findScssVars, resolveScssVarDefinition } =
+      await import('../../../../src/engine/strategies/scss-vars')
+    fileTexts.set('/workspace/_red.scss', '$brand_color: red;')
+    fileTexts.set('/workspace/_blue.scss', '$brand-color: blue;')
+    const text =
+      '@use "red" as my_theme; @use "blue" as my-theme; .a { color: my_theme.$brand-color; background: my-theme.$brand_color; }'
+    const matches = await findScssVars(text, context)
+    expect(matches.map(match => match.color)).toStrictEqual([
+      'rgb(255, 0, 0)',
+      'rgb(0, 0, 255)',
+    ])
+    for (const [reference, targetFilePath] of [
+      ['my_theme.$brand-color', '/workspace/_red.scss'],
+      ['my-theme.$brand_color', '/workspace/_blue.scss'],
+    ]) {
+      const target = await resolveScssVarDefinition(
+        text,
+        text.indexOf(reference),
+        context,
+      )
+      expect(target?.targetFilePath).toBe(targetFilePath)
+    }
+  })
+
+  it('normalizes only member names when resolving aliases inside modules', async () => {
+    const { findScssVars } =
+      await import('../../../../src/engine/strategies/scss-vars')
+    fileTexts.set('/workspace/_red.scss', '$brand_color: red;')
+    fileTexts.set(
+      '/workspace/_facade.scss',
+      '@use "red" as my_theme; $valid: my_theme.$brand-color; $invalid: my-theme.$brand_color;',
+    )
+    const text =
+      '@use "facade"; .a { color: facade.$valid; background: facade.$invalid; }'
+    const matches = await findScssVars(text, context)
+    expect(
+      matches.map(match => text.slice(match.start, match.end)),
+    ).toStrictEqual(['facade.$valid'])
+    expect(matches[0]?.color).toBe('rgb(255, 0, 0)')
   })
 
   it('uses the same scoped bindings for navigation and highlighting', async () => {

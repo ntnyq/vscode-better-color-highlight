@@ -76,6 +76,16 @@ vi.mock(
       },
       workspace: {
         createFileSystemWatcher,
+        onDidOpenTextDocument: vi.fn<
+          (
+            listener: (document: Vscode.TextDocument) => void,
+          ) => Vscode.Disposable
+        >(() => ({ dispose: vi.fn<() => void>() })),
+        onDidCloseTextDocument: vi.fn<
+          (
+            listener: (document: Vscode.TextDocument) => void,
+          ) => Vscode.Disposable
+        >(() => ({ dispose: vi.fn<() => void>() })),
         onDidChangeTextDocument: vi.fn<
           (handler: (event: unknown) => void) => { dispose: DisposeFn }
         >(handler => {
@@ -95,6 +105,40 @@ describe('useColorDependencyRevision', () => {
     configSnapshot.scssLoadPaths = []
     configSnapshot.tailwindStylesheetPaths = []
     createFileSystemWatcher.mockClear()
+  })
+
+  it('invalidates dependencies on open and close and disposes both listeners', async () => {
+    vi.useFakeTimers()
+    deactivateHandlers.length = 0
+    vi.resetModules()
+    const { workspace } = await import('vscode')
+    const { useColorDependencyRevision } =
+      await import('../../src/extension/color-dependency-revision')
+    const revision = useColorDependencyRevision()
+    const open = vi.mocked(workspace.onDidOpenTextDocument)
+    const close = vi.mocked(workspace.onDidCloseTextDocument)
+    const document = {
+      uri: { path: '/tokens.css' },
+    } as Vscode.TextDocument
+
+    open.mock.calls.at(-1)?.[0](document)
+    await vi.advanceTimersByTimeAsync(100)
+    expect(revision.value).toBe(1)
+    close.mock.calls.at(-1)?.[0](document)
+    await vi.advanceTimersByTimeAsync(100)
+    expect(revision.value).toBe(2)
+
+    configSnapshot.resolveCssVariablesAcrossFiles = false
+    configSnapshot.resolveDesignTokensAcrossFiles = false
+    open.mock.calls.at(-1)?.[0](document)
+    await vi.advanceTimersByTimeAsync(100)
+    expect(revision.value).toBe(2)
+    for (const dispose of deactivateHandlers.splice(0)) {
+      dispose()
+    }
+    expect(open.mock.results.at(-1)?.value.dispose).toHaveBeenCalledTimes(1)
+    expect(close.mock.results.at(-1)?.value.dispose).toHaveBeenCalledTimes(1)
+    vi.useRealTimers()
   })
 
   it('coalesces rapid stylesheet and token dependency changes', async () => {

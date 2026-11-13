@@ -25,8 +25,9 @@ import { FIXTURE_SCSS } from '../../../fixtures'
 
 vi.mock(
   import('../../../../src/shared/workspace/file-system'),
-  () =>
+  async importActual =>
     ({
+      ...(await importActual()),
       basenameWorkspacePath: basename,
       dirnameWorkspacePath: dirname,
       extnameWorkspacePath: extname,

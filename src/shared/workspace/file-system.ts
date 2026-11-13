@@ -1,9 +1,13 @@
 import { isString } from '@ntnyq/utils'
+import type { TextDocument } from 'vscode'
 import type {
   WorkspaceDirectoryEntry,
   WorkspaceFileStat,
   WorkspacePathParts,
 } from './types'
+
+const documentSessions = new WeakMap<TextDocument, number>()
+let nextDocumentSession = 0
 
 export interface WorkspaceFindFilesPattern {
   readonly basePath: string
@@ -367,8 +371,14 @@ export async function statWorkspaceFile(
     candidate => candidate.uri.toString() === uri.toString(),
   )
   const documentText = document?.getText()
+  let documentSession = document && documentSessions.get(document)
+  if (document && documentSession === undefined) {
+    documentSession = ++nextDocumentSession
+    documentSessions.set(document, documentSession)
+  }
 
   return {
+    documentSession,
     documentVersion: document?.version,
     mtimeMs: stat.mtime,
     size:

@@ -7,13 +7,18 @@ export interface WorkspaceDirectoryEntry {
 }
 
 /**
- * Workspace file metadata used by the SCSS resolver cache.
+ * Workspace file metadata used by dependency caches.
  */
 export interface WorkspaceFileStat {
   /**
    * Open text-document version when unsaved editor content is available.
    */
   readonly documentVersion?: number
+
+  /**
+   * Identity of the open document instance, independent of its version.
+   */
+  readonly documentSession?: number
 
   /**
    * Last known file modification timestamp.

@@ -38,8 +38,9 @@ const statMock = vi.fn<
 
 vi.mock(
   import('../../../../src/shared/workspace/file-system'),
-  () =>
+  async importActual =>
     ({
+      ...(await importActual()),
       basenameWorkspacePath: basename,
       dirnameWorkspacePath: dirname,
       extnameWorkspacePath: extname,
@@ -54,6 +55,37 @@ vi.mock(
 )
 
 describe('scss variable dependency cache', () => {
+  it('bounds missing module probes and memoizes failures within one request', async () => {
+    vi.resetModules()
+    fileTexts.clear()
+    existsMock.mockClear()
+    existsMock.mockResolvedValue(false)
+    const { findScssVars } =
+      await import('../../../../src/engine/strategies/scss-vars')
+    const context = {
+      languageId: 'scss',
+      filePath: '/workspace/a/b/main.scss',
+      resolveScssVariablesAcrossFiles: true,
+      workspaceIsTrusted: true,
+    }
+
+    await findScssVars(
+      Array.from(
+        { length: 100 },
+        (_, index) => `@use "missing-${index}";`,
+      ).join('\n'),
+      context,
+    )
+    expect(existsMock.mock.calls.length).toBeLessThanOrEqual(1024)
+    expect(existsMock.mock.calls.length).toBeGreaterThan(0)
+
+    existsMock.mockClear()
+    await findScssVars('@use "./missing";'.repeat(100), context)
+    expect(existsMock).toHaveBeenCalledTimes(6)
+    await findScssVars('@use "./missing";', context)
+    expect(existsMock).toHaveBeenCalledTimes(12)
+  })
+
   it('reuses unchanged dependency contents and invalidates when metadata changes', async () => {
     fileStats.clear()
     fileTexts.clear()

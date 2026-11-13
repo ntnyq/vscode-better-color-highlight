@@ -458,7 +458,31 @@
         "command": "color-highlight.checkColorContrast",
         "title": "Check Color Contrast"
       }
-    ]
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "color-highlight.replaceColorAsHex",
+          "when": "false"
+        },
+        {
+          "command": "color-highlight.replaceColorAsRgb",
+          "when": "false"
+        },
+        {
+          "command": "color-highlight.replaceColorAsHsl",
+          "when": "false"
+        },
+        {
+          "command": "color-highlight.replaceColorAsOklch",
+          "when": "false"
+        },
+        {
+          "command": "color-highlight.adjustColorAlpha",
+          "when": "false"
+        }
+      ]
+    }
   },
   "activationEvents": [
     "onStartupFinished"

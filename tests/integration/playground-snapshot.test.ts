@@ -17,8 +17,9 @@ import type * as WorkspaceFileSystem from '../../src/shared/workspace/file-syste
 
 vi.mock(
   import('../../src/shared/workspace/file-system'),
-  () =>
+  async importActual =>
     ({
+      ...(await importActual()),
       basenameWorkspacePath: basename,
       dirnameWorkspacePath: dirname,
       extnameWorkspacePath: extname,

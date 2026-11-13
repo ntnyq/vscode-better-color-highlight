@@ -30,7 +30,7 @@ const createTextEditorDecorationType = vi.fn<() => { dispose: DisposeFn }>(
     dispose: vi.fn<DisposeFn>(),
   }),
 )
-const asyncStrategy = vi.fn<() => Promise<ColorMatch[]>>()
+const asyncStrategy = vi.fn<ColorDetector>()
 
 /**
  * Create a test ref that notifies direct and getter watchers on assignment.
@@ -332,6 +332,51 @@ describe('useColorHighlight', () => {
 
     resolve([])
     await vi.runAllTimersAsync()
+    vi.useRealTimers()
+  })
+
+  it('discards old results before debounce and rescans text restored during the delay', async () => {
+    setupTest()
+    vi.useFakeTimers()
+    const pending = Promise.withResolvers<ColorMatch[]>()
+    asyncStrategy.mockReturnValueOnce(pending.promise).mockResolvedValue([])
+    documentTextRef = createRef('#ff0000')
+    visibleEditorsRef = createRef<unknown[]>([createEditor()])
+    const { useColorHighlight } =
+      await import('../../../src/features/highlight/use-color-highlight')
+    useColorHighlight()
+
+    documentTextRef.value = 'prefix #00ff00'
+    pending.resolve([{ start: 0, end: 7, color: 'rgb(255, 0, 0)' }])
+    await flushPromises()
+    await flushPromises()
+    expect(setDecorations).not.toHaveBeenCalled()
+
+    documentTextRef.value = '#ff0000'
+    await vi.advanceTimersByTimeAsync(100)
+    expect(asyncStrategy).toHaveBeenCalledTimes(2)
+    vi.useRealTimers()
+  })
+
+  it('does not scan old text when configuration changes during debounce', async () => {
+    setupTest()
+    vi.useFakeTimers()
+    asyncStrategy.mockResolvedValue([])
+    documentTextRef = createRef('#ff0000')
+    visibleEditorsRef = createRef<unknown[]>([createEditor()])
+    const { useColorHighlight } =
+      await import('../../../src/features/highlight/use-color-highlight')
+    useColorHighlight()
+    await flushPromises()
+
+    documentTextRef.value = 'prefix #00ff00'
+    configSnapshot.markerType = 'outline'
+    triggerGetterWatchers()
+    expect(asyncStrategy).toHaveBeenCalledTimes(1)
+
+    await vi.advanceTimersByTimeAsync(100)
+    expect(asyncStrategy).toHaveBeenCalledTimes(2)
+    expect(asyncStrategy.mock.calls[1]?.[0]).toBe('prefix #00ff00')
     vi.useRealTimers()
   })
 

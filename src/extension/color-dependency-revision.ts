@@ -1,6 +1,6 @@
 import { onDeactivate, ref, watch } from 'reactive-vscode'
 import type { Ref } from 'reactive-vscode'
-import type { Disposable, FileSystemWatcher, Uri } from 'vscode'
+import type { Disposable, FileSystemWatcher, TextDocument, Uri } from 'vscode'
 import { RelativePattern, Uri as VscodeUri, workspace } from 'vscode'
 import {
   basenameWorkspacePath,
@@ -111,15 +111,24 @@ export function useColorDependencyRevision(): Readonly<Ref<number>> {
     },
     { immediate: true },
   )
-  const documentChangeDisposable = workspace.onDidChangeTextDocument(event => {
+  const invalidateDocument = (document: TextDocument) => {
     if (isCrossFileResolutionEnabled()) {
-      invalidate(event.document.uri)
+      invalidate(document.uri)
     }
-  })
+  }
+  const documentChangeDisposable = workspace.onDidChangeTextDocument(event =>
+    invalidateDocument(event.document),
+  )
+  const documentOpenDisposable =
+    workspace.onDidOpenTextDocument(invalidateDocument)
+  const documentCloseDisposable =
+    workspace.onDidCloseTextDocument(invalidateDocument)
 
   onDeactivate(() => {
     stopConfigWatch()
     documentChangeDisposable.dispose()
+    documentOpenDisposable.dispose()
+    documentCloseDisposable.dispose()
     disposeWatcher()
   })
 

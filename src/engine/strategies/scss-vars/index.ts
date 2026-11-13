@@ -2,6 +2,7 @@ import {
   basenameWorkspacePath,
   dirnameWorkspacePath,
   extnameWorkspacePath,
+  getWorkspacePathIdentity,
   isAbsoluteWorkspacePath,
   joinWorkspacePath,
   readWorkspaceFile,
@@ -69,6 +70,11 @@ const MAX_SCSS_RESOLVE_DEPTH = 5
 const MAX_SCSS_RESOLVE_FILES = 32
 
 /**
+ * Maximum unique module-path metadata probes, including missing files.
+ */
+const MAX_SCSS_MODULE_PROBES = 1024
+
+/**
  * Maximum number of SCSS dependency file contents kept in memory.
  */
 const MAX_SCSS_FILE_CONTENT_CACHE_SIZE = 256
@@ -86,6 +92,7 @@ interface ScssFileContentCacheEntry {
    * Open text-document version when the dependency has unsaved changes.
    */
   readonly documentVersion?: number
+  readonly documentSession?: number
 
   /**
    * Last known file modification timestamp.
@@ -132,6 +139,10 @@ interface ScssModule {
  * Mutable state shared while resolving a bounded SCSS dependency graph.
  */
 interface ScssResolveState {
+  /**
+   * Request-local existence results also bound failed module discovery.
+   */
+  readonly moduleProbes: Map<string, boolean>
   /** Cancellation shared through dependency traversal. */
   readonly signal?: CancellationSignal
   /**
@@ -158,6 +169,7 @@ interface ScssResolveState {
  */
 function createScssResolveState(context?: StrategyContext): ScssResolveState {
   return {
+    moduleProbes: new Map(),
     resolvingFiles: new Set(context?.filePath ? [context.filePath] : []),
     loadPaths: context?.scssLoadPaths ?? [],
     signal: context?.signal,
@@ -354,6 +366,7 @@ async function readCachedScssFile(
 
     if (
       cached &&
+      cached.documentSession === stats.documentSession &&
       cached.documentVersion === stats.documentVersion &&
       cached.mtimeMs === stats.mtimeMs &&
       cached.size === stats.size
@@ -369,6 +382,7 @@ async function readCachedScssFile(
       return null
     }
     scssFileContentCache.set(filePath, {
+      documentSession: stats.documentSession,
       documentVersion: stats.documentVersion,
       mtimeMs: stats.mtimeMs,
       size: stats.size,
@@ -398,10 +412,9 @@ async function readCachedScssFile(
 async function resolveScssModulePath(
   fromFilePath: string,
   specifier: string,
-  loadPaths: readonly string[],
-  workspaceReadBudget?: WorkspaceReadBudget,
-  signal?: CancellationSignal,
+  state: ScssResolveState,
 ): Promise<string | null> {
+  const { loadPaths, workspaceReadBudget, signal, moduleProbes } = state
   if (signal?.isCancellationRequested) {
     return null
   }
@@ -420,7 +433,15 @@ async function resolveScssModulePath(
     if (workspaceReadBudget && !workspaceReadBudget.tryClaim(candidate)) {
       continue
     }
-    const exists = await workspacePathExists(candidate)
+    const identity = getWorkspacePathIdentity(candidate)
+    let exists = moduleProbes.get(identity)
+    if (exists === undefined) {
+      if (moduleProbes.size >= MAX_SCSS_MODULE_PROBES) {
+        return null
+      }
+      exists = await workspacePathExists(candidate)
+      moduleProbes.set(identity, exists)
+    }
     if (signal?.isCancellationRequested) {
       return null
     }
@@ -457,13 +478,7 @@ async function loadScssModule(
     return null
   }
 
-  const filePath = await resolveScssModulePath(
-    fromFilePath,
-    specifier,
-    state.loadPaths,
-    state.workspaceReadBudget,
-    state.signal,
-  )
+  const filePath = await resolveScssModulePath(fromFilePath, specifier, state)
   if (state.signal?.isCancellationRequested) {
     return null
   }
@@ -581,6 +596,9 @@ async function collectForwardedScssVarDefs(
     }
 
     for (const [name, value] of module.varDefs) {
+      if (name.startsWith('-')) {
+        continue
+      }
       if (ambiguousNames.has(name)) {
         continue
       }
@@ -705,6 +723,9 @@ async function collectUsedStarScssVarDefs(
     }
 
     for (const [name, value] of module.varDefs) {
+      if (name.startsWith('-')) {
+        continue
+      }
       if (ambiguousNames.has(name)) {
         continue
       }
@@ -757,7 +778,12 @@ async function collectUsedScssModules(
       depth,
     )
     if (module) {
-      modules.push(module)
+      modules.push({
+        ...module,
+        varDefs: new Map(
+          [...module.varDefs].filter(([name]) => !name.startsWith('-')),
+        ),
+      })
     }
   }
 
