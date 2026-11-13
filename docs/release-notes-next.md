@@ -46,8 +46,9 @@ version is chosen.
 - Add deterministic CSS decimal-grid and tie scans for all four rounding
   strategies, signed steps, numbers/percentages/angles, modulo/remainder signs,
   signed zero, extreme finite values, intermediate precision, and shared limits.
-- Run desktop smoke tests on Ubuntu and Windows against VS Code 1.140.0 and
-  stable; retain Ubuntu Web and installed-VSIX checks.
+- Raise the minimum supported VS Code version to 1.146.0 and run desktop smoke
+  tests on Ubuntu and Windows against that version and stable; retain Ubuntu Web
+  and installed-VSIX checks.
 - Run every native/CSS math picker and hover-alpha editing fixture with both
   LF and CRLF. Normalize fixture text, expected edits, and UTF-16 offsets to
   the selected document line ending rather than assuming LF on Windows.
@@ -70,8 +71,8 @@ version is chosen.
   passed; measurements are in the [math baseline](performance-baseline.md#trigonometric-and-exponential-css-math-2026-11-06).
 - Previously recorded: formatting, lint, types, 86 unit/snapshot files with 2,331 tests, stable
   Electron/Chromium Web hosts, and installed-VSIX activation checks passed.
-- The shared desktop suite also passed locally with VS Code 1.140.0. CI tracks
-  both versions on Windows and Ubuntu.
+- Previously recorded: the shared desktop suite also passed locally with
+  VS Code 1.140.0. CI now targets 1.146.0 and stable on Windows and Ubuntu.
 - All 45 benchmark fixtures passed; focused measurements are recorded in the
   [sign-related baseline](performance-baseline.md#sign-related-css-math-2026-10-25)
   and [Compose space baseline](performance-baseline.md#compose-explicit-static-color-spaces-2026-10-25).

@@ -24,9 +24,9 @@ separate steps. Choose the version once and validate the final versioned tree.
 Unit tests finish before VS Code launches. Correctness checks have no fixed
 wall-clock performance threshold; `pnpm bench` records timing trends separately.
 CI runs the shared desktop activation, highlight, picker, alpha-editing, and
-navigation checks on Ubuntu and Windows with both VS Code 1.140.0 (the minimum)
+navigation checks on Ubuntu and Windows with both VS Code 1.146.0 (the minimum)
 and stable. Web and installed-VSIX checks run on Ubuntu stable. Set
-`VSCODE_VERSION=1.140.0` when running `pnpm test:e2e:electron` locally to select
+`VSCODE_VERSION=1.146.0` when running `pnpm test:e2e:electron` locally to select
 that desktop host; build first with `pnpm build`.
 
 ## Publish the prepared version

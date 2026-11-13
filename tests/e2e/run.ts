@@ -19,6 +19,10 @@ try {
     extensionTestsPath: resolve(rootDir, 'tests/e2e/suite/index.ts'),
     launchArgs: [
       resolve(rootDir, 'playground'),
+      // Keep editor operations responsive when the test window is in the background.
+      '--disable-renderer-backgrounding',
+      '--disable-background-timer-throttling',
+      '--disable-backgrounding-occluded-windows',
       '--disable-extensions',
       '--user-data-dir',
       userDataDir,
